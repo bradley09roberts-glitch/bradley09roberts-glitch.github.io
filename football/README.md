@@ -3,10 +3,12 @@
 Prediction and backtesting for the Premier League, La Liga, Serie A, Bundesliga and Ligue 1,
 covering match result (1X2), total goals (O/U 1.5 / 2.5 / 3.5) and both teams to score.
 
-> **Status: M1 (data) complete.** football-data.co.uk results, stats and prices for ten
-> divisions, 2018/19 to date, are imported with a coverage report. No model has been fitted, so
-> the site shows no predictions, accuracy or profit figures; they will come only from real data
-> through the milestones in [STATUS.md](STATUS.md).
+> **Status (21 Oct 2026): live.** Genuine pre-match predictions are published and saved
+> before kickoff: league games use a model + market blend, UEFA competitions a pan-European
+> model. Both were chosen on 2023/24 and tested once on 2024/25 and 2025/26. The league model
+> is clearly more accurate than the pure models but does not beat the closing price, so no
+> betting edge is claimed. Details and open items: [STATUS.md](STATUS.md); results:
+> [docs/results/domestic.md](docs/results/domestic.md).
 
 ## What this is (and isn't)
 
@@ -45,6 +47,10 @@ uv run footy euro-crosscheck    # openfootball against Wikipedia's match boxes (
 uv run footy coverage           # coverage per division, season and field
 uv run footy serve              # API on http://127.0.0.1:8000  (GET /api/health)
 uv run footy capture-odds       # forward odds snapshots (needs a provider key; cron every 5 min)
+uv run footy fd-fixtures        # this week's football-data prices (Tue/Fri) for model + market
+uv run footy predict-domestic --model market_tilt_shots --dry-run   # league predictions
+uv run footy predict-euro --model pan_euro_mix_mxg --dry-run        # UEFA predictions
+uv run footy settle             # settle published predictions whose results are in
 
 cd frontend
 npm ci

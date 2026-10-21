@@ -1,151 +1,136 @@
 # STATUS
 
-_Last updated: 2026-10-19 (end of M1). Every session starts from this file._
+_Last updated: 2026-10-21, 08:30 UK. Every session starts from this file._
 
-## Current milestone
+## Where things stand
 
-**M1 Data: complete, awaiting owner review.** Next: M2 Baselines for the Premier League (do not
-start until M1 is approved).
+On 21 Oct the owner asked for as much as possible overnight, with the Champions League first
+and "whatever has the best accuracy". M2 to M6 were built in that push and M7 is running;
+none of it has had the owner's review yet.
 
 | Milestone | State |
 | --- | --- |
-| M0 Setup | Done (reviewed: owner replied "Do what's best" to the open decisions) |
-| M1 Data | Done, awaiting review |
-| M2 Baselines (Premier League) | Not started |
-| M3 Score model (Premier League) | Not started |
-| M4 Remaining four leagues | Not started |
-| M5 Profit simulation | Not started |
-| M6 Website core | Not started |
-| M7 Live operations | Not started |
+| M0 Setup | Done, reviewed |
+| M1 Data | Done; extended on 21 Oct (European leagues, repeat meetings, prices for 26 divisions) |
+| M2 Baselines | Done: walk-forward harness, ledgers, leakage tests, frequency/Elo/Poisson baselines |
+| M3 Score model | Done: Dixon-Coles, then a model lab of 8 families (lab still running, see below) |
+| M4 Five leagues | Done: every model is run and selected on the five leagues pooled |
+| M5 Profit simulation | Done: `footy final-report` (one test run, market benchmark, profit) |
+| M6 Website core | Done: fixtures, match, past, performance, lab, data, status pages; QA in `docs/m6/qa.md` |
+| M7 Live operations | Running: genuine pre-match records are being published and settled; see dependencies |
 
-## Where the code lives
+## Models of record (D-025, D-026)
 
-- Repo `bradley09roberts-glitch/bradley09roberts-glitch.github.io`, branch
-  `claude/football-predictor`, directory `football/` (the brief's "repo root"; see D-001).
-- Not merged to `main`: `main` publishes the FightBase site via GitHub Pages.
+Chosen by the lowest composite on validation 2023/24 and run once on test 2024/25 + 2025/26.
+`src/footy/reference/primary_models.json` holds them as periods with start times.
+
+| Group | Model of record | Test composite | Against |
+| --- | --- | --- | --- |
+| League games, five top leagues | `market_tilt_shots`, falling back to `dixon_coles` where a fixture has no prices yet (from 21 Oct, 07:01 UTC) | 0.9555 | `dixon_coles` 0.9693 |
+| UEFA competitions | `pan_euro_mix_mxg` (from 21 Oct, 04:30 UTC) | 0.9666 | earlier `pan_euro_mix` 0.9686 |
+
+- **`market_tilt_shots`** moves the shots model's score grid onto football-data's pre-closing
+  Bet365 and market-average prices (D-024, [docs/research/market-blend.md](docs/research/market-blend.md)).
+  It beats every pure model in every league and both test seasons. It does not beat the
+  closing price: level on 1X2, slightly worse on O/U 2.5. Full report:
+  [docs/results/domestic.md](docs/results/domestic.md).
+- **`pan_euro_mix_mxg`** is the pan-European Dixon-Coles + Elo mixture, with top-five domestic
+  matches fitted partly to the expected goals their closing prices implied. Its market-xG
+  scope is pinned (`top5_exact`), so it reproduces its published records exactly.
+
+## Published predictions (genuine pre-match, `records/predictions/2026-10-21.jsonl`)
+
+| Model | Records | Fixtures |
+| --- | --- | --- |
+| `pan_euro_mix_mxg` | 45 | UCL 21 Oct (9), UEL and UECL 22 Oct (36) |
+| `pan_euro_mix` | 45 | the same fixtures, published earlier the same night |
+| `dixon_coles` | 64 | league games 21–27 Oct (E0, SP1, I1, D1, F1, E1) |
+| `market_tilt_dc`, `market_tilt_shots` | 1 each | Levante v Athletic Club, 21 Oct |
+
+Nothing is settled yet. Scheduled check-ins (this session, `send_later`):
+
+| When (UTC) | What |
+| --- | --- |
+| Wed 21 Oct 12:30 | Deadline check before the UCL kickoffs (already published) |
+| Wed 21 Oct 22:20 | Settle the Champions League |
+| Thu 22 Oct 22:20 | Settle the Europa League and Conference League |
+| Fri 23 Oct 12:20 | Fetch the weekend's prices (`footy fd-fixtures`), publish `market_tilt_shots` records before the 19:00 kickoffs |
+| Mon 26 Oct 08:10 | Settle the weekend's league games |
+| Tue 27 Oct 11:50 | Midweek prices and records (Serie A on 27 Oct) |
+
+## Data (21 Oct 2026)
+
+- 64,693 matches in 26 divisions (the core ten plus 16 European leagues, D-022), 2018/19 to
+  date; 181 excluded from models (play-offs, bare and awarded results).
+- 1,473,193 prices: closing 1X2 for every division, O/U 2.5 where football-data has it,
+  pre-closing prices for the main-layout files.
+- 4,537 UEFA matches in `euro_matches` (4,234 played, 297 scheduled, 4 awarded, 2 cancelled),
+  from openfootball and Wikipedia (D-023). UEFA.com is not used (terms §6.2).
+- Repeat meetings in multi-round leagues are stored since migration 0005 (4,815 recovered).
+- Coverage report: [docs/coverage/coverage.md](docs/coverage/coverage.md). Its European
+  section still describes prices as top-five only (to regenerate).
+
+## Model lab (workflow still running)
+
+Each family is built on seasons before 2023/24 and compared on validation; the composites below
+are the builders' own and still wait for the lab's adversarial audits and its ensemble.
+
+| Family | Best candidate | Validation composite |
+| --- | --- | --- |
+| Goal-based Elo | `elo_goals_gd` | 0.9528 |
+| Dynamic ratings | `dynamic_ratings_blend3` | 0.9540 |
+| Bivariate / dispersion | `bivariate_dispersion_sx_birth_time` | 0.9544 |
+| Goal calibration | `goal_calibration_tuned_level` | 0.9548 |
+| Shots as xG | `shots_xg_sot_joint_rw` | 0.9552 |
+| Dixon-Coles tuning | `dc_tuning_tilt` | 0.9560 |
+| Gradient boosting | `ml_gbm_glm_boost_dc` | 0.9564 |
+| Congestion and context | building | – |
+| Dixon-Coles (reference) | `dixon_coles` | 0.9598 |
+
+When the lab finishes: pick the best audited pure model (or the ensemble), test it once, and
+use it as the pure fallback and as the model + market base if it improves the shape markets.
 
 ## Resume commands
 
 ```bash
 cd football
-uv sync                         # Python 3.12 env from uv.lock
-uv run footy fd-update          # migrate, download (polite, cached) and import football-data
-uv run footy coverage --markdown docs/coverage/coverage.md
-uv run footy spot-check -n 20 --markdown docs/m1/spot-check.md
-make check                      # lint, format check, pytest, frontend typecheck + build
-uv run footy serve              # API: /api/health /api/coverage /api/refresh-history /api/import-issues
-cd frontend && npm ci && npm run dev    # site http://127.0.0.1:5173
+uv sync
+uv run footy fd-update                    # results and prices (polite, cached; --scope core|europe)
+uv run footy euro-update --fetch-wikipedia
+uv run footy fd-fixtures                  # this week's prices (Tue/Fri), D-024
+uv run footy predict-domestic --model market_tilt_shots --divisions E0,SP1,I1,D1,F1,E1 --days 4 --dry-run
+uv run footy predict-euro --model pan_euro_mix_mxg --days 2 --dry-run
+uv run footy settle
+uv run footy final-report --selected <model> --candidates <a,b>
+uv run footy set-model-of-record --group domestic --models <a,b> --from now
+make check
+uv run footy serve; cd frontend && npm ci && npm run dev
 ```
 
-`data/` (database and raw store) is git-ignored. A fresh session rebuilds it with
-`fd-update`: 90 files at one request every 2 s, about 3 minutes, then about 45 s to import.
-
-## Data coverage (19 Oct 2026)
-
-Full tables: [docs/coverage/coverage.md](docs/coverage/coverage.md).
-
-- 90 season files (10 divisions × 2018/19–2026/27), 31,347 matches, 433,184 prices.
-- 28 matches excluded from models as bare or awarded results (D-018); 1 row rejected (no score).
-- Earliest and latest matches, top divisions:
-
-  | League | Earliest | Latest |
-  | --- | --- | --- |
-  | Premier League | 2018-08-10 | 2026-10-12 |
-  | La Liga | 2018-08-17 | 2026-10-12 |
-  | Serie A | 2018-08-18 | 2026-10-12 |
-  | Bundesliga | 2018-08-24 | 2026-10-11 |
-  | Ligue 1 | 2018-08-10 | 2026-10-11 |
-
-- Every completed season has the full round-robin count, except:
-  - Ligue 1 and Ligue 2 2019/20 (cut short);
-  - Ligue 2 2023/24 (Troyes v Valenciennes absent from the source);
-  - Ligue 2 2025/26 (one row with no score).
-- 2018/19 has no kickoff times and no closing prices except Pinnacle's (burn-in season only).
-
-Price coverage for the market benchmark (D-014):
-
-| Closing prices | 2023/24 | 2024/25 | 2025/26 | 2026/27 |
-| --- | --- | --- | --- | --- |
-| Pinnacle 1X2 | 100% | 100% | 49–55% | 0% |
-| Betfair Exchange 1X2 | 0% | 100% | 92–95% | 100% |
-
-## European leagues (21 Oct 2026, D-022)
-
-Sixteen extra domestic leagues, results only, for rating Champions League clubs from outside
-the big five. They cover 2018/19 (or 2018) to date.
-
-- **Main layout:** Scotland, Netherlands, Belgium, Portugal, Turkey and Greece (54 season
-  files).
-- **Extra-league files:** Austria, Denmark, Switzerland, Norway, Sweden, Poland, Romania,
-  Russia, Finland and Ireland (10 files, one per league with every season).
-
-**Totals:** 28,432 matches stored and 153 excluded from models. 394 new teams.
-
-**Gap:** 4,815 repeat meetings (the same home and away teams twice in a season) are held back,
-because `matches` allows one row per pairing per season. This affects split and multi-round
-leagues: Scotland, Switzerland, Ireland, Romania, Austria, Denmark, Greece, Finland, Belgium
-and Poland. Their past seasons stop early. A migration is needed (D-022 has the fix).
-
-Commands:
-
-- `uv run footy fd-update` covers everything.
-- `--scope core` or `--scope europe` narrows it.
-
-## UEFA club competitions (21 Oct 2026, D-023)
-
-`euro_matches` holds 4,537 Champions League, Europa League and Conference League matches:
-4,234 played, 297 scheduled (this season's remaining league-phase fixtures), 4 awarded and
-2 cancelled. Details: [docs/europe/uefa-matches.md](docs/europe/uefa-matches.md).
-
-- **Sources.** openfootball (CC0) for 2018/19 to 2025/26; Wikipedia for the 2025/26 Europa
-  League and Conference League main tournaments (missing from openfootball) and for 2026/27.
-- **Checks.** All 3,371 openfootball matches were checked against Wikipedia's match boxes.
-  - 5 rows were corrected: 2 scores missing their extra time, 1 extra-time flag and 2 dates.
-  - 113 matches were marked neutral (relocated or COVID-era venues).
-  - The 2025/26 qualifying files turned out to give UK time, not CET.
-- **Teams.** 200 new clubs; 376 openfootball and 257 Wikipedia aliases, all explicit.
-- **Gaps.** No Europa League before 2020/21 and no qualifying rounds before 2024/25.
-
-Commands:
-
-- `uv run footy euro-update` reloads everything idempotently; add `--fetch-wikipedia` after a
-  matchday.
-- `uv run footy euro-crosscheck` re-runs the comparison.
-
-## M1 acceptance results (run 2026-10-19)
-
-| Test | Result |
-| --- | --- |
-| Spot-check of 20 matches against source | 874 values (teams, date, kickoff, score, half-time, stats, every stored price) re-read from the raw CSVs with a separate code path: **0 mismatches** ([docs/m1/spot-check.md](docs/m1/spot-check.md)). Against independent public sources: **20/20 dates and scores confirmed, 18/18 recorded kick-offs match the scheduled UK time** ([docs/m1/independent-check.md](docs/m1/independent-check.md)) |
-| Re-running imports creates no duplicates | Plain re-run imported nothing; a forced re-parse of all 90 files changed 0 matches and 0 prices; table counts identical. Also covered by `test_import_then_rerun_creates_no_duplicates` |
-| `uv run pytest` | 76 passed, 1 skipped (Sportmonks contract test: no recorded responses until a key exists) |
-| Lint, format, typecheck, build | Clean |
-| App on real data | `/api/health` reports 31,347 matches, 10 divisions; phone (390 px) and desktop screenshots, no horizontal scroll |
+`data/` (database, raw store, ledgers) is git-ignored; `fd-update` and `euro-update` rebuild it.
+The capture loop (`data/logs/capture_loop.sh`, every 5 minutes) runs only while this
+container lives.
 
 ## Known problems and open dependencies
 
-1. **Sportmonks key** (D-010): the adapter and capture job are built and unit-tested, but they
-   are unverified against live responses and capture nothing until the owner adds a key.
-2. **Always-on host** (D-009): the capture job is meant to run every 5 minutes from cron on
-   it; it can't run in these coding sessions.
-3. **2026/27 is under way.** The genuine pre-match record starts only when M7 is live; earlier
-   2026/27 matches are retrospective.
-4. **Pinnacle's 2025/26 gaps** are handled by D-014 (Betfair Exchange closing from 23 Jul 2025).
-   Betfair Exchange prices don't exist in the data before 2024/25.
-5. **Referees** are only in English files; **xG** only in 2026/27 (undocumented; not used).
-6. **European leagues: repeat meetings held back** (D-022). The fix needs a migration: a
-   `matches.meeting` column in the unique key, then a re-import.
-
-## M2 plan (for the next session, after review)
-
-1. Walk-forward harness for the Premier League:
-   - burn-in 2018/19–2019/20, training through 2022/23, validation 2023/24, test 2024/25 and
-     2025/26;
-   - predictions in matchweek batches, using only results final before each batch's D-012
-     cutoff.
-2. Baselines: league frequency, Elo with home advantage and a draw model, and independent
-   Poisson.
-3. Per-fixture ledger (CSV and JSON) and run manifest. Metrics: RPS for 1X2, log loss for
-   O/U 1.5 / 2.5 / 3.5 and BTTS, plus Brier score, accuracy and calibration.
-4. A leakage test for every guard in the brief. Acceptance: headline metrics recompute exactly
-   from the exported ledger.
+1. **Always-on host** (D-009): publishing, settling and odds capture run from this session's
+   check-ins and a loop inside the container. When the container is reclaimed they stop
+   until a session resumes them.
+2. **Sportmonks free plan** covers only the Scottish Premiership and Danish Superliga; its
+   capture job has stored no snapshots yet (no fixture inside its windows so far). The live
+   prices for the five leagues come from football-data's `fixtures.csv` instead (D-024).
+3. **UEFA.com raw files** (D-023): 147 pages fetched before the terms were checked sit in the
+   local raw store, never committed or used. The owner decides whether to purge them.
+4. **No lineups or injuries**: only early editions exist.
+5. **Data fingerprint**: `ledger.data_revision` hashes the raw football-data files only, so it
+   doesn't change when parsers, UEFA sources or imported prices change.
+6. **Profit reports**: with 20 or more bets, the equity curve and one-bet rows would reveal
+   individual prices (D-013); aggregate them before a model that bets often is reported.
+7. **Harness gaps**: E1 has no entry in the runner's league map (`run_models(leagues=["E1"])`
+   fails), and `save()` run ids carry no league.
+8. **`alembic check`** fails about 1 run in 15: two unique constraints on `raw_files` get the
+   same generated name.
+9. **The fixed rho** for 1X2-only market-xG solves is a median over all seasons (a small
+   look-ahead, measured as negligible; the UEFA model of record doesn't use it).
+10. **Lab files**: references to the selection rule as "D-022" in lab modules should read
+    D-025 once the lab stops editing them.
