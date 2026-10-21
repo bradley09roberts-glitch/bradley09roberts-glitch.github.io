@@ -171,8 +171,8 @@ class PoissonGLM:
     offset. The linear counterpart of the booster. Columns listed in `free` are not
     penalised (e.g. a Dixon-Coles log-rate whose weight the data should set)."""
 
-    def __init__(self, l2: float = 1.0, free: tuple[int, ...] = ()):
-        self.l2, self.free = l2, tuple(free)
+    def __init__(self, l2: float = 1.0, free: tuple[int, ...] = (), expand: float = 1.0):
+        self.l2, self.free, self.expand = l2, tuple(free), expand
 
     def fit(self, X, y, w=None, offset=None) -> "PoissonGLM":
         X, y = np.asarray(X, float), np.asarray(y, float)
@@ -206,7 +206,7 @@ class PoissonGLM:
 
     def predict_log(self, X, offset=None) -> np.ndarray:
         Z = ((np.asarray(X, float) - self.mean) / self.sd)[:, self.keep]
-        out = self.coef[0] + Z @ self.coef[1:]
+        out = self.coef[0] + self.expand * (Z @ self.coef[1:])
         return out + (0.0 if offset is None else np.asarray(offset, float))
 
 
@@ -292,6 +292,8 @@ FEATURES = [
     "cf_l",
     "ca_o_l",
 ]
+BASE_FEATURES = list(FEATURES)
+FEATURES += ["gf_v", "ga_o_v", "sf_v", "sa_o_v", "ga_t_v", "gf_o_v", "on_g2", "on_s2"]
 
 
 def _days(s: pd.Series) -> np.ndarray:
@@ -331,15 +333,18 @@ class FeatureScan:
         elo_k: float = 20.0,
         elo_home: float = 60.0,
         eta: float = 0.05,
+        hl_vlong: float = 50.0,
+        eta_slow: float = 0.015,
     ):
-        self.d = np.array([0.5 ** (1 / hl_short), 0.5 ** (1 / hl_long)])
+        self.d = 0.5 ** (1 / np.array([hl_short, hl_long, hl_vlong]))
+        self.etas = np.array([eta, eta, eta_slow, eta_slow])
         self.d_lg = 0.5 ** (1 / hl_league)
-        self.prior_n, self.elo_k, self.elo_home, self.eta = prior_n, elo_k, elo_home, eta
+        self.prior_n, self.elo_k, self.elo_home = prior_n, elo_k, elo_home
         self.tid: dict[str, int] = {}
         self.did = {d: i for i, d in enumerate(sorted(TIER1 | TIER2))}
         self.seasons: dict[str, int] = {}
         D = len(self.did)
-        shapes = {"S": (2, 0, 8), "W": (2, 0, 8), "att": (2, 0), "dfn": (2, 0), "recent": (0, 4)}
+        shapes = {"S": (3, 0, 8), "W": (3, 0, 8), "att": (4, 0), "dfn": (4, 0), "recent": (0, 4)}
         for name, (_, fill, dtype) in self.TEAM_STATE.items():
             setattr(self, name, np.full(shapes.get(name, (0,)), fill, dtype=dtype))
         lv = np.array([DEFAULT_LEVEL[k] for k in ("g", "s", "sh", "c")])
@@ -479,6 +484,14 @@ class FeatureScan:
             oth(o),
             self._ew(1, t, 6, lv[:, 3]),
             self._ew(1, o, 7, lv[:, 3]),
+            self._ew(2, t, 0, g),
+            self._ew(2, o, 1, g),
+            self._ew(2, t, 2, s),
+            self._ew(2, o, 3, s),
+            self._ew(2, t, 1, g),
+            self._ew(2, o, 0, g),
+            on_base + self.att[2, t] - self.dfn[2, o],
+            sot_base + self.att[3, t] - self.dfn[3, o],
         ]
         return np.column_stack(cols)
 
@@ -486,7 +499,7 @@ class FeatureScan:
         lv, hv = self._level(di)
         gh, ga = y["g"]
         # EW team stats
-        for k in range(2):
+        for k in range(len(self.d)):
             d = self.d[k]
             for stat_i, (key, own) in enumerate(
                 [("g", 0), ("g", 1), ("s", 0), ("s", 1), ("sh", 0), ("sh", 1), ("c", 0), ("c", 1)]
@@ -529,18 +542,18 @@ class FeatureScan:
         self.elo[ai] -= delta
         # online Poisson ratings: goals (level = division home / away rates) and SoT
         ha = np.log(hv[:, 0] / hv[:, 1])
-        for r, (a, b), base_h, base_a, scale in (
-            (0, y["g"], np.log(hv[:, 0]), np.log(hv[:, 1]), lv[:, 0]),
-            (1, y["s"], np.log(lv[:, 1]) + ha / 2, np.log(lv[:, 1]) - ha / 2, lv[:, 1]),
-        ):
+        goals = (y["g"], np.log(hv[:, 0]), np.log(hv[:, 1]), lv[:, 0])
+        sot = (y["s"], np.log(lv[:, 1]) + ha / 2, np.log(lv[:, 1]) - ha / 2, lv[:, 1])
+        for r, ((a, b), base_h, base_a, scale) in enumerate((goals, sot, goals, sot)):
+            eta = self.etas[r]
             mh = np.exp(base_h + self.att[r, hi] - self.dfn[r, ai])
             ma = np.exp(base_a + self.att[r, ai] - self.dfn[r, hi])
             rh = np.nan_to_num((a - mh) / scale)
             ra = np.nan_to_num((b - ma) / scale)
-            self.att[r, hi] += self.eta * rh
-            self.dfn[r, ai] -= self.eta * rh
-            self.att[r, ai] += self.eta * ra
-            self.dfn[r, hi] -= self.eta * ra
+            self.att[r, hi] += eta * rh
+            self.dfn[r, ai] -= eta * rh
+            self.att[r, ai] += eta * ra
+            self.dfn[r, hi] -= eta * ra
         # schedule and seasons
         for team in (hi, ai):
             new_season = self.last_season[team] != si
@@ -569,6 +582,9 @@ class MLGBM:
         stack: bool = False,
         stack_offset: bool = True,
         free: tuple[str, ...] = (),
+        l2_grid: tuple[float, ...] = (),
+        expand: bool = False,
+        holdout_days: int = 180,
         mix_dc: float = 0.0,
         features: tuple[str, ...] | None = None,
         n_trees: int = 200,
@@ -590,6 +606,7 @@ class MLGBM:
         self.learner, self.stack, self.mix_dc = learner, stack, mix_dc
         self.split_venue, self.stack_offset = split_venue, stack_offset
         self.free = tuple(free)
+        self.l2_grid, self.expand, self.holdout_days = tuple(l2_grid), expand, holdout_days
         self.features = tuple(features) if features else tuple(FEATURES)
         if "home" in self.features:  # the home flag first (SplitVenue relies on it)
             self.features = ("home", *[f for f in self.features if f != "home"])
@@ -615,6 +632,9 @@ class MLGBM:
             "stack": self.stack,
             "stack_offset": self.stack_offset,
             "free": list(self.free),
+            "l2_grid": list(self.l2_grid),
+            "expand": self.expand,
+            "holdout_days": self.holdout_days,
             "mix_dc": self.mix_dc,
             "features": list(self.features),
             **self.gbm,
@@ -714,6 +734,10 @@ class MLGBM:
         age = (cutoff_day - day[keep]).astype(float)
         w = np.exp(-self.xi * age) * np.where(hk.division.isin(TIER2), self.tier2_weight, 1.0)
         w = np.r_[w, w]
+        if self.learner == "glm" and (self.l2_grid or self.expand):
+            tier1 = ~hk.division.isin(TIER2).to_numpy()
+            goals = np.r_[hk.home_goals.to_numpy(float), hk.away_goals.to_numpy(float)]
+            self._tune(X, y, w, off, np.r_[age, age], np.r_[tier1, tier1], goals)
         model = self._make_learner().fit(X, y, w, off)
         self.learner_ = model
         self.fitted_at = np.datetime64(cut, "D")
@@ -727,13 +751,51 @@ class MLGBM:
             w[:k],
         )
 
-    def _make_learner(self):
+    def _tune(self, X, y, w, off, age, tier1, goals) -> None:
+        """Time split inside the training window: fit on all but the last `holdout_days`,
+        score the held-out top-tier rows (Poisson deviance of the goals). Picks the ridge
+        strength from `l2_grid`, then (if `expand`) a factor on the linear predictor's
+        deviation from its mean that undoes the ridge's compression of team differences."""
+        tr = age >= self.holdout_days
+        ho = ~tr & tier1
+        if tr.sum() < 400 or ho.sum() < 100:
+            return
+        o_tr = None if off is None else off[tr]
+        o_ho = None if off is None else off[ho]
+        yh = goals[ho]
+        best = (np.inf, self.glm_l2)
+        fits = {}
+        for l2 in self.l2_grid or (self.glm_l2,):
+            m = PoissonGLM(l2, self._free_idx()).fit(X[tr], y[tr], w[tr], o_tr)
+            mu = np.exp(m.predict_log(X[ho], o_ho))
+            dev = float((mu - yh * np.log(mu)).mean())
+            fits[l2] = m
+            best = min(best, (dev, l2))
+        self.chosen_l2_ = best[1]
+        if self.expand:
+            m = fits[best[1]]
+            Z = ((X[ho] - m.mean) / m.sd)[:, m.keep]
+            dz = Z @ m.coef[1:]
+            base = m.coef[0] + (0.0 if o_ho is None else o_ho)
+
+            def nll(p):
+                eta = base + p[0] + p[1] * dz
+                return float((np.exp(eta) - yh * eta).sum())
+
+            res = minimize(nll, np.array([0.0, 1.0]), method="Nelder-Mead")
+            self.expand_ = float(np.clip(res.x[1], 0.7, 1.6))
+
+    def _free_idx(self) -> tuple[int, ...]:
         cols = [*self.features, *(("dc_own", "dc_other") if self.stack else ())]
-        free = tuple(cols.index(f) for f in self.free if f in cols)
+        return tuple(cols.index(f) for f in self.free if f in cols)
+
+    def _make_learner(self):
+        free = self._free_idx()
 
         def make():
             if self.learner == "glm":
-                return PoissonGLM(self.glm_l2, free)
+                l2 = getattr(self, "chosen_l2_", self.glm_l2)
+                return PoissonGLM(l2, free, getattr(self, "expand_", 1.0))
             if self.learner == "glm_gbm":
                 return GLMThenBoost(self.glm_l2, free, **self.gbm)
             return PoissonBooster(**self.gbm)
