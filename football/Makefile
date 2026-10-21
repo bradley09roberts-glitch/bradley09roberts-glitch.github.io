@@ -1,4 +1,4 @@
-.PHONY: install check lint test frontend-check serve dev
+.PHONY: install check lint test frontend-check serve dev snapshot
 
 install:
 	uv sync
@@ -21,3 +21,9 @@ serve:
 
 dev:
 	cd frontend && npm run dev
+
+# A static, read-only copy of the site: make snapshot OUT=<folder> (see README).
+snapshot:
+	$(if $(OUT),,$(error set OUT to the output folder, e.g. make snapshot OUT=../site))
+	cd frontend && npm run build:snapshot
+	uv run footy export-snapshot --out $(OUT) $(if $(PAGE),--single-page $(PAGE),)

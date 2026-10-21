@@ -39,9 +39,38 @@ type SnapshotFile = {
 
 let file: Promise<SnapshotFile> | null = null;
 
+/** How loading snapshot.json is going, for the banner. It follows every attempt, so a
+ * "Try again" that succeeds after a failed load clears the banner's failure note too. */
+export type SnapshotStatus =
+  | { state: "loading" }
+  | { state: "failed" }
+  | { state: "loaded"; takenAt: string };
+
+let status: SnapshotStatus = { state: "loading" };
+const listeners = new Set<() => void>();
+
+function setStatus(next: SnapshotStatus): void {
+  status = next;
+  for (const listener of listeners) listener();
+}
+
+/** For useSyncExternalStore: subscribe to status changes. */
+export function subscribeSnapshotStatus(listener: () => void): () => void {
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
+}
+
+/** For useSyncExternalStore: the current status (the same object until it changes). */
+export function snapshotStatus(): SnapshotStatus {
+  return status;
+}
+
 /** Fetch snapshot.json once. A failed load is forgotten, so "Try again" fetches it again. */
 function loadSnapshot(): Promise<SnapshotFile> {
   if (!file) {
+    if (status.state === "failed") setStatus({ state: "loading" });
     const pending = fetch(SNAPSHOT_URL, { headers: { Accept: "application/json" } })
       .then(async (res) => {
         if (!res.ok) throw new SnapshotError(`Couldn't load this snapshot's data (error ${res.status}).`);
@@ -49,10 +78,14 @@ function loadSnapshot(): Promise<SnapshotFile> {
         if (!body || typeof body.entries !== "object" || !Array.isArray(body.bodies)) {
           throw new SnapshotError("This snapshot's data file is not in the expected format.");
         }
+        if (file === pending) setStatus({ state: "loaded", takenAt: body.taken_at_utc });
         return body;
       })
       .catch((err: unknown) => {
-        if (file === pending) file = null;
+        if (file === pending) {
+          file = null;
+          setStatus({ state: "failed" });
+        }
         throw err instanceof SnapshotError ? err : new SnapshotError("Couldn't load this snapshot's data.");
       });
     file = pending;
@@ -104,7 +137,11 @@ export async function snapshotFetch(url: string, signal: AbortSignal): Promise<R
   });
 }
 
-/** When the snapshot was taken (UTC, ISO 8601), for the banner. */
-export function snapshotTakenAt(): Promise<string> {
-  return loadSnapshot().then((s) => s.taken_at_utc);
+/** Start loading snapshot.json if nothing has yet (the banner does this, so a page that
+ * makes no request of its own still learns when the snapshot was taken). Progress and
+ * failure are reported through snapshotStatus(). */
+export function startSnapshotLoad(): void {
+  loadSnapshot().catch(() => {
+    // Reported through snapshotStatus(); the pages show their own error and "Try again".
+  });
 }

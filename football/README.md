@@ -57,6 +57,24 @@ npm ci
 npm run dev                     # site on http://127.0.0.1:5173, proxies /api to :8000
 ```
 
+## Static snapshot (a read-only copy for the phone)
+
+With no always-on host, the site can be published as a private, self-contained copy: the
+frontend built in snapshot mode plus `snapshot.json`, the API's real responses at one moment
+(every request the pages can make). It needs no API server; a banner on every page gives the
+time it was taken. Re-run both steps to refresh it.
+
+```bash
+cd football/frontend && npm run build:snapshot     # -> frontend/dist-snapshot (relative paths)
+cd .. && uv run footy export-snapshot --out <folder>
+# or: make snapshot OUT=<folder>
+```
+
+The export reads the database read-only and refuses to write anything if a price-like field
+or a secret from `.env` would appear, or if the site is over 16 MB. `<folder>/index.html`
+holds only body content (a stylesheet link, the root element and the module script), for
+hosts that wrap the page in their own document. Ledger downloads are not included.
+
 ## Checks
 
 ```bash

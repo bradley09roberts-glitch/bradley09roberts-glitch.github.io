@@ -138,6 +138,27 @@ def main(argv: list[str] | None = None) -> int:
     mr.add_argument("--note", help="optional reason saved with the period, e.g. a decision id")
     mr.add_argument("--file", help="the JSON file to change (default: the reference file)")
 
+    snap = sub.add_parser(
+        "export-snapshot",
+        help="write a static, read-only copy of the website with the API's current responses",
+    )
+    snap.add_argument(
+        "--out",
+        required=True,
+        help="folder for the site (index.html, assets/, snapshot.json); empty or an earlier "
+        "snapshot, whose files are replaced",
+    )
+    snap.add_argument(
+        "--single-page",
+        help="also write this one-file page (script and styles inlined) with snapshot.json "
+        "beside it, for publishing as a private Artifact",
+    )
+    snap.add_argument(
+        "--dist",
+        help="the snapshot build of the frontend (default frontend/dist-snapshot, made by "
+        "`npm run build:snapshot`)",
+    )
+
     args = parser.parse_args(argv)
     if args.command == "set-model-of-record":
         return _set_model_of_record(args)
@@ -327,6 +348,33 @@ def main(argv: list[str] | None = None) -> int:
         detail = run_capture(get_engine(), settings, horizon_days=args.horizon_days)
         print(json.dumps(detail, indent=2, default=str))
         return 0 if detail.get("status") in ("ok", "no_provider") else 1
+    elif args.command == "export-snapshot":
+        import sys
+        from pathlib import Path
+
+        from footy.snapshot import DEFAULT_DIST, SnapshotRefused, run_export
+
+        def progress(n: int, key: str) -> None:
+            if n % 100 == 0:
+                print(f"  {n} requests ({key})", file=sys.stderr, flush=True)
+
+        try:
+            result = run_export(
+                settings,
+                Path(args.out).resolve(),
+                dist=Path(args.dist).resolve() if args.dist else DEFAULT_DIST,
+                progress=progress,
+            )
+        except (SnapshotRefused, FileExistsError, FileNotFoundError) as e:
+            print(f"Refused, nothing written: {e}")
+            return 1
+        report = result.report()
+        if args.single_page:
+            from footy.snapshot import write_single_page
+
+            written = write_single_page(result.out, Path(args.single_page).resolve())
+            report["single_page"] = [{"path": str(p), "bytes": p.stat().st_size} for p in written]
+        print(json.dumps(report, indent=2))
     elif args.command == "fd-fixtures":
         from sqlalchemy.orm import Session
 
