@@ -1,101 +1,65 @@
-import { useEffect, useState } from "react";
-import { fetchHealth, formatDate, formatLondon, type Health } from "./api";
-
-type State =
-  | { kind: "loading" }
-  | { kind: "error"; message: string }
-  | { kind: "ready"; health: Health };
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { Nav, PageErrorBoundary } from "./components/Nav";
+import { SITE_NAME } from "./hooks";
+import { pages } from "./pages";
+import { NotFound } from "./pages/Placeholder";
+import { href, resolve, savedScrollPosition, useLocation } from "./router";
 
 export function App() {
-  const [state, setState] = useState<State>({ kind: "loading" });
-  const [attempt, setAttempt] = useState(0);
-
+  const location = useLocation();
+  const match = resolve(pages, location.path);
+  const page = match?.route;
+  // A page outside the navigation (a match) highlights the section the reader came from, e.g.
+  // Past matches; opened directly, it highlights its own `section`.
+  const [lastSection, setLastSection] = useState<string | null>(null);
+  const navPath = page?.nav ? page.path : null;
   useEffect(() => {
-    const controller = new AbortController();
-    setState({ kind: "loading" });
-    fetchHealth(controller.signal)
-      .then((health) => setState({ kind: "ready", health }))
-      .catch((err: unknown) => {
-        if (controller.signal.aborted) return;
-        setState({ kind: "error", message: err instanceof Error ? err.message : String(err) });
-      });
-    return () => controller.abort();
-  }, [attempt]);
+    if (navPath) setLastSection(navPath);
+  }, [navPath]);
+  const active = page ? (navPath ?? lastSection ?? page.section ?? null) : null;
+  const main = useRef<HTMLElement>(null);
+  const shownPath = useRef(location.path);
+
+  // Each history entry keeps its own scroll position; a new page starts at the top.
+  useLayoutEffect(() => {
+    window.scrollTo(0, savedScrollPosition());
+  }, [location.hash]);
+
+  // Move focus to the page on navigation, so keyboard and screen-reader users start there.
+  useEffect(() => {
+    if (shownPath.current === location.path) return;
+    shownPath.current = location.path;
+    main.current?.focus({ preventScroll: true });
+  }, [location.path]);
+
+  // A layout effect runs before the page's own useDocumentTitle, which can then refine it.
+  useLayoutEffect(() => {
+    document.title = page ? `${page.title} · ${SITE_NAME}` : `Not found · ${SITE_NAME}`;
+  }, [page]);
+
+  const Page = page?.component;
 
   return (
     <>
       <header className="bar">
-        <strong>Football model</strong>
-        <span className="tag">Data import</span>
+        <a className="brand" href={href("/fixtures")}>
+          <span className="brand-mark" aria-hidden="true" />
+          {SITE_NAME}
+        </a>
+        <Nav pages={pages} active={active} />
       </header>
-      <main className="page">
-        <section className="card notice">
-          <h1>No predictions yet</h1>
-          <p>
-            Match data is being imported, but no model has been fitted, so there are no
-            predictions, accuracy figures or profit numbers on this site. They appear only once
-            they come from real data and reproducible backtests.
-          </p>
-        </section>
-
-        <section className="card" aria-live="polite">
-          <h2>System status</h2>
-          {state.kind === "loading" && <p className="muted">Checking the API…</p>}
-          {state.kind === "error" && (
-            <div className="error">
-              <p>Can't reach the API: {state.message}</p>
-              <button type="button" onClick={() => setAttempt((n) => n + 1)}>
-                Try again
-              </button>
-            </div>
+      <main className="page" ref={main} tabIndex={-1}>
+        <PageErrorBoundary key={location.path}>
+          {Page && match ? (
+            <Page key={location.path} params={match.params} query={location.query} />
+          ) : (
+            <NotFound path={location.path} />
           )}
-          {state.kind === "ready" && <StatusList health={state.health} />}
-        </section>
+        </PageErrorBoundary>
       </main>
+      <footer className="site-foot muted small">
+        Probabilities are model estimates, not advice. Times are UK time (Europe/London).
+      </footer>
     </>
-  );
-}
-
-function StatusList({ health }: { health: Health }) {
-  const schemaOk = health.schema_revision === health.schema_head;
-  return (
-    <dl className="status">
-      <dt>API</dt>
-      <dd className={health.status === "ok" ? "good" : "bad"}>
-        {health.status === "ok" ? "Running" : "Degraded"} (v{health.app_version})
-      </dd>
-      <dt>Database</dt>
-      <dd className={health.database === "ok" && schemaOk ? "good" : "bad"}>
-        {health.database === "ok" ? "Connected" : "Error"}, schema{" "}
-        {health.schema_revision ?? "not migrated"}
-        {!schemaOk && ` (expected ${health.schema_head})`}
-      </dd>
-      <dt>Match data</dt>
-      <dd className={health.data_imported ? undefined : "muted"}>
-        {health.data_imported
-          ? `${health.data.matches.toLocaleString("en-GB")} matches, ${health.data.divisions} divisions`
-          : "None imported"}
-      </dd>
-      {health.data.latest_match_date && (
-        <>
-          <dt>Latest match</dt>
-          <dd>{formatDate(health.data.latest_match_date)}</dd>
-        </>
-      )}
-      <dt>Last refresh</dt>
-      <dd className={health.data.last_refresh?.status === "ok" ? undefined : "bad"}>
-        {health.data.last_refresh
-          ? `${formatLondon(health.data.last_refresh.started_at)} (${health.data.last_refresh.status})`
-          : "Never"}
-      </dd>
-      <dt>Live provider</dt>
-      <dd className="muted">
-        {health.live_provider === "none"
-          ? "Not configured (no key)"
-          : `${health.live_provider}${health.live_provider_configured ? "" : " (no key)"}`}
-      </dd>
-      <dt>Server time</dt>
-      <dd>{formatLondon(health.server_time_utc)} (UK)</dd>
-    </dl>
   );
 }

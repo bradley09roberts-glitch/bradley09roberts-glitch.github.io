@@ -6,7 +6,7 @@ import pytest
 
 from footy.modeling.dixon_coles import DixonColes
 from footy.modeling.grid import check_coherent
-from footy.modeling.lab.dc_tuning import CANDIDATES, DCTuned
+from footy.modeling.lab.dc_tuning import CANDIDATES, DCTuned, crowd_mask
 from footy.modeling.ledger import headline
 from footy.modeling.walkforward import RESULT_COLUMNS, BacktestSpec, run_backtest
 
@@ -53,13 +53,13 @@ def test_candidates_are_coherent_and_beat_frequency(name):
 def test_equal_block_decays_reduce_to_a_single_decay():
     df = synthetic_league(seed=2, seasons=("2223", "2324"))
     a = _fit_predict(DCTuned(xi=0.003), df)
-    b = _fit_predict(DCTuned(xi=0.001, xi_att=0.003, xi_def=0.003, xi_glob=0.003), df)
+    b = _fit_predict(DCTuned(xi=0.001, xi_strength=0.003, xi_open=0.003, xi_glob=0.003), df)
     np.testing.assert_allclose(a.p1x2, b.p1x2, atol=1e-9)
 
 
 def test_separate_decays_converge_and_differ():
     df = synthetic_league(seed=2, seasons=("2122", "2223", "2324"))
-    m = DCTuned(xi_att=0.004, xi_def=0.001)
+    m = DCTuned(xi_strength=0.004, xi_open=0.001, xi_glob=0.003)
     mp = _fit_predict(m, df)
     assert m.converged_ and check_coherent(mp) == []
     base = _fit_predict(DCTuned(), df)
@@ -112,3 +112,70 @@ def test_deterministic():
     a = run_backtest(df, BacktestSpec(CANDIDATES[name], "E0", ["2324"]))
     b = run_backtest(df, BacktestSpec(CANDIDATES[name], "E0", ["2324"]))
     pd.testing.assert_frame_equal(a, b)
+
+
+def test_equal_strength_and_openness_ridge_is_the_core_ridge():
+    df = synthetic_league(seed=11, seasons=("2223", "2324"))
+    a = _fit_predict(DCTuned(reg=3.0), df)
+    b = _fit_predict(DCTuned(reg=1.0, reg_strength=3.0, reg_open=3.0), df)
+    np.testing.assert_allclose(a.p1x2, b.p1x2, atol=1e-9)
+
+
+def test_heavy_openness_ridge_flattens_team_totals_not_1x2():
+    df = synthetic_league(seed=12, seasons=("2122", "2223", "2324"), teams=12)
+    loose, tight = DCTuned(), DCTuned(reg_strength=2.0, reg_open=1e4)
+    a, b = _fit_predict(loose, df), _fit_predict(tight, df)
+    total_a, total_b = a.lam_h + a.lam_a, b.lam_h + b.lam_a
+    assert total_b.std() < 0.5 * total_a.std()
+    assert np.abs(b.p1x2[:, 0] - b.p1x2[:, 2]).max() > 0.1  # still separates the teams
+
+
+def test_btts_tilt_is_fitted_and_coherent():
+    df = synthetic_league(seed=13, seasons=("2122", "2223", "2324"), teams=12)
+    rng = np.random.default_rng(3)
+    # turn some 1-0 / 0-1 results into 1-1: more "both teams score" than Poisson implies
+    nil = ((df.home_goals == 1) & (df.away_goals == 0)) | (
+        (df.home_goals == 0) & (df.away_goals == 1)
+    )
+    flip = nil & (rng.random(len(df)) < 0.5)
+    df.loc[flip, ["home_goals", "away_goals"]] = 1
+    m = DCTuned(tilt="btts")
+    mp = _fit_predict(m, df)
+    assert m.tilt_[0] > 0.05 and m.tilt_[1] == 0.0
+    assert check_coherent(mp) == []
+    plain = _fit_predict(DCTuned(), df)
+    assert (mp.p_btts > plain.p_btts).all()
+
+
+def test_crowd_calendar_fallback_flags_covid_matches_only(monkeypatch):
+    import footy.modeling.lab.dc_tuning as lab
+
+    monkeypatch.setattr(lab, "periods", lambda statuses=("none",): {})  # no reference file
+    days = pd.to_datetime(["2019-12-01", "2020-11-07", "2021-03-01", "2022-01-15", "2023-02-01"])
+    df = pd.DataFrame({"division": ["D1"] * 5, "date": days})
+    assert crowd_mask(df, False).tolist() == [False] * 5
+    assert crowd_mask(df, True).tolist() == [False, True, True, True, False]
+    df2 = pd.DataFrame({"division": ["F1"] * 2, "date": pd.to_datetime(["2020-09-01"] * 2)})
+    assert not crowd_mask(df2, True).any() and crowd_mask(df2, "limited").all()
+
+
+def test_crowd_mask_prefers_the_reference_file_when_present():
+    from footy.modeling.closed_doors import closed_doors_mask, periods
+
+    df = pd.DataFrame(
+        {
+            "division": ["E0", "D1", "F1", "SP1"],
+            "date": pd.to_datetime(["2020-07-01", "2021-02-01", "2020-09-01", "2021-01-10"]),
+        }
+    )
+    if not periods():
+        pytest.skip("reference/closed_doors.csv absent: the fallback calendar is used")
+    for mode, st in ((True, ("none",)), ("limited", ("none", "limited"))):
+        np.testing.assert_array_equal(crowd_mask(df, mode), closed_doors_mask(df, st))
+
+
+def test_form_term_converges():
+    df = synthetic_league(seed=14, seasons=("2122", "2223", "2324"))
+    m = DCTuned(xi_form=0.01, reg_form=10.0)
+    mp = _fit_predict(m, df)
+    assert m.converged_ and check_coherent(mp) == []

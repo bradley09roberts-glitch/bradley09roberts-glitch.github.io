@@ -1,0 +1,235 @@
+/* Data and methodology. Colours come from the variables in styles.css. */
+
+.data-jump {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.data-jump .chip {
+  min-height: 34px;
+  font-size: 0.85rem;
+}
+
+/* Leave room for the sticky header when a jump button scrolls a section into view. */
+.data-anchor {
+  scroll-margin-top: 72px;
+}
+
+.warn-text {
+  color: var(--warn);
+}
+
+.data-totals {
+  margin: 0;
+}
+
+.card .data-totals {
+  margin: 10px 0;
+}
+
+.card .ctl-row + .data-totals {
+  margin-top: 12px;
+}
+
+/* Sources */
+.sources {
+  margin: 0 0 12px;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 12px;
+}
+
+.sources li {
+  display: grid;
+  gap: 6px;
+  padding: 12px;
+  border-radius: 8px;
+  background: var(--surface-2);
+  min-width: 0;
+}
+
+.source-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 10px;
+}
+
+.card .source-head h3 {
+  margin: 0;
+}
+
+/* Method */
+.data-signals {
+  margin: 0 0 8px;
+  display: grid;
+  gap: 8px;
+}
+
+.data-signals > div {
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.data-signals dt {
+  font-size: 0.75rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.data-signals dd {
+  margin: 2px 0 0;
+}
+
+@media (min-width: 640px) {
+  .data-signals {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.data-models {
+  margin-top: 4px;
+}
+
+.data-model-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 4px;
+}
+
+/* Coverage */
+.coverage-scroll {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.coverage-table tbody th.sticky-col {
+  min-width: 5.5rem;
+}
+
+.coverage-group th {
+  padding-top: 12px;
+  background: var(--surface-2);
+  font-weight: 700;
+  text-align: left;
+}
+
+.coverage-group-name {
+  position: sticky;
+  left: 10px;
+}
+
+.data-table tbody .coverage-group + tr > * {
+  border-top: 0;
+}
+
+/* Issues */
+.issues-table tbody th {
+  white-space: normal;
+  min-width: 0;
+}
+
+.issue-action {
+  display: block;
+  margin-top: 2px;
+  font-weight: 400;
+  color: var(--text);
+}
+
+.issues-table tbody th .badge {
+  margin-right: 4px;
+}
+
+.issue-examples td {
+  background: var(--surface-2);
+  white-space: normal;
+}
+
+.issue-examples ul {
+  margin: 0 0 4px;
+  padding-left: 1.1em;
+  display: grid;
+  gap: 4px;
+  overflow-wrap: anywhere;
+}
+
+/* Refresh history */
+.runs {
+  margin: 12px 0 8px;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+}
+
+.run {
+  display: grid;
+  grid-template-columns: 5.6rem minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  border-left-width: 4px;
+}
+
+.run-good {
+  border-left-color: var(--good);
+}
+
+.run-warn {
+  border-left-color: var(--warn);
+  background: var(--warn-bg);
+}
+
+.run-bad {
+  border-left-color: var(--bad);
+  background: var(--bad-bg);
+}
+
+.run-info {
+  border-left-color: var(--info);
+}
+
+.run-status {
+  justify-self: start;
+  gap: 4px;
+  font-weight: 700;
+}
+
+.run-body {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.card .run-head {
+  margin: 0;
+}
+
+.card .run-error {
+  margin: 4px 0 0;
+  color: var(--bad);
+  font-size: 0.88rem;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.run-detail summary {
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  min-height: 26px;
+  margin-top: 4px;
+}
+
+.run-detail .json {
+  margin-top: 6px;
+}

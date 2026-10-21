@@ -32,11 +32,13 @@ def test_every_alias_points_at_a_team_and_is_unique():
 
 def test_every_team_in_a_football_data_country_has_a_football_data_alias():
     """Teams from other sources (e.g. UEFA competitions) may come from countries without a
-    football-data division; every team of a football-data country is in a division's files."""
+    football-data division; every team of a football-data country is in a division's files,
+    except the reviewed UEFA-only clubs (a lower-division cup winner, D-023)."""
     country = {t.team_key: t.country for t in load_teams()}
     fd = {a.team_key for a in load_aliases() if a.source == "football-data"}
+    uefa_only = {"prt-torreense"}
     assert all(country[k] in FD_COUNTRIES for k in fd)
-    assert fd == {k for k, c in country.items() if c in FD_COUNTRIES}
+    assert fd == {k for k, c in country.items() if c in FD_COUNTRIES} - uefa_only
 
 
 def test_reviewed_same_club_variants_share_a_key():

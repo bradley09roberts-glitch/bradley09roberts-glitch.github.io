@@ -1,4 +1,19 @@
 team_key,name,country
+alb-dinamo-city,Dinamo City,ALB
+alb-egnatia,Egnatia,ALB
+alb-elbasani,Elbasani,ALB
+alb-partizani,Partizani,ALB
+alb-tirana,Tirana,ALB
+alb-vllaznia,Vllaznia,ALB
+and-atletic-escaldes,Atlètic Club d'Escaldes,AND
+and-fc-santa-coloma,FC Santa Coloma,AND
+and-inter-escaldes,Inter Club d'Escaldes,AND
+and-ue-santa-coloma,UE Santa Coloma,AND
+arm-alashkert,Alashkert,ARM
+arm-ararat-armenia,Ararat-Armenia,ARM
+arm-noah,Noah,ARM
+arm-pyunik,Pyunik,ARM
+arm-urartu,Urartu,ARM
 aut-a-klagenfurt,A. Klagenfurt,AUT
 aut-a-lustenau,A. Lustenau,AUT
 aut-admira,Admira,AUT
@@ -17,6 +32,12 @@ aut-sturm-graz,Sturm Graz,AUT
 aut-tirol,Tirol,AUT
 aut-wacker-innsbruck,Wacker Innsbruck,AUT
 aut-wolfsberger-ac,Wolfsberger AC,AUT
+aze-araz-naxcivan,Araz-Naxçıvan,AZE
+aze-neftci,Neftçi,AZE
+aze-qarabag,Qarabağ,AZE
+aze-sabah,Sabah,AZE
+aze-sumgayit,Sumgayıt,AZE
+aze-zira,Zira,AZE
 bel-anderlecht,Anderlecht,BEL
 bel-antwerp,Antwerp,BEL
 bel-beerschot-va,Beerschot VA,BEL
@@ -43,6 +64,25 @@ bel-st-truiden,St Truiden,BEL
 bel-standard,Standard,BEL
 bel-waregem,Waregem,BEL
 bel-westerlo,Westerlo,BEL
+bgr-arda-kardzhali,Arda Kardzhali,BGR
+bgr-botev-plovdiv,Botev Plovdiv,BGR
+bgr-cherno-more,Cherno More,BGR
+bgr-cska-1948,CSKA 1948,BGR
+bgr-cska-sofia,CSKA Sofia,BGR
+bgr-levski-sofia,Levski Sofia,BGR
+bgr-ludogorets,Ludogorets Razgrad,BGR
+bih-borac-banja-luka,Borac Banja Luka,BIH
+bih-sarajevo,Sarajevo,BIH
+bih-velez-mostar,Velež Mostar,BIH
+bih-zeljeznicar,Željezničar,BIH
+bih-zrinjski-mostar,Zrinjski Mostar,BIH
+blr-bate-borisov,BATE Borisov,BLR
+blr-dinamo-brest,Dinamo Brest,BLR
+blr-dinamo-minsk,Dinamo Minsk,BLR
+blr-isloch,Isloch Minsk Raion,BLR
+blr-ml-vitebsk,ML Vitebsk,BLR
+blr-neman-grodno,Neman Grodno,BLR
+blr-torpedo-belaz,Torpedo-BelAZ Zhodino,BLR
 che-aarau,Aarau,CHE
 che-basel,Basel,CHE
 che-grasshoppers,Grasshoppers,CHE
@@ -61,6 +101,23 @@ che-xamax,Xamax,CHE
 che-young-boys,Young Boys,CHE
 che-yverdon,Yverdon,CHE
 che-zurich,Zurich,CHE
+cyp-aek-larnaca,AEK Larnaca,CYP
+cyp-anorthosis,Anorthosis Famagusta,CYP
+cyp-apoel,APOEL,CYP
+cyp-apollon-limassol,Apollon Limassol,CYP
+cyp-aris-limassol,Aris Limassol,CYP
+cyp-omonia,Omonia,CYP
+cyp-pafos,Pafos,CYP
+cze-banik-ostrava,Baník Ostrava,CZE
+cze-hradec-kralove,Hradec Králové,CZE
+cze-jablonec,Jablonec,CZE
+cze-mlada-boleslav,Mladá Boleslav,CZE
+cze-sigma-olomouc,Sigma Olomouc,CZE
+cze-slavia-prague,Slavia Prague,CZE
+cze-slovacko,Slovácko,CZE
+cze-slovan-liberec,Slovan Liberec,CZE
+cze-sparta-prague,Sparta Prague,CZE
+cze-viktoria-plzen,Viktoria Plzeň,CZE
 deu-augsburg,Augsburg,DEU
 deu-bayern-munich,Bayern Munich,DEU
 deu-bielefeld,Bielefeld,DEU
@@ -245,6 +302,11 @@ esp-vallecano,Vallecano,ESP
 esp-villarreal,Villarreal,ESP
 esp-villarreal-b,Villarreal B,ESP
 esp-zaragoza,Zaragoza,ESP
+est-flora,Flora,EST
+est-levadia,FCI Levadia,EST
+est-nomme-kalju,Nõmme Kalju,EST
+est-paide,Paide Linnameeskond,EST
+est-tallinna-kalev,Tallinna Kalev,EST
 fin-ac-oulu,AC Oulu,FIN
 fin-ekenas,Ekenas,FIN
 fin-gnistan,Gnistan,FIN
@@ -317,6 +379,21 @@ fra-strasbourg,Strasbourg,FRA
 fra-toulouse,Toulouse,FRA
 fra-troyes,Troyes,FRA
 fra-valenciennes,Valenciennes,FRA
+fro-b36-torshavn,B36 Tórshavn,FRO
+fro-hb-torshavn,HB Tórshavn,FRO
+fro-ki-klaksvik,KÍ Klaksvík,FRO
+fro-nsi-runavik,NSÍ Runavík,FRO
+fro-vikingur-gota,Víkingur Gøta,FRO
+geo-dila-gori,Dila Gori,GEO
+geo-dinamo-batumi,Dinamo Batumi,GEO
+geo-dinamo-tbilisi,Dinamo Tbilisi,GEO
+geo-iberia-1999,Iberia 1999,GEO
+geo-spaeri,Spaeri,GEO
+geo-torpedo-kutaisi,Torpedo Kutaisi,GEO
+gib-europa,Europa,GIB
+gib-lincoln-red-imps,Lincoln Red Imps,GIB
+gib-magpies,FCB Magpies,GIB
+gib-st-josephs,St Joseph's,GIB
 grc-aek,AEK,GRC
 grc-apollon,Apollon,GRC
 grc-aris,Aris,GRC
@@ -340,6 +417,17 @@ grc-panserraikos,Panserraikos,GRC
 grc-paok,PAOK,GRC
 grc-volos-nfc,Volos NFC,GRC
 grc-xanthi,Xanthi,GRC
+hrv-dinamo-zagreb,Dinamo Zagreb,HRV
+hrv-hajduk-split,Hajduk Split,HRV
+hrv-osijek,Osijek,HRV
+hrv-rijeka,Rijeka,HRV
+hrv-varazdin,Varaždin,HRV
+hun-debrecen,Debrecen,HUN
+hun-eto-gyor,ETO Győr,HUN
+hun-fehervar,Fehérvár,HUN
+hun-ferencvaros,Ferencváros,HUN
+hun-paks,Paks,HUN
+hun-puskas-akademia,Puskás Akadémia,HUN
 irl-bohemians,Bohemians,IRL
 irl-bray,Bray,IRL
 irl-cabinteely,Cabinteely,IRL
@@ -358,6 +446,18 @@ irl-st-patricks,St. Patricks,IRL
 irl-treaty-united,Treaty United,IRL
 irl-uc-dublin,UC Dublin,IRL
 irl-waterford,Waterford,IRL
+isl-breidablik,Breiðablik,ISL
+isl-ka-akureyri,KA Akureyri,ISL
+isl-stjarnan,Stjarnan,ISL
+isl-valur,Valur,ISL
+isl-vestri,Vestri,ISL
+isl-vikingur-reykjavik,Víkingur Reykjavík,ISL
+isr-beitar-jerusalem,Beitar Jerusalem,ISR
+isr-hapoel-beer-sheva,Hapoel Be'er Sheva,ISR
+isr-hapoel-tel-aviv,Hapoel Tel Aviv,ISR
+isr-maccabi-haifa,Maccabi Haifa,ISR
+isr-maccabi-petah-tikva,Maccabi Petah Tikva,ISR
+isr-maccabi-tel-aviv,Maccabi Tel Aviv,ISR
 ita-alessandria,Alessandria,ITA
 ita-arezzo,Arezzo,ITA
 ita-ascoli,Ascoli,ITA
@@ -420,6 +520,60 @@ ita-venezia,Venezia,ITA
 ita-verona,Verona,ITA
 ita-vicenza,Vicenza,ITA
 ita-virtus-entella,Virtus Entella,ITA
+kaz-aktobe,Aktobe,KAZ
+kaz-astana,Astana,KAZ
+kaz-kairat,Kairat,KAZ
+kaz-ordabasy,Ordabasy,KAZ
+kaz-tobol,Tobol,KAZ
+kaz-yelimay,Yelimay,KAZ
+ltu-banga,Banga Gargždai,LTU
+ltu-hegelmann,Hegelmann,LTU
+ltu-kauno-zalgiris,Kauno Žalgiris,LTU
+ltu-panevezys,Panevėžys,LTU
+ltu-siauliai,FA Šiauliai,LTU
+ltu-transinvest,TransINVEST,LTU
+ltu-zalgiris,Žalgiris,LTU
+lux-atert-bissen,Atert Bissen,LUX
+lux-differdange,Differdange 03,LUX
+lux-dudelange,F91 Dudelange,LUX
+lux-mondorf,Mondorf-les-Bains,LUX
+lux-progres-niederkorn,Progrès Niederkorn,LUX
+lux-racing-union,Racing Union Luxembourg,LUX
+lux-una-strassen,UNA Strassen,LUX
+lva-auda,Auda,LVA
+lva-daugavpils,BFC Daugavpils,LVA
+lva-liepaja,Liepāja,LVA
+lva-rfs,RFS,LVA
+lva-riga,Riga,LVA
+mda-milsami,Milsami Orhei,MDA
+mda-petrocub,Petrocub Hîncești,MDA
+mda-sheriff,Sheriff Tiraspol,MDA
+mda-zimbru,Zimbru Chișinău,MDA
+mkd-rabotnicki,Rabotnički,MKD
+mkd-shkendija,Shkëndija,MKD
+mkd-sileks,Sileks,MKD
+mkd-struga,Struga,MKD
+mkd-tikves,Tikvesh,MKD
+mkd-vardar,Vardar,MKD
+mlt-birkirkara,Birkirkara,MLT
+mlt-floriana,Floriana,MLT
+mlt-hamrun-spartans,Hamrun Spartans,MLT
+mlt-hibernians,Hibernians,MLT
+mlt-marsaxlokk,Marsaxlokk,MLT
+mlt-sliema-wanderers,Sliema Wanderers,MLT
+mlt-valletta,Valletta,MLT
+mne-buducnost,Budućnost Podgorica,MNE
+mne-decic,Dečić,MNE
+mne-mornar,Mornar,MNE
+mne-petrovac,Petrovac,MNE
+mne-sutjeska,Sutjeska,MNE
+nir-cliftonville,Cliftonville,NIR
+nir-coleraine,Coleraine,NIR
+nir-crusaders,Crusaders,NIR
+nir-dungannon-swifts,Dungannon Swifts,NIR
+nir-glentoran,Glentoran,NIR
+nir-larne,Larne,NIR
+nir-linfield,Linfield,NIR
 nld-ajax,Ajax,NLD
 nld-almere-city,Almere City,NLD
 nld-az-alkmaar,AZ Alkmaar,NLD
@@ -532,6 +686,7 @@ prt-setubal,Setubal,PRT
 prt-sp-braga,Sp Braga,PRT
 prt-sp-lisbon,Sp Lisbon,PRT
 prt-tondela,Tondela,PRT
+prt-torreense,Torreense,PRT
 prt-vizela,Vizela,PRT
 rou-academica-clinceni,Academica Clinceni,ROU
 rou-astra,Astra,ROU
@@ -606,6 +761,31 @@ sco-rangers,Rangers,SCO
 sco-ross-county,Ross County,SCO
 sco-st-johnstone,St Johnstone,SCO
 sco-st-mirren,St Mirren,SCO
+smr-la-fiorita,La Fiorita,SMR
+smr-tre-fiori,Tre Fiori,SMR
+smr-tre-penne,Tre Penne,SMR
+smr-virtus,Virtus,SMR
+srb-cukaricki,Čukarički,SRB
+srb-novi-pazar,Novi Pazar,SRB
+srb-partizan,Partizan,SRB
+srb-radnicki-1923,Radnički 1923,SRB
+srb-red-star-belgrade,Red Star Belgrade,SRB
+srb-tsc,TSC,SRB
+srb-vojvodina,Vojvodina,SRB
+srb-zeleznicar-pancevo,Železničar Pančevo,SRB
+svk-dac,DAC Dunajská Streda,SVK
+svk-kosice,Košice,SVK
+svk-ruzomberok,Ružomberok,SVK
+svk-slovan-bratislava,Slovan Bratislava,SVK
+svk-spartak-trnava,Spartak Trnava,SVK
+svk-zilina,Žilina,SVK
+svn-aluminij,Aluminij,SVN
+svn-bravo,Bravo,SVN
+svn-celje,Celje,SVN
+svn-koper,Koper,SVN
+svn-maribor,Maribor,SVN
+svn-mura,Mura,SVN
+svn-olimpija-ljubljana,Olimpija Ljubljana,SVN
 swe-afc-eskilstuna,AFC Eskilstuna,SWE
 swe-aik,AIK,SWE
 swe-brage,Brage,SWE
@@ -672,3 +852,23 @@ tur-sivasspor,Sivasspor,TUR
 tur-trabzonspor,Trabzonspor,TUR
 tur-umraniyespor,Umraniyespor,TUR
 tur-yeni-malatyaspor,Yeni Malatyaspor,TUR
+ukr-dnipro-1,Dnipro-1,UKR
+ukr-dynamo-kyiv,Dynamo Kyiv,UKR
+ukr-kryvbas,Kryvbas Kryvyi Rih,UKR
+ukr-lnz-cherkasy,LNZ Cherkasy,UKR
+ukr-oleksandriya,Oleksandriya,UKR
+ukr-polissya-zhytomyr,Polissya Zhytomyr,UKR
+ukr-shakhtar-donetsk,Shakhtar Donetsk,UKR
+ukr-zorya-luhansk,Zorya Luhansk,UKR
+wal-bala-town,Bala Town,WAL
+wal-caernarfon-town,Caernarfon Town,WAL
+wal-connahs-quay-nomads,Connah's Quay Nomads,WAL
+wal-haverfordwest-county,Haverfordwest County,WAL
+wal-penybont,Penybont,WAL
+wal-the-new-saints,The New Saints,WAL
+xkx-ballkani,Ballkani,XKX
+xkx-drita,Drita,XKX
+xkx-dukagjini,Dukagjini,XKX
+xkx-llapi,Llapi,XKX
+xkx-malisheva,Malisheva,XKX
+xkx-prishtina,Prishtina,XKX

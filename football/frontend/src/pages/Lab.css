@@ -1,0 +1,244 @@
+/* Backtest lab. Colours come from the variables in styles.css. */
+
+.lab-panel {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.lab-panel > * {
+  min-width: 0;
+}
+
+.lab-filters {
+  display: grid;
+  gap: 12px;
+}
+
+.lab-toolbar {
+  align-items: flex-start;
+}
+
+.lab-toolbar button {
+  flex: none;
+}
+
+.card .lab-facts {
+  flex: 1 1 220px;
+  min-width: 0;
+  margin: 0;
+}
+
+.lab-run-id {
+  font-size: 0.75rem;
+  overflow-wrap: anywhere;
+}
+
+.lab-h-sub {
+  font-weight: 400;
+  font-size: 0.9rem;
+}
+
+.lab-n {
+  color: var(--text);
+}
+
+.lab-updating {
+  font-size: 0.88rem;
+}
+
+/* Headline metrics: one primary tile, then smaller ones. */
+.lab-metrics {
+  margin: 12px 0 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.lab-metric {
+  display: grid;
+  gap: 2px;
+  align-content: start;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--surface-2);
+  min-width: 0;
+}
+
+.lab-metric dt {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.lab-metric dd {
+  margin: 0;
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.lab-metric-primary {
+  grid-column: 1 / -1;
+  border-left: 4px solid var(--accent);
+}
+
+.lab-metric-value {
+  font-size: 1.35rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.lab-metric-primary .lab-metric-value {
+  font-size: 1.9rem;
+}
+
+.lab-metric-ci {
+  font-size: 0.88rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.lab-metric-note {
+  font-size: 0.76rem;
+  color: var(--muted);
+}
+
+@media (min-width: 640px) {
+  .lab-metrics {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.card .lab-signal-note {
+  margin-top: 10px;
+}
+
+/* Benchmark */
+.bench {
+  display: grid;
+  gap: 16px;
+}
+
+.bench-split {
+  display: grid;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.bench-split:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.card .bench-split h3 {
+  margin: 0;
+}
+
+.bench-row {
+  display: grid;
+  gap: 6px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--surface-2);
+}
+
+.card .bench-row-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 2px 10px;
+}
+
+.bench-values {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  font-variant-numeric: tabular-nums;
+}
+
+.bench-values dt {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.bench-values dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+.bench-more summary {
+  cursor: pointer;
+  font-weight: 600;
+  min-height: 28px;
+}
+
+.bench-more[open] {
+  display: grid;
+  gap: 8px;
+}
+
+.lab-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--warn-bg);
+  border-left: 4px solid var(--warn);
+}
+
+.card .lab-warning p {
+  margin: 0;
+}
+
+.lab-unavailable {
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--surface-2);
+}
+
+/* Exports */
+.lab-exports {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.lab-export {
+  display: grid;
+  gap: 2px;
+  flex: 1 1 140px;
+  min-height: 52px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  text-decoration: none;
+  color: var(--text);
+}
+
+a.lab-export:hover {
+  border-color: var(--accent);
+}
+
+.lab-export-label {
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.lab-export.is-missing .lab-export-label {
+  color: var(--muted);
+}
+
+/* Run comparison: names wrap so the metric columns stay in view on a phone. */
+.data-table .lab-run-col {
+  white-space: normal;
+  min-width: 8.5rem;
+  max-width: 12rem;
+}
+
+.data-table .lab-run-col .link-button {
+  text-align: left;
+}

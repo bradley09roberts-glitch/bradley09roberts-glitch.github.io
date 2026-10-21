@@ -70,6 +70,28 @@ def main(argv: list[str] | None = None) -> int:
     fr.add_argument("--candidates", default="", help="comma-separated lab candidates to compare")
     fr.add_argument("--workers", type=int, default=3)
 
+    eu = sub.add_parser("euro-update", help="load UEFA competition matches into euro_matches")
+    eu.add_argument(
+        "--openfootball-dir",
+        help="clone of openfootball/champions-league (default: $FOOTY_OPENFOOTBALL_DIR or "
+        "../../openfootball/champions-league from the project root); without one, the stored "
+        "revisions are used",
+    )
+    eu.add_argument(
+        "--fetch-wikipedia", action="store_true", help="re-fetch the 2026/27 Wikipedia pages first"
+    )
+    eu.add_argument(
+        "--fetch-uefa", action="store_true", help="fetch UEFA.com pages not yet stored (slow)"
+    )
+    eu.add_argument(
+        "--no-rebuild", action="store_true", help="load uefa_2627.csv as it is, without rebuilding"
+    )
+
+    ec = sub.add_parser(
+        "euro-crosscheck", help="compare the openfootball matches with Wikipedia's match boxes"
+    )
+    ec.add_argument("--fetch", action="store_true", help="fetch the Wikipedia pages first")
+
     cap = sub.add_parser("capture-odds", help="take any due pre-match odds snapshots (cron: 5 min)")
     cap.add_argument("--horizon-days", type=int, default=3)
 
@@ -194,6 +216,30 @@ def main(argv: list[str] | None = None) -> int:
         from footy.publish import settle
 
         print(json.dumps(settle(get_engine())))
+    elif args.command == "euro-update":
+        from pathlib import Path
+
+        from footy.db import get_engine, upgrade_to_head
+        from footy.europe.euro_load import run_euro_update
+
+        upgrade_to_head()
+        detail = run_euro_update(
+            get_engine(),
+            settings,
+            openfootball_dir=Path(args.openfootball_dir) if args.openfootball_dir else None,
+            rebuild_2627=not args.no_rebuild,
+            fetch_wikipedia=args.fetch_wikipedia,
+            fetch_uefa=args.fetch_uefa,
+        )
+        print(json.dumps(detail, indent=2, default=str))
+        wiki = detail.get("wikipedia", {})
+        failed = wiki.get("rebuild_error") or str(wiki.get("csv", "")).startswith("missing")
+        return 1 if failed else 0
+    elif args.command == "euro-crosscheck":
+        from footy.db import get_engine
+        from footy.europe.of_crosscheck import run_crosscheck
+
+        print(json.dumps(run_crosscheck(get_engine(), settings, fetch=args.fetch), indent=2))
     elif args.command == "capture-odds":
         from footy.capture import run_capture
         from footy.db import get_engine, upgrade_to_head
