@@ -13,6 +13,7 @@ needs something only the owner can do:
 | --- | --- | --- |
 | D-010 | Create a Sportmonks account (free plan first) and put the token in `.env` | Adapter contract test against real responses; forward odds capture |
 | D-009 | An always-on machine (small VPS or your own) to run scheduled jobs | Forward odds capture; M7 |
+| D-023 | Keep or purge the 147 UEFA.com files in the raw store. UEFA's terms (§6.2) forbid scripted collection and using its content to build models; don't run `euro-update --fetch-uefa` meanwhile ([uefa-data-check.md](docs/research/uefa-data-check.md#uefacom-terms-owner-decision)) | Nothing: German Wikipedia covers the one venue that came from UEFA.com |
 
 ---
 

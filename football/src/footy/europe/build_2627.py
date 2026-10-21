@@ -55,8 +55,9 @@ def fetch_uefa_pages(
     client: WikiClient | None = None,
     refetch: bool = False,
 ) -> list[WikiFetchResult]:
-    """Fetch the UEFA.com match page of each row (skipping pages already stored, unless
-    `refetch`), for the second-source check."""
+    """DISABLED. UEFA.com's terms (section 6.2) forbid scripted collection and using its
+    content to build models (DECISIONS.md D-023), so this project must not fetch it."""
+    raise RuntimeError("UEFA.com may not be fetched by script (terms 6.2; DECISIONS.md D-023)")
     client = client or WikiClient(min_interval=2.5)
     results = []
     for row in rows:

@@ -85,7 +85,9 @@ def main(argv: list[str] | None = None) -> int:
         "--fetch-wikipedia", action="store_true", help="re-fetch the 2026/27 Wikipedia pages first"
     )
     eu.add_argument(
-        "--fetch-uefa", action="store_true", help="fetch UEFA.com pages not yet stored (slow)"
+        "--fetch-uefa",
+        action="store_true",
+        help="disabled: UEFA.com terms forbid scripted collection (DECISIONS.md D-023)",
     )
     eu.add_argument(
         "--no-rebuild", action="store_true", help="load uefa_2627.csv as it is, without rebuilding"
