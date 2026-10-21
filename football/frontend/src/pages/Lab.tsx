@@ -1,6 +1,8 @@
-// Brief item 4: the backtest lab. Moneyline (1X2), Goal Totals and BTTS tabs; filters for
-// run (model), league, season and line; headline metrics with sample size and 95% interval;
-// a calibration chart; the market benchmark from the saved report; ledger exports.
+// Brief item 4: the backtest lab. A Hit rates tab (how often each model of record's pick was
+// right, per league or competition and market: ./HitRates.tsx), then Moneyline (1X2), Goal
+// Totals and BTTS tabs; filters for run (model), league, season and line; headline metrics
+// with sample size and 95% interval; a calibration chart; the market benchmark from the saved
+// report; ledger exports.
 //
 // Every number comes from /api/backtests, /api/backtests/{run}/summary or a saved report.
 // The few things worked out here (Wilson intervals and the average calibration gap in the
@@ -39,15 +41,18 @@ import { useDocumentTitle } from "../hooks";
 import { href, setQuery } from "../router";
 import { SNAPSHOT } from "../snapshot";
 import type { PageProps } from ".";
+import { HitRatesPanel } from "./HitRates";
 import "./Lab.css";
 
 // ---------------------------------------------------------------------------------------------
 // Query parameters
 
-type LabTab = "moneyline" | "totals" | "btts";
+type LabTab = "hits" | MarketTab;
+type MarketTab = "moneyline" | "totals" | "btts";
 type Outcome = "all" | "home" | "draw" | "away";
 
 const TABS: readonly TabDef<LabTab>[] = [
+  { id: "hits", label: "Hit rates", hint: "By league" },
   { id: "moneyline", label: "Moneyline", hint: "1X2" },
   { id: "totals", label: "Goal Totals", hint: "Over/under" },
   { id: "btts", label: "BTTS", hint: "Both score" },
@@ -57,8 +62,13 @@ const LINES = [0.5, 1.5, 2.5, 3.5, 4.5] as const;
 const DEFAULT_LINE = 2.5;
 const FILTER_KEYS = ["run", "league", "season", "line", "outcome"] as const;
 
-function parseTab(raw: string | null): LabTab {
-  return raw === "totals" || raw === "btts" ? raw : "moneyline";
+/** The tab in the address. Without one the lab opens on Hit rates, except for an address
+ * with run or filter choices but no tab (written before the Hit rates tab existed, when the
+ * match result was the first tab): that one keeps opening the match result. */
+function parseTab(query: URLSearchParams): LabTab {
+  const raw = query.get("tab");
+  if (raw === "hits" || raw === "moneyline" || raw === "totals" || raw === "btts") return raw;
+  return FILTER_KEYS.some((k) => query.get(k) !== null) ? "moneyline" : "hits";
 }
 
 function parseLine(raw: string | null): number {
@@ -71,19 +81,19 @@ function parseOutcome(raw: string | null): Outcome {
 }
 
 /** Market key in the API: "1X2", "OU_2.5" (Python's f"{k:g}"), "BTTS". */
-function marketFor(tab: LabTab, line: number): string {
+function marketFor(tab: MarketTab, line: number): string {
   if (tab === "moneyline") return "1X2";
   if (tab === "btts") return "BTTS";
   return `OU_${String(line)}`;
 }
 
-function marketTitle(tab: LabTab, line: number): string {
+function marketTitle(tab: MarketTab, line: number): string {
   if (tab === "moneyline") return "Match result (1X2)";
   if (tab === "btts") return "Both teams to score";
   return `Over/under ${line} goals`;
 }
 
-function marketShort(tab: LabTab, line: number): string {
+function marketShort(tab: MarketTab, line: number): string {
   if (tab === "moneyline") return "1X2";
   if (tab === "btts") return "BTTS";
   return `O/U ${line}`;
@@ -294,7 +304,37 @@ function benchmarkSplits(v: JsonValue | undefined): { split: string | null; resu
 
 export function Lab({ query }: PageProps) {
   useDocumentTitle("Backtest lab");
-  const tab = parseTab(query.get("tab"));
+  const tab = parseTab(query);
+
+  return (
+    <>
+      <header className="page-head">
+        <h1 className="page-title">Backtest lab</h1>
+        <p className="lede">
+          Past seasons replayed week by week: each fixture was predicted using only results final
+          before its decision time. These are retrospective results, kept apart from the{" "}
+          <a href={href("/performance")}>genuine pre-match record</a>.
+        </p>
+      </header>
+
+      <Tabs
+        tabs={TABS}
+        active={tab}
+        idBase="lab"
+        label="Lab view"
+        // Always written, so an address keeps its tab when its other choices are cleared.
+        onChange={(id) => setQuery({ tab: id }, { replace: false })}
+      />
+
+      <div className="lab-panel" id={tabPanelId("lab")} role="tabpanel" aria-labelledby={tabId("lab", tab)}>
+        {tab === "hits" ? <HitRatesPanel query={query} /> : <MarketLab tab={tab} query={query} />}
+      </div>
+    </>
+  );
+}
+
+/** The Moneyline, Goal Totals and BTTS tabs: one run, filtered. */
+function MarketLab({ tab, query }: { tab: MarketTab; query: URLSearchParams }) {
   const line = parseLine(query.get("line"));
   const outcome = parseOutcome(query.get("outcome"));
   const market = marketFor(tab, line);
@@ -338,148 +378,129 @@ export function Lab({ query }: PageProps) {
   }
 
   const hasFilters = FILTER_KEYS.some((k) => query.get(k) !== null);
-  const reset = () => setQuery({ run: null, league: null, season: null, line: null, outcome: null });
+  const reset = () => setQuery({ tab, run: null, league: null, season: null, line: null, outcome: null });
   const short = marketShort(tab, line);
   const groups = useMemo(() => runGroups(runs, market, short), [runs, market, short]);
 
   return (
     <>
-      <header className="page-head">
-        <h1 className="page-title">Backtest lab</h1>
-        <p className="lede">
-          Past seasons replayed week by week: each fixture was predicted using only results final
-          before its decision time. These are retrospective results, kept apart from the{" "}
-          <a href={href("/performance")}>genuine pre-match record</a>.
-        </p>
-      </header>
-
-      <Tabs
-        tabs={TABS}
-        active={tab}
-        idBase="lab"
-        label="Market"
-        onChange={(id) => setQuery({ tab: id === "moneyline" ? null : id }, { replace: false })}
-      />
-
-      <div className="lab-panel" id={tabPanelId("lab")} role="tabpanel" aria-labelledby={tabId("lab", tab)}>
-        {runsRes.data === undefined ? (
-          runsRes.error ? (
-            <ErrorView error={runsRes.error} what="the backtest runs" onRetry={runsRes.reload} retrying={runsRes.loading} />
-          ) : (
-            <Loading label="Loading backtest runs…" lines={2} />
-          )
-        ) : runs.length === 0 ? (
-          <Empty title="No backtest runs saved yet">
-            <p>Runs appear here once a walk-forward backtest has written its ledger and manifest.</p>
-          </Empty>
+      {runsRes.data === undefined ? (
+        runsRes.error ? (
+          <ErrorView error={runsRes.error} what="the backtest runs" onRetry={runsRes.reload} retrying={runsRes.loading} />
         ) : (
-          <>
-            {runsRes.error && (
-              <StaleNotice onRetry={runsRes.reload} retrying={runsRes.loading}>
-                The run list couldn't be refreshed: {runsRes.error.message}
-              </StaleNotice>
-            )}
+          <Loading label="Loading backtest runs…" lines={2} />
+        )
+      ) : runs.length === 0 ? (
+        <Empty title="No backtest runs saved yet">
+          <p>Runs appear here once a walk-forward backtest has written its ledger and manifest.</p>
+        </Empty>
+      ) : (
+        <>
+          {runsRes.error && (
+            <StaleNotice onRetry={runsRes.reload} retrying={runsRes.loading}>
+              The run list couldn't be refreshed: {runsRes.error.message}
+            </StaleNotice>
+          )}
 
-            <section className="card lab-filters" aria-label="Filters">
-              <div className="ctl-row">
-                <SelectField
-                  id="lab-run"
-                  label="Model run"
-                  wide
-                  value={run?.run_id ?? ""}
-                  groups={groups}
-                  options={run ? undefined : [{ value: "", label: "Choosing…", disabled: true }]}
-                  disabled={!run}
-                  onChange={(v) => setQuery({ run: v, league: null, season: null })}
-                />
-                <SelectField
-                  id="lab-league"
-                  label={run?.kind === "backtests_euro" ? "Competition" : "League"}
-                  value={league ?? ""}
-                  disabled={!run || leagueCodes.length < 2}
-                  options={[
-                    { value: "", label: run?.kind === "backtests_euro" ? "All competitions" : "All leagues" },
-                    ...leagueCodes.map((c) => ({ value: c, label: competitionName(c) })),
-                  ]}
-                  onChange={(v) => setQuery({ league: v || null })}
-                />
-                <SelectField
-                  id="lab-season"
-                  label="Season"
-                  value={season ?? ""}
-                  disabled={!run || seasons.length < 2}
-                  options={[
-                    { value: "", label: seasons.length === 1 ? `All (${seasonLabel(seasons[0] ?? "")})` : "All seasons" },
-                    ...(seasons.length > 1 ? seasons.map((s) => ({ value: s, label: seasonLabel(s) })) : []),
-                  ]}
-                  onChange={(v) => setQuery({ season: v || null })}
-                />
-                {tab === "totals" && (
-                  <Segmented
-                    label="Line"
-                    value={line}
-                    options={LINES.map((l) => ({ value: l, label: String(l) }))}
-                    onChange={(l) => setQuery({ line: l === DEFAULT_LINE ? null : l })}
-                  />
-                )}
-                {tab === "moneyline" && (
-                  <Segmented
-                    label="Chart outcome"
-                    value={outcome}
-                    options={[
-                      { value: "all", label: "All" },
-                      { value: "home", label: "Home" },
-                      { value: "draw", label: "Draw" },
-                      { value: "away", label: "Away" },
-                    ]}
-                    onChange={(o) => setQuery({ outcome: o === "all" ? null : o })}
-                  />
-                )}
-              </div>
-              <div className="toolbar lab-toolbar">
-                {run ? <RunFacts run={run} selected={selection?.selected} /> : <span className="muted small">Choosing a run…</span>}
-                <button type="button" onClick={reset} disabled={!hasFilters}>
-                  Reset filters
-                </button>
-              </div>
-              {run && run.kind === "backtests_euro" && !run.leagues && (
-                <p className="muted small">
-                  This run's manifest doesn't list its competitions or seasons, so the competition
-                  list shows every UEFA code; one the run doesn't contain returns no fixtures.
-                </p>
-              )}
-            </section>
-
-            {missingRun && (
-              <StaleNotice>
-                There's no saved run called <code>{requestedId}</code>. Showing the default run
-                instead.
-              </StaleNotice>
-            )}
-
-            {run && summaryUrl ? (
-              <SummaryArea
-                summary={summary}
-                kept={kept && kept.runId === run.run_id && kept.url !== summaryUrl ? kept : null}
-                filterLabel={filterLabel}
-                tab={tab}
-                line={line}
-                outcome={outcome}
-                market={market}
-                run={run}
+          <section className="card lab-filters" aria-label="Filters">
+            <div className="ctl-row">
+              <SelectField
+                id="lab-run"
+                label="Model run"
+                wide
+                value={run?.run_id ?? ""}
+                groups={groups}
+                options={run ? undefined : [{ value: "", label: "Choosing…", disabled: true }]}
+                disabled={!run}
+                onChange={(v) => setQuery({ run: v, league: null, season: null })}
               />
-            ) : (
-              <Loading label="Loading the backtest summary…" lines={2} />
+              <SelectField
+                id="lab-league"
+                label={run?.kind === "backtests_euro" ? "Competition" : "League"}
+                value={league ?? ""}
+                disabled={!run || leagueCodes.length < 2}
+                options={[
+                  { value: "", label: run?.kind === "backtests_euro" ? "All competitions" : "All leagues" },
+                  ...leagueCodes.map((c) => ({ value: c, label: competitionName(c) })),
+                ]}
+                onChange={(v) => setQuery({ league: v || null })}
+              />
+              <SelectField
+                id="lab-season"
+                label="Season"
+                value={season ?? ""}
+                disabled={!run || seasons.length < 2}
+                options={[
+                  { value: "", label: seasons.length === 1 ? `All (${seasonLabel(seasons[0] ?? "")})` : "All seasons" },
+                  ...(seasons.length > 1 ? seasons.map((s) => ({ value: s, label: seasonLabel(s) })) : []),
+                ]}
+                onChange={(v) => setQuery({ season: v || null })}
+              />
+              {tab === "totals" && (
+                <Segmented
+                  label="Line"
+                  value={line}
+                  options={LINES.map((l) => ({ value: l, label: String(l) }))}
+                  onChange={(l) => setQuery({ line: l === DEFAULT_LINE ? null : l })}
+                />
+              )}
+              {tab === "moneyline" && (
+                <Segmented
+                  label="Chart outcome"
+                  value={outcome}
+                  options={[
+                    { value: "all", label: "All" },
+                    { value: "home", label: "Home" },
+                    { value: "draw", label: "Draw" },
+                    { value: "away", label: "Away" },
+                  ]}
+                  onChange={(o) => setQuery({ outcome: o === "all" ? null : o })}
+                />
+              )}
+            </div>
+            <div className="toolbar lab-toolbar">
+              {run ? <RunFacts run={run} selected={selection?.selected} /> : <span className="muted small">Choosing a run…</span>}
+              <button type="button" onClick={reset} disabled={!hasFilters}>
+                Reset filters
+              </button>
+            </div>
+            {run && run.kind === "backtests_euro" && !run.leagues && (
+              <p className="muted small">
+                This run's manifest doesn't list its competitions or seasons, so the competition
+                list shows every UEFA code; one the run doesn't contain returns no fixtures.
+              </p>
             )}
+          </section>
 
-            {run && <RunComparison runs={runs} current={run} tab={tab} line={line} market={market} />}
-          </>
-        )}
+          {missingRun && (
+            <StaleNotice>
+              There's no saved run called <code>{requestedId}</code>. Showing the default run
+              instead.
+            </StaleNotice>
+          )}
 
-        <BenchmarkPanel tab={tab} line={line} selection={selection} />
+          {run && summaryUrl ? (
+            <SummaryArea
+              summary={summary}
+              kept={kept && kept.runId === run.run_id && kept.url !== summaryUrl ? kept : null}
+              filterLabel={filterLabel}
+              tab={tab}
+              line={line}
+              outcome={outcome}
+              market={market}
+              run={run}
+            />
+          ) : (
+            <Loading label="Loading the backtest summary…" lines={2} />
+          )}
 
-        {run && <ExportLinks run={run} />}
-      </div>
+          {run && <RunComparison runs={runs} current={run} tab={tab} line={line} market={market} />}
+        </>
+      )}
+
+      <BenchmarkPanel tab={tab} line={line} selection={selection} />
+
+      {run && <ExportLinks run={run} />}
     </>
   );
 }
@@ -522,7 +543,7 @@ function SummaryArea({
   summary: ApiResult<BacktestSummary>;
   kept: Kept | null;
   filterLabel: string;
-  tab: LabTab;
+  tab: MarketTab;
   line: number;
   outcome: Outcome;
   market: string;
@@ -563,7 +584,7 @@ function SummaryView({
 }: {
   data: BacktestSummary;
   label: string;
-  tab: LabTab;
+  tab: MarketTab;
   line: number;
   outcome: Outcome;
   market: string;
@@ -683,7 +704,7 @@ function CalibrationSection({
   label,
 }: {
   data: BacktestSummary;
-  tab: LabTab;
+  tab: MarketTab;
   line: number;
   outcome: Outcome;
   label: string;
@@ -742,7 +763,7 @@ function RunComparison({
 }: {
   runs: readonly BacktestRun[];
   current: BacktestRun;
-  tab: LabTab;
+  tab: MarketTab;
   line: number;
   market: string;
 }) {
@@ -887,7 +908,7 @@ const BOOKMAKER_NAMES: Record<string, string> = {
   Avg: "Market average",
 };
 
-function BenchmarkPanel({ tab, line, selection }: { tab: LabTab; line: number; selection: ModelSelection | undefined }) {
+function BenchmarkPanel({ tab, line, selection }: { tab: MarketTab; line: number; selection: ModelSelection | undefined }) {
   const bench = useApi(endpoints.report<JsonValue>("benchmark"));
   const who = selection?.selected ? modelName(selection.selected) : "the model chosen by the evaluation report";
 
@@ -921,7 +942,7 @@ function BenchmarkPanel({ tab, line, selection }: { tab: LabTab; line: number; s
   );
 }
 
-function comparisonKeys(tab: LabTab, line: number): string[] | string {
+function comparisonKeys(tab: MarketTab, line: number): string[] | string {
   if (tab === "moneyline") return ["bench_1X2", "avg_1X2"];
   if (tab === "btts")
     return "There is no benchmark for both teams to score: the historical data has no BTTS prices, so this market is judged on accuracy and calibration only.";
@@ -930,7 +951,7 @@ function comparisonKeys(tab: LabTab, line: number): string[] | string {
   return ["bench_OU_2.5", "avg_OU_2.5"];
 }
 
-function BenchmarkBody({ data, tab, line }: { data: JsonValue; tab: LabTab; line: number }) {
+function BenchmarkBody({ data, tab, line }: { data: JsonValue; tab: MarketTab; line: number }) {
   const splits = benchmarkSplits(data);
   if (splits.length === 0) {
     return <p className="muted">The saved benchmark report has no results in a form this page can read.</p>;

@@ -9,6 +9,7 @@ import itertools
 import json
 import sqlite3
 from datetime import UTC, datetime, timedelta
+from unittest.mock import ANY
 
 import pandas as pd
 import pytest
@@ -256,7 +257,7 @@ def test_export_covers_every_frontend_request(settings, migrated_engine, world, 
 
     expected = {"/api/health", "/api/coverage", "/api/refresh-history?limit=200"}
     expected |= {"/api/import-issues", "/api/performance", "/api/backtests"}
-    expected |= {"/api/reports/model_selection", "/api/reports/benchmark"}
+    expected |= {"/api/reports/model_selection", "/api/reports/benchmark", "/api/hit-rates"}
     expected |= {f"/api/fixtures?days={d}" for d in FRONTEND_FIXTURE_DAYS}
     expected |= {"/api/past?limit=1&record_type=genuine_prematch"}
     for rt in FRONTEND_PAST_RECORD_TYPES:
@@ -293,6 +294,9 @@ def test_export_covers_every_frontend_request(settings, migrated_engine, world, 
     past = body("/api/past?limit=500&record_type=genuine_prematch")[1]
     assert world["settled"] in {m["id"] for m in past["matches"]}
     assert body("/api/reports/benchmark") == (404, {"detail": "no such report"})
+    hits = body("/api/hit-rates")
+    assert hits == (200, client.get("/api/hit-rates").json() | {"generated_at_utc": ANY})
+    assert {m["model"] for m in hits[1]["backtest"]["missing"]} >= {"market_tilt_shots"}
     # A server error is kept as its status (the site shows only "error 500" for it).
     broken = "/api/backtests/synthetic_broken__validation__2324/summary"
     assert body(broken + "?league=E0") == (500, None)

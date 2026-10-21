@@ -369,6 +369,86 @@ export type BenchmarkComparison = {
 };
 
 // ---------------------------------------------------------------------------------------------
+// Hit rates (footy.modeling.hit_rates): how often the pick was right
+
+/** A count of picks and how many were right, with a 95% Wilson interval (null when n is 0). */
+export type HitRate = {
+  n: number;
+  correct: number;
+  hit_rate: number | null;
+  ci95: [number, number] | null;
+};
+
+/** A model's hit rate and the frequency baseline's on the same fixtures. */
+export type HitRateCell = HitRate & { baseline: HitRate | null };
+
+/** Games where the favourite (match result) or the likelier side (two-way markets) had at
+ * least `threshold`; `share` is games ÷ of_games. */
+export type ConfidenceBucket = {
+  threshold: number;
+  games: number;
+  share: number;
+  of_games: number;
+  correct: number;
+  hit_rate: number | null;
+  ci95: [number, number] | null;
+};
+
+export type HitRateRow = {
+  /** "ALL", or a league or competition code. */
+  code: string;
+  name: string;
+  games: number;
+  /** "1X2", "OU_1.5", "OU_2.5", "OU_3.5", "BTTS". */
+  markets: Record<string, HitRateCell>;
+  confidence: Record<string, ConfidenceBucket[]>;
+};
+
+export type HitRateTable = {
+  family: "domestic" | "uefa" | (string & {});
+  family_name: string;
+  model: string;
+  basis: Basis;
+  run_id: string;
+  split: string | null;
+  run_created_at_utc: string | null;
+  baseline_model: string;
+  baseline_run_id: string;
+  baseline_run_created_at_utc: string | null;
+  seasons: string[];
+  games: number;
+  rows: HitRateRow[];
+};
+
+export type PrematchHitRow = { code: string; name: string; games: number; markets: Record<string, HitRate> };
+
+export type PrematchHitTable = {
+  family: string;
+  family_name: string;
+  games: number;
+  /** Settled fixtures per model of record. */
+  models: Record<string, number>;
+  bases: Record<string, number>;
+  rows: PrematchHitRow[];
+};
+
+export type HitRates = {
+  generated_at_utc: string;
+  markets: { key: string; label: string }[];
+  confidence_thresholds: Record<string, number[]>;
+  backtest: {
+    tables: HitRateTable[];
+    missing: { family: string; model: string; reason: string; runs: string[] }[];
+  };
+  prematch: {
+    published: number;
+    settled: number;
+    last_settled_at_utc: string | null;
+    tables: PrematchHitTable[];
+  };
+};
+
+// ---------------------------------------------------------------------------------------------
 // Endpoints: typed URLs. `Endpoint<T>` is a plain string that remembers its response type.
 
 declare const responseType: unique symbol;
@@ -402,6 +482,7 @@ export const endpoints = {
   backtests: () => endpoint<BacktestsResponse>("/api/backtests"),
   backtestSummary: (runId: string, q: SummaryQuery = {}) =>
     endpoint<BacktestSummary>(`/api/backtests/${seg(runId)}/summary`, q),
+  hitRates: () => endpoint<HitRates>("/api/hit-rates"),
   /** Saved JSON reports, e.g. "benchmark". The shape depends on the report. */
   report: <T = JsonValue>(name: string) => endpoint<T>(`/api/reports/${seg(name)}`),
 };
@@ -551,6 +632,7 @@ export const api = {
   past: (q?: PastQuery, signal?: AbortSignal) => getJson(endpoints.past(q), signal),
   performance: (signal?: AbortSignal) => getJson(endpoints.performance(), signal),
   backtests: (signal?: AbortSignal) => getJson(endpoints.backtests(), signal),
+  hitRates: (signal?: AbortSignal) => getJson(endpoints.hitRates(), signal),
   backtestSummary: (runId: string, q?: SummaryQuery, signal?: AbortSignal) =>
     getJson(endpoints.backtestSummary(runId, q), signal),
   report: <T = JsonValue>(name: string, signal?: AbortSignal) =>

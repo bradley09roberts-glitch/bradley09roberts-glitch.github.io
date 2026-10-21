@@ -627,6 +627,63 @@ def make_router(engine_fn: Callable[[], Engine], settings: Settings) -> APIRoute
             raise HTTPException(404, "not exported")
         return FileResponse(path, filename=f"{run_id}.{fmt}")
 
+    @r.get("/hit-rates")
+    def hit_rates() -> dict:
+        """How often the pick was right, per league or competition and market
+        (footy.modeling.hit_rates).
+
+        `backtest`: each model of record's test run (2024/25 + 2025/26), counted from its saved
+        ledger, with the frequency baseline's hit rate on the same fixtures and 95% Wilson
+        intervals; confidence buckets per row. `missing` lists a model of record whose test
+        ledger isn't saved. `prematch`: the settled genuine pre-match record, each fixture
+        once with the first edition of its record of record (as /api/performance counts it);
+        empty until something is settled."""
+        from footy.modeling import hit_rates as hr
+
+        now = datetime.now(UTC)
+        tables, missing = hr.backtest_tables(settings.data_dir)
+        for t in tables:
+            for k in ("run_created_at_utc", "baseline_run_created_at_utc"):
+                t[k] = iso_utc_text(t[k])
+        with Session(engine_fn()) as s:
+            st = settlements(s)
+            ror = RecordsOfRecord(s, model_periods())
+            rows = s.scalars(
+                select(Prediction)
+                .where(Prediction.record_type == "genuine_prematch")
+                .order_by(Prediction.id)
+            ).all()
+        first: dict[str, Prediction] = {}
+        for p in rows:
+            if ror.is_primary(p) and p.fixture_ref not in first:
+                first[p.fixture_ref] = p
+        settled = [
+            hr.SettledRecord(
+                family=competition_group(p.competition),
+                model=p.model_name,
+                basis=basis_of(json.loads(p.features) if p.features else {}),
+                competition=p.competition,
+                outcomes=json.loads(st[p.id].outcomes),
+            )
+            for p in first.values()
+            if p.id in st
+        ]
+        last = max((st[p.id].settled_at_utc for p in first.values() if p.id in st), default=None)
+        return {
+            "generated_at_utc": iso_utc(now, "seconds"),
+            "markets": [{"key": k, "label": v} for k, v in hr.MARKET_LABELS.items()],
+            "confidence_thresholds": {
+                m: list(thresholds) for m, (_, thresholds) in hr.CONFIDENCE.items()
+            },
+            "backtest": {"tables": tables, "missing": missing},
+            "prematch": {
+                "published": len(first),
+                "settled": len(settled),
+                "last_settled_at_utc": iso_utc(last),
+                "tables": hr.prematch_tables(settled),
+            },
+        }
+
     @r.get("/reports/{name}")
     def report(name: str) -> dict:
         """Saved JSON reports (model selection, benchmark gate, profit simulation)."""

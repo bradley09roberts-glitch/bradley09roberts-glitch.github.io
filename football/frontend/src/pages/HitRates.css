@@ -1,0 +1,198 @@
+/* The lab's Hit rates tab. Colours come from the variables in styles.css. */
+
+.hit-family,
+.hit-intro,
+.hit-prematch {
+  display: grid;
+  gap: 10px;
+}
+
+.card .hit-family h2,
+.hit-family > h2,
+.hit-intro > h2,
+.hit-prematch > h2 {
+  margin: 0;
+}
+
+.card.hit-family p + p,
+.card.hit-intro p + p,
+.card.hit-prematch p + p {
+  margin-top: 0;
+}
+
+.hit-ci-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  justify-self: start;
+  min-height: 40px;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.hit-ci-toggle input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+.hit-facts code,
+.hit-source code {
+  overflow-wrap: anywhere;
+}
+
+/* "Hit rate / baseline / interval" key above a table, matching the cell's lines. */
+.hit-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin: 0;
+}
+
+.hit-legend-model {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.hit-legend > span + span::before {
+  content: "↓ ";
+  color: var(--muted);
+}
+
+/* Compact cells: the rate, then the baseline (and interval) beneath in muted text. */
+.hit-table th,
+.hit-table td {
+  padding: 7px 6px;
+}
+
+.hit-table th:first-child,
+.hit-table td:first-child {
+  padding-left: 10px;
+}
+
+.hit-table th:last-child,
+.hit-table td:last-child {
+  padding-right: 10px;
+}
+
+.hit-table tbody th {
+  white-space: normal;
+  min-width: 6.5rem;
+  max-width: 9.5rem;
+  line-height: 1.25;
+}
+
+.hit-table thead th {
+  line-height: 1.2;
+}
+
+.hit-table thead .cell-sub {
+  font-size: 0.7rem;
+}
+
+.hit-value {
+  display: block;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.hit-base,
+.hit-ci {
+  white-space: nowrap;
+}
+
+.hit-ci {
+  font-size: 0.7rem;
+}
+
+.hit-table tr.hit-all > * {
+  background: var(--surface-2);
+  border-bottom: 2px solid var(--border);
+}
+
+.hit-table tr.hit-all > .sticky-col {
+  background: var(--surface-2);
+}
+
+.hit-note {
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--info-bg);
+  border-left: 4px solid var(--info);
+}
+
+.hit-conf {
+  display: grid;
+  gap: 8px;
+}
+
+.card .hit-conf h3 {
+  margin: 6px 0 0;
+}
+
+.hit-conf-table tbody th {
+  white-space: normal;
+  min-width: 8rem;
+  font-weight: 600;
+}
+
+.hit-missing {
+  margin: 0;
+}
+
+.hit-prematch-family {
+  display: grid;
+  gap: 8px;
+}
+
+.card .hit-prematch-family h3 {
+  margin: 4px 0 0;
+}
+
+/* The containing block for the screen-reader text inside the cells, so the scroll box clips it
+   and it can't widen the page on a phone. */
+.hit-scroll {
+  position: relative;
+}
+
+/* Phones: tighter cells, narrower names and no % signs in view, so all five markets fit. */
+.hit-pct-note {
+  display: none;
+}
+
+@media (max-width: 479px) {
+  .hit-table th,
+  .hit-table td {
+    padding: 7px 4px;
+  }
+
+  .hit-table th:first-child,
+  .hit-table td:first-child {
+    padding-left: 8px;
+  }
+
+  .hit-table th:last-child,
+  .hit-table td:last-child {
+    padding-right: 8px;
+  }
+
+  .hit-table tbody th {
+    min-width: 4.9rem;
+    max-width: 6.5rem;
+  }
+
+  .hit-pct {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .hit-pct-note {
+    display: inline;
+    font-weight: 400;
+  }
+}

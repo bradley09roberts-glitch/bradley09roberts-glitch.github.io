@@ -278,6 +278,7 @@ def export_snapshot(
                     "limit": FRONTEND_PAST_LIMIT,
                 },
             )
+    get("/api/hit-rates")  # Lab.tsx, the Hit rates tab
     for name in FRONTEND_REPORTS:
         get(f"/api/reports/{_encode(name)}")
     runs = (get("/api/backtests") or {}).get("runs", [])

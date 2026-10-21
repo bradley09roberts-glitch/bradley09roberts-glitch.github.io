@@ -49,6 +49,8 @@ export function Performance(_props: PageProps) {
         over matches already played, are not counted here. They are in the{" "}
         <a href={href("/lab")}>backtest lab</a> and in the{" "}
         <a href={href("/past", { type: "retrospective" })}>retrospective list</a> on Past matches.
+        How often the models of record were right on the test seasons, by league and market, is
+        on the lab's <a href={href("/lab", { tab: "hits" })}>Hit rates</a> tab.
       </div>
 
       <ApiView
