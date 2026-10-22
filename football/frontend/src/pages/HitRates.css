@@ -1,4 +1,4 @@
-/* The lab's Hit rates tab. Colours come from the variables in styles.css. */
+/* The lab's Hit rates tab. Colours, type and spacing come from the tokens in styles.css. */
 
 .hit-family,
 .hit-intro,
@@ -31,8 +31,8 @@
 }
 
 .hit-ci-toggle input {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   margin: 0;
   accent-color: var(--accent);
 }
@@ -60,10 +60,12 @@
   color: var(--muted);
 }
 
-/* Compact cells: the rate, then the baseline (and interval) beneath in muted text. */
+/* Compact cells: the rate, then the baseline (and interval) beneath in muted text. Columns are
+   kept apart by at least 12 px and a light rule, and rows are striped, so the figures never
+   run together on a phone. */
 .hit-table th,
 .hit-table td {
-  padding: 7px 6px;
+  padding: 7px 8px;
 }
 
 .hit-table th:first-child,
@@ -74,6 +76,15 @@
 .hit-table th:last-child,
 .hit-table td:last-child {
   padding-right: 10px;
+}
+
+.hit-table .num + .num {
+  border-left: 1px solid var(--border);
+}
+
+.hit-table tbody tr:nth-child(even) > *,
+.hit-table tbody tr:nth-child(even) > .sticky-col {
+  background: color-mix(in srgb, var(--surface-2) 60%, var(--surface));
 }
 
 .hit-table tbody th {
@@ -88,13 +99,21 @@
 }
 
 .hit-table thead .cell-sub {
-  font-size: 0.7rem;
+  font-size: var(--fs-2xs);
 }
 
 .hit-value {
   display: block;
+  font-family: var(--font-display);
+  font-size: 1.08rem;
   font-weight: 700;
+  line-height: 1.2;
   color: var(--text);
+}
+
+.hit-pct {
+  margin-left: 1px;
+  font-size: max(0.8em, 12px);
 }
 
 .hit-base,
@@ -103,12 +122,12 @@
 }
 
 .hit-ci {
-  font-size: 0.7rem;
+  font-size: var(--fs-xs);
 }
 
 .hit-table tr.hit-all > * {
   background: var(--surface-2);
-  border-bottom: 2px solid var(--border);
+  border-bottom: 2px solid var(--border-strong);
 }
 
 .hit-table tr.hit-all > .sticky-col {
@@ -116,10 +135,10 @@
 }
 
 .hit-note {
-  padding: 10px 12px;
-  border-radius: 8px;
+  padding: 10px 12px 10px 16px;
+  border-radius: var(--r-md);
   background: var(--info-bg);
-  border-left: 4px solid var(--info);
+  box-shadow: inset 4px 0 0 var(--info);
 }
 
 .hit-conf {
@@ -156,15 +175,12 @@
   position: relative;
 }
 
-/* Phones: tighter cells, narrower names and no % signs in view, so all five markets fit. */
-.hit-pct-note {
-  display: none;
-}
-
+/* Phones: tighter cells and a narrower name column. The table scrolls sideways inside its box
+   (the name column stays put); the figures keep their % signs. */
 @media (max-width: 479px) {
   .hit-table th,
   .hit-table td {
-    padding: 7px 4px;
+    padding: 7px 6px;
   }
 
   .hit-table th:first-child,
@@ -178,21 +194,11 @@
   }
 
   .hit-table tbody th {
-    min-width: 4.9rem;
-    max-width: 6.5rem;
+    min-width: 5.2rem;
+    max-width: 6.8rem;
   }
 
-  .hit-pct {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip: rect(0 0 0 0);
-    white-space: nowrap;
-  }
-
-  .hit-pct-note {
-    display: inline;
-    font-weight: 400;
+  .hit-value {
+    font-size: 1.02rem;
   }
 }

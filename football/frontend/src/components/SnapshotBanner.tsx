@@ -1,6 +1,6 @@
 // The note above every page in a snapshot build (src/snapshot.ts): when the copy was taken,
-// and that it doesn't update by itself. Never rendered in the normal app. Styled inline with
-// the site's own tokens, so the normal build's stylesheet is unchanged.
+// and that it doesn't update by itself. Never rendered in the normal app (its styles in
+// styles.css are unused there).
 
 import { useEffect, useSyncExternalStore } from "react";
 import { formatLondon } from "../format";
@@ -16,8 +16,9 @@ export function SnapshotBanner() {
   }, []);
 
   return (
-    <div style={{ maxWidth: 760, margin: "0 auto", padding: "12px 16px 0" }}>
-      <div className="notice-info small" role="note">
+    <div className="snapshot-strip">
+      <div className="snapshot-strip-inner" role="note">
+        <span className="snapshot-dot" aria-hidden="true" />
         <strong>
           {status.state === "loaded"
             ? `Snapshot taken ${formatLondon(status.takenAt)} UK time.`
@@ -25,7 +26,7 @@ export function SnapshotBanner() {
               ? "Snapshot: its data couldn't be loaded."
               : "Snapshot."}
         </strong>{" "}
-        Read-only copy; predictions and results update when the snapshot is refreshed.
+        <span>Read-only copy; predictions and results update when the snapshot is refreshed.</span>
       </div>
     </div>
   );

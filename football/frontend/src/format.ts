@@ -208,3 +208,8 @@ export function outcomeLabel(market: string, code: string): string {
 export function totalLine(market: string): number {
   return Number.parseFloat(market.slice(3));
 }
+
+/** "Ligue 1" -> "Ligue 1" with a no-break space, so a name's number never starts a new line. */
+export function keepNumberWithName(name: string): string {
+  return name.replace(/ (\d+)(?=$|[^\d])/g, "\u00a0$1");
+}

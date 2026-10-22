@@ -55,11 +55,24 @@ export function FreshnessBadge({
       className={`freshness${stale ? " is-stale" : ""}`}
       title={`Saved ${formatLondon(createdAt)}${latest ? `; newest result used ${formatDate(latest)}` : ""}`}
     >
-      <span className="freshness-dot" aria-hidden="true" />
-      {latest ? <>Results to {formatShortDay(latest)}</> : <>Result dates not recorded</>}
-      <span aria-hidden="true"> · </span>
-      Saved {formatLondon(createdAt)}
-      {stale && <strong> · newest result is {gap} days older than the prediction</strong>}
+      <span className="freshness-part">
+        <span className="freshness-dot" aria-hidden="true" />
+        {latest ? <>Results to {formatShortDay(latest)}</> : <>Result dates not recorded</>}
+      </span>
+      <span className="freshness-part">
+        <span className="freshness-sep" aria-hidden="true">
+          ·{" "}
+        </span>
+        Saved {formatLondon(createdAt)}
+      </span>
+      {stale && (
+        <strong className="freshness-part freshness-stale">
+          <span className="freshness-sep" aria-hidden="true">
+            ·{" "}
+          </span>
+          newest result is {gap} days older than the prediction
+        </strong>
+      )}
     </span>
   );
 }

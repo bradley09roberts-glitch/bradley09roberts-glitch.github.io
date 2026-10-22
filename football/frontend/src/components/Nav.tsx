@@ -1,5 +1,6 @@
 // Main navigation, built from the page registry (src/pages/index.ts). On a phone it is a
-// tab bar along the bottom of the screen; from 720 px wide it sits in the header.
+// tab bar along the bottom of the screen (clear of the home indicator, via the safe-area
+// inset); from 720 px wide it sits in the top bar beside the wordmark.
 
 import { Component, type ErrorInfo, type MouseEvent, type ReactNode } from "react";
 import type { PageDef } from "../pages";
@@ -18,7 +19,9 @@ export function Nav({ pages, active }: { pages: readonly PageDef[]; active: stri
           return (
             <li key={p.path}>
               <a href={href(p.path)} aria-current={current ? "page" : undefined} aria-label={p.nav.label}>
-                <Icon name={p.nav.icon ?? "dot"} />
+                <span className="nav-icon">
+                  <Icon name={p.nav.icon ?? "dot"} />
+                </span>
                 <span className="nav-long" aria-hidden="true">
                   {p.nav.label}
                 </span>
@@ -65,11 +68,14 @@ export class PageErrorBoundary extends Component<{ children: ReactNode }, { erro
     if (this.state.error) {
       return (
         <section className="card state state-error" role="alert">
+          <span className="state-icon" aria-hidden="true">
+            !
+          </span>
           <h2>This page couldn't be shown</h2>
           <p>
             Something in the data didn't match what the page expects: {this.state.error.message}
           </p>
-          <button type="button" onClick={() => this.setState({ error: null })}>
+          <button type="button" className="button-primary" onClick={() => this.setState({ error: null })}>
             Try again
           </button>
         </section>

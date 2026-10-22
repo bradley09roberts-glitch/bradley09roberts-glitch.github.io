@@ -47,10 +47,10 @@ function num(v: JsonValue | undefined): number | null {
   return typeof v === "number" && Number.isFinite(v) ? v : null;
 }
 
-/** The confidence label: on a model + market record the probabilities are the bookmakers'
+/** Whose probabilities the confidence is: on a model + market record they are the bookmakers'
  * consensus blended with the model, not the model's alone. */
-export function confidenceLabel(c: Pick<PredictionCard, "basis">): string {
-  return c.basis === "model_and_market" ? "Forecast confidence (bookmakers + model)" : "Model confidence";
+export function confidenceSource(c: Pick<PredictionCard, "basis">): string {
+  return c.basis === "model_and_market" ? "bookmakers + model" : "model";
 }
 
 /** The same fixture's model + market record, when this record is model-only. */
@@ -80,18 +80,28 @@ export function Signals({
   // Prices exist for this match, but in its model + market record rather than this one.
   const pricesElsewhere = !vs && !odds && !blended && marketRecord !== null;
 
+  // Each signal: a label, then one headline in the same style for all three, then (on the
+  // match page) a note.
   return (
     <dl className={`signals signals-${variant}`}>
       <div className="signal">
-        <dt>{confidenceLabel(card)}</dt>
+        <dt>
+          Confidence
+          {/* On the match page the source is the label's second line; on a card it sits under
+              the value, so the three values start on one line. */}
+          {full && <span className="signal-sub">({confidenceSource(card)})</span>}
+        </dt>
         <dd>
-          {conf ? (
-            <>
-              <strong>{formatPct(conf.p)}</strong> <span>{conf.label}</span>
-            </>
-          ) : (
-            <span className="muted">No match-result probabilities</span>
-          )}
+          <span className="signal-value">
+            {conf ? (
+              <>
+                <strong>{formatPct(conf.p)}</strong> {conf.label}
+              </>
+            ) : (
+              <span className="muted">No match-result probabilities</span>
+            )}
+          </span>
+          {!full && <span className="signal-sub">({confidenceSource(card)})</span>}
           {full && (
             <p className="signal-note">
               {blended
@@ -102,15 +112,17 @@ export function Signals({
         </dd>
       </div>
       <div className="signal">
-        <dt>Data completeness</dt>
+        <dt>{full ? "Data completeness" : "Data"}</dt>
         <dd>
-          {missing.length === 0 ? (
-            <strong>All inputs present</strong>
-          ) : (
-            <span>
-              Without <strong>{listJoin(missing.map(fieldName))}</strong>
-            </span>
-          )}
+          <span className="signal-value">
+            {missing.length === 0 ? (
+              <strong>All inputs present</strong>
+            ) : (
+              <>
+                Without <strong>{listJoin(missing.map(fieldName))}</strong>
+              </>
+            )}
+          </span>
           {full && homeN !== null && awayN !== null && (
             <p className="signal-note">
               Team ratings use {homeN} recent matches for {card.home_name} and {awayN} for{" "}
@@ -122,31 +134,33 @@ export function Signals({
       <div className="signal">
         <dt>Betting edge</dt>
         <dd>
-          {vs ? (
-            // Real prices were used, but no selection rule is published: nothing is named.
-            <strong>No selection published</strong>
-          ) : odds ? (
-            // The API has no betting-selection field for this record, so nothing can qualify.
-            <strong>No qualifying bet</strong>
-          ) : pricesElsewhere && marketRecord ? (
-            // The match has prices, used by its model + market record: point there, never
-            // "no odds available".
-            <span>
-              <strong>
-                See the{" "}
-                {full ? (
-                  <a href={href(`/match/${marketRecord.id}`)}>model + market record</a>
-                ) : (
-                  "model + market record"
-                )}
-              </strong>{" "}
-              — this one uses no prices
-            </span>
-          ) : (
-            <span>
-              <strong>No odds available</strong> — no betting selection
-            </span>
-          )}
+          <span className="signal-value">
+            {vs ? (
+              // Real prices were used, but no selection rule is published: nothing is named.
+              <strong>No selection published</strong>
+            ) : odds ? (
+              // The API has no betting-selection field for this record, so nothing can qualify.
+              <strong>No qualifying bet</strong>
+            ) : pricesElsewhere && marketRecord ? (
+              // The match has prices, used by its model + market record: point there, never
+              // "no odds available".
+              <>
+                <strong>
+                  See the{" "}
+                  {full ? (
+                    <a href={href(`/match/${marketRecord.id}`)}>model + market record</a>
+                  ) : (
+                    "model + market record"
+                  )}
+                </strong>{" "}
+                — this one uses no prices
+              </>
+            ) : (
+              <>
+                <strong>No odds available</strong> — no betting selection
+              </>
+            )}
+          </span>
           {full && (
             <p className="signal-note">
               {vs

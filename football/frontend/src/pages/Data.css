@@ -1,19 +1,35 @@
-/* Data and methodology. Colours come from the variables in styles.css. */
+/* Data and methodology. Colours, type and spacing come from the tokens in styles.css. */
 
 .data-jump {
   display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
+  gap: 8px;
+  overflow-x: auto;
+  margin: 0 calc(-1 * var(--gutter));
+  padding: 2px var(--gutter) 6px;
+  scrollbar-width: none;
+}
+
+.data-jump::-webkit-scrollbar {
+  display: none;
+}
+
+@media (min-width: 720px) {
+  .data-jump {
+    flex-wrap: wrap;
+    overflow: visible;
+    margin: 0;
+    padding: 0;
+  }
 }
 
 .data-jump .chip {
-  min-height: 34px;
-  font-size: 0.85rem;
+  min-height: 36px;
+  font-size: var(--fs-sm);
 }
 
-/* Leave room for the sticky header when a jump button scrolls a section into view. */
+/* Leave room for the sticky app bar when a jump button scrolls a section into view. */
 .data-anchor {
-  scroll-margin-top: 72px;
+  scroll-margin-top: calc(var(--sticky-top) + 16px);
 }
 
 .warn-text {
@@ -46,13 +62,31 @@
   gap: 12px;
 }
 
+@media (min-width: 900px) {
+  .sources {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 .sources li {
   display: grid;
-  gap: 6px;
-  padding: 12px;
-  border-radius: 8px;
+  align-content: start;
+  gap: 8px;
+  padding: 14px 16px;
+  border-radius: var(--r-md);
   background: var(--surface-2);
   min-width: 0;
+}
+
+.sources li p:not(.small) {
+  font-size: var(--fs-md);
+}
+
+.card .source-head h3 {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
 }
 
 .source-head {
@@ -61,6 +95,10 @@
   align-items: center;
   justify-content: space-between;
   gap: 4px 10px;
+}
+
+.sources li p:not(.small) {
+  font-size: var(--fs-md);
 }
 
 .card .source-head h3 {
@@ -75,16 +113,19 @@
 }
 
 .data-signals > div {
-  padding: 10px 12px;
+  padding: 12px 14px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--r-md);
+  background: var(--surface-2);
 }
 
 .data-signals dt {
-  font-size: 0.75rem;
-  color: var(--muted);
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text);
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.03em;
 }
 
 .data-signals dd {
@@ -122,7 +163,10 @@
 .coverage-group th {
   padding-top: 12px;
   background: var(--surface-2);
+  font-family: var(--font-display);
+  font-size: 1rem;
   font-weight: 700;
+  letter-spacing: 0.02em;
   text-align: left;
 }
 
@@ -179,28 +223,30 @@
   grid-template-columns: 5.6rem minmax(0, 1fr);
   gap: 10px;
   align-items: start;
-  padding: 10px 12px;
-  border-radius: 8px;
+  padding: 11px 12px 11px 14px;
+  border-radius: var(--r-md);
   border: 1px solid var(--border);
-  border-left-width: 4px;
+  box-shadow: inset 4px 0 0 var(--border-strong);
 }
 
 .run-good {
-  border-left-color: var(--good);
+  box-shadow: inset 4px 0 0 var(--good);
 }
 
 .run-warn {
-  border-left-color: var(--warn);
+  box-shadow: inset 4px 0 0 var(--warn);
   background: var(--warn-bg);
+  border-color: transparent;
 }
 
 .run-bad {
-  border-left-color: var(--bad);
+  box-shadow: inset 4px 0 0 var(--bad);
   background: var(--bad-bg);
+  border-color: transparent;
 }
 
 .run-info {
-  border-left-color: var(--info);
+  box-shadow: inset 4px 0 0 var(--info);
 }
 
 .run-status {

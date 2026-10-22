@@ -20,7 +20,7 @@ import {
 import { BasisBadge, basisLabel } from "../components/Badge";
 import { Segmented, TableScroll } from "../components/Controls";
 import { ApiView } from "../components/StateViews";
-import { formatLondon, formatNumber, formatPct, seasonLabel } from "../format";
+import { formatLondon, formatNumber, formatPct, keepNumberWithName, seasonLabel } from "../format";
 import { href, setQuery } from "../router";
 import "./HitRates.css";
 
@@ -45,16 +45,16 @@ function seasonsText(seasons: readonly string[]): string {
 }
 
 function listText(names: readonly string[]): string {
-  if (names.length <= 1) return names.join("");
-  return `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
+  const kept = names.map(keepNumberWithName);
+  if (kept.length <= 1) return kept.join("");
+  return `${kept.slice(0, -1).join(", ")} and ${kept[kept.length - 1]}`;
 }
 
 function pct(r: HitRate | null | undefined): string {
   return formatPct(r?.hit_rate, 1);
 }
 
-/** A rate in a table cell. On a phone the % sign is hidden from view (the legend says the
- * figures are percentages) so five markets fit across; screen readers still hear it. */
+/** A rate in a table cell, with its % sign (set a little smaller). */
 function Rate({ r }: { r: HitRate | null | undefined }) {
   const v = r?.hit_rate;
   if (v === null || v === undefined || !Number.isFinite(v)) return <>—</>;
@@ -195,9 +195,7 @@ function FamilyCard({
       </p>
 
       <p className="muted small hit-legend" aria-hidden="true">
-        <span className="hit-legend-model">
-          Hit rate<span className="hit-pct-note"> (%)</span>
-        </span>
+        <span className="hit-legend-model">Hit rate</span>
         <span className="hit-legend-base">baseline</span>
         {showCi && <span className="hit-legend-ci">95% interval</span>}
       </p>
@@ -406,9 +404,7 @@ function PrematchTable({ t, markets }: { t: PrematchHitTable; markets: HitRates[
         ))}
       </p>
       <p className="muted small hit-legend" aria-hidden="true">
-        <span className="hit-legend-model">
-          Hit rate<span className="hit-pct-note"> (%)</span>
-        </span>
+        <span className="hit-legend-model">Hit rate</span>
         <span className="hit-legend-base">right of settled</span>
       </p>
       <TableScroll className="hit-scroll" label={`${t.family_name}: pre-match hit rates`}>

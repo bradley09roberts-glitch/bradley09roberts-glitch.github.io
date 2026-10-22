@@ -71,6 +71,7 @@ export function Performance(_props: PageProps) {
         {(d) => <Record d={d} latest={latest.data?.matches[0]} />}
       </ApiView>
 
+      <div className="perf-notes">
       <section className="card" aria-labelledby="betting-record">
         <h2 id="betting-record">Betting record</h2>
         <p>
@@ -118,6 +119,7 @@ export function Performance(_props: PageProps) {
           <a href={href("/past")}>Past matches</a>.
         </p>
       </section>
+      </div>
     </>
   );
 }

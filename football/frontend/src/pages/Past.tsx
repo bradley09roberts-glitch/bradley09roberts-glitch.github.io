@@ -13,9 +13,12 @@ import {
   type RecordType,
 } from "../api";
 import { BasisBadge, EditionBadge, RecordTypeBadge } from "../components/Badge";
+import { CompetitionChip } from "../components/CompetitionMark";
 import { ApiView, Empty } from "../components/StateViews";
+import { TeamBadge } from "../components/TeamBadge";
 import { sortByCompetition } from "../competitions";
 import {
+  formatDayHeading,
   formatDayHeadingWithYear,
   formatLondon,
   formatNumber,
@@ -216,7 +219,13 @@ function NoRecords({
   }
   if (kind === "genuine") {
     return (
-      <Empty title="No settled pre-match predictions yet">
+      <Empty
+        title={
+          <>
+            No settled <span className="nowrap">pre-match</span> predictions yet
+          </>
+        }
+      >
         <p>
           The genuine record is made only of predictions saved before kickoff. A match appears here
           once its result is in and the prediction has been settled. Upcoming predictions are on
@@ -293,6 +302,13 @@ function probOf(p: Probabilities, market: string, code: string): number | null {
 
 type DayGroup = { day: string; rows: PredictionCard[] };
 
+/** "Sunday 25 October", as on Fixtures; the year only for a day in an earlier year. */
+function dayHeading(day: string): string {
+  return day.slice(0, 4) === londonDayKey(new Date().toISOString(), day).slice(0, 4)
+    ? formatDayHeading(day)
+    : formatDayHeadingWithYear(day);
+}
+
 function groupByDay(rows: PredictionCard[]): DayGroup[] {
   const byDay = new Map<string, PredictionCard[]>();
   for (const r of rows) {
@@ -356,8 +372,11 @@ function PastList({
 
       {days.map((d) => (
         <section key={d.day} className="past-day" aria-labelledby={`day-${d.day}`}>
-          <h2 id={`day-${d.day}`} className="day-title">
-            {formatDayHeadingWithYear(d.day)}
+          <h2 id={`day-${d.day}`} className="day-head">
+            <span className="day-name">{dayHeading(d.day)}</span>
+            <span className="day-count">
+              {d.rows.length} {d.rows.length === 1 ? "match" : "matches"}
+            </span>
           </h2>
           <ol className="past-list">
             {d.rows.map((r) => (
@@ -477,18 +496,24 @@ function PastRow({
       <article className="card past-row">
         <div className="past-meta">
           {card.kickoff_utc && <span className="kickoff">{formatTime(card.kickoff_utc)}</span>}
-          {showCompetition && <span className="past-comp">{card.competition_name}</span>}
+          {showCompetition && <CompetitionChip code={card.competition} name={card.competition_name} />}
           {card.edition !== "early" && <EditionBadge edition={card.edition} />}
           {card.basis === "model_and_market" && <BasisBadge basis={card.basis} />}
           {showModel && <span className="past-model">{card.model_name}</span>}
         </div>
         <h3 className="past-teams">
           <a className="stretched" href={href(`/match/${card.id}`)} aria-label={linkLabel}>
-            <span className="past-home">{card.home_name}</span>
-            <span className="past-score">
+            <span className="past-home">
+              <span className="past-name">{card.home_name}</span>
+              <TeamBadge teamKey={card.home_team} name={card.home_name} size={28} />
+            </span>
+            <span className={`past-score${scored ? "" : " is-status"}`}>
               {scored ? `${s.home_goals}–${s.away_goals}` : s ? settlementStatusLabel(s.status) : "—"}
             </span>
-            <span className="past-away">{card.away_name}</span>
+            <span className="past-away">
+              <TeamBadge teamKey={card.away_team} name={card.away_name} size={28} />
+              <span className="past-name">{card.away_name}</span>
+            </span>
           </a>
         </h3>
         {settledMarkets === 0 ? (

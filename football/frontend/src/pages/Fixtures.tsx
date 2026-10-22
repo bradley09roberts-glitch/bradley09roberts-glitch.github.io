@@ -1,21 +1,25 @@
-// Brief item 1: upcoming matches by league, with every market's probabilities, the data
-// freshness and the edition. With no odds there is no betting selection, but the
-// probabilities always stay visible.
+// Brief item 1: upcoming matches, grouped by UK day (sticky day headings) and, within a day,
+// by competition then kick-off, with every market's probabilities, the data freshness and the
+// edition. A competition chip on each card filters to that competition. With no odds there is
+// no betting selection, but the probabilities always stay visible.
 
-import { useMemo } from "react";
+import { useLayoutEffect, useMemo, useRef, type FocusEvent } from "react";
 import { endpoints, useApi, type FixturesResponse, type PredictionCard } from "../api";
 import { BasisBadge, EditionBadge, RecordTypeBadge, basisLabel } from "../components/Badge";
+import { CompetitionChip, CompetitionMark } from "../components/CompetitionMark";
 import { FreshnessBadge } from "../components/FreshnessBadge";
 import { MarketGrid } from "../components/MarketGrid";
 import { ProbBar } from "../components/ProbBar";
 import { Signals, hasOdds } from "../components/Signals";
 import { ApiView, Empty, StaleNotice } from "../components/StateViews";
-import { sortByCompetition } from "../competitions";
+import { TeamBadge } from "../components/TeamBadge";
+import { competitionRank, sortByCompetition } from "../competitions";
 import {
   daysBetween,
   formatDayHeading,
   formatLondon,
   formatRelative,
+  formatShortDay,
   formatTime,
   londonDayKey,
   parseUtc,
@@ -111,50 +115,76 @@ function RefreshNotice() {
   );
 }
 
-type FixtureGroup = { ref: string; cards: PredictionCard[] };
+type FixtureGroup = { ref: string; competition: string; cards: PredictionCard[] };
 type DayGroup = { day: string; fixtures: FixtureGroup[] };
-type CompetitionGroup = { code: string; name: string; days: DayGroup[]; count: number };
+type CompetitionCount = { code: string; name: string; count: number };
 
-function group(data: FixturesResponse): CompetitionGroup[] {
+/** Fixtures by UK day; within a day, by competition (cups, then the big five, …) then kick-off.
+ * Each fixture's records are kept together, the record of record first. */
+function group(data: FixturesResponse, competition: string | null): { days: DayGroup[]; competitions: CompetitionCount[] } {
   const comps = sortByCompetition(data.competitions, (c) => c.code);
-  return comps
-    .map((c) => {
-      const byRef = new Map<string, PredictionCard[]>();
-      for (const card of c.fixtures) {
-        const list = byRef.get(card.fixture_ref);
-        if (list) list.push(card);
-        else byRef.set(card.fixture_ref, [card]);
-      }
-      // The record of record leads; the others stay in the API's order.
-      for (const list of byRef.values()) list.sort((a, b) => Number(b.is_primary) - Number(a.is_primary));
-      const byDay = new Map<string, FixtureGroup[]>();
-      for (const [ref, cards] of byRef) {
-        const first = cards[0];
-        if (!first) continue;
-        const day = londonDayKey(first.kickoff_utc, first.match_date);
-        const list = byDay.get(day);
-        const g = { ref, cards };
-        if (list) list.push(g);
-        else byDay.set(day, [g]);
-      }
-      const kickoff = (g: FixtureGroup) => g.cards[0]?.kickoff_utc ?? "\uffff";
-      const days = [...byDay.entries()]
-        .sort(([a], [b]) => a.localeCompare(b))
-        .map(([day, fixtures]) => ({
-          day,
-          fixtures: fixtures.sort((a, b) => kickoff(a).localeCompare(kickoff(b))),
-        }));
-      return { code: c.code, name: c.name, days, count: byRef.size };
-    })
-    .filter((c) => c.count > 0);
+  const competitions: CompetitionCount[] = [];
+  const byDay = new Map<string, FixtureGroup[]>();
+  for (const c of comps) {
+    const byRef = new Map<string, PredictionCard[]>();
+    for (const card of c.fixtures) {
+      const list = byRef.get(card.fixture_ref);
+      if (list) list.push(card);
+      else byRef.set(card.fixture_ref, [card]);
+    }
+    if (byRef.size > 0) competitions.push({ code: c.code, name: c.name, count: byRef.size });
+    if (competition && c.code !== competition) continue;
+    // The record of record leads; the others stay in the API's order.
+    for (const [ref, cards] of byRef) {
+      cards.sort((a, b) => Number(b.is_primary) - Number(a.is_primary));
+      const first = cards[0];
+      if (!first) continue;
+      const day = londonDayKey(first.kickoff_utc, first.match_date);
+      const g = { ref, competition: c.code, cards };
+      const list = byDay.get(day);
+      if (list) list.push(g);
+      else byDay.set(day, [g]);
+    }
+  }
+  const kickoff = (g: FixtureGroup) => g.cards[0]?.kickoff_utc ?? "\uffff";
+  const days = [...byDay.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([day, fixtures]) => ({
+      day,
+      fixtures: fixtures.sort(
+        (a, b) => competitionRank(a.competition) - competitionRank(b.competition) || kickoff(a).localeCompare(kickoff(b)),
+      ),
+    }));
+  return { days, competitions };
 }
 
 function FixtureList({ data, competition }: { data: FixturesResponse; competition: string | null }) {
-  const groups = useMemo(() => group(data), [data]);
-  const shown = competition ? groups.filter((g) => g.code === competition) : groups;
+  const { days, competitions } = useMemo(() => group(data, competition), [data, competition]);
   const all = data.competitions.flatMap((c) => c.fixtures);
   const noOdds = all.length > 0 && all.every((c) => !hasOdds(c));
-  const total = groups.reduce((n, g) => n + g.count, 0);
+  const total = competitions.reduce((n, g) => n + g.count, 0);
+
+  // On a phone the competition chips scroll sideways: keep the chosen one in view.
+  const chipsRef = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const row = chipsRef.current;
+    const chip = row?.querySelector<HTMLElement>('[aria-pressed="true"]');
+    if (!row || !chip || row.scrollWidth <= row.clientWidth) return;
+    row.scrollLeft = chip.offsetLeft - (row.clientWidth - chip.offsetWidth) / 2;
+  }, [competition]);
+
+  // A chip reached with Tab is scrolled fully into view, focus ring and all (the browser
+  // leaves a chip at the edge half cut off).
+  const onChipFocus = (e: FocusEvent<HTMLDivElement>) => {
+    const row = e.currentTarget;
+    const chip = e.target;
+    if (chip === row || row.scrollWidth <= row.clientWidth) return;
+    const margin = 28;
+    const left = chip.offsetLeft - margin;
+    const right = chip.offsetLeft + chip.offsetWidth + margin - row.clientWidth;
+    if (row.scrollLeft > left) row.scrollLeft = left;
+    else if (row.scrollLeft < right) row.scrollLeft = right;
+  };
 
   return (
     <>
@@ -170,8 +200,8 @@ function FixtureList({ data, competition }: { data: FixturesResponse; competitio
         </div>
       )}
 
-      {groups.length > 1 && (
-        <div className="chips" role="group" aria-label="Competition">
+      {competitions.length > 1 && (
+        <div className="chips chips-scroll" role="group" aria-label="Competition" ref={chipsRef} onFocus={onChipFocus}>
           <button
             type="button"
             className="chip"
@@ -180,7 +210,7 @@ function FixtureList({ data, competition }: { data: FixturesResponse; competitio
           >
             All <span className="chip-count">{total}</span>
           </button>
-          {groups.map((g) => (
+          {competitions.map((g) => (
             <button
               key={g.code}
               type="button"
@@ -188,35 +218,33 @@ function FixtureList({ data, competition }: { data: FixturesResponse; competitio
               aria-pressed={competition === g.code}
               onClick={() => setQuery({ competition: g.code })}
             >
+              <CompetitionMark code={g.code} />
               {g.name} <span className="chip-count">{g.count}</span>
             </button>
           ))}
         </div>
       )}
 
-      {shown.length === 0 ? (
+      {days.length === 0 ? (
         <Empty title="No fixtures for this competition in this window">
           <button type="button" onClick={() => setQuery({ competition: null })}>
             Show every competition
           </button>
         </Empty>
       ) : (
-        shown.map((g) => (
-          <section key={g.code} className="competition" aria-labelledby={`comp-${g.code}`}>
-            <h2 id={`comp-${g.code}`} className="competition-title">
-              {g.name}
-              <span className="muted"> · {g.count}</span>
+        days.map((d) => (
+          <section key={d.day} className="day" aria-labelledby={`day-${d.day}`}>
+            <h2 id={`day-${d.day}`} className="day-head">
+              <span className="day-name">{formatDayHeading(d.day)}</span>
+              <span className="day-count">
+                {d.fixtures.length} {d.fixtures.length === 1 ? "fixture" : "fixtures"}
+              </span>
             </h2>
-            {g.days.map((d) => (
-              <div key={d.day} className="day">
-                <h3 className="day-title">{formatDayHeading(d.day)}</h3>
-                <div className="fixture-list">
-                  {d.fixtures.map((f) => (
-                    <FixtureCard key={f.ref} cards={f.cards} />
-                  ))}
-                </div>
-              </div>
-            ))}
+            <div className="fixture-list">
+              {d.fixtures.map((f) => (
+                <FixtureCard key={f.ref} cards={f.cards} />
+              ))}
+            </div>
           </section>
         ))
       )}
@@ -224,18 +252,32 @@ function FixtureList({ data, competition }: { data: FixturesResponse; competitio
   );
 }
 
+/** The result, or that the match has kicked off, under the kick-off time. */
 function KickoffStatus({ card }: { card: PredictionCard }) {
   const s = card.settlement;
   if (s && s.home_goals !== null && s.away_goals !== null) {
     return (
-      <span className="result-tag">
-        Full time {s.home_goals}–{s.away_goals}
+      <span className="fx-status">
+        <span className="result-tag">
+          Full time {s.home_goals}–{s.away_goals}
+        </span>
       </span>
     );
   }
-  if (s) return <span className="result-tag">{settlementStatusLabel(s.status)}</span>;
+  if (s) {
+    return (
+      <span className="fx-status">
+        <span className="result-tag">{settlementStatusLabel(s.status)}</span>
+      </span>
+    );
+  }
   if (card.kickoff_utc && parseUtc(card.kickoff_utc).getTime() <= Date.now()) {
-    return <span className="muted small">Kicked off · awaiting result</span>;
+    return (
+      <span className="fx-status">
+        <span className="live-dot" aria-hidden="true" />
+        <span>Kicked off · awaiting result</span>
+      </span>
+    );
   }
   return null;
 }
@@ -244,25 +286,36 @@ function FixtureCard({ cards }: { cards: PredictionCard[] }) {
   const [card, ...others] = cards;
   if (!card) return null;
   const x = card.probabilities["1X2"];
+  const day = londonDayKey(card.kickoff_utc, card.match_date);
   return (
     <article className="card fixture">
-      <div className="fixture-meta">
-        <span className="kickoff">{card.kickoff_utc ? formatTime(card.kickoff_utc) : "Time TBC"}</span>
-        <BasisBadge basis={card.basis} />
-        <EditionBadge edition={card.edition} />
-        {card.record_type !== "genuine_prematch" && <RecordTypeBadge type={card.record_type} />}
-        <KickoffStatus card={card} />
+      <div className="fx-head">
+        <CompetitionChip code={card.competition} name={card.competition_name} />
+        <span className="fx-tags">
+          <BasisBadge basis={card.basis} />
+        </span>
       </div>
-      <h4 className="fixture-teams">
-        <a className="stretched" href={href(`/match/${card.id}`)}>
-          <span>{card.home_name}</span>
-          <span className="vs" aria-hidden="true">
-            v
-          </span>
-          <span className="visually-hidden"> versus </span>
-          <span>{card.away_name}</span>
-        </a>
-      </h4>
+      <div className="fx-body">
+        <h3 className="fx-teams">
+          <a className="stretched" href={href(`/match/${card.id}`)}>
+            <span className="fx-team">
+              <TeamBadge teamKey={card.home_team} name={card.home_name} size={32} />
+              <span className="fx-name">{card.home_name}</span>
+            </span>
+            <span className="visually-hidden"> versus </span>
+            <span className="fx-team">
+              <TeamBadge teamKey={card.away_team} name={card.away_name} size={32} />
+              <span className="fx-name">{card.away_name}</span>
+            </span>
+          </a>
+        </h3>
+        <p className="fx-when">
+          <span className="fx-time">{card.kickoff_utc ? formatTime(card.kickoff_utc) : "TBC"}</span>
+          <span className="fx-day">{formatShortDay(day)}</span>
+          {!card.kickoff_utc && <span className="visually-hidden">Kick-off time to be confirmed</span>}
+          <KickoffStatus card={card} />
+        </p>
+      </div>
       {x ? (
         <ProbBar probs={x} homeName={card.home_name} awayName={card.away_name} />
       ) : (
@@ -274,28 +327,33 @@ function FixtureCard({ cards }: { cards: PredictionCard[] }) {
         marketRecord={card.basis === "model_only" ? (others.find((o) => o.basis === "model_and_market") ?? null) : null}
       />
       <div className="fixture-foot">
-        <FreshnessBadge
-          freshness={card.data_freshness}
-          createdAt={card.created_at_utc}
-          competition={card.competition}
-        />
-        <span className="more" aria-hidden="true">
-          Details →
+        <span className="fx-foot-tags">
+          <EditionBadge edition={card.edition} />
+          {card.record_type !== "genuine_prematch" && <RecordTypeBadge type={card.record_type} />}
+          <FreshnessBadge freshness={card.data_freshness} createdAt={card.created_at_utc} competition={card.competition} />
         </span>
-      </div>
-      {others.length > 0 && (
-        <p className="small above-stretch">
-          Also predicted by{" "}
-          {others.map((o, i) => (
-            <span key={o.id}>
-              {i > 0 && ", "}
-              <a href={href(`/match/${o.id}`)}>{o.model_name}</a>
-              <span className="muted"> ({basisLabel(o.basis).toLowerCase()})</span>
+        <span className="more" aria-hidden="true">
+          Details <span className="more-arrow">→</span>
+        </span>
+        {others.length > 0 && (
+          <p className="above-stretch also">
+            Also predicted by{" "}
+            {others.map((o, i) => (
+              <span key={o.id}>
+                {i > 0 && ", "}
+                <a className="also-model" href={href(`/match/${o.id}`)}>
+                  {o.model_name}
+                </a>
+                <span className="muted"> ({basisLabel(o.basis).toLowerCase()})</span>
+              </span>
+            ))}
+            <span className="muted">
+              {" "}
+              · shown: <span className="also-model">{card.model_name}</span>
             </span>
-          ))}
-          <span className="muted"> (shown: {card.model_name})</span>
-        </p>
-      )}
+          </p>
+        )}
+      </div>
     </article>
   );
 }

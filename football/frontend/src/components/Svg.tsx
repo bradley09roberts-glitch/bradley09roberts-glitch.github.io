@@ -117,6 +117,18 @@ const ICONS: Record<IconName, ReactNode> = {
   dot: <circle cx="12" cy="12" r="4" />,
 };
 
+/** The wordmark's emblem: a centre circle and halfway line, in chalk with a floodlit spot. */
+export function BrandMark({ size = 26 }: { size?: number }) {
+  return (
+    <svg className="brand-mark" width={size} height={size} viewBox="0 0 28 28" aria-hidden="true" focusable="false">
+      <rect className="brand-mark-pitch" x="1" y="1" width="26" height="26" rx="7" />
+      <path className="brand-mark-line" d="M14 3.5v21" />
+      <circle className="brand-mark-line" cx="14" cy="14" r="6.2" />
+      <circle className="brand-mark-spot" cx="14" cy="14" r="2.1" />
+    </svg>
+  );
+}
+
 export function Icon({ name, size = 22 }: { name: IconName; size?: number }) {
   return (
     <svg

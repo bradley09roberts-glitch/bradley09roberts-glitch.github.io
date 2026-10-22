@@ -1,7 +1,10 @@
-// Brief item 2: one saved prediction in full: expected goals, score grid, recent evidence,
-// availability, uncertainty, saved editions and the API's explanation.
+// Brief item 2: one saved prediction in full. A hero with both teams, kick-off, competition
+// and stage; a scoreboard with the match-result probabilities and expected goals; then the
+// goal markets, the most likely scores as a heat map, recent evidence, availability,
+// uncertainty, saved editions and the API's explanation. From 1024 px the evidence sits in a
+// second column.
 
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import {
   endpoints,
   useApi,
@@ -19,29 +22,34 @@ import {
   editionLabel,
   recordTypeLabel,
 } from "../components/Badge";
+import { CompetitionChip } from "../components/CompetitionMark";
 import { FreshnessBadge, freshnessFacts } from "../components/FreshnessBadge";
 import { MarketGrid, totalsIn } from "../components/MarketGrid";
 import { BackLink } from "../components/Nav";
 import { ProbBar } from "../components/ProbBar";
-import { ScoreTopList } from "../components/ScoreTopList";
+import { ScoreGrid } from "../components/ScoreGrid";
 import { Signals, fieldName, missingInputs } from "../components/Signals";
 import { ApiView, Empty } from "../components/StateViews";
 import { FormPips, Sparkline } from "../components/Svg";
+import { TeamBadge, teamKeyFromName } from "../components/TeamBadge";
 import { EUROPEAN_CUPS } from "../competitions";
 import {
   formatDate,
+  formatDayHeading,
   formatKickoff,
   formatLondon,
   formatNumber,
   formatPct,
   formatShortDay,
+  formatTime,
+  londonDayKey,
   marketLabel,
   outcomeLabel,
   seasonLabel,
   settlementStatusLabel,
   totalLine,
 } from "../format";
-import { useDocumentTitle } from "../hooks";
+import { useDocumentTitle, useMediaQuery } from "../hooks";
 import { canGoBack, href } from "../router";
 import type { PageProps } from ".";
 
@@ -97,113 +105,201 @@ function MatchDetail({ d }: { d: PredictionDetail }) {
   const p = d.probabilities;
   const x = p["1X2"];
   const s = d.settlement;
-  const scored = s && s.home_goals !== null && s.away_goals !== null;
+  // From 1024 px the evidence column holds the three signals too, so the two columns end
+  // close together; on narrower screens they follow the explanation, as before.
+  const twoColumns = useMediaQuery("(min-width: 1024px)");
+  const signals = (
+    <Signals
+      card={d}
+      features={d.features}
+      variant="full"
+      marketRecord={d.basis === "model_only" && d.counterpart?.basis === "model_and_market" ? d.counterpart : null}
+    />
+  );
 
   return (
     <>
-      <header className="card match-head">
-        <p className="eyebrow">
-          {d.competition_name} · {seasonLabel(d.season)}
+      <MatchHero d={d} />
+
+      <div className="match-layout">
+        <div className="match-main">
+          <div className="card scoreboard">
+            <section aria-labelledby="one-x-two">
+              <h2 id="one-x-two" className="sb-title">
+                Match result
+              </h2>
+              {x ? (
+                <ProbBar probs={x} homeName={d.home_name} awayName={d.away_name} size="large" />
+              ) : (
+                <p className="muted">No match-result probabilities in this record.</p>
+              )}
+            </section>
+            {p.expected_goals && (
+              <section className="sb-xg" aria-labelledby="xg">
+                <h2 id="xg" className="sb-title">
+                  Expected goals
+                </h2>
+                <ExpectedGoals
+                  home={d.home_name}
+                  away={d.away_name}
+                  xg={p.expected_goals}
+                  beforePrices={d.basis === "model_and_market" && sameXg(p.expected_goals, d.counterpart)}
+                />
+              </section>
+            )}
+          </div>
+
+          {(d.explanation || d.notes) && (
+            <section className="card notice brief" aria-labelledby="summary">
+              <h2 id="summary">In brief</h2>
+              {d.explanation && <p className="brief-text">{d.explanation}</p>}
+              {d.notes && <p className="muted small note-gap">Note: {d.notes}</p>}
+            </section>
+          )}
+
+          {d.basis === "model_and_market" && <MarketBlend d={d} />}
+          {d.basis === "model_only" && d.counterpart?.basis === "model_and_market" && (
+            <MarketVersion d={d} other={d.counterpart} />
+          )}
+
+          {!twoColumns && signals}
+
+          {s && <ResultSection d={d} />}
+
+          <div className="match-pair">
+            <Section title="Goals" id="goals">
+              <MarketGrid probabilities={p} variant="full" />
+            </Section>
+
+            <Section title="Most likely scores" id="scores">
+              <ScoreGrid scores={p.top_scores ?? []} homeName={d.home_name} awayName={d.away_name} />
+            </Section>
+          </div>
+
+          <Section title="Recent form" id="recent">
+            <p className="muted small">
+              Each side's last results before the prediction's data cut-off (
+              {formatLondon(d.training_cutoff_utc)}), so nothing that happened later is used.
+            </p>
+            <div className="recent-grid">
+              <RecentForm team={d.home_name} teamKey={d.home_team} matches={d.recent.home} />
+              <RecentForm team={d.away_name} teamKey={d.away_team} matches={d.recent.away} />
+            </div>
+          </Section>
+        </div>
+
+        <aside className="match-aside" aria-label="Evidence and record">
+          {twoColumns && signals}
+
+          <Section title="Uncertainty" id="uncertainty">
+            <Uncertainty d={d} />
+          </Section>
+
+          <Section title="Availability and team news" id="availability">
+            <Availability d={d} />
+          </Section>
+
+          <Section title="Saved editions" id="editions">
+            <Editions d={d} />
+          </Section>
+
+          <RecordDetails d={d} />
+        </aside>
+      </div>
+    </>
+  );
+}
+
+function stageOf(d: PredictionDetail): string | null {
+  const v = d.features.stage;
+  return typeof v === "string" && v.trim() ? v.trim() : null;
+}
+
+/** The longest word of a team name, for the hero's font size (styles.css, .mh-name): a long
+ * word shrinks the name so it breaks only between words, never inside one. */
+function nameFit(name: string): CSSProperties {
+  const longest = Math.max(6, ...name.split(/[\s-]+/).map((w) => [...w].length));
+  return { ["--word" as string]: longest };
+}
+
+function MatchHero({ d }: { d: PredictionDetail }) {
+  const s = d.settlement;
+  const scored = s !== null && s.home_goals !== null && s.away_goals !== null;
+  const stage = stageOf(d);
+  const day = londonDayKey(d.kickoff_utc, d.match_date);
+  return (
+    <header className="match-hero">
+      <div className="mh-inner">
+        <p className="mh-eyebrow">
+          <CompetitionChip
+            code={d.competition}
+            name={d.competition_name}
+            detail={[stage, seasonLabel(d.season)].filter(Boolean).join(" · ")}
+          />
         </p>
-        <h1 className="match-title">
-          <span>{d.home_name}</span> <span className="vs">v</span> <span>{d.away_name}</span>
-        </h1>
-        <p className="match-when">
-          {formatKickoff(d.kickoff_utc, d.match_date)}
-          {d.kickoff_utc && " (UK time)"}
+        <div className="mh-face">
+          <h1 className="mh-teams">
+            <span className="mh-team mh-home">
+              <TeamBadge teamKey={d.home_team} name={d.home_name} size={72} className="mh-badge" />
+              <span className="mh-name" style={nameFit(d.home_name)}>
+                {d.home_name}
+              </span>
+              <span className="mh-side" aria-hidden="true">
+                Home
+              </span>
+            </span>
+            <span className="visually-hidden"> v </span>
+            <span className="mh-team mh-away">
+              <TeamBadge teamKey={d.away_team} name={d.away_name} size={72} className="mh-badge" />
+              <span className="mh-name" style={nameFit(d.away_name)}>
+                {d.away_name}
+              </span>
+              <span className="mh-side" aria-hidden="true">
+                Away
+              </span>
+            </span>
+          </h1>
+          <div className="mh-centre">
+            {scored ? (
+              <>
+                <span className="mh-score">
+                  {s.home_goals}
+                  <span className="mh-score-sep">–</span>
+                  {s.away_goals}
+                </span>
+                <span className="mh-centre-sub">Full time</span>
+              </>
+            ) : d.kickoff_utc ? (
+              <>
+                <span className="mh-time">{formatTime(d.kickoff_utc)}</span>
+                <span className="mh-centre-sub">UK time</span>
+              </>
+            ) : (
+              <>
+                <span className="mh-time mh-time-tbc">TBC</span>
+                <span className="mh-centre-sub">Time not yet known</span>
+              </>
+            )}
+          </div>
+        </div>
+        <p className="mh-when">
+          {d.kickoff_utc ? (
+            <>
+              {formatDayHeading(day)} · kick-off {formatTime(d.kickoff_utc)} UK time
+            </>
+          ) : (
+            formatKickoff(d.kickoff_utc, d.match_date)
+          )}
         </p>
-        <div className="badges">
+        <div className="badges mh-badges">
           <BasisBadge basis={d.basis} />
           <RecordTypeBadge type={d.record_type} />
           <EditionBadge edition={d.edition} />
-          {scored && (
-            <span className="result-tag">
-              Full time {s.home_goals}–{s.away_goals}
-            </span>
-          )}
           {s && !scored && <span className="result-tag">{settlementStatusLabel(s.status)}</span>}
         </div>
-        <FreshnessBadge
-          freshness={d.data_freshness}
-          createdAt={d.created_at_utc}
-          competition={d.competition}
-        />
-      </header>
-
-      {(d.explanation || d.notes) && (
-        <section className="card notice" aria-labelledby="summary">
-          <h2 id="summary">In brief</h2>
-          {d.explanation && <p>{d.explanation}</p>}
-          {d.notes && <p className="muted small note-gap">Note: {d.notes}</p>}
-        </section>
-      )}
-
-      {d.basis === "model_and_market" && <MarketBlend d={d} />}
-      {d.basis === "model_only" && d.counterpart?.basis === "model_and_market" && (
-        <MarketVersion d={d} other={d.counterpart} />
-      )}
-
-      <Signals
-        card={d}
-        features={d.features}
-        variant="full"
-        marketRecord={d.basis === "model_only" && d.counterpart?.basis === "model_and_market" ? d.counterpart : null}
-      />
-
-      {s && <ResultSection d={d} />}
-
-      {p.expected_goals && (
-        <Section title="Expected goals" id="xg">
-          <ExpectedGoals
-            home={d.home_name}
-            away={d.away_name}
-            xg={p.expected_goals}
-            beforePrices={d.basis === "model_and_market" && sameXg(p.expected_goals, d.counterpart)}
-          />
-        </Section>
-      )}
-
-      <Section title="Match result" id="one-x-two">
-        {x ? (
-          <ProbBar probs={x} homeName={d.home_name} awayName={d.away_name} size="large" />
-        ) : (
-          <p className="muted">No match-result probabilities in this record.</p>
-        )}
-      </Section>
-
-      <Section title="Goals" id="goals">
-        <MarketGrid probabilities={p} variant="full" />
-      </Section>
-
-      <Section title="Most likely scores" id="scores">
-        <ScoreTopList scores={p.top_scores ?? []} homeName={d.home_name} awayName={d.away_name} />
-      </Section>
-
-      <Section title="Uncertainty" id="uncertainty">
-        <Uncertainty d={d} />
-      </Section>
-
-      <Section title="Availability and team news" id="availability">
-        <Availability d={d} />
-      </Section>
-
-      <Section title="Recent form" id="recent">
-        <p className="muted small">
-          Each side's last results before the prediction's data cut-off (
-          {formatLondon(d.training_cutoff_utc)}), so nothing that happened later is used.
-        </p>
-        <div className="recent-grid">
-          <RecentForm team={d.home_name} matches={d.recent.home} />
-          <RecentForm team={d.away_name} matches={d.recent.away} />
-        </div>
-      </Section>
-
-      <Section title="Saved editions" id="editions">
-        <Editions d={d} />
-      </Section>
-
-      <RecordDetails d={d} />
-    </>
+        <FreshnessBadge freshness={d.data_freshness} createdAt={d.created_at_utc} competition={d.competition} />
+      </div>
+    </header>
   );
 }
 
@@ -227,26 +323,32 @@ function ExpectedGoals({
   beforePrices?: boolean;
 }) {
   const scale = Math.max(3, xg.home, xg.away);
-  const rows = [
-    { name: home, v: xg.home, cls: "home" },
-    { name: away, v: xg.away, cls: "away" },
-  ];
   return (
     <>
-      <ul className="xg">
-        {rows.map((r) => (
-          <li key={r.cls}>
-            <span className="xg-team">
-              <span className={`swatch swatch-${r.cls}`} aria-hidden="true" />
-              {r.name}
-            </span>
-            <span className="xg-value">{formatNumber(r.v, 2)}</span>
-            <span className="bar-track" aria-hidden="true">
-              <span className={`bar-fill seg-${r.cls}`} style={{ width: `${(r.v / scale) * 100}%` }} />
-            </span>
-          </li>
-        ))}
-      </ul>
+      <div className="xg-duel">
+        <p className="xg-side xg-home">
+          <span className="xg-value">{formatNumber(xg.home, 2)}</span>
+          <span className="xg-team">
+            <span className="swatch swatch-home" aria-hidden="true" />
+            {home}
+          </span>
+        </p>
+        <div className="xg-bars" aria-hidden="true">
+          <span className="bar-track xg-track-home">
+            <span className="bar-fill seg-home" style={{ width: `${(xg.home / scale) * 100}%` }} />
+          </span>
+          <span className="bar-track xg-track-away">
+            <span className="bar-fill seg-away" style={{ width: `${(xg.away / scale) * 100}%` }} />
+          </span>
+        </div>
+        <p className="xg-side xg-away">
+          <span className="xg-value">{formatNumber(xg.away, 2)}</span>
+          <span className="xg-team">
+            <span className="swatch swatch-away" aria-hidden="true" />
+            {away}
+          </span>
+        </p>
+      </div>
       <p className="muted small">
         The average number of goals the model expects each side to score: {formatNumber(xg.home + xg.away, 2)}{" "}
         in total. Model estimates, not shot-based xG.
@@ -591,11 +693,17 @@ function teamGoals(m: RecentMatch): { gf: number; ga: number } | null {
   return m.venue === "H" ? { gf: hg, ga: ag } : { gf: ag, ga: hg };
 }
 
-function RecentForm({ team, matches }: { team: string; matches: RecentMatch[] }) {
+function RecentForm({ team, teamKey, matches }: { team: string; teamKey: string; matches: RecentMatch[] }) {
+  const heading = (
+    <h3 className="recent-head">
+      <TeamBadge teamKey={teamKey} name={team} size={28} />
+      {team}
+    </h3>
+  );
   if (matches.length === 0) {
     return (
       <div className="recent">
-        <h3>{team}</h3>
+        {heading}
         <p className="muted small">No earlier results in the data.</p>
       </div>
     );
@@ -611,7 +719,7 @@ function RecentForm({ team, matches }: { team: string; matches: RecentMatch[] })
   const signed = (n: number) => (n > 0 ? `+${n}` : String(n));
   return (
     <div className="recent">
-      <h3>{team}</h3>
+      {heading}
       <div className="recent-summary">
         <FormPips results={oldestFirst.map((m) => m.result)} />
         {gd.length > 1 && (
@@ -630,8 +738,11 @@ function RecentForm({ team, matches }: { team: string; matches: RecentMatch[] })
             <li key={`${m.date}-${i}`}>
               <span className="recent-date">{formatShortDay(m.date)}</span>
               <span className="recent-opp">
-                <span className="muted">{m.venue === "H" ? "v" : "at"}</span> {m.opponent}
-                <span className="muted small"> · {m.competition}</span>
+                <TeamBadge teamKey={teamKeyFromName(m.opponent)} name={m.opponent} size={18} />
+                <span className="recent-opp-text">
+                  <span className="muted">{m.venue === "H" ? "v" : "at"}</span> {m.opponent}
+                  <span className="muted small"> · {m.competition}</span>
+                </span>
               </span>
               <span className="recent-score">{g ? `${g.gf}–${g.ga}` : m.score}</span>
               <span className={`pip pip-${m.result}`} aria-label={m.result === "W" ? "Win" : m.result === "D" ? "Draw" : "Loss"}>

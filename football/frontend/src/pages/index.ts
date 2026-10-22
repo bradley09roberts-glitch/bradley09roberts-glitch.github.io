@@ -11,6 +11,7 @@ import { Past } from "./Past";
 import { Performance } from "./Performance";
 import { Data } from "./Data";
 import { Lab } from "./Lab";
+import { redirectTo } from "./Placeholder";
 
 export type PageProps = {
   /** Path parameters, e.g. { id: "123" } for "/match/:id". */
@@ -38,7 +39,9 @@ export const pages: readonly PageDef[] = [
   { path: "/fixtures", title: "Fixtures", component: Fixtures, nav: { label: "Fixtures", icon: "fixtures", order: 10 } },
   { path: "/match/:id", title: "Match", component: Match, section: "/fixtures" },
   { path: "/past", title: "Past matches", component: Past, nav: { label: "Past matches", short: "Past", icon: "past", order: 20 } },
-  { path: "/performance", title: "Performance", component: Performance, nav: { label: "Performance", short: "Record", icon: "performance", order: 30 } },
+  { path: "/performance", title: "Performance", component: Performance, nav: { label: "Performance", icon: "performance", order: 30 } },
   { path: "/lab", title: "Backtest lab", component: Lab, nav: { label: "Backtest lab", short: "Lab", icon: "lab", order: 40 } },
   { path: "/data", title: "Data and methodology", component: Data, nav: { label: "Data", icon: "data", order: 50 } },
+  // System status lives on the Data page now.
+  { path: "/status", title: "Data and methodology", component: redirectTo("/data"), section: "/data" },
 ];

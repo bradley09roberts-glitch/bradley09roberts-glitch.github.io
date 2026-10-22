@@ -1,9 +1,12 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Nav, PageErrorBoundary } from "./components/Nav";
-import { SITE_NAME } from "./hooks";
+import { SnapshotBanner } from "./components/SnapshotBanner";
+import { BrandMark } from "./components/Svg";
+import { SITE_NAME, useAutoHideAppBar } from "./hooks";
 import { pages } from "./pages";
 import { NotFound } from "./pages/Placeholder";
 import { href, resolve, savedScrollPosition, useLocation } from "./router";
+import { SNAPSHOT } from "./snapshot";
 
 export function App() {
   const location = useLocation();
@@ -18,7 +21,9 @@ export function App() {
   }, [navPath]);
   const active = page ? (navPath ?? lastSection ?? page.section ?? null) : null;
   const main = useRef<HTMLElement>(null);
+  const header = useRef<HTMLElement>(null);
   const shownPath = useRef(location.path);
+  useAutoHideAppBar(header);
 
   // Each history entry keeps its own scroll position; a new page starts at the top.
   useLayoutEffect(() => {
@@ -41,13 +46,21 @@ export function App() {
 
   return (
     <>
-      <header className="bar">
-        <a className="brand" href={href("/fixtures")}>
-          <span className="brand-mark" aria-hidden="true" />
-          {SITE_NAME}
-        </a>
-        <Nav pages={pages} active={active} />
+      <header className="appbar" ref={header}>
+        <div className="appbar-inner">
+          <a className="brand" href={href("/fixtures")}>
+            <BrandMark />
+            {/* SITE_NAME, set as a wordmark. */}
+            <span className="brand-word">
+              Football <span className="brand-word-accent">model</span>
+            </span>
+          </a>
+          <Nav pages={pages} active={active} />
+        </div>
       </header>
+      {/* Snapshot builds only (a constant false otherwise, so the bundler drops it). Below the
+          app bar, which alone handles the iPhone status bar and notch. */}
+      {SNAPSHOT && <SnapshotBanner />}
       <main className="page" ref={main} tabIndex={-1}>
         <PageErrorBoundary key={location.path}>
           {Page && match ? (
@@ -57,8 +70,11 @@ export function App() {
           )}
         </PageErrorBoundary>
       </main>
-      <footer className="site-foot muted small">
-        Probabilities are model estimates, not advice. Times are UK time (Europe/London).
+      <footer className="site-foot">
+        <div className="site-foot-inner">
+          <BrandMark size={18} />
+          <p>Probabilities are model estimates, not advice. Times are UK time (Europe/London).</p>
+        </div>
       </footer>
     </>
   );

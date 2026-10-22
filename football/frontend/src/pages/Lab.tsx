@@ -36,7 +36,7 @@ import {
   type TabDef,
 } from "../components/Controls";
 import { ApiView, Empty, ErrorView, Loading, StaleNotice } from "../components/StateViews";
-import { formatLondon, formatNumber, formatPct, seasonLabel } from "../format";
+import { formatLondon, formatNumber, formatPct, keepNumberWithName, seasonLabel } from "../format";
 import { useDocumentTitle } from "../hooks";
 import { href, setQuery } from "../router";
 import { SNAPSHOT } from "../snapshot";
@@ -506,7 +506,7 @@ function MarketLab({ tab, query }: { tab: MarketTab; query: URLSearchParams }) {
 }
 
 function RunFacts({ run, selected }: { run: BacktestRun; selected: string | undefined }) {
-  const leagues = run.leagues?.length ? run.leagues.map(competitionName).join(", ") : null;
+  const leagues = run.leagues?.length ? run.leagues.map((c) => keepNumberWithName(competitionName(c))).join(", ") : null;
   return (
     <p className="muted small lab-facts">
       {selected && run.model === selected && (
@@ -623,7 +623,7 @@ function SummaryView({
   const ci = m.primary_ci95;
 
   return (
-    <>
+    <div className="lab-summary">
       <section className="card" aria-labelledby="lab-headline">
         <h2 id="lab-headline">
           {title} <span className="muted lab-h-sub">· {label}</span>
@@ -686,7 +686,7 @@ function SummaryView({
       </section>
 
       <CalibrationSection data={data} tab={tab} line={line} outcome={outcome} label={label} />
-    </>
+    </div>
   );
 }
 
@@ -727,7 +727,7 @@ function CalibrationSection({
   const many = withBins.length > 1;
 
   return (
-    <section className="card" aria-labelledby="lab-calibration">
+    <section className="card lab-cal" aria-labelledby="lab-calibration">
       <h2 id="lab-calibration">
         Calibration <span className="muted lab-h-sub">· {label}</span>
       </h2>
@@ -754,6 +754,9 @@ function CalibrationSection({
 // ---------------------------------------------------------------------------------------------
 // Every run on this market (from the saved manifests: whole runs, no filters)
 
+/** Runs listed before "Show all". */
+const RUNS_SHOWN = 10;
+
 function RunComparison({
   runs,
   current,
@@ -767,6 +770,7 @@ function RunComparison({
   line: number;
   market: string;
 }) {
+  const [showAll, setShowAll] = useState(false);
   type Row = { run: BacktestRun; m: MarketMetrics; group: string; primary: number | undefined };
   const primaryOf = (m: MarketMetrics) => (tab === "moneyline" ? m.rps : m.log_loss);
   const rows: Row[] = [];
@@ -788,6 +792,18 @@ function RunComparison({
   });
   const baselineIn = (group: string) =>
     rows.find((r) => r.group === group && r.run.model === "baseline_frequency")?.primary;
+  // Every row in display order (group by group, best first), marking where a group starts.
+  const ordered = groupOrder.flatMap((g) =>
+    rows
+      .filter((r) => r.group === g)
+      .sort((a, b) => (a.primary ?? Infinity) - (b.primary ?? Infinity))
+      .map((r, i) => ({ ...r, groupStart: i === 0, base: baselineIn(g) })),
+  );
+  // A long list shows its first rows (and the chosen run, wherever it is) until "Show all".
+  const limited = !showAll && ordered.length > RUNS_SHOWN;
+  const visible = limited
+    ? ordered.filter((r, i) => i < RUNS_SHOWN || r.run.run_id === current.run_id)
+    : ordered;
   const metricName = tab === "moneyline" ? "RPS" : "Log loss";
   const metricLower = tab === "moneyline" ? "RPS" : "log loss";
   const noHeadline = without.filter((r) => r.headline === null);
@@ -819,68 +835,68 @@ function RunComparison({
             </tr>
           </thead>
           <tbody>
-            {groupOrder.map((g) => {
-              const inGroup = rows
-                .filter((r) => r.group === g)
-                .sort((a, b) => (a.primary ?? Infinity) - (b.primary ?? Infinity));
-              const base = baselineIn(g);
-              return inGroup.map((r, i) => {
-                const isCurrent = r.run.run_id === current.run_id;
-                const ci = r.m.primary_ci95;
-                const delta =
-                  base !== undefined && r.primary !== undefined && r.run.model !== "baseline_frequency"
-                    ? r.primary - base
-                    : undefined;
-                return (
-                  <tr
-                    key={r.run.run_id}
-                    className={`${isCurrent ? "is-current" : ""}${i === 0 ? " group-start" : ""}`}
-                    aria-current={isCurrent ? "true" : undefined}
-                  >
-                    <th scope="row" className="sticky-col lab-run-col">
-                      {isCurrent ? (
-                        <span>{modelName(r.run.model ?? r.run.run_id)}</span>
-                      ) : (
-                        <button
-                          type="button"
-                          className="link-button"
-                          onClick={() => setQuery({ run: r.run.run_id, league: null, season: null })}
-                        >
-                          {modelName(r.run.model ?? r.run.run_id)}
-                        </button>
-                      )}
+            {visible.map((r, i) => {
+              const base = r.base;
+              const isCurrent = r.run.run_id === current.run_id;
+              const ci = r.m.primary_ci95;
+              const delta =
+                base !== undefined && r.primary !== undefined && r.run.model !== "baseline_frequency"
+                  ? r.primary - base
+                  : undefined;
+              return (
+                <tr
+                  key={r.run.run_id}
+                  className={`${isCurrent ? "is-current" : ""}${r.groupStart || (i > 0 && visible[i - 1]?.group !== r.group) ? " group-start" : ""}`}
+                  aria-current={isCurrent ? "true" : undefined}
+                >
+                  <th scope="row" className="sticky-col lab-run-col">
+                    {isCurrent ? (
+                      <span>{modelName(r.run.model ?? r.run.run_id)}</span>
+                    ) : (
+                      <button
+                        type="button"
+                        className="link-button"
+                        onClick={() => setQuery({ run: r.run.run_id, league: null, season: null })}
+                      >
+                        {modelName(r.run.model ?? r.run.run_id)}
+                      </button>
+                    )}
+                    <span className="cell-sub">
+                      {r.run.kind === "backtests" ? "" : `${kindName(r.run.kind)} · `}
+                      {splitName(r.run.split)} {runSeasons(r.run)} · {r.m.n.toLocaleString("en-GB")} fixtures
+                    </span>
+                  </th>
+                  <td className="num">
+                    {fmt4(r.primary)}
+                    {ci && (
                       <span className="cell-sub">
-                        {r.run.kind === "backtests" ? "" : `${kindName(r.run.kind)} · `}
-                        {splitName(r.run.split)} {runSeasons(r.run)} · {r.m.n.toLocaleString("en-GB")} fixtures
+                        {fmt4(ci[0])} to {fmt4(ci[1])}
                       </span>
-                    </th>
-                    <td className="num">
-                      {fmt4(r.primary)}
-                      {ci && (
-                        <span className="cell-sub">
-                          {fmt4(ci[0])} to {fmt4(ci[1])}
-                        </span>
-                      )}
-                    </td>
-                    <td className="num">
-                      {delta === undefined ? (
-                        <span className="muted">—</span>
-                      ) : (
-                        <>
-                          {delta > 0 ? "+" : delta < 0 ? "−" : ""}
-                          {fmt4(Math.abs(delta))}
-                          <span className="cell-sub">{delta < 0 ? "better" : delta > 0 ? "worse" : "same"}</span>
-                        </>
-                      )}
-                    </td>
-                    <td className="num">{formatPct(r.m.accuracy, 1)}</td>
-                  </tr>
-                );
-              });
+                    )}
+                  </td>
+                  <td className="num">
+                    {delta === undefined ? (
+                      <span className="muted">—</span>
+                    ) : (
+                      <>
+                        {delta > 0 ? "+" : delta < 0 ? "−" : ""}
+                        {fmt4(Math.abs(delta))}
+                        <span className="cell-sub">{delta < 0 ? "better" : delta > 0 ? "worse" : "same"}</span>
+                      </>
+                    )}
+                  </td>
+                  <td className="num">{formatPct(r.m.accuracy, 1)}</td>
+                </tr>
+              );
             })}
           </tbody>
         </table>
       </TableScroll>
+      {ordered.length > RUNS_SHOWN && (
+        <button type="button" className="lab-runs-more" aria-expanded={!limited} onClick={() => setShowAll(!showAll)}>
+          {limited ? `Show all ${ordered.length} runs` : `Show the first ${RUNS_SHOWN}`}
+        </button>
+      )}
       <p className="muted small">
         "vs frequency baseline" is the run's {metricLower} minus the league-frequency
         baseline's in the same group, worked out here from the two saved headlines.

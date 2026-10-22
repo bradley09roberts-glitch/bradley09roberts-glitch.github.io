@@ -1,4 +1,4 @@
-/* Backtest lab. Colours come from the variables in styles.css. */
+/* Backtest lab. Colours, type and spacing come from the tokens in styles.css. */
 
 .lab-panel {
   display: grid;
@@ -12,7 +12,56 @@
 
 .lab-filters {
   display: grid;
-  gap: 12px;
+  gap: 14px;
+}
+
+/* Headline metrics, then the calibration chart, each full width: on wide screens the metrics
+   sit in one row and the chart has its legend beside it, so neither card leaves a hole. */
+.lab-summary {
+  display: grid;
+  gap: var(--sp-4);
+  min-width: 0;
+}
+
+.lab-summary > * {
+  min-width: 0;
+}
+
+@media (min-width: 720px) {
+  .lab-summary {
+    gap: var(--sp-5);
+  }
+}
+
+.lab-cal {
+  container: lab-cal / inline-size;
+}
+
+@container lab-cal (min-width: 720px) {
+  .lab-cal .cal {
+    grid-template-columns: minmax(0, 480px) minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+    column-gap: var(--sp-8);
+    align-items: start;
+  }
+
+  .lab-cal .cal-chart {
+    grid-row: 1 / span 2;
+  }
+
+  .lab-cal .cal-legend {
+    grid-column: 2;
+    padding-top: var(--sp-2);
+  }
+
+  .lab-cal .cal-legend ul {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .lab-cal .cal-table {
+    grid-column: 2;
+  }
 }
 
 .lab-toolbar {
@@ -30,13 +79,16 @@
 }
 
 .lab-run-id {
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
   overflow-wrap: anywhere;
 }
 
 .lab-h-sub {
-  font-weight: 400;
-  font-size: 0.9rem;
+  font-family: var(--font-text);
+  font-weight: 500;
+  font-size: var(--fs-sm);
+  letter-spacing: 0;
+  text-transform: none;
 }
 
 .lab-n {
@@ -57,16 +109,19 @@
 
 .lab-metric {
   display: grid;
-  gap: 2px;
+  gap: 4px;
   align-content: start;
-  padding: 10px 12px;
-  border-radius: 8px;
+  padding: 12px 14px;
+  border-radius: var(--r-md);
   background: var(--surface-2);
   min-width: 0;
 }
 
 .lab-metric dt {
-  font-size: 0.78rem;
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
   color: var(--muted);
 }
 
@@ -77,34 +132,65 @@
   min-width: 0;
 }
 
+/* The primary metric is the scoreboard: chalk on grass. */
 .lab-metric-primary {
   grid-column: 1 / -1;
-  border-left: 4px solid var(--accent);
+  padding: 14px 16px 16px;
+  background: var(--pitch);
+  color: var(--on-pitch);
+  box-shadow: inset 0 -3px 0 var(--volt);
+}
+
+.lab-metric-primary dt,
+.lab-metric-primary dt .muted,
+.lab-metric-primary .lab-metric-note {
+  color: var(--on-pitch-muted);
 }
 
 .lab-metric-value {
-  font-size: 1.35rem;
+  font-family: var(--font-display);
+  font-size: 1.75rem;
   font-weight: 700;
-  line-height: 1.2;
+  line-height: 1.05;
 }
 
 .lab-metric-primary .lab-metric-value {
-  font-size: 1.9rem;
+  font-size: 2.75rem;
 }
 
 .lab-metric-ci {
-  font-size: 0.88rem;
-  font-variant-numeric: tabular-nums;
+  font-size: var(--fs-sm);
+  font-weight: 500;
 }
 
 .lab-metric-note {
-  font-size: 0.76rem;
+  font-size: var(--fs-2xs);
   color: var(--muted);
+}
+
+/* Phones: two columns under the primary tile; a last tile left on its own takes the row. */
+@media (max-width: 639px) {
+  .lab-metric:not(.lab-metric-primary):nth-child(even):last-child {
+    grid-column: 1 / -1;
+  }
 }
 
 @media (min-width: 640px) {
   .lab-metrics {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* Wide: every tile in one row, the primary one twice as wide. */
+@media (min-width: 1024px) {
+  .lab-metrics {
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+  }
+
+  .lab-metric-primary {
+    grid-column: span 2;
   }
 }
 
@@ -138,9 +224,9 @@
 
 .bench-row {
   display: grid;
-  gap: 6px;
-  padding: 10px 12px;
-  border-radius: 8px;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: var(--r-md);
   background: var(--surface-2);
 }
 
@@ -161,19 +247,30 @@
 }
 
 .bench-values dt {
-  font-size: 0.75rem;
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   color: var(--muted);
 }
 
 .bench-values dd {
   margin: 0;
-  font-weight: 600;
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+.bench-values dd .cell-sub {
+  font-family: var(--font-text);
 }
 
 .bench-more summary {
   cursor: pointer;
   font-weight: 600;
-  min-height: 28px;
+  min-height: 32px;
+  color: var(--accent);
 }
 
 .bench-more[open] {
@@ -185,10 +282,10 @@
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  padding: 10px 12px;
-  border-radius: 8px;
+  padding: 10px 12px 10px 14px;
+  border-radius: var(--r-md);
   background: var(--warn-bg);
-  border-left: 4px solid var(--warn);
+  box-shadow: inset 4px 0 0 var(--warn);
 }
 
 .card .lab-warning p {
@@ -196,8 +293,8 @@
 }
 
 .lab-unavailable {
-  padding: 10px 12px;
-  border-radius: 8px;
+  padding: 12px 14px;
+  border-radius: var(--r-md);
   background: var(--surface-2);
 }
 
@@ -212,21 +309,29 @@
 .lab-export {
   display: grid;
   gap: 2px;
-  flex: 1 1 140px;
-  min-height: 52px;
-  padding: 8px 12px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
+  flex: 1 1 160px;
+  min-height: 56px;
+  padding: 10px 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-md);
+  background: var(--surface);
   text-decoration: none;
   color: var(--text);
+  transition: border-color var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease-out);
 }
 
 a.lab-export:hover {
   border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--text);
 }
 
 .lab-export-label {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
   font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
   color: var(--accent);
 }
 
@@ -243,4 +348,10 @@ a.lab-export:hover {
 
 .data-table .lab-run-col .link-button {
   text-align: left;
+}
+
+/* Every run: the first ten, then "Show all". */
+.lab-runs-more {
+  justify-self: start;
+  margin-top: var(--sp-3);
 }

@@ -9,7 +9,9 @@ import type { PageProps } from ".";
 export function Status(_props: PageProps) {
   return (
     <>
-      <h1 className="page-title">Data and methodology</h1>
+      <header className="page-head">
+        <h1 className="page-title">Data and methodology</h1>
+      </header>
       <SystemStatus />
       <section className="card">
         <h2>Still to come on this page</h2>

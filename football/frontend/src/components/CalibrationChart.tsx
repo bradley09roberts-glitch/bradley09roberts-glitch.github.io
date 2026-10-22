@@ -192,8 +192,12 @@ export function CalibrationChart({
             >
               Observed frequency
             </text>
-            <text className="cal-tick" x={M.left - 6} y={histTop + HIST_LABEL + HIST_H / 2} dy="0.32em" textAnchor="end">
-              n
+            <text
+              className="cal-axis-title"
+              transform={`translate(11 ${histTop + HIST_LABEL + HIST_H / 2}) rotate(-90)`}
+              textAnchor="middle"
+            >
+              Fixtures
             </text>
           </g>
 

@@ -42,8 +42,9 @@ function rows(p: Probabilities, lines: number[] | undefined): Row[] {
 }
 
 /**
- * compact: one cell per market (over / yes probability large, the other side small), for
- * fixture cards. full: a table with both sides and a meter for every line.
+ * compact: one chip per market (over / yes probability large, the other side small, a thin
+ * meter along the bottom), for fixture cards. full: a table with both sides and a meter for
+ * every line.
  */
 export function MarketGrid({
   probabilities,
@@ -59,17 +60,18 @@ export function MarketGrid({
   if (list.length === 0) return <p className="muted">No goal-total or both-teams-to-score probabilities in this record.</p>;
 
   if (variant === "compact") {
+    // One chip per market: the over (or yes) probability large, the other side beneath.
     return (
-      <ul className="market-cells">
+      <ul className="market-chips">
         {list.map((r) => (
-          <li key={r.key} className="market-cell">
-            <span className="market-cell-label">{r.key === "BTTS" ? "Both score" : r.yesLabel}</span>
-            <span className="market-cell-value">{formatPct(r.yes)}</span>
-            <span className="meter" aria-hidden="true">
-              <span className="meter-fill" style={{ width: `${Math.round(r.yes * 100)}%` }} />
-            </span>
-            <span className="market-cell-other">
+          <li key={r.key} className="mchip">
+            <span className="mchip-label">{r.key === "BTTS" ? "Both score" : r.yesLabel}</span>
+            <span className="mchip-value">{formatPct(r.yes)}</span>
+            <span className="mchip-other">
               {r.key === "BTTS" ? "No" : "Under"} {formatPct(r.no)}
+            </span>
+            <span className="mchip-meter" aria-hidden="true">
+              <span style={{ width: `${Math.round(r.yes * 100)}%` }} />
             </span>
           </li>
         ))}
