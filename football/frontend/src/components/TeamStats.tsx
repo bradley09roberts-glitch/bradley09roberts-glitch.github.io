@@ -171,18 +171,23 @@ export function averageRows(
  * Why some averages cover fewer matches than goals do, or are missing: UEFA matches carry
  * scores only, and so do football-data's files for some leagues (D-022). `goals` and `stats`
  * are the matches behind the goals and the shots averages; `europe`, whether the club has UEFA
- * matches. `team` names the club where the note isn't on its own page (the match page).
+ * matches among them; `league`, whether it has league matches among them (a club whose league
+ * the data doesn't hold has none). `team` names the club where the note isn't on its own page
+ * (the match page).
  */
 export function statsNote(
   scope: "all" | CompetitionType,
   goals: number,
   stats: number,
-  europe: boolean,
-  team?: string,
+  { europe, league, team }: { europe: boolean; league: boolean; team?: string },
 ): string | null {
   const only = team ? `Only goals for ${team}` : "Only goals";
-  if (scope === "europe") return `${only}: the UEFA sources give scores, not shots, corners, fouls or cards.`;
+  const uefa = "the UEFA sources give scores, not shots, corners, fouls or cards";
+  if (scope === "europe") return `${only}: ${uefa}.`;
   if (stats >= goals) return null;
+  if (stats === 0 && scope === "all" && !league) {
+    return `${only}: the data holds no league matches for ${team ? "it" : "this club"}, only UEFA matches, and ${uefa}.`;
+  }
   if (stats === 0) {
     return `${only}: football-data's files for ${team ? "its" : "this club's"} league give scores only, with no shots, corners, fouls or cards${scope === "all" && europe ? ", and so do the UEFA sources" : ""}.`;
   }

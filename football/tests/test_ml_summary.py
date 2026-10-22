@@ -114,3 +114,21 @@ def test_the_reports_themselves_are_served(client, settings):
     write(settings, "ml_selection", selection())
     assert client.get("/api/reports/ml_learning_curve").json() == curve
     assert client.get("/api/reports/ml_selection").json()["targets"]["with_prices"] == "tilt_m"
+
+
+def test_a_candidate_missing_from_the_report_is_not_said_to_have_lost(client, settings):
+    """A candidate the saved report has no row for has no validation figures; its outcome says
+    so rather than claiming it lost to its target."""
+    report = selection()
+    report["validation_2324"]["table"] = [
+        r for r in report["validation_2324"]["table"] if r["model"] != "ml_stack_pure"
+    ]
+    del report["validation_2324"]["paired_vs_target"]["ml_stack_pure - ctx_m"]
+    write(settings, "ml_selection", report)
+    body = client.get("/api/ml/summary").json()
+    c = {x["model"]: x for x in body["candidates"]}
+    missing = c["ml_stack_pure"]
+    assert missing["validation"] is None and missing["test"] == {"run": False}
+    assert "worse" not in missing["outcome"] and "not in the saved report" in missing["outcome"]
+    assert c["ml_online_pure"]["outcome"] == "not tested: worse than its target on validation"
+    assert not any("ml_stack_pure" in w for w in body["why"])

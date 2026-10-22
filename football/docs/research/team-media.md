@@ -11,7 +11,7 @@ For every team, `GET /api/teams/{team_key}/media` returns:
 | --- | --- | --- |
 | `crest` | The club's crest, **only** if a freely licensed file has been downloaded from Wikimedia Commons (`kind: "crest"`). Otherwise our own generated badge (`kind: "generated"`) | Commons file named by Wikidata P154; or `footy.media.badge` |
 | `venue` | The home ground's name, and its photo once downloaded (else `url: null`) | Wikidata P115 (home venue), its English label and P18 (image) |
-| `colours` | The club's official colours, `{name, hex}`, the badge's background first | Wikidata P6364 (official colour) with P465 (sRGB hex) |
+| `colours` | The club's official colours, `{name, hex, shade}` (`shade`: the hex the site draws, see below), the badge's background first | Wikidata P6364 (official colour) with P465 (sRGB hex) |
 
 Every picture carries `licence`, `licence_url`, `author`, `attribution` (the text to
 display) and `source_url` (the Commons file page). A downloaded picture is shown only while
@@ -29,7 +29,8 @@ crest or venue, or from a Wikidata item since corrected, falls back to the gener
             "source_url": "https://www.wikidata.org/wiki/Q9617"},
   "venue": {"name": "Emirates Stadium", "url": null, "licence": null, "licence_url": null,
             "author": null, "attribution": null, "source_url": null},
-  "colours": [{"name": "red", "hex": "#FF0000"}, {"name": "white", "hex": "#FFFFFF"}]
+  "colours": [{"name": "red", "hex": "#FF0000", "shade": "#C8102E"},
+              {"name": "white", "hex": "#FFFFFF", "shade": "#FFFFFF"}]
 }
 ```
 
@@ -41,14 +42,18 @@ team's badge without a request per team (`service.media_summary`; where each end
 [docs/teams.md](../teams.md#pictures-and-colours)):
 
 ```json
-{"crest_url": null, "badge": {"colours": ["#FF0000", "#FFFFFF"], "short": "ARS"}}
+{"crest_url": null, "badge": {"colours": ["#C8102E", "#FFFFFF"], "short": "ARS"}}
 ```
 
 `crest_url` is set only for a downloaded crest that the full response above would show
 (free licence, the Commons file the facts name now, inside `data/media/teams/`), never for the
-generated badge. `badge.colours` are the hex values of `colours` in the same order, and
+generated badge. `badge.colours` are the shades of `colours` in the same order, and
 `badge.short` is the generated badge's three letters, so the website's own badge and
-`badge.svg` agree. `short_name` keeps a leading acronym as the club writes it ("RB Leipzig" →
+`badge.svg` agree (how both are chosen: [docs/teams.md](../teams.md#pictures-and-colours)).
+Wikidata gives most clubs a plain named colour at its pure screen value ("red" `#FF0000`),
+which no club wears; `badge.kit_shade` draws those in a kit shade of the same name
+(`KIT_SHADES`, each with white or near-black letters at 4.5:1 or better) and any other hex as
+given. `short_name` keeps a leading acronym as the club writes it ("RB Leipzig" →
 RBL, "PSV Eindhoven" → PSV, "CSKA Sofia" → CSK) and skips a four-digit year ("Iberia 1999" →
 IBE).
 
@@ -119,9 +124,11 @@ Wikimedia's own resized copies of the original, under the original's licence.
 ## The generated badge
 
 `footy.media.badge` draws a plain roundel: the club's most saturated official colour as the
-background, the colour that contrasts most with it as a diagonal band, and a three-letter
-short name ("Aston Villa" → AVL, "Man United" → MUN, "Paris SG" → PSG) in white or near-black,
-whichever reads better. Without Wikidata colours it uses one of five muted neutral pairs,
+background, the colour that contrasts most with it as a diagonal band (both in their kit
+shades, and in the order reviewed in `reference/team_badges.csv` where a club has one), and a
+three-letter short name ("Aston Villa" → AVL, "Man United" → MUN, "Paris SG" → PSG; letters
+made different for teams that meet, docs/teams.md) in white or near-black, whichever reads
+better. Without Wikidata colours it uses one of five muted neutral pairs,
 picked by the team key. The same inputs always give byte-identical SVG. It is deliberately
 unlike any crest (no shield, no emblem), its title and accessible name say "generated badge,
 not the club's crest", and the API marks it `kind: "generated"`.

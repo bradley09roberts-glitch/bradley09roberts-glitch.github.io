@@ -239,12 +239,15 @@
   color: var(--accent);
 }
 
+/* One column as wide as the disclosure, never its content: a grid item (here Chrome's slot
+   around the opened content, which no selector reaches) is otherwise as wide as the table, and
+   widens the page on a phone. The table scrolls inside its own box instead. */
 .cal-table[open] {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 10px;
 }
 
-/* A grid item is as wide as its content by default: the table scrolls inside instead. */
 .cal-table[open] > * {
   min-width: 0;
 }
@@ -357,9 +360,11 @@
   fill: var(--muted);
 }
 
-.lc-zero {
+/* Firm, not dashed like the grid lines it sits among. */
+.cal-grid .lc-zero {
   stroke: var(--text-2);
   stroke-width: 1.25;
+  stroke-dasharray: none;
 }
 
 .lc-hover {
@@ -432,10 +437,16 @@
   font-size: var(--fs-sm);
 }
 
+/* A model's code name moves under its label on a narrow screen rather than breaking. */
 .lc-legend li {
   display: inline-flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 7px;
+  gap: 2px 7px;
+}
+
+.lc-legend code {
+  overflow-wrap: normal;
 }
 
 .lc-legend-key {

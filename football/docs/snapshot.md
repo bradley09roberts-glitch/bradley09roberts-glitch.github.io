@@ -16,7 +16,9 @@ make snapshot OUT=<folder> PAGE=<dir>/football-model.html   # also the one-file 
 
 | File | What it answers | Fetched |
 | --- | --- | --- |
-| `snapshot.json` | What the first screen needs: health, fixtures (every 1–30 day window), past results, performance, hit rates, data and status pages, the saved reports and the D-028 summary; and the list of shard files with the request keys each answers | At start-up |
+| `snapshot.json` | What every page needs first: health, past results, performance, hit rates, the list of backtest runs, the saved reports and the D-028 summary; and the list of shard files with the request keys each answers | At start-up |
+| `snapshot-fixtures-1.json` | The fixtures for the next 30 days (`/api/fixtures?days=30`); the page takes every shorter window (1 to 30 days) from it, as the API would (`derived` in `snapshot.ts`) | The first time the fixtures or the Data page is opened |
+| `snapshot-data-1.json` | The Data page's coverage, import issues and refresh history | The first time the Data page is opened |
 | `snapshot-matches-<n>.json` | Match pages (`/api/predictions/{id}`, with their `teams` block) | The first time a match page is opened |
 | `snapshot-lab-<n>.json` | Backtest summaries (`/api/backtests/{run}/summary`), each run's in one file | The first time a run is opened in the lab |
 | `snapshot-teams-1.json` | The teams list alone (`/api/teams`) | The first time the teams list is opened |
@@ -24,14 +26,18 @@ make snapshot OUT=<folder> PAGE=<dir>/football-model.html   # also the one-file 
 | `media/teams/<key>/crest.png`, `venue.jpg` | Downloaded, freely licensed pictures the carried teams' media responses link to | By the page's `<img>` |
 
 Each data file has the same shape (`format`, `taken_at_utc`, `bodies`, `entries`: key →
-`[status, body index]`; identical bodies stored once per file). `snapshot.json` adds `shards`:
+`[status, body index]`; identical bodies stored once per file, ignoring the second each was
+made at, `generated_at_utc`). `snapshot.json` adds `shards`:
 `[{"file", "bytes", "keys"}]`. `frontend/src/snapshot.ts` looks a request up in
 `snapshot.json`, then in the shard that lists its key, fetching that shard once (a failed load
 is retried by "Try again"); a key in no file answers "Not in this snapshot". A snapshot from
 before shards existed (`footy-api-snapshot/1`, no `shards`) still loads.
 
-A shard is closed once it holds 2 MB (`SHARD_TARGET_BYTES`), so a team or match page loads
-about 2 MB at most on a phone; no shard may pass 12 MB (`SHARD_MAX_BYTES`).
+A shard is closed once it holds 2 MB (`SHARD_TARGET_BYTES`), or 1 MB for team and match pages
+(`PAGE_SHARD_TARGET_BYTES`), as either is often the first page opened from a shared link: on
+22 October 2026 a team page loads `snapshot.json` (0.4 MB) and one team file (about 0.9 MB).
+No shard may pass 12 MB (`SHARD_MAX_BYTES`). The files are plain JSON; a host that compresses
+them (gzip or Brotli) cuts each to between a sixth and a tenth of its size.
 
 ## Which teams have pages
 
@@ -85,20 +91,22 @@ the page with all of those files.
 
 ## Sizes on the real data (22 October 2026)
 
-`make snapshot` on the real database at 02:54 UK time (about two minutes; 2,507 requests, all
+`make snapshot` on the real database at 06:22 UK time (about two minutes; 2,478 requests, all
 200):
 
 | File | Bytes | Answers |
 | --- | ---: | --- |
-| `snapshot.json` | 4,159,814 | 103 first-screen requests (the 30 fixture windows are 7 distinct bodies, 3.2 MB) and the shard list (0.15 MB) |
-| `snapshot-matches-1.json`, `-2.json` | 1,991,198 + 453,282 | 225 match pages |
+| `snapshot.json` | 424,564 | 70 first-screen requests and the shard list |
+| `snapshot-fixtures-1.json` | 524,729 | The 30-day fixtures (every shorter window is taken from it) |
+| `snapshot-data-1.json` | 490,090 | The Data page's coverage, import issues and refresh history |
+| `snapshot-matches-1.json` … `-3.json` | 991,242 + 987,720 + 465,600 | 225 match pages |
 | `snapshot-lab-1.json` … `-4.json` | 1,975,086 + 1,991,029 + 1,917,249 + 553,964 | 1,608 backtest summaries |
-| `snapshot-teams-1.json` | 431,531 | The teams list (873 teams with their media) |
-| `snapshot-teams-2.json` … `-13.json` | 1.89–2.00 MB each, the last 499,586 | 190 teams × 3 pages |
-| `index.html`, `assets/*.js`, `assets/*.css` | 371 + 385,647 + 69,018 | The site |
-| **Site folder** | **36,020,836 in 23 files** | |
-| One-file page (`--single-page`) | 455,398 | Replaces `index.html` and `assets/`: **21 files, 36.0 MB** to publish |
+| `snapshot-teams-1.json` | 503,627 | The teams list (873 teams with their names and media) |
+| `snapshot-teams-2.json` … `-25.json` | 0.88–0.99 MB each, the last 759,993 | 190 teams × 3 pages |
+| `index.html`, `assets/*.js`, `assets/*.css` | 371 + 469,555 + 102,204 | The site |
+| **Site folder** | **33,501,949 in 38 files** | |
+| One-file page (`--single-page`) | 572,828 | Replaces `index.html` and `assets/`: **36 files, 33.5 MB** to publish |
 
 Per team: profile about 34 KB (Arsenal 33.6 KB, Aston Villa 35.6 KB), match log about 95 KB,
 media 0.5 KB. Before shards the whole snapshot was one `snapshot.json` of 12.2 MB without team
-pages; the first screen now loads 4.2 MB. No pictures are downloaded yet, so none are carried.
+pages; the first screen now loads 0.4 MB. No pictures are downloaded yet, so none are carried.

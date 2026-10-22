@@ -131,8 +131,8 @@ function Sources() {
           </div>
           <p>
             2026/27 Champions League, Europa League and Conference League fixtures and results,
-            qualifying and league phase, read from saved page revisions. Kick-offs and venues are
-            cross-checked against UEFA.com match pages.
+            qualifying and league phase, read from saved page revisions. UEFA.com is not used: its
+            terms forbid scripted collection.
           </p>
         </li>
         <li>

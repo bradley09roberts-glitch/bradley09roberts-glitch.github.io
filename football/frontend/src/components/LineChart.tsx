@@ -53,6 +53,8 @@ export function niceTicks(lo: number, hi: number, count = 4): number[] {
 }
 
 const M = { top: 14, right: 14, bottom: 30 };
+/** The strip kept clear at the top of the plot for the bands' labels. */
+const BAND_HEAD = 18;
 
 export function LineChart({
   series,
@@ -105,8 +107,10 @@ export function LineChart({
   const left = Math.max(34, labelW);
   const plotW = width - left - M.right;
   const plotH = height - M.top - M.bottom;
+  // A labelled band keeps a strip at its top for the label, so no line or dot runs through it.
+  const head = bands.length > 0 ? BAND_HEAD : 0;
   const x = (v: number) => left + (xMax === xMin ? plotW / 2 : ((v - xMin) / (xMax - xMin)) * plotW);
-  const y = (v: number) => M.top + ((hi - v) / (hi - lo)) * plotH;
+  const y = (v: number) => M.top + head + ((hi - v) / (hi - lo)) * (plotH - head);
 
   // x labels that would touch the one before are left out.
   const shownTicks: { x: number; label: string }[] = [];

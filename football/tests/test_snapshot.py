@@ -787,3 +787,65 @@ def test_answers_that_differ_only_in_when_they_were_made_are_stored_once():
     assert snap.entries["/a"] == snap.entries["/b"] != snap.entries["/c"]
     assert snap.body("/b")["generated_at_utc"] == "2026-10-22T04:00:01+00:00"  # the first kept
     assert len(snap.bodies) == 2
+
+
+def test_team_and_match_page_shards_are_smaller_than_the_others():
+    from footy.snapshot import PAGE_SHARD_TARGET_BYTES, SHARD_TARGET_BYTES, Snapshot
+
+    # Bodies of 0.6 of the page target: a match or team file holds one, a lab file several.
+    filler = "x" * int(PAGE_SHARD_TARGET_BYTES * 0.6)
+    snap = Snapshot(taken_at_utc="2026-10-22T04:00:00+00:00")
+    for family in ("matches", "lab", "teams"):
+        for n in range(3):
+            key = f"/api/{family}/{n}"
+            snap.add(key, 200, {"n": n, "family": family, "filler": filler})
+            snap.group(family, [key])
+    files = {name: keys for name, keys in snap.shards()}
+    assert PAGE_SHARD_TARGET_BYTES < SHARD_TARGET_BYTES
+    assert [len(files[f"snapshot-matches-{n}.json"]) for n in (1, 2, 3)] == [1, 1, 1]
+    assert [len(files[f"snapshot-teams-{n}.json"]) for n in (1, 2, 3)] == [1, 1, 1]
+    assert len(files["snapshot-lab-1.json"]) == 3 and "snapshot-lab-2.json" not in files
+
+
+def test_a_record_published_while_the_export_runs_is_carried_with_the_team_page_linking_it(
+    settings, migrated_engine, world, tmp_path, monkeypatch
+):
+    """A team page links to its fixtures' and matches' match pages. A record published after
+    the match pages were collected but before the team pages (a scheduled job writing while the
+    export runs) must still have its match page in the snapshot."""
+    from footy import snapshot
+
+    later = FixtureIn(
+        "E0",
+        "2627",
+        DAY + timedelta(days=3),
+        KICKOFF + timedelta(days=3),
+        "eng-mockford",
+        "eng-testtown",
+        features={"home_matches_in_window": 40, "away_matches_in_window": 38},
+        missing_fields=["lineups", "injuries", "odds"],
+    )
+    choose_teams = snapshot.snapshot_teams
+    published: list[int] = []
+
+    def publish_then_choose(engine, snap):
+        if not published:
+            published.extend(pub(migrated_engine, tmp_path, [later], "dixon_coles"))
+        return choose_teams(engine, snap)
+
+    monkeypatch.setattr(snapshot, "snapshot_teams", publish_then_choose)
+    out = tmp_path / "site"
+    export(settings, world, out)
+    entries = read_site(out)
+    (new_id,) = published
+    profile = entries["/api/teams/eng-testtown"][1]
+    assert new_id in {f["prediction"]["id"] for f in profile["upcoming"] if f["prediction"]}
+    linked = {
+        r["prediction"]["id"]
+        for key, (status, body, _) in entries.items()
+        if status == 200 and key.startswith("/api/teams/")
+        for r in [*(body.get("upcoming") or []), *(body.get("matches") or [])]
+        if isinstance(r, dict) and r.get("prediction")
+    }
+    assert new_id in linked
+    assert {f"/api/predictions/{i}" for i in linked} <= set(entries)

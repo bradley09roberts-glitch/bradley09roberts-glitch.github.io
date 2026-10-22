@@ -148,16 +148,14 @@ function AverageBlock({ t }: { t: MatchTeams }) {
   // page's words; for European matches one note covers both sides.
   const notes =
     scope === "europe"
-      ? [statsNote("europe", 0, 0, true)]
+      ? [statsNote("europe", 0, 0, { europe: true, league: false })]
       : [t.home, t.away].map((sd) => {
           const pm = sd.per_match[scope]?.averages;
-          return statsNote(
-            scope,
-            pm?.goals?.matches ?? 0,
-            pm?.shots?.matches ?? 0,
-            (sd.per_match.europe?.matches ?? 0) > 0,
-            sd.name,
-          );
+          return statsNote(scope, pm?.goals?.matches ?? 0, pm?.shots?.matches ?? 0, {
+            europe: (sd.per_match.europe?.matches ?? 0) > 0,
+            league: (sd.per_match.league?.matches ?? 0) > 0,
+            team: sd.name,
+          });
         });
   return (
     <div className="mf-block">

@@ -9,7 +9,7 @@
 // parameters so a static snapshot can answer them (docs/snapshot.md). Nothing is estimated
 // here: a figure the source doesn't have is shown as missing, never filled in.
 
-import { useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import {
   endpoints,
   useApi,
@@ -131,20 +131,29 @@ function TeamDetail({
   if (played("cup") > 0) tabs.push({ id: "cups", label: "Cups", hint: formatNumber(played("cup"), 0) });
   const shown = tabs.some((t) => t.id === tab) ? tab : "overview";
   const tabsRef = useRef<HTMLDivElement>(null);
+  // Where the page was when a tab was chosen; null otherwise (a Back step to another tab).
+  const chosenAt = useRef<number | null>(null);
   const choose = (id: TeamTab) => {
+    if (id === shown) return;
+    chosenAt.current = window.scrollY;
     // A tab's own choices (the match log's filters) are left behind with it.
     setQuery({ tab: id === "overview" ? null : id, type: null, season: null }, { replace: false });
-    // Bring the chosen view up under the app bar, so a tab doesn't open on the hero again.
-    requestAnimationFrame(() => {
-      const el = tabsRef.current;
-      if (!el) return;
-      const top = el.getBoundingClientRect().top;
-      if (top < 0 || top > window.innerHeight / 4) {
-        const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-        el.scrollIntoView({ block: "start", behavior: reduce ? "auto" : "smooth" });
-      }
-    });
   };
+  // Once the chosen view is on screen, bring the tabs up under the app bar, so a tab doesn't
+  // open on the hero again. A new history entry starts at the top (App.tsx), so first go back
+  // to where the reader was, then scroll from there.
+  useEffect(() => {
+    const from = chosenAt.current;
+    chosenAt.current = null;
+    const el = tabsRef.current;
+    if (from === null || !el) return;
+    window.scrollTo(0, from);
+    const top = el.getBoundingClientRect().top;
+    if (top < 0 || top > window.innerHeight / 4) {
+      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      el.scrollIntoView({ block: "start", behavior: reduce ? "auto" : "smooth" });
+    }
+  }, [shown]);
   return (
     <>
       <TeamHero p={p} media={media} />
@@ -462,7 +471,13 @@ function Overview({ p, log }: { p: TeamProfile; log: ApiResult<TeamMatchesRespon
 
         {!twoColumns && <Upcoming p={p} />}
 
-        <Averages s={s} id="averages" scope="all" europe={(p.by_type.europe?.played ?? 0) > 0} />
+        <Averages
+          s={s}
+          id="averages"
+          scope="all"
+          europe={(p.by_type.europe?.played ?? 0) > 0}
+          league={(p.by_type.league?.played ?? 0) > 0}
+        />
 
         <StrengthCard p={p} />
       </div>
@@ -657,17 +672,20 @@ function Averages({
   id,
   scope,
   europe = false,
+  league = false,
 }: {
   s: FullSummary;
   id: string;
   scope: "all" | CompetitionType;
   /** The club has UEFA matches among those summarised. */
   europe?: boolean;
+  /** The club has league matches among those summarised. */
+  league?: boolean;
 }) {
   const rows = averageRows(s.per_match);
   const goals = s.per_match.goals?.matches ?? 0;
   const stats = s.per_match.shots?.matches ?? 0;
-  const note = statsNote(scope, goals, stats, europe);
+  const note = statsNote(scope, goals, stats, { europe, league });
   // Listed only where some statistics are held; with none, the note above says why.
   const missing = stats > 0 ? missingStats(s.per_match) : [];
   return (

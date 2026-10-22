@@ -479,16 +479,25 @@ function CandidateRow({ c }: { c: MlCandidate }) {
         </p>
       </div>
       <div className="mlx-splits">
-        <Split
-          split="validation"
-          title={SPLITS.validation ?? "Validation"}
-          learner={v.composite}
-          target={v.target_composite}
-          fixtures={v.fixtures}
-          difference={v.difference}
-          ci={v.difference_ci95}
-          good={v.beat_target}
-        />
+        {v ? (
+          <Split
+            split="validation"
+            title={SPLITS.validation ?? "Validation"}
+            learner={v.composite}
+            target={v.target_composite}
+            fixtures={v.fixtures}
+            difference={v.difference}
+            ci={v.difference_ci95}
+            good={v.beat_target}
+          />
+        ) : (
+          <div className="mlx-split mlx-split-none">
+            <p className="mlx-split-head">
+              <strong>{SPLITS.validation}</strong>
+            </p>
+            <p className="muted small">Not in the saved report.</p>
+          </div>
+        )}
         {t.run ? (
           <Split
             split="test"

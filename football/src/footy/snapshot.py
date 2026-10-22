@@ -76,11 +76,13 @@ HOST_LIMITS = {
 }
 TEXT_SUFFIXES = (".html", ".json", ".js", ".css", ".svg", ".txt", ".map")
 # A shard is closed once it holds this much. A team page or a match page loads one shard, so
-# they are kept small for a phone: team shards hold about 8 teams' pages each (about 120 KB a
-# team), as a team page is often the first page opened from a shared link. 12 MB is the most
-# any shard may hold (a single group bigger than the target gets a file of its own).
+# theirs are kept small for a phone (PAGE_SHARD_FAMILIES): about 8 teams' pages a file (about
+# 120 KB a team) or about 90 match pages, as either is often the first page opened from a
+# shared link. 12 MB is the most any shard may hold (a single group bigger than the target gets
+# a file of its own).
 SHARD_TARGET_BYTES = 2 * MB
-TEAM_SHARD_TARGET_BYTES = 1 * MB
+PAGE_SHARD_TARGET_BYTES = 1 * MB
+PAGE_SHARD_FAMILIES = ("matches", "teams")
 SHARD_MAX_BYTES = 12 * MB
 SHARD_FAMILIES = ("fixtures", "data", "matches", "lab", "teams")  # in file order
 
@@ -259,12 +261,13 @@ class Snapshot:
 
     def shards(self) -> list[tuple[str, list[str]]]:
         """(file name, keys) per shard file: each family's groups in order, a file closed once
-        it holds SHARD_TARGET_BYTES (by its bodies' size, counted once each)."""
+        it holds SHARD_TARGET_BYTES, or PAGE_SHARD_TARGET_BYTES for team and match pages (by its
+        bodies' size, counted once each)."""
         out: list[tuple[str, list[str]]] = []
         for family in SHARD_FAMILIES:
             target = SHARD_TARGET_BYTES
-            if family == "teams":
-                target = min(target, TEAM_SHARD_TARGET_BYTES)
+            if family in PAGE_SHARD_FAMILIES:
+                target = min(target, PAGE_SHARD_TARGET_BYTES)
             files: list[list[str]] = []
             size, seen, closed = 0, set(), True
             for keys, alone in self.groups.get(family, []):
@@ -329,14 +332,17 @@ def _prediction_ids(engine: Engine) -> set[int]:
 
 
 def _linked_prediction_ids(body: Any) -> Iterator[int]:
-    """Prediction ids a response links to: cards, editions and counterparts."""
+    """Prediction ids a response links to: cards, editions and counterparts, and the records on
+    a team's fixtures and match log rows."""
     if not isinstance(body, dict):
         return
     linked = [c for comp in body.get("competitions") or [] for c in comp.get("fixtures") or []]
-    linked += body.get("matches") or []  # past cards (a team's match log has no ids)
+    linked += body.get("matches") or []  # past cards, or a team's match log rows
     linked += body.get("editions") or []
     if isinstance(body.get("counterpart"), dict):
         linked.append(body["counterpart"])
+    rows = [*(body.get("matches") or []), *(body.get("upcoming") or [])]
+    linked += [r["prediction"] for r in rows if isinstance(r, dict) and r.get("prediction")]
     for x in linked:
         if isinstance(x, dict) and isinstance(x.get("id"), int):
             yield x["id"]
@@ -466,15 +472,18 @@ def export_snapshot(
     # yet (one published while the export ran), until every link resolves.
     wanted = _prediction_ids(engine)
     done: set[int] = set()
-    while wanted - done:
-        for pid in sorted(wanted - done):
-            get(f"/api/predictions/{pid}")
-            snap.group("matches", [canonical_key(f"/api/predictions/{pid}")])
-            done.add(pid)
-        for status, i in snap.entries.values():
-            if status == 200:
-                wanted.update(_linked_prediction_ids(snap.bodies[i]))
 
+    def match_pages() -> None:
+        while wanted - done:
+            for pid in sorted(wanted - done):
+                get(f"/api/predictions/{pid}")
+                snap.group("matches", [canonical_key(f"/api/predictions/{pid}")])
+                done.add(pid)
+            for status, i in snap.entries.values():
+                if status == 200:
+                    wanted.update(_linked_prediction_ids(snap.bodies[i]))
+
+    match_pages()
     # Team pages: the list in a shard of its own, then each team's pages together.
     get(FRONTEND_TEAMS_LIST)
     snap.group("teams", [canonical_key(FRONTEND_TEAMS_LIST)], alone=True)
@@ -483,6 +492,11 @@ def export_snapshot(
         for path in paths:
             get(path)
         snap.group("teams", (canonical_key(path) for path in paths))
+    # A record published since the match pages were taken that a team page links to.
+    for status, i in snap.entries.values():
+        if status == 200:
+            wanted.update(_linked_prediction_ids(snap.bodies[i]))
+    match_pages()
     snap.finished_at_utc = _iso_now()
     return snap
 

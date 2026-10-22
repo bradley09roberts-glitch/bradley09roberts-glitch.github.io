@@ -101,6 +101,9 @@ def ml_summary(reports_dir: Path) -> dict | None:
                 "not tested: it beat its target on validation, but D-025 tests only the one "
                 "selected candidate (the lowest validation composite)"
             )
+        elif val is None:  # no row for it (or its target) in the report: nothing to compare
+            entry["test"] = {"run": False}
+            entry["outcome"] = "not in the saved report: no validation figures to compare"
         else:
             entry["test"] = {"run": False}
             entry["outcome"] = "not tested: worse than its target on validation"

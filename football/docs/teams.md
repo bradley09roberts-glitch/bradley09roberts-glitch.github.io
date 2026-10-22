@@ -174,16 +174,25 @@ Wherever these endpoints name a team they also send its media summary
 (`footy.media.service.media_summary`; [docs/research/team-media.md](research/team-media.md)):
 
 ```json
-{"crest_url": null, "badge": {"colours": ["#670E36", "#95BFE5"], "short": "AVL"}}
+{"crest_url": null, "badge": {"colours": ["#800032", "#6CABDD"], "short": "AVL"}}
 ```
 
 - `crest_url`: `/media/teams/<key>/crest.png` only once a freely licensed crest has been
   downloaded (none yet), else `null`. Never the generated badge.
 - `badge.colours`: the club's official colours from Wikidata (CC0) as hex, the badge's
-  background first, then its band; `[]` when Wikidata has none (nothing is made up).
-- `badge.short`: the three-letter name the generated badge.svg draws
-  (`footy.media.badge.short_name`): the one abbreviation of a team, made on the server so the
-  site's badges and the SVG agree.
+  background first, then its band; `[]` when Wikidata has none (nothing is made up). Each is
+  the shade drawn (`footy.media.badge.kit_shade`): Wikidata gives most clubs a plain named
+  colour at its pure screen value (red `#FF0000`, blue `#0000FF`, green `#00FF00`), which is
+  drawn in a kit shade of the same name (`#C8102E`, `#1D4F9C`, `#00843D`); any other hex is
+  drawn as given. The background and band follow the order reviewed by hand in
+  `reference/team_badges.csv` where a club has one (Real Madrid and Tottenham play in white,
+  not their most saturated colour), else `pick_colours`.
+- `badge.short`: the three-letter name the generated badge.svg draws, made on the server so
+  the site's badges and the SVG agree: `footy.media.badge.short_name`, or the letters reviewed
+  in `reference/team_badges.csv` ("MCI", "BAY", "ATM"), then made different for every two
+  teams that share a competition's season (`footy.teams.badge_letters`: Celtic and Celta meet
+  in the 2026/27 Europa League, so Celta is "CTA"). The team with more matches keeps its
+  letters; the other takes its next choice (`short_candidates`).
 
 | Endpoint | Where |
 | --- | --- |
@@ -202,13 +211,23 @@ All three are read-only and follow the existing routes (404 `{"detail": "no such
 unknown key, 422 for a bad parameter, UTC timestamps with `+00:00`).
 
 `GET /api/teams?competition=E0,UCL&q=villa` (filters optional; `competition` repeatable or
-comma-separated, matching this season's competitions; `q` matches names and keys, ignoring case
-and accents):
+comma-separated, matching this season's competitions; `q` matches every name held for a club
+and its key, ignoring case and accents, each word anywhere: "spurs", "manchester city",
+"athletic bilbao").
+
+Names (`footy.teams`, "Names"): `name` is football-data's short name ("Ath Madrid", "Nott'm
+Forest"), kept on cards, tables and logs. `display_name`, for headings, is the club's name on
+Wikipedia's UEFA season pages ("Atlético Madrid"), else its Wikidata label without a club-type
+word ("Nottingham Forest"), else `name`. `aliases` lists every other name held, for search:
+openfootball's and Wikipedia's (`team_aliases`, country suffix removed), the Wikidata label and
+the mapped item's English aliases ("Spurs"; `reference/team_wikidata_aliases.json`). Every name
+is a source's own; none is made up. The team profile's `team` has `display_name` too.
 
 ```json
 {"generated_at_utc": "2026-10-21T23:05:40+00:00", "latest_match_held": "2026-10-20",
  "filters": {"competition": ["E0", "UCL"], "q": "villa"}, "count": 2,
- "teams": [{"key": "eng-aston-villa", "name": "Aston Villa", "country": "ENG",
+ "teams": [{"key": "eng-aston-villa", "name": "Aston Villa", "display_name": "Aston Villa",
+   "aliases": ["Aston Villa F.C.", "..."], "country": "ENG",
    "division": {"code": "E0", "name": "Premier League", "tier": 1, "season": "2627",
                 "season_label": "2026/27", "current": true},
    "competitions_this_season": [{"code": "E0", "name": "Premier League", "type": "league",
@@ -216,15 +235,15 @@ and accents):
    "form_last_5": "LWDWW", "matches": 360,
    "matches_by_type": {"league": 319, "europe": 41, "cup": 0},
    "last_match_date": "2026-10-17", "elo": 1866.2, "elo_rank": 9}, "..."],
- "media": {"eng-aston-villa": {"crest_url": null, "badge": {"colours": ["#800032", "#007FFF"], "short": "AVL"}},
-           "esp-villarreal": {"crest_url": null, "badge": {"colours": ["#FFFF00"], "short": "VIL"}}}}
+ "media": {"eng-aston-villa": {"crest_url": null, "badge": {"colours": ["#800032", "#6CABDD"], "short": "AVL"}},
+           "esp-villarreal": {"crest_url": null, "badge": {"colours": ["#FCD116"], "short": "VIL"}}}}
 ```
 
 `GET /api/teams/eng-arsenal` (trimmed):
 
 ```json
 {"team": {"key": "eng-arsenal", "name": "Arsenal",
-          "media": {"crest_url": null, "badge": {"colours": ["#FF0000", "#FFFFFF"], "short": "ARS"}},
+          "media": {"crest_url": null, "badge": {"colours": ["#C8102E", "#FFFFFF"], "short": "ARS"}},
           "country": "ENG", "division": {"code": "E0", "...": "..."}},
  "matches": {"logged": 374, "counted": 374, "left_out": 0, "first_date": "2018-08-12", "last_date": "2026-10-18"},
  "summary": {"played": 374, "won": 222, "drawn": 76, "lost": 76, "goals_for": 703, "goals_against": 368,

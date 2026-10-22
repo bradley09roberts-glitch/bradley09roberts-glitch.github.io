@@ -799,7 +799,8 @@ export type MlCandidate = {
   what: string;
   fixtures_with_prices: boolean;
   target: string;
-  validation: MlComparison & { beat_target: boolean };
+  /** Null when the saved report has no row for the candidate (or its target). */
+  validation: (MlComparison & { beat_target: boolean }) | null;
   test: { run: false } | (MlComparison & { run: true; at_least_as_good: boolean });
   outcome: string;
 };

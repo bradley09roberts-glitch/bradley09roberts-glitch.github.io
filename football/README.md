@@ -60,9 +60,10 @@ npm run dev                     # site on http://127.0.0.1:5173, proxies /api to
 ## Static snapshot (a read-only copy for the phone)
 
 With no always-on host, the site can be published as a private, self-contained copy: the
-frontend built in snapshot mode plus `snapshot.json`, the API's real responses at one moment
-(every request the pages can make). It needs no API server; a banner on every page gives the
-time it was taken. Re-run both steps to refresh it.
+frontend built in snapshot mode plus `snapshot.json` and its shard files, the API's real
+responses at one moment (every request the pages can make; a shard is fetched only when a page
+needs it). It needs no API server; a banner on every page gives the time it was taken. Re-run
+both steps to refresh it. Files, sizes and checks: [docs/snapshot.md](docs/snapshot.md).
 
 ```bash
 cd football/frontend && npm run build:snapshot     # -> frontend/dist-snapshot (relative paths)
@@ -71,7 +72,8 @@ cd .. && uv run footy export-snapshot --out <folder>
 ```
 
 The export reads the database read-only and refuses to write anything if a price-like field
-or a secret from `.env` would appear, or if the site is over 16 MB. `<folder>/index.html`
+or a secret from `.env` would appear in any file, or if the files break the publishing host's
+limits (16 MB a text file, 64 MB and 255 files in all; 12 MB a shard). `<folder>/index.html`
 holds only body content (a stylesheet link, the root element and the module script), for
 hosts that wrap the page in their own document. Ledger downloads are not included.
 
