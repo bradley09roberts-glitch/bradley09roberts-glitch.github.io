@@ -450,6 +450,9 @@ def make_router(engine_fn: Callable[[], Engine], settings: Settings) -> APIRoute
                 "home": recent_form(s, p.home_team, p.training_cutoff_utc, names),
                 "away": recent_form(s, p.away_team, p.training_cutoff_utc, names),
             }
+            from footy.teams import match_page  # here: footy.teams imports this module
+
+            out["teams"] = match_page(s, p, names)
         out["explanation"] = explain(out)
         return out
 
@@ -693,6 +696,9 @@ def make_router(engine_fn: Callable[[], Engine], settings: Settings) -> APIRoute
             raise HTTPException(404, "no such report")
         return json.loads(path.read_text())
 
+    from footy.api.teams_routes import make_teams_router  # here: it imports this module
+
+    r.include_router(make_teams_router(engine_fn))
     return r
 
 

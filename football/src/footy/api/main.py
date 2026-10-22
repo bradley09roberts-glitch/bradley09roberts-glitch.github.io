@@ -8,6 +8,7 @@ from sqlalchemy import Engine, func, select
 from sqlalchemy.orm import Session
 
 from footy import __version__
+from footy.api.media_routes import make_media_router
 from footy.api.routes import iso_utc, iso_utc_text
 from footy.config import Settings, get_settings
 from footy.db import check_connection, current_revision, get_engine, head_revision
@@ -151,6 +152,7 @@ def create_app(settings: Settings | None = None, engine: Engine | None = None) -
 
     from footy.api.routes import make_router
 
+    app.include_router(make_media_router(_engine, settings))  # first: /api/teams/{key}/media
     app.include_router(make_router(_engine, settings))
     return app
 

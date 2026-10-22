@@ -138,6 +138,16 @@ def main(argv: list[str] | None = None) -> int:
     mr.add_argument("--note", help="optional reason saved with the period, e.g. a decision id")
     mr.add_argument("--file", help="the JSON file to change (default: the reference file)")
 
+    ts = sub.add_parser(
+        "team-stats",
+        help="a team's statistics across league and UEFA matches (docs/teams.md)",
+    )
+    ts.add_argument("team", help="team key (e.g. eng-arsenal) or name (e.g. Arsenal)")
+    ts.add_argument(
+        "--type", choices=["league", "europe", "cup"], help="only this type of competition"
+    )
+    ts.add_argument("--csv", help="also write the full match log to this CSV file")
+
     snap = sub.add_parser(
         "export-snapshot",
         help="write a static, read-only copy of the website with the API's current responses",
@@ -159,9 +169,49 @@ def main(argv: list[str] | None = None) -> int:
         "`npm run build:snapshot`)",
     )
 
+    tm = sub.add_parser(
+        "team-media",
+        help="team pictures from Wikidata and Wikimedia Commons, free licences only "
+        "(docs/research/team-media.md); with no option, a summary of what is stored",
+    )
+    tm.add_argument(
+        "--map",
+        action="store_true",
+        help="rebuild reference/team_wikidata.csv from the Wikidata Query Service "
+        "(manual rows kept)",
+    )
+    tm.add_argument(
+        "--facts",
+        action="store_true",
+        help="rebuild reference/team_media.json (crest file, venue, colours) for mapped teams",
+    )
+    tm.add_argument(
+        "--download",
+        action="store_true",
+        help="download crests and venue photos from Wikimedia Commons (resumable; stops at "
+        "the first HTTP 429)",
+    )
+    tm.add_argument(
+        "--team", action="append", help="with --download: only this team key (repeatable)"
+    )
+    tm.add_argument(
+        "--offline",
+        action="store_true",
+        help="with --map or --facts: answer from the query cache only, no requests",
+    )
+    tm.add_argument(
+        "--probe",
+        action="store_true",
+        help="make one Commons API request and report whether Wikimedia still returns 429",
+    )
+
     args = parser.parse_args(argv)
     if args.command == "set-model-of-record":
         return _set_model_of_record(args)
+    if args.command == "team-stats":
+        return _team_stats(args)
+    if args.command == "team-media":
+        return _team_media(args)
     settings = get_settings()
 
     if args.command == "migrate":
@@ -447,6 +497,107 @@ def _set_model_of_record(args) -> int:
         )
     print("Fixtures kicking off before the new period keep their model of record.")
     return 0
+
+
+def _team_stats(args) -> int:
+    """Print a team's profile (footy.teams); --csv also writes its whole match log. Reads only."""
+    from pathlib import Path
+
+    from sqlalchemy.orm import Session
+
+    from footy import teams
+    from footy.api.routes import model_periods
+    from footy.db import get_engine
+
+    with Session(get_engine()) as s:
+        found = teams.find_teams(s, args.team)
+        if len(found) != 1:
+            names = teams.team_names(s)
+            listed = ", ".join(f"{k} ({names.get(k, k)})" for k in found[:20])
+            print(
+                f"{args.team!r} matches {len(found)} teams: {listed}"
+                if found
+                else f"No team matches {args.team!r}"
+            )
+            return 1
+        key = found[0]
+        periods = model_periods()
+        profile = teams.team_profile(s, key, periods=periods, only_type=args.type)
+        print(teams.profile_text(profile))
+        if args.csv:
+            log = teams.team_matches(s, key, periods=periods, type_=args.type) or []
+            n = teams.write_csv(log[::-1], Path(args.csv))
+            print(f"\nWrote {n} matches to {args.csv}")
+    return 0
+
+
+def _team_media(args) -> int:
+    """Team pictures (footy.media). Exit 1 on a query error, 2 when a download stopped early."""
+    import sys
+
+    from footy.media import commons, facts, mapping
+    from footy.media.wdqs import WdqsClient, WdqsError
+
+    settings = get_settings()
+    media_root = settings.data_dir / "media"
+    if args.probe:
+        print(json.dumps(commons.probe(commons.CommonsClient()), indent=2))
+        return 0
+    report: dict = {}
+    if args.map or args.facts:
+        wdqs = WdqsClient(media_root / "wdqs", offline=args.offline)
+        try:
+            if args.map:
+                from footy.db import get_engine
+
+                teams = mapping.teams_in_scope(get_engine())
+                rows = mapping.build_mapping(teams, wdqs, mapping.read_mapping())
+                mapping.write_mapping(rows)
+                report["mapping"] = {
+                    "file": str(mapping.MAPPING_CSV),
+                    "coverage": mapping.coverage(rows, teams),
+                    "unmapped": {k: r.note for k, r in sorted(rows.items()) if not r.qid},
+                }
+            if args.facts:
+                found = facts.fetch_facts(wdqs, mapping.read_mapping())
+                facts.write_facts(found)
+                report["facts"] = {"file": str(facts.MEDIA_JSON), **facts.summary(found)}
+        except WdqsError as e:
+            report["error"] = str(e)
+        report["wdqs"] = {"requests": wdqs.requests_made, "cache_hits": wdqs.cache_hits}
+        if "error" in report:
+            print(json.dumps(report, indent=2))
+            return 1
+    rc = 0
+    if args.download:
+
+        def progress(o: commons.Outcome) -> None:
+            print(f"  {o.team_key} {o.kind}: {o.status} {o.detail}", file=sys.stderr, flush=True)
+
+        report["download"] = commons.run_download(
+            facts.read_facts(),
+            media_root / "teams",
+            commons.CommonsClient(),
+            only=args.team,
+            progress=progress,
+        )
+        rc = 0 if report["download"]["status"] == "complete" else 2
+    if not (args.map or args.facts or args.download):
+        rows = mapping.read_mapping()
+        stored = facts.read_facts()
+        manifests = [commons.read_manifest(media_root / "teams" / k) for k in sorted(stored)]
+        report = {
+            "mapped": sum(1 for r in rows.values() if r.qid),
+            "unmapped": sum(1 for r in rows.values() if not r.qid),
+            "facts": facts.summary(stored),
+            "downloaded": {
+                kind: sum(1 for m in manifests if kind in m.get("files", {}))
+                for kind in ("crest", "venue")
+            },
+            "refused": sum(len(m.get("refused", [])) for m in manifests),
+        }
+    print(json.dumps(report, indent=2, default=str))
+    return rc
 
 
 def _published_model_names(group: str) -> set[str]:
