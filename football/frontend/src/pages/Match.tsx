@@ -55,6 +55,7 @@ import { useDocumentTitle, useMediaQuery } from "../hooks";
 import { canGoBack, href } from "../router";
 import type { PageProps } from ".";
 import { FormAndStats } from "./MatchForm";
+import { EveryModel } from "./MatchModels";
 
 export function Match({ params }: PageProps) {
   const id = params.id ?? "";
@@ -168,6 +169,8 @@ function MatchDetail({ d }: { d: PredictionDetail }) {
           {!twoColumns && signals}
 
           {s && <ResultSection d={d} />}
+
+          <EveryModel d={d} />
 
           <div className="match-pair">
             <Section title="Goals" id="goals">

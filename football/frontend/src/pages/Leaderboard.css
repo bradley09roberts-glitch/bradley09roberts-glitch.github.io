@@ -1,0 +1,270 @@
+/* "Model leaderboard (live)" on the Performance page (Leaderboard.tsx). Phones: one block per
+   model with its figures in two columns. From 900 px: a row per model under a column header. */
+
+.lb-groups {
+  display: grid;
+  gap: var(--sp-4);
+}
+
+@media (min-width: 720px) {
+  .lb-groups {
+    gap: var(--sp-5);
+  }
+}
+
+.lb {
+  display: grid;
+  gap: var(--sp-3);
+}
+
+.lb-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+}
+
+.card .lb-head h2 {
+  margin: 0;
+}
+
+.lb-group {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.card .lb-lede {
+  color: var(--text-2);
+  font-size: var(--fs-sm);
+}
+
+.lb-small {
+  padding: 10px 14px 10px 16px;
+  border-radius: var(--r-md);
+  background: var(--warn-bg);
+  box-shadow: inset 4px 0 0 var(--warn);
+  font-size: var(--fs-sm);
+  line-height: 1.5;
+}
+
+.lb-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--border);
+}
+
+.lb-row {
+  display: grid;
+  grid-template-columns: 1.9rem minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-areas:
+    "rank model model"
+    "rank hit rps"
+    "rank n vs"
+    "rank ou bt";
+  gap: 10px 12px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.lb-colhead {
+  display: none;
+}
+
+.lb-c-rank {
+  grid-area: rank;
+}
+
+.lb-c-model {
+  grid-area: model;
+}
+
+.lb-c-n {
+  grid-area: n;
+}
+
+.lb-c-hit {
+  grid-area: hit;
+}
+
+.lb-c-rps {
+  grid-area: rps;
+}
+
+.lb-c-ou {
+  grid-area: ou;
+}
+
+.lb-c-bt {
+  grid-area: bt;
+}
+
+.lb-c-vs {
+  grid-area: vs;
+}
+
+.lb-rank {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--muted);
+}
+
+.lb-record {
+  margin: 0 calc(-1 * var(--sp-3));
+  padding-left: var(--sp-3);
+  padding-right: var(--sp-3);
+  background: var(--surface-2);
+  box-shadow: inset 4px 0 0 var(--accent);
+}
+
+.lb-record .lb-rank {
+  color: var(--accent);
+  font-size: 1.2rem;
+}
+
+.lb-model {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.lb-name {
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.lb-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+}
+
+.lb-desc {
+  font-size: var(--fs-xs);
+  color: var(--muted);
+}
+
+.lb-fig {
+  display: grid;
+  gap: 2px;
+  align-content: start;
+  min-width: 0;
+}
+
+.lb-fig-label {
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.lb-value {
+  font-family: var(--font-display);
+  font-size: 1.45rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.lb-value-sm {
+  font-size: 1.15rem;
+}
+
+.lb-sub {
+  font-size: var(--fs-xs);
+  line-height: 1.35;
+  color: var(--muted);
+}
+
+.lb-vs-word {
+  font-family: var(--font-text);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.lb-vs-better {
+  color: var(--good);
+}
+
+.lb-vs-worse {
+  color: var(--bad);
+}
+
+.lb-fig .rangebar {
+  margin-top: 4px;
+  max-width: 180px;
+}
+
+.lb-waiting,
+.lb-empty {
+  display: grid;
+  gap: 6px;
+}
+
+.lb-empty {
+  padding: 14px 16px;
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+}
+
+.card .lb-empty-title {
+  font-size: var(--fs-md);
+}
+
+.lb-waiting-list {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lb-name-sm {
+  font-weight: 600;
+}
+
+.card .lb-foot {
+  margin-top: 2px;
+}
+
+@media (min-width: 900px) {
+  .lb-row {
+    grid-template-columns: 1.9rem minmax(0, 15rem) 5.6rem minmax(8.5rem, 1.2fr) 5.2rem 5.8rem 5.4rem minmax(9rem, 1fr);
+    grid-template-areas: "rank model n hit rps ou bt vs";
+    column-gap: 12px;
+    align-items: start;
+  }
+
+  .lb-colhead {
+    display: grid;
+    padding: 10px 0 8px;
+    font-size: var(--fs-2xs);
+    font-weight: 600;
+    letter-spacing: var(--tracking-caps);
+    text-transform: uppercase;
+    color: var(--muted);
+    align-items: end;
+  }
+
+  .lb-fig-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .lb-record {
+    margin: 0 calc(-1 * var(--sp-5));
+    padding-left: var(--sp-5);
+    padding-right: var(--sp-5);
+  }
+}

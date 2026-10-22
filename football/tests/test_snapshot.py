@@ -10,6 +10,7 @@ import json
 import sqlite3
 from datetime import UTC, datetime, timedelta
 from unittest.mock import ANY
+from urllib.parse import quote
 
 import pandas as pd
 import pytest
@@ -28,6 +29,7 @@ from footy.snapshot import (
     FRONTEND_PAST_RECORD_TYPES,
     FRONTEND_REPORTS,
     FRONTEND_UEFA_CODES,
+    PART_REF,
     SNAPSHOT_FIXTURE_DAYS,
     SnapshotRefused,
     body_only_html,
@@ -205,7 +207,17 @@ def world(settings, migrated_engine, tmp_path):
     (dist / "assets" / "index-EfGh5678.css").write_text("body{margin:0}\n")
     env_file = tmp_path / "synthetic.env"
     env_file.write_text("FOOTY_DISPLAY_TZ=Europe/London\nSYNTHETIC_API_TOKEN=not-in-output-xyz\n")
-    return {"ids": {a, b, tilt}, "settled": a, "dist": dist, "env_file": env_file}
+    refs = {
+        f"E0:2627:{DAY.isoformat()}:eng-testtown:eng-sampleton",
+        f"E0:2627:{DAY.isoformat()}:eng-sampleton:eng-mockford",
+    }
+    return {
+        "ids": {a, b, tilt},
+        "refs": refs,
+        "settled": a,
+        "dist": dist,
+        "env_file": env_file,
+    }
 
 
 def export(settings, world, out):
@@ -226,8 +238,21 @@ def read_site(out):
         assert doc["format"] == FORMAT and doc["taken_at_utc"] == main["taken_at_utc"]
         for key, (status, i) in doc["entries"].items():
             assert key not in found, key
-            found[key] = (status, doc["bodies"][i], name)
+            found[key] = (status, resolve_parts(doc, doc["bodies"][i]), name)
     return found
+
+
+def resolve_parts(doc, body):
+    """A body with its shared parts put back, as frontend/src/snapshot.ts does: a top-level
+    field holding only {"$part": n} is the file's n-th part."""
+    parts = doc.get("parts") or []
+    if not parts or not isinstance(body, dict):
+        return body
+    out = dict(body)
+    for k, v in body.items():
+        if isinstance(v, dict) and list(v) == [PART_REF]:
+            out[k] = parts[v[PART_REF]]
+    return out
 
 
 def test_canonical_key_matches_the_frontend():
@@ -279,12 +304,20 @@ def test_export_covers_every_frontend_request(settings, migrated_engine, world, 
     expected |= {f"/api/reports/{name}" for name in FRONTEND_REPORTS} | {"/api/ml/summary"}
     # One fixtures window: the page takes every shorter one from it (snapshot.ts).
     expected.add(f"/api/fixtures?days={SNAPSHOT_FIXTURE_DAYS}")
-    assert not any(k.startswith("/api/fixtures") and k != "/api/fixtures?days=30" for k in entries)
+    windows = [k for k in entries if k.startswith("/api/fixtures") and "/models" not in k]
+    assert windows == ["/api/fixtures?days=30"]
     expected |= {"/api/past?limit=1&record_type=genuine_prematch"}
     for rt in FRONTEND_PAST_RECORD_TYPES:
         expected |= {f"/api/past?limit=500&record_type={rt}"}
         expected |= {f"/api/past?competition={c}&limit=500&record_type={rt}" for c in ("E0", "UCL")}
     expected |= {f"/api/predictions/{i}" for i in world["ids"]}
+    # Every model: each fixture's list (both fixtures have genuine records), the leaderboards
+    # and the backtest explorer's models list (no curated ledger here, so no match lists).
+    for ref in world["refs"]:
+        expected.add(canonical_key(f"/api/fixtures/{quote(ref, safe='')}/models"))
+    expected |= {"/api/model-leaderboard?group=domestic", "/api/model-leaderboard?group=uefa"}
+    expected.add("/api/backtest-models")
+    assert not any(k.startswith("/api/backtest-matches") for k in entries)
     dom = "/api/backtests/synthetic_dc__validation__2324-2425/summary"
     for lg in (None, "E0", "E1"):
         for ss in (None, "2324", "2425"):
@@ -377,7 +410,12 @@ def test_shards_close_at_the_target_size_and_keep_each_team_together(
     assert len({f for files in team_files.values() for f in files}) == 3
     shards = {sh["file"] for sh in report["shards"]}
     assert {f"snapshot-teams-{n}.json" for n in range(1, 5)} <= shards
-    assert {f"snapshot-matches-{n}.json" for n in range(1, len(world["ids"]) + 1)} <= shards
+    # One file per fixture (every group alone here): its match pages and its every-model list.
+    assert {f"snapshot-matches-{n}.json" for n in range(1, len(world["refs"]) + 1)} <= shards
+    for ref in world["refs"]:
+        models = entries[canonical_key(f"/api/fixtures/{quote(ref, safe='')}/models")]
+        pages = {entries[f"/api/predictions/{m['prediction_id']}"][2] for m in models[1]["models"]}
+        assert pages == {models[2]}
     assert report["checks"]["within_limits"] and report["file_count"] == len(report["files"])
 
 
@@ -849,3 +887,95 @@ def test_a_record_published_while_the_export_runs_is_carried_with_the_team_page_
     }
     assert new_id in linked
     assert {f"/api/predictions/{i}" for i in linked} <= set(entries)
+
+
+# --- Every model's predictions (docs/model-comparison.md) -----------------------------------
+
+
+def test_backtest_explorer_is_carried_one_shard_per_division_and_split(
+    settings, migrated_engine, world, tmp_path
+):
+    """With curated ledgers saved (SYNTHETIC, btfixtures), the snapshot carries the explorer's
+    models list in snapshot.json and every division and season it covers, under the exact
+    query the page asks for, one shard per group, division and split."""
+    import btfixtures
+
+    btfixtures.write_curated(settings.data_dir)
+    out = tmp_path / "site"
+    export(settings, world, out)
+    entries = read_site(out)
+    client = TestClient(create_app(settings=settings, engine=migrated_engine))
+    assert entries["/api/backtest-models"][2] == "snapshot.json"
+    keys = {
+        "E0 validation": ["/api/backtest-matches?division=E0&limit=1000&season=2324"],
+        "E0 test": [
+            "/api/backtest-matches?division=E0&limit=1000&season=2425",
+            "/api/backtest-matches?division=E0&limit=1000&season=2526",
+        ],
+        "UCL test": ["/api/backtest-matches?division=UCL&limit=1000&season=2425"],
+    }
+    found = sorted(k for k in entries if k.startswith("/api/backtest-matches"))
+    assert found == sorted(k for ks in keys.values() for k in ks)
+    files = {name: {entries[k][2] for k in ks} for name, ks in keys.items()}
+    assert all(len(f) == 1 for f in files.values())
+    assert len({f for fs in files.values() for f in fs}) == 3
+    for name in {f for fs in files.values() for f in fs}:
+        assert name.startswith("snapshot-backtest-")
+        assert {n for k, (_, _, n) in entries.items() if n == name} == {name}
+        held = [k for k, (_, _, n) in entries.items() if n == name]
+        assert all(k.startswith("/api/backtest-matches") for k in held)
+    key = keys["E0 validation"][0]
+    assert entries[key][:2] == (200, client.get(key).json())
+    assert entries[key][1]["kind"] == "backtest"
+    # The leaderboards are on the first screen, and are genuine records only.
+    for group in ("domestic", "uefa"):
+        status, body, name = entries[f"/api/model-leaderboard?group={group}"]
+        assert (status, name, body["kind"]) == (200, "snapshot.json", "genuine_prematch")
+
+
+def test_a_division_bigger_than_the_explorer_limit_refuses_the_export(
+    settings, world, tmp_path, monkeypatch
+):
+    import btfixtures
+    from footy import snapshot
+
+    btfixtures.write_curated(settings.data_dir)
+    monkeypatch.setattr(snapshot, "FRONTEND_BACKTEST_LIMIT", 2)  # E0 2023/24 holds three
+    with pytest.raises(RuntimeError, match="FRONTEND_BACKTEST_LIMIT"):
+        export(settings, world, tmp_path / "site")
+
+
+def test_match_pages_share_their_fixtures_parts_within_a_file(settings, world, tmp_path):
+    """Fixture A's two records have two match pages repeating the same form and stats,
+    recent results and list of records: each is written once, in the file's `parts`, and
+    every page reads back as the API's own response."""
+    out = tmp_path / "site"
+    export(settings, world, out)
+    main = json.loads((out / "snapshot.json").read_text())
+    entries = read_site(out)
+    by_file: dict[str, list[str]] = {}
+    for key, (_, _, name) in entries.items():
+        if key.startswith("/api/predictions/"):
+            by_file.setdefault(name, []).append(key)
+    shared = 0
+    for name, keys in by_file.items():
+        doc = json.loads((out / name).read_text())
+        raw = [doc["bodies"][doc["entries"][k][1]] for k in keys]
+        refs = [
+            v[PART_REF] for b in raw for v in b.values() if isinstance(v, dict) and PART_REF in v
+        ]
+        assert sorted(set(refs)) == list(range(len(doc.get("parts", []))))
+        shared += len(refs) - len(set(refs))
+        assert find_prices(doc) == []
+    assert shared >= 2  # fixture A's pages share at least teams and editions
+    for pid in world["ids"]:
+        status, body, _ = entries[f"/api/predictions/{pid}"]
+        assert status == 200 and {"teams", "recent", "editions"} <= set(body)
+        assert isinstance(body["teams"], dict) and "home" in body["teams"]
+        assert isinstance(body["editions"], list)
+    assert "parts" not in main or all(main["parts"])
+
+
+def test_find_prices_reads_shared_parts():
+    planted = {"bodies": [{"teams": {PART_REF: 0}}], "parts": [{"B365H": 2.1}]}
+    assert find_prices(planted) == ["parts[0].B365H"]

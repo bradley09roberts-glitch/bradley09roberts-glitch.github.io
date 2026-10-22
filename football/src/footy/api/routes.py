@@ -761,6 +761,9 @@ def make_router(engine_fn: Callable[[], Engine], settings: Settings) -> APIRoute
     from footy.api.teams_routes import make_teams_router  # here: it imports this module
 
     r.include_router(make_teams_router(engine_fn, settings))
+    from footy.api.models_routes import make_models_router  # here: it imports this module
+
+    r.include_router(make_models_router(engine_fn, settings))
     return r
 
 

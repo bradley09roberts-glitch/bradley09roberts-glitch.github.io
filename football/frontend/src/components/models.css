@@ -1,0 +1,207 @@
+/* Every-model pieces (ModelBits.tsx): role tags, the compact split bar, right/wrong marks and
+   the interval range bar. Colours come from the tokens in styles.css; every value a colour
+   marks is also printed. */
+
+/* ---- Role tags -------------------------------------------------------------------------- */
+
+/* Two classes each: styles.css (loaded after this file) sets plain .badge colours. */
+
+.badge.role-tag {
+  color: var(--text-2);
+}
+
+.badge.role-model_of_record {
+  background: var(--pitch);
+  border-color: transparent;
+  color: var(--on-pitch);
+}
+
+.badge.role-model_of_record::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--volt);
+}
+
+.badge.role-fallback_of_record {
+  border-color: var(--accent);
+  color: var(--accent-soft-text);
+}
+
+.badge.role-machine_learning {
+  color: var(--info);
+  background: var(--info-bg);
+  border-color: transparent;
+}
+
+.badge.role-earlier_record {
+  border-style: dashed;
+}
+
+.badge.role-baseline {
+  background: var(--surface-2);
+  border-color: var(--border);
+  color: var(--muted);
+}
+
+@media (prefers-color-scheme: dark) {
+  .badge.role-model_of_record {
+    background: var(--score-bg);
+  }
+}
+
+/* ---- Right / wrong ---------------------------------------------------------------------- */
+
+.mark {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: 1.35em;
+  height: 1.35em;
+  margin-left: 4px;
+  border-radius: 50%;
+  font-size: 0.82em;
+  font-weight: 800;
+  line-height: 1;
+  vertical-align: 0.05em;
+}
+
+.mark-ok {
+  background: var(--good-bg);
+  color: var(--good);
+}
+
+.mark-no {
+  background: var(--bad-bg);
+  color: var(--bad);
+}
+
+/* ---- Split bar (home / draw / away) ----------------------------------------------------- */
+
+.split {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+/* The pick's segment is drawn full height, the other two a little lower. */
+.split-track {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 10px;
+}
+
+.split-seg {
+  flex-basis: 0;
+  min-width: 3px;
+  height: 6px;
+  border-radius: 2px;
+}
+
+.split-seg.is-pick {
+  height: 10px;
+}
+
+.split-nums {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  column-gap: 6px;
+  font-size: var(--fs-xs);
+  line-height: 1.25;
+  color: var(--text-2);
+  white-space: nowrap;
+}
+
+.split-num {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.split-draw {
+  justify-content: center;
+}
+
+.split-away {
+  justify-content: flex-end;
+}
+
+.split-num.is-pick {
+  font-weight: 700;
+  color: var(--text);
+}
+
+.split-key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin: 0;
+  color: var(--muted);
+}
+
+.split-key > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* ---- Range bar (an estimate and its interval on 0–100%) --------------------------------- */
+
+.rangebar {
+  position: relative;
+  display: block;
+  width: 100%;
+  min-width: 56px;
+  height: 12px;
+}
+
+.rangebar::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 5px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--track);
+}
+
+.rangebar-band {
+  position: absolute;
+  top: 3px;
+  height: 6px;
+  min-width: 2px;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+.rangebar-dot {
+  position: absolute;
+  top: 1px;
+  width: 10px;
+  height: 10px;
+  margin-left: -5px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 2px var(--surface);
+}
+
+/* ---- Tag for the best score among several models ---------------------------------------- */
+
+.best-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 6px 1px;
+  border-radius: var(--r-xs);
+  background: var(--volt);
+  color: var(--on-volt);
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}

@@ -1,5 +1,7 @@
 // Brief item 4: the backtest lab. A Hit rates tab (how often each model of record's pick was
-// right, per league or competition and market: ./HitRates.tsx), then Moneyline (1X2), Goal
+// right, per league or competition and market: ./HitRates.tsx), an Explorer tab (every curated
+// model's backtest prediction for every match, filtered by league, season, team and model:
+// ./LabExplorer.tsx), then Moneyline (1X2), Goal
 // Totals and BTTS tabs, and a Machine learning tab (the learners and their verdict:
 // ./LabML.tsx); filters for run (model), league, season and line; headline metrics
 // with sample size and 95% interval; a calibration chart; the market benchmark from the saved
@@ -43,19 +45,22 @@ import { useDocumentTitle } from "../hooks";
 import { href, setQuery } from "../router";
 import { SNAPSHOT } from "../snapshot";
 import type { PageProps } from ".";
+import { EXPLORER_KEYS } from "../explorer";
 import { HitRatesPanel } from "./HitRates";
+import { BacktestExplorer } from "./LabExplorer";
 import { MachineLearningPanel } from "./LabML";
 import "./Lab.css";
 
 // ---------------------------------------------------------------------------------------------
 // Query parameters
 
-type LabTab = "hits" | MarketTab | "ml";
+type LabTab = "hits" | "explorer" | MarketTab | "ml";
 type MarketTab = "moneyline" | "totals" | "btts";
 type Outcome = "all" | "home" | "draw" | "away";
 
 const TABS: readonly TabDef<LabTab>[] = [
   { id: "hits", label: "Hit rates", hint: "By league" },
+  { id: "explorer", label: "Explorer", hint: "Every match" },
   { id: "moneyline", label: "Moneyline", hint: "1X2" },
   { id: "totals", label: "Goal Totals", hint: "Over/under" },
   { id: "btts", label: "BTTS", hint: "Both score" },
@@ -71,7 +76,9 @@ const FILTER_KEYS = ["run", "league", "season", "line", "outcome"] as const;
  * match result was the first tab): that one keeps opening the match result. */
 function parseTab(query: URLSearchParams): LabTab {
   const raw = query.get("tab");
-  if (raw === "hits" || raw === "moneyline" || raw === "totals" || raw === "btts" || raw === "ml") return raw;
+  if (raw === "hits" || raw === "explorer" || raw === "moneyline" || raw === "totals" || raw === "btts" || raw === "ml") {
+    return raw;
+  }
   return FILTER_KEYS.some((k) => query.get(k) !== null) ? "moneyline" : "hits";
 }
 
@@ -326,13 +333,21 @@ export function Lab({ query }: PageProps) {
         active={tab}
         idBase="lab"
         label="Lab view"
-        // Always written, so an address keeps its tab when its other choices are cleared.
-        onChange={(id) => setQuery({ tab: id }, { replace: false })}
+        // Always written, so an address keeps its tab when its other choices are cleared. The
+        // explorer's choices and the market tabs' share some names (season), so moving to or
+        // from the explorer leaves the other side's choices behind.
+        onChange={(id) => {
+          const crossing = (id === "explorer") !== (tab === "explorer");
+          const clear = crossing ? Object.fromEntries([...FILTER_KEYS, ...EXPLORER_KEYS].map((k) => [k, null])) : {};
+          setQuery({ ...clear, tab: id }, { replace: false });
+        }}
       />
 
       <div className="lab-panel" id={tabPanelId("lab")} role="tabpanel" aria-labelledby={tabId("lab", tab)}>
         {tab === "hits" ? (
           <HitRatesPanel query={query} />
+        ) : tab === "explorer" ? (
+          <BacktestExplorer query={query} />
         ) : tab === "ml" ? (
           <MachineLearningPanel />
         ) : (

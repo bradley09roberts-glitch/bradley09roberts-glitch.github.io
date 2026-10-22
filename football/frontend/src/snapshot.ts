@@ -37,6 +37,10 @@ type SnapshotFile = {
   taken_at_utc: string;
   /** Distinct response bodies; entries point into this list. */
   bodies: unknown[];
+  /** Shared parts (footy-api-snapshot/3): values that several bodies in this file repeat,
+   * such as a fixture's form and stats on each of its match pages. A body holds
+   * {"$part": n} as a top-level field in place of the n-th; `resolveParts` puts it back. */
+  parts?: unknown[];
   /** Canonical request key -> [HTTP status, index into bodies]. */
   entries: Record<string, [number, number]>;
   /** snapshot.json only: the shard files, each with the keys it answers. Absent in a
@@ -213,6 +217,27 @@ function derived(key: string): { from: string; make: (body: unknown) => unknown 
   return { from: canonicalKey(`/api/fixtures?days=${FIXTURE_DAYS_HELD}`), make: (body) => fixturesWithin(body, days) };
 }
 
+const PART_REF = "$part";
+
+/** A body as the API sent it: each top-level field that holds only {"$part": n} replaced by
+ * the file's n-th shared part (footy/snapshot.py, PART_FIELDS). Other bodies are unchanged. */
+function resolveParts(source: SnapshotFile, body: unknown): unknown {
+  const parts = source.parts;
+  if (!parts || parts.length === 0 || !body || typeof body !== "object" || Array.isArray(body)) return body;
+  let out: Record<string, unknown> | null = null;
+  for (const [key, value] of Object.entries(body as Record<string, unknown>)) {
+    if (!value || typeof value !== "object" || Array.isArray(value)) continue;
+    const fields = Object.keys(value);
+    const ref = (value as Record<string, unknown>)[PART_REF];
+    if (fields.length !== 1 || typeof ref !== "number" || !Number.isInteger(ref) || ref < 0 || ref >= parts.length) {
+      continue;
+    }
+    out ??= { ...(body as Record<string, unknown>) };
+    out[key] = parts[ref];
+  }
+  return out ?? body;
+}
+
 /** The stored [status, body] for a key, from snapshot.json or its shard; null if neither has it. */
 async function lookup(snap: SnapshotFile, key: string, signal: AbortSignal): Promise<[number, unknown] | null> {
   let source = snap;
@@ -226,7 +251,7 @@ async function lookup(snap: SnapshotFile, key: string, signal: AbortSignal): Pro
     if (!hit) return null;
   }
   const [status, index] = hit;
-  return [status, source.bodies[index] ?? null];
+  return [status, resolveParts(source, source.bodies[index] ?? null)];
 }
 
 /** Answer an API request from the snapshot, as the Response the API sent when it was taken:

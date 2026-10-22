@@ -24,6 +24,7 @@ import {
 import { useDocumentTitle } from "../hooks";
 import { href } from "../router";
 import type { PageProps } from ".";
+import { ModelLeaderboards } from "./Leaderboard";
 
 /** Below this many settled predictions a market's figures can swing a long way. */
 const SMALL_SAMPLE = 30;
@@ -71,6 +72,8 @@ export function Performance(_props: PageProps) {
         {(d) => <Record d={d} latest={latest.data?.matches[0]} />}
       </ApiView>
 
+      <ModelLeaderboards />
+
       <div className="perf-notes">
       <section className="card" aria-labelledby="betting-record">
         <h2 id="betting-record">Betting record</h2>
@@ -112,6 +115,20 @@ export function Performance(_props: PageProps) {
           <li>
             With fewer than {SMALL_SAMPLE} settled matches a market's figures can move a long way
             from one weekend to the next.
+          </li>
+          <li>
+            The <strong>model leaderboards</strong> rank every model with settled pre-match records
+            by mean RPS (ranked probability score of the match-result forecast; lower is better).
+            Results right is how often its most likely result happened, with a 95% interval drawn
+            as a bar; log losses score the over/under 2.5 and both-teams-to-score forecasts (lower
+            is better). "Against the record" compares a model with each match's record of record on
+            the matches both have; negative means the model did better. Under 100 settled matches
+            the order is provisional.
+          </li>
+          <li>
+            Predictions for past seasons, computed after the fact, are in the lab's{" "}
+            <a href={href("/lab", { tab: "explorer" })}>backtest explorer</a>; they are never counted
+            here.
           </li>
         </ul>
         <p className="small">

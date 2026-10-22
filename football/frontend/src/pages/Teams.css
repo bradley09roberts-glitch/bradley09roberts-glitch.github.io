@@ -1174,6 +1174,25 @@
 
 /* ---- Match log -------------------------------------------------------------------------- */
 
+/* The way into the lab's backtest explorer for this team, above the log. */
+.ml-backtest {
+  display: grid;
+  gap: 4px;
+  padding: 12px 16px 12px 18px;
+  border-radius: var(--r-md);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: inset 4px 0 0 var(--warn);
+}
+
+.ml-backtest p {
+  margin: 0;
+}
+
+.ml-backtest-link {
+  font-weight: 700;
+}
+
 .ml-filters {
   display: flex;
   flex-wrap: wrap;

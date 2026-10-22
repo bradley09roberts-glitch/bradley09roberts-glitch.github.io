@@ -34,6 +34,7 @@ import {
 } from "../components/TeamStats";
 import { formatDate, formatNumber, formatPct, formatTime, marketLabel, seasonLabel } from "../format";
 import { href, setQuery } from "../router";
+import { explorerHref, teamExplorerTargets } from "../explorer";
 import { SNAPSHOT } from "../snapshot";
 
 /** Rows drawn at a time; "Show more" adds another page. */
@@ -78,9 +79,49 @@ export function MatchLog({
   query: URLSearchParams;
 }) {
   return (
-    <ApiView result={log} what="the match log" loadingLines={2}>
-      {(data) => <LogView p={p} data={data} query={query} />}
-    </ApiView>
+    <>
+      <BacktestLinks p={p} />
+      <ApiView result={log} what="the match log" loadingLines={2}>
+        {(data) => <LogView p={p} data={data} query={query} />}
+      </ApiView>
+    </>
+  );
+}
+
+/** Into the lab's backtest explorer, filtered by this team: the latest league season (or UEFA
+ * competition) it has backtest predictions for, then the others. Nothing when it has none. */
+function BacktestLinks({ p }: { p: TeamProfile }) {
+  const targets = teamExplorerTargets(p);
+  const [first, ...rest] = targets;
+  if (!first) return null;
+  const name = p.team.display_name ?? p.team.name;
+  const link = (t: { division: string; season: string }) => explorerHref({ ...t, team: p.team.key });
+  return (
+    <div className="ml-backtest">
+      <a className="ml-backtest-link" href={link(first)}>
+        What each model predicted for these games (backtest)
+        <span aria-hidden="true"> →</span>
+      </a>
+      <p className="muted small">
+        Every model's predictions for {name}'s {first.name} matches in {seasonLabel(first.season)}, computed after
+        the fact: not pre-match records.
+        {rest.length > 0 && (
+          <>
+            {" "}
+            Also:{" "}
+            {rest.map((t, i) => (
+              <span key={`${t.division}-${t.season}`}>
+                {i > 0 && " · "}
+                <a href={link(t)}>
+                  {t.name} {seasonLabel(t.season)}
+                </a>
+              </span>
+            ))}
+            .
+          </>
+        )}
+      </p>
+    </div>
   );
 }
 

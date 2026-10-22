@@ -853,6 +853,213 @@ export type MlSelection = {
 };
 
 // ---------------------------------------------------------------------------------------------
+// Every model's predictions (src/footy/api/models_routes.py, docs/model-comparison.md). Two
+// kinds, never mixed in one response: genuine pre-match records ("genuine_prematch") and
+// backtests computed after the fact ("backtest"). Each response says which in `kind`.
+
+/** A model's part in the comparison. `roles` in each response gives the display names. */
+export type ModelRole =
+  | "model_of_record"
+  | "fallback_of_record"
+  | "challenger"
+  | "machine_learning"
+  | "lab_best"
+  | "earlier_record"
+  | "baseline"
+  | "other"
+  | (string & {});
+
+/** Probabilities in a fixture's every-model list: as on a record, with the single most likely
+ * score as `top_score`. */
+export type ModelProbabilities = {
+  "1X2"?: { H: number; D: number; A: number };
+  BTTS?: { Y: number; N: number };
+  expected_goals?: { home: number; away: number };
+  top_score?: { score: string; p: number } | null;
+  [line: `OU_${string}`]: OverUnder | undefined;
+};
+
+export type FixtureModel = {
+  model: string;
+  label: string;
+  role: ModelRole;
+  description: string | null;
+  basis: Basis;
+  /** This model's record is the one the headline record counts for the match. */
+  is_record_of_record: boolean;
+  /** The record's own match page. */
+  prediction_id: number;
+  edition: Edition;
+  model_version: string;
+  published_at_utc: string;
+  later_editions: { prediction_id: number; edition: Edition; published_at_utc: string }[];
+  probabilities: ModelProbabilities;
+  /** A model + market record keeps its base model's expected goals. */
+  expected_goals_before_prices: boolean;
+  /** Null until settled, and for a void match. */
+  settlement: {
+    markets: Record<string, MarketOutcome>;
+    rps: number | null;
+    log_loss: Record<string, number>;
+  } | null;
+};
+
+export type FixtureModels = {
+  kind: "genuine_prematch";
+  explanation: string;
+  generated_at_utc: string;
+  fixture_ref: string;
+  competition: string;
+  competition_name: string;
+  group: "domestic" | "uefa" | (string & {});
+  season: string;
+  match_date: string;
+  kickoff_utc: string | null;
+  home_team: string;
+  away_team: string;
+  home_name: string;
+  away_name: string;
+  home_media?: MediaSummary;
+  away_media?: MediaSummary;
+  record_of_record: string | null;
+  result: { home_goals: number | null; away_goals: number | null; settled_at_utc: string } | null;
+  roles: Record<string, string>;
+  /** The record of record first, then the other listed models of record, then by role. */
+  models: FixtureModel[];
+};
+
+export type LeaderboardRecord = {
+  published: number;
+  settled: number;
+  results_right: HitRate;
+  mean_rps: number | null;
+  mean_log_loss: Partial<Record<"OU_2.5" | "BTTS", number | null>>;
+  small_sample: boolean;
+};
+
+export type LeaderboardModel = LeaderboardRecord & {
+  model: string;
+  label: string;
+  role: ModelRole;
+  basis: Basis;
+  description: string | null;
+  pending: number;
+  void: number;
+  records_of_record: number;
+  /** On the matches where both this model and the match's record of record are settled (not
+   * counting the matches where this model is the record of record). Negative: this model did
+   * better. */
+  vs_record: {
+    n: number;
+    mean_rps_difference: number | null;
+    better: number;
+    worse: number;
+    level: number;
+    small_sample: boolean;
+  } | null;
+};
+
+export type ModelLeaderboard = {
+  kind: "genuine_prematch";
+  explanation: string;
+  generated_at_utc: string;
+  group: "domestic" | "uefa" | (string & {});
+  group_name: string;
+  small_sample_below: number;
+  models_of_record_now: string[];
+  roles: Record<string, string>;
+  last_settled_at_utc: string | null;
+  record: LeaderboardRecord & { label: string; description: string | null };
+  /** Best mean RPS first. */
+  models: LeaderboardModel[];
+  /** Models with records still waiting for their first result. */
+  waiting: { model: string; label: string; role: ModelRole; basis: Basis; description: string | null; published: number }[];
+};
+
+export type BacktestModelSplit = {
+  split: "validation" | "test" | (string & {});
+  run_id: string;
+  seasons: string[];
+  matches: number;
+  mean_rps: number | null;
+  results_right: number | null;
+};
+
+export type BacktestModel = {
+  model: string;
+  group: "domestic" | "uefa" | (string & {});
+  label: string;
+  role: ModelRole;
+  family: string | null;
+  basis: Basis;
+  description: string | null;
+  note: string | null;
+  splits: BacktestModelSplit[];
+};
+
+export type BacktestGroup = {
+  group: "domestic" | "uefa" | (string & {});
+  name: string;
+  divisions: { code: string; name: string }[];
+  seasons: { season: string; split: string }[];
+  coverage: { division: string; season: string; split: string; matches: number }[];
+  skipped_runs: JsonValue[];
+};
+
+export type BacktestModels = {
+  kind: "backtest";
+  explanation: string;
+  splits: Record<string, string>;
+  roles: Record<string, string>;
+  columns: string[];
+  groups: BacktestGroup[];
+  models: BacktestModel[];
+};
+
+/** One model's prediction for one match: [p_home, p_draw, p_away, p_over_2_5, p_btts_yes,
+ * result_right (1/0), rps] (`columns`). Goal lines and BTTS are null for a model without them. */
+export type BacktestCell = [number, number, number, number | null, number | null, number, number];
+
+export type BacktestMatch = {
+  date: string;
+  division: string;
+  season: string;
+  split: string;
+  /** UEFA rows only, e.g. "League MD3". */
+  stage?: string | null;
+  home: string;
+  away: string;
+  home_name: string;
+  away_name: string;
+  score: [number, number];
+  /** One cell per entry of `models`, in order; null where that model didn't predict it. */
+  p: (BacktestCell | null)[];
+};
+
+export type BacktestMatches = {
+  kind: "backtest";
+  explanation: string;
+  group: string;
+  filters: Record<string, JsonValue>;
+  total: number;
+  count: number;
+  offset: number;
+  columns: string[];
+  models: { model: string; label: string; role: ModelRole; basis: Basis }[];
+  summary: {
+    model: string;
+    matches: number;
+    results_right: number;
+    hit_rate: number | null;
+    ci95: [number, number] | null;
+    mean_rps: number | null;
+    small_sample: boolean;
+  }[];
+  teams: Record<string, { name: string; media?: MediaSummary }>;
+  matches: BacktestMatch[];
+};
+
+// ---------------------------------------------------------------------------------------------
 // Endpoints: typed URLs. `Endpoint<T>` is a plain string that remembers its response type.
 
 declare const responseType: unique symbol;
@@ -898,7 +1105,18 @@ export const endpoints = {
   teamMatches: (key: string, offset?: number) =>
     endpoint<TeamMatchesResponse>(`/api/teams/${seg(key)}/matches`, { offset: offset || undefined }),
   teamMedia: (key: string) => endpoint<TeamMedia>(`/api/teams/${seg(key)}/media`),
+  // Every model's predictions. The static snapshot holds exactly these requests
+  // (docs/snapshot.md): the explorer always asks for a whole division and season and filters
+  // by team and model itself.
+  fixtureModels: (fixtureRef: string) => endpoint<FixtureModels>(`/api/fixtures/${seg(fixtureRef)}/models`),
+  modelLeaderboard: (group: "domestic" | "uefa") => endpoint<ModelLeaderboard>("/api/model-leaderboard", { group }),
+  backtestModels: () => endpoint<BacktestModels>("/api/backtest-models"),
+  backtestMatches: (division: string, season: string) =>
+    endpoint<BacktestMatches>("/api/backtest-matches", { division, season, limit: BACKTEST_PAGE_LIMIT }),
 };
+
+/** The explorer asks for every match of a division and season at once (the most is 380). */
+export const BACKTEST_PAGE_LIMIT = 1000;
 
 /** File downloads: plain links, not fetched by the app. */
 export const downloads = {

@@ -58,8 +58,10 @@ from sqlalchemy.orm import Session
 
 from footy.config import PROJECT_ROOT, Settings
 
-FORMAT = "footy-api-snapshot/2"  # 2: shard files and pictures beside snapshot.json
-EARLIER_FORMATS = ("footy-api-snapshot/1",)  # an earlier snapshot folder is still replaced
+# 2: shard files and pictures beside snapshot.json. 3: shared parts (`parts`, see PART_FIELDS).
+FORMAT = "footy-api-snapshot/3"
+# An earlier snapshot folder is still replaced; the site still reads one.
+EARLIER_FORMATS = ("footy-api-snapshot/1", "footy-api-snapshot/2")
 SNAPSHOT_FILE = "snapshot.json"
 SHARD_FILE = re.compile(r"snapshot-[a-z]+-\d+\.json")
 MEDIA_DIR = "media"
@@ -84,7 +86,19 @@ SHARD_TARGET_BYTES = 2 * MB
 PAGE_SHARD_TARGET_BYTES = 1 * MB
 PAGE_SHARD_FAMILIES = ("matches", "teams")
 SHARD_MAX_BYTES = 12 * MB
-SHARD_FAMILIES = ("fixtures", "data", "matches", "lab", "teams")  # in file order
+SHARD_FAMILIES = ("fixtures", "data", "matches", "lab", "teams", "backtest")  # in file order
+# Shared parts. Every record of a fixture has its own match page, and each page repeats the
+# fixture's form and stats (`teams`), recent results (`recent`) and list of records
+# (`editions`): about 7 KB of a 11 KB page, the same on every page of the fixture. With a
+# model of record, its fallbacks and some twenty shadow models per fixture, that repetition
+# alone would outgrow the host's 64 MB. So in a match page these fields are written once per
+# file, in the file's `parts` list, and the page holds {PART_REF: n} in their place (only a
+# field of at least PART_MIN_BYTES; identical values share one part). frontend/src/snapshot.ts
+# puts them back before a page sees the body, so every body is still the API's own response.
+PART_FIELDS = ("teams", "recent", "editions")
+PARTED_KEYS = ("/api/predictions/",)
+PART_REF = "$part"
+PART_MIN_BYTES = 256
 
 # ---------------------------------------------------------------------------------------------
 # What the frontend requests (frontend/src/pages and src/api.ts)
@@ -117,6 +131,20 @@ FRONTEND_TEAM_PATHS = ("/api/teams/{key}", "/api/teams/{key}/matches", "/api/tea
 # season held (2026/27 on 22 Oct 2026).
 SNAPSHOT_TEAM_LEAGUES = ("E0", "SP1", "I1", "D1", "F1", "E1")
 SNAPSHOT_TEAM_UEFA = ("UCL", "UEL", "UECL")
+# Every model's predictions (docs/model-comparison.md). The match page: every model's genuine
+# pre-match record for its fixture, kept in the same shard as the fixture's match pages (one
+# per fixture with a genuine record). The leaderboards of genuine records, both groups.
+FRONTEND_FIXTURE_MODELS = "/api/fixtures/{ref}/models"
+FRONTEND_LEADERBOARD = "/api/model-leaderboard"
+FRONTEND_LEADERBOARD_GROUPS = ("domestic", "uefa")
+# The backtest explorer: the curated models list, then every division and season it covers
+# (its groups' `coverage`), each asked for once with every curated model and every match:
+# /api/backtest-matches?division=<code>&limit=1000&season=<season>. The page filters by team
+# and model itself. One shard per league and split (a league's two test seasons together) and
+# one per UEFA split, so a page loads only about what it shows.
+FRONTEND_BACKTEST_MODELS = "/api/backtest-models"
+FRONTEND_BACKTEST_MATCHES = "/api/backtest-matches"
+FRONTEND_BACKTEST_LIMIT = 1000  # more than any division-season holds (380); checked
 
 # Requests the site can make that a snapshot does not hold (each answers "Not in this
 # snapshot"). Reported with every export.
@@ -131,6 +159,10 @@ NOT_COVERED = (
     "/api/teams with filters, a team's match log with filters or beyond its latest 100 "
     "matches, /api/teams/{key}?series=full, and the pages of teams outside the set above",
     "/media/teams/{key}/badge.svg (drawn on request by the API; the site draws its own badge)",
+    "/api/backtest-matches with any other query (a team, a model list, an offset or another "
+    "limit): the page asks for whole divisions and seasons and filters them itself",
+    "/api/fixtures/{ref}/models for a fixture without a genuine pre-match record (the API "
+    "would answer 404)",
 )
 
 # ---------------------------------------------------------------------------------------------
@@ -209,7 +241,14 @@ class Snapshot:
     # file of its own. Every other key is in snapshot.json.
     groups: dict[str, list[tuple[list[str], bool]]] = field(default_factory=dict)
     _index: dict[str, int] = field(default_factory=dict, repr=False)
+    # Per body: its size as written (shared parts replaced by references) and its shared
+    # parts (field -> part id). Per part: its value and size, by its JSON text.
     _sizes: list[int] = field(default_factory=list, repr=False)
+    _parts_of: list[dict[str, int]] = field(default_factory=list, repr=False)
+    _parted: set[int] = field(default_factory=set, repr=False)
+    _part_ids: dict[str, int] = field(default_factory=dict, repr=False)
+    _part_values: list[Any] = field(default_factory=list, repr=False)
+    _part_sizes: list[int] = field(default_factory=list, repr=False)
 
     def add(self, key: str, status: int, body: Any) -> None:
         # Two answers that differ only in the second they were made at are the same answer.
@@ -221,9 +260,37 @@ class Snapshot:
         if i is None:
             i = self._index[text] = len(self.bodies)
             self.bodies.append(body)
-            sent = json.dumps(body, ensure_ascii=False, separators=(",", ":"))
-            self._sizes.append(len(sent.encode("utf-8")))
+            self._sizes.append(0)
+            self._parts_of.append({})
+            if status == 200 and key.startswith(PARTED_KEYS):
+                self._parted.add(i)
+            self.measure(i)
         self.entries[key] = (status, i)
+
+    def measure(self, i: int) -> None:
+        """Work out body `i`'s shared parts and its size as written (again after a change)."""
+        body = self.bodies[i]
+        fields: dict[str, int] = {}
+        if i in self._parted and isinstance(body, dict):
+            for name in PART_FIELDS:
+                value = body.get(name)
+                if not isinstance(value, dict | list):
+                    continue
+                text = _dumps(value)
+                size = len(text.encode("utf-8"))
+                if size < PART_MIN_BYTES:
+                    continue
+                pid = self._part_ids.get(text)
+                if pid is None:
+                    pid = self._part_ids[text] = len(self._part_values)
+                    self._part_values.append(value)
+                    self._part_sizes.append(size)
+                fields[name] = pid
+        self._parts_of[i] = fields
+        written = (
+            {k: {PART_REF: 0} if k in fields else v for k, v in body.items()} if fields else body
+        )
+        self._sizes[i] = len(_dumps(written).encode("utf-8"))
 
     def body(self, key: str) -> Any:
         status, i = self.entries[key]
@@ -237,27 +304,43 @@ class Snapshot:
         self.groups.setdefault(family, []).append((list(dict.fromkeys(keys)), alone))
 
     def _doc(self, keys: Iterable[str], **extra: Any) -> dict:
-        """One file's document: its keys' bodies, each stored once."""
+        """One file's document: its keys' bodies, each stored once, and the shared parts they
+        refer to (`parts`, each stored once; only when some body has one)."""
         bodies: list[Any] = []
+        parts: list[Any] = []
         where: dict[int, int] = {}
+        part_where: dict[int, int] = {}
         entries = {}
         for k in sorted(keys):
             status, i = self.entries[k]
             if i not in where:
                 where[i] = len(bodies)
-                bodies.append(self.bodies[i])
+                body = self.bodies[i]
+                if self._parts_of[i]:
+                    body = dict(body)
+                    for name, pid in self._parts_of[i].items():
+                        if pid not in part_where:
+                            part_where[pid] = len(parts)
+                            parts.append(self._part_values[pid])
+                        body[name] = {PART_REF: part_where[pid]}
+                bodies.append(body)
             entries[k] = [status, where[i]]
         return {
             "format": FORMAT,
             "taken_at_utc": self.taken_at_utc,
             "finished_at_utc": self.finished_at_utc,
             **extra,
+            **({"parts": parts} if parts else {}),
             "bodies": bodies,
             "entries": entries,
         }
 
-    def _bytes(self, bodies: set[int], keys: list[str]) -> int:
-        return sum(self._sizes[i] for i in bodies) + sum(len(k) + 16 for k in keys)
+    def _bytes(self, bodies: set[int], keys: list[str], parts: set[int] = frozenset()) -> int:
+        return (
+            sum(self._sizes[i] for i in bodies)
+            + sum(self._part_sizes[p] for p in parts)
+            + sum(len(k) + 16 for k in keys)
+        )
 
     def shards(self) -> list[tuple[str, list[str]]]:
         """(file name, keys) per shard file: each family's groups in order, a file closed once
@@ -269,17 +352,19 @@ class Snapshot:
             if family in PAGE_SHARD_FAMILIES:
                 target = min(target, PAGE_SHARD_TARGET_BYTES)
             files: list[list[str]] = []
-            size, seen, closed = 0, set(), True
+            size, seen, seen_parts, closed = 0, set(), set(), True
             for keys, alone in self.groups.get(family, []):
                 bodies = {self.entries[k][1] for k in keys}
-                extra = self._bytes(bodies - seen, keys)
+                parts = {p for i in bodies for p in self._parts_of[i].values()}
+                extra = self._bytes(bodies - seen, keys, parts - seen_parts)
                 if closed or alone or size + extra > target:
                     files.append([])
-                    size, seen = 0, set()
-                    extra = self._bytes(bodies, keys)
+                    size, seen, seen_parts = 0, set(), set()
+                    extra = self._bytes(bodies, keys, parts)
                 files[-1].extend(keys)
                 size += extra
                 seen |= bodies
+                seen_parts |= parts
                 closed = alone
             out += [(f"snapshot-{family}-{n}.json", f) for n, f in enumerate(files, 1)]
         return out
@@ -324,11 +409,16 @@ def _past_competitions(engine: Engine) -> list[str]:
     return sorted(seen | set(COMPETITION_NAMES))
 
 
-def _prediction_ids(engine: Engine) -> set[int]:
+def _prediction_fixtures(engine: Engine) -> tuple[dict[int, str], set[str]]:
+    """Every prediction's fixture (id -> fixture_ref), and the fixtures with a genuine
+    pre-match record."""
     from footy.models import Prediction
 
     with Session(engine) as s:
-        return set(s.scalars(select(Prediction.id)))
+        rows = s.execute(
+            select(Prediction.id, Prediction.fixture_ref, Prediction.record_type)
+        ).all()
+    return {i: ref for i, ref, _ in rows}, {ref for _, ref, t in rows if t == "genuine_prematch"}
 
 
 def _linked_prediction_ids(body: Any) -> Iterator[int]:
@@ -346,6 +436,14 @@ def _linked_prediction_ids(body: Any) -> Iterator[int]:
     for x in linked:
         if isinstance(x, dict) and isinstance(x.get("id"), int):
             yield x["id"]
+    # A fixture's every-model list: each model's first edition and its later ones.
+    if body.get("kind") == "genuine_prematch" and "fixture_ref" in body:
+        for m in body.get("models") or []:
+            if not isinstance(m, dict):
+                continue
+            for x in [m, *(m.get("later_editions") or [])]:
+                if isinstance(x, dict) and isinstance(x.get("prediction_id"), int):
+                    yield x["prediction_id"]
 
 
 def _summary_requests(runs: list[dict]) -> Iterator[tuple[str, dict]]:
@@ -399,6 +497,36 @@ def snapshot_teams(engine: Engine, snap: Snapshot) -> list[str]:
         wanted.update(t for row in phase for t in row)
         known = set(s.scalars(select(Team.team_key)))
     return sorted(wanted & known)
+
+
+def backtest_matches(get: Callable[..., Any], snap: Snapshot) -> None:
+    """The backtest explorer's requests: the models list, then each division and season its
+    groups cover, one shard per league and split and one per UEFA split. Raises RuntimeError
+    if a division
+    and season holds more matches than FRONTEND_BACKTEST_LIMIT (the page would miss some)."""
+    body = get(FRONTEND_BACKTEST_MODELS) or {}
+    files: dict[tuple[str, str, str], list[str]] = {}
+    for group in body.get("groups") or []:
+        for c in group.get("coverage") or []:
+            params = {
+                "division": c["division"],
+                "season": c["season"],
+                "limit": FRONTEND_BACKTEST_LIMIT,
+            }
+            page = get(FRONTEND_BACKTEST_MATCHES, params) or {}
+            if page.get("total", 0) > page.get("count", 0):
+                raise RuntimeError(
+                    f"{c['division']} {c['season']}: {page['total']} backtest matches, more than "
+                    f"FRONTEND_BACKTEST_LIMIT ({FRONTEND_BACKTEST_LIMIT})"
+                )
+            # League games: one file per division and split. UEFA: one per split (its
+            # competitions are small).
+            split = c.get("split") or c["season"]
+            division = c["division"] if group.get("group") == "domestic" else "*"
+            where = (group.get("group"), division, split)
+            files.setdefault(where, []).append(canonical_key(FRONTEND_BACKTEST_MATCHES, params))
+    for keys in files.values():
+        snap.group("backtest", keys, alone=True)
 
 
 def export_snapshot(
@@ -467,18 +595,43 @@ def export_snapshot(
         for path, params in requests:
             get(path, params)
         snap.group("lab", (canonical_key(path, params) for path, params in requests))
+    # Every model's genuine records: the leaderboards (first screen).
+    for group in FRONTEND_LEADERBOARD_GROUPS:
+        get(FRONTEND_LEADERBOARD, {"group": group})
+    # The backtest explorer: the models list (first screen), then every division and season.
+    backtest_matches(get, snap)
 
     # Every prediction in the database, then any a saved response links to that wasn't there
-    # yet (one published while the export ran), until every link resolves.
-    wanted = _prediction_ids(engine)
+    # yet (one published while the export ran), until every link resolves. A fixture's match
+    # pages and its every-model list stay in one shard.
+    refs, genuine = _prediction_fixtures(engine)
+    wanted = set(refs)
     done: set[int] = set()
+    listed: set[str] = set()
 
     def match_pages() -> None:
         while wanted - done:
+            by_fixture: dict[str, list[int]] = {}
             for pid in sorted(wanted - done):
-                get(f"/api/predictions/{pid}")
-                snap.group("matches", [canonical_key(f"/api/predictions/{pid}")])
-                done.add(pid)
+                if pid not in refs:  # published since the export started
+                    page = get(f"/api/predictions/{pid}")
+                    ref = page.get("fixture_ref") if isinstance(page, dict) else None
+                    refs[pid] = ref or f"#{pid}"
+                    if isinstance(page, dict) and page.get("record_type") == "genuine_prematch":
+                        genuine.add(refs[pid])
+                by_fixture.setdefault(refs[pid], []).append(pid)
+            for ref, pids in by_fixture.items():
+                keys = []
+                for pid in pids:
+                    get(f"/api/predictions/{pid}")
+                    keys.append(canonical_key(f"/api/predictions/{pid}"))
+                    done.add(pid)
+                if ref in genuine and ref not in listed:
+                    path = FRONTEND_FIXTURE_MODELS.format(ref=_encode(ref))
+                    get(path)
+                    keys.append(canonical_key(path))
+                    listed.add(ref)
+                snap.group("matches", keys)
             for status, i in snap.entries.values():
                 if status == 200:
                     wanted.update(_linked_prediction_ids(snap.bodies[i]))
@@ -565,8 +718,7 @@ def relocate_media(snap: Snapshot, carried: set[str]) -> int:
         before = changed
         snap.bodies[i] = fix(body)
         if changed != before:
-            text = json.dumps(snap.bodies[i], ensure_ascii=False, separators=(",", ":"))
-            snap._sizes[i] = len(text.encode("utf-8"))
+            snap.measure(i)  # its size and its shared parts, which may have changed too
     return changed
 
 
@@ -601,10 +753,15 @@ def _walk(value: Any, path: str) -> Iterator[tuple[str, str | None, Any]]:
 
 
 def find_prices(snapshot: dict) -> list[str]:
-    """JSON paths in a snapshot that look like bookmakers' prices. Should always be empty."""
+    """JSON paths in a snapshot (its bodies and shared parts) that look like bookmakers'
+    prices. Should always be empty."""
     hits: list[str] = []
-    for i, body in enumerate(snapshot.get("bodies", [])):
-        for path, key, value in _walk(body, f"bodies[{i}]"):
+    values = [
+        *((f"bodies[{i}]", b) for i, b in enumerate(snapshot.get("bodies", []))),
+        *((f"parts[{i}]", p) for i, p in enumerate(snapshot.get("parts", []))),
+    ]
+    for where, body in values:
+        for path, key, value in _walk(body, where):
             if key is not None:
                 fractional = (
                     isinstance(value, float)
@@ -855,7 +1012,7 @@ def check_out_dir(out: Path) -> None:
         raise FileExistsError(f"{out} is not empty and is not an earlier snapshot")
 
 
-def _dumps(doc: dict) -> str:
+def _dumps(doc: Any) -> str:
     return json.dumps(doc, ensure_ascii=False, separators=(",", ":"))
 
 
