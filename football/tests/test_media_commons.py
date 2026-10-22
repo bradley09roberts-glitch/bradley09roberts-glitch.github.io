@@ -235,6 +235,9 @@ def test_probe_reports_block():
         (None, "pd", True),
         ("CC BY-NC 2.0", "cc-by-nc-2.0", False),
         ("CC BY-ND 4.0", None, False),
+        # The two fields disagree: NC or ND in either refuses the file.
+        ("CC BY-NC-SA 4.0", "cc-by-sa-4.0", False),
+        ("CC BY-SA 4.0", "cc-by-nd-4.0", False),
         ("GFDL", "gfdl", False),
         ("Copyrighted free use", None, False),
         ("Fair use", None, False),

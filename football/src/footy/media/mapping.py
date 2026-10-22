@@ -9,8 +9,10 @@ facts used to reject the wrong kind of team.
 - Our names for a team are its `teams.name` and every `team_aliases` alias (the `(ENG)`-style
   country suffix of openfootball and Wikipedia names removed).
 - Names are compared in two passes. Strict: case, accents and punctuation ignored ("F.C."
-  equals "FC"). Loose: legal-form words such as FC, AC, SV or Calcio ignored too ("Arsenal"
-  equals "Arsenal F.C."). The loose pass runs only when the strict one finds nothing.
+  equals "FC", "Ħamrun" equals "Hamrun"). Loose: legal-form words such as FC, AC, SV or
+  Calcio ignored too ("Arsenal" equals "Arsenal F.C."). The loose pass runs only when the
+  strict one finds nothing. An item without sitelinks is dropped from both passes when
+  another name match has some (Malta's first-team items, see `match_team`).
 - Rejected: women's, reserve, B, C and youth teams (by class, by a parent club P831 that is
   itself a football club, by a women's or youth competition class P2094, by a women's
   league P118, or by a label such as "Arsenal W.F.C.", "Sevilla FC C" or "Real Madrid
@@ -256,6 +258,8 @@ def strict(name: str) -> str:
     text = "".join(ch for ch in text if not unicodedata.combining(ch))
     text = text.casefold().replace("&", " and ").replace("ß", "ss").replace("ø", "o")
     text = text.replace("æ", "ae").replace("ł", "l").replace("đ", "d").replace("ı", "i")
+    # Letters NFKD leaves alone, spelt as English names write them ("Ħamrun" -> "hamrun").
+    text = text.replace("ħ", "h").replace("ð", "d").replace("þ", "th").replace("œ", "oe")
     text = re.sub(r"[.'’`]", "", text)  # "F.C." -> "fc", "Nott'm" -> "nottm"
     return " ".join(re.findall(r"[a-z0-9]+", text))
 
@@ -512,14 +516,26 @@ def match_team(
     """The mapping row for one team from its strict and loose name matches."""
     rejected: dict[str, str] = {}
     leagues = team.leagues
+    passes: dict[str, Hits] = {}
     for pass_name in PASSES:
-        kept = {}
+        passes[pass_name] = {}
         for q, h in hits[pass_name].items():
             why = rejection(clubs[q], team, ctx)
             if why is None:
-                kept[q] = h
+                passes[pass_name][q] = h
             else:
                 rejected[q] = why
+    # An item no Wikipedia describes gives way to a name match, in either pass, that one does:
+    # Malta's first-team items (part of their club's item, P361) carry the bare club name
+    # ("Sliema Wanderers"), so they match strictly where the club, "Sliema Wanderers F.C.",
+    # matches only loosely, and they hold no crest, venue or league.
+    if any(clubs[q].sitelinks for found in passes.values() for q in found):
+        for found in passes.values():
+            for q in [q for q in found if not clubs[q].sitelinks]:
+                del found[q]
+                rejected[q] = "no sitelinks, where another name match has some"
+    for pass_name in PASSES:
+        kept = passes[pass_name]
         if not kept:
             continue
         confirmed = [q for q in kept if clubs[q].leagues & leagues]

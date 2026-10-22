@@ -43,6 +43,13 @@ def test_badge_escapes_names():
     assert 'A & B <"C">' in root.find(f"{SVG}title").text
 
 
+def test_badge_drops_characters_xml_cannot_hold():
+    svg = badge_svg("x-odd", "Odd\x00 Town\x1b FC\ufffe", [])
+    root = ET.fromstring(svg)  # parses: no control characters left
+    assert root.find(f"{SVG}title").text.startswith("Odd Town FC:")
+    assert "Odd Town FC" in root.get("aria-label")
+
+
 def test_neutral_palette_without_colours_is_stable_per_team():
     assert pick_colours([], "eng-arsenal") in NEUTRAL_PALETTES
     assert pick_colours([], "eng-arsenal") == pick_colours([], "eng-arsenal")

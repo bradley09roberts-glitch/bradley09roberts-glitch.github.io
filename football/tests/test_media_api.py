@@ -52,7 +52,7 @@ def media(client, migrated_engine, settings, tmp_path, monkeypatch):
     return service.media_dir(settings)
 
 
-def add_crest(media_dir, licence="Public domain"):
+def add_crest(media_dir, licence="Public domain", commons_file="Arsenal FC.svg", **extra):
     team = media_dir / "eng-arsenal"
     team.mkdir(parents=True)
     (team / "crest.png").write_bytes(PNG)
@@ -61,15 +61,25 @@ def add_crest(media_dir, licence="Public domain"):
         "files": {
             "crest": {
                 "file": "crest.png",
-                "commons_file": "Arsenal FC.svg",
+                "commons_file": commons_file,
                 "source_url": "https://commons.wikimedia.org/wiki/File:Arsenal_FC.svg",
                 "licence": licence,
                 "attribution": "Arsenal FC.svg, Public domain, via Wikimedia Commons",
+                **extra,
             }
         },
         "refused": [],
     }
     (team / "manifest.json").write_text(json.dumps(manifest))
+
+
+def use_facts(tmp_path, monkeypatch, name, **arsenal):
+    """Point the service at a copy of FACTS with Arsenal's entry changed."""
+    doc = json.loads(json.dumps(FACTS))
+    doc["teams"]["eng-arsenal"].update(arsenal)
+    path = tmp_path / name
+    path.write_text(json.dumps(doc))
+    monkeypatch.setattr(service, "FACTS_PATH", path)
 
 
 def test_generated_badge_until_a_free_crest_is_downloaded(client, media):
@@ -87,6 +97,8 @@ def test_generated_badge_until_a_free_crest_is_downloaded(client, media):
         "name": "Emirates Stadium",
         "url": None,  # no photo downloaded yet
         "licence": None,
+        "licence_url": None,
+        "author": None,
         "attribution": None,
         "source_url": None,
     }
@@ -97,6 +109,8 @@ def test_generated_badge_until_a_free_crest_is_downloaded(client, media):
         "url": "/media/teams/eng-arsenal/crest.png",
         "kind": "crest",
         "licence": "Public domain",
+        "licence_url": None,
+        "author": None,
         "attribution": "Arsenal FC.svg, Public domain, via Wikimedia Commons",
         "source_url": "https://commons.wikimedia.org/wiki/File:Arsenal_FC.svg",
     }
@@ -104,6 +118,33 @@ def test_generated_badge_until_a_free_crest_is_downloaded(client, media):
     assert resp.status_code == 200
     assert resp.content == PNG
     assert resp.headers["content-type"] == "image/png"
+    assert resp.headers["x-content-type-options"] == "nosniff"
+
+
+def test_a_cc_by_sa_crest_comes_with_its_licence_link_and_author(client, media):
+    # CC BY and BY-SA ask for the licence to be named with a link to it, and the author.
+    add_crest(
+        media,
+        licence="CC BY-SA 4.0",
+        licence_url="https://creativecommons.org/licenses/by-sa/4.0",
+        author="Jane Doe",
+    )
+    crest = client.get("/api/teams/eng-arsenal/media").json()["crest"]
+    assert crest["licence_url"] == "https://creativecommons.org/licenses/by-sa/4.0"
+    assert crest["author"] == "Jane Doe"
+
+
+def test_a_picture_of_another_file_than_the_facts_name_is_not_shown(
+    client, media, tmp_path, monkeypatch
+):
+    # Downloaded for an earlier crest file (or an earlier, since corrected, Wikidata item).
+    add_crest(media)
+    use_facts(tmp_path, monkeypatch, "new_crest.json", crest_file="Arsenal FC 2026.svg")
+    assert client.get("/api/teams/eng-arsenal/media").json()["crest"]["kind"] == "generated"
+    use_facts(tmp_path, monkeypatch, "no_crest.json", crest_file=None)
+    assert client.get("/api/teams/eng-arsenal/media").json()["crest"]["kind"] == "generated"
+    use_facts(tmp_path, monkeypatch, "same_crest.json", crest_file="Arsenal FC.svg")
+    assert client.get("/api/teams/eng-arsenal/media").json()["crest"]["kind"] == "crest"
 
 
 def test_a_crest_with_a_non_free_licence_is_never_shown(client, media):
@@ -126,6 +167,7 @@ def test_badge_svg(client, media):
     assert resp.status_code == 200
     assert resp.headers["content-type"].startswith("image/svg+xml")
     assert "default-src 'none'" in resp.headers["content-security-policy"]
+    assert resp.headers["x-content-type-options"] == "nosniff"
     root = ET.fromstring(resp.text)
     assert root.get("data-generated") == "footy"
     assert "#6CABDD" in resp.text
@@ -146,6 +188,15 @@ def test_badge_svg(client, media):
 def test_only_downloaded_pictures_are_served(client, media, path):
     add_crest(media)
     assert client.get(path).status_code == 404
+
+
+def test_a_team_folder_linked_outside_the_media_folder_is_not_served(client, media, tmp_path):
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    (outside / "crest.png").write_bytes(PNG)
+    media.mkdir(parents=True)
+    (media / "eng-arsenal").symlink_to(outside, target_is_directory=True)
+    assert client.get("/media/teams/eng-arsenal/crest.png").status_code == 404
 
 
 def test_media_route_is_not_shadowed_by_other_team_routes(client, media, settings, migrated_engine):

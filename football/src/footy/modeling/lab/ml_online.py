@@ -144,6 +144,11 @@ class OnlineMixture:
         return self.w.get(key, self.uniform)
 
     def fit(self, history: pd.DataFrame, cutoff) -> None:
+        fitted = self.stream.fitted_cutoff
+        if fitted is not None and pd.Timestamp(cutoff) < fitted:
+            # time went backwards: the stream starts again, and so must the weights, or what
+            # they learned from matches after this cutoff would reach its forecasts
+            self.w, self.done, self.updates = {}, 0, 0
         self.stream.update(history, cutoff)
         rec = self.stream.records()
         if rec is None or self.done >= len(rec):
@@ -191,7 +196,9 @@ class MarketOnlineMixture(MarketFacing, OnlineMixture):
 # 100, share 0 / 0.002 / 0.01, pooled or per division, warm-up 365 / 730 days; 600 settings
 # (896 replays) on 2022/23, the promising ones also on 2021/22, ranked by the mean of the two
 # seasons' D-025 composites. The curves are flat around the chosen eta (with prices 10-100,
-# without 0.2-0.5); per-division weights and the fixed share never helped.
+# without 0.2-0.5); per-division weights and the fixed share never helped. The chosen settings
+# are near-ties rather than the best (within 0.00002 of the best mean: all six members at eta
+# 50-100 with prices, eta 0.5 without).
 #   with prices:    0.95506 / 0.96014 against the shots model + market 0.95568 / 0.96077
 #   without prices: 0.96067 / 0.96532 against congestion_context_on_elo 0.96349 / 0.96677
 SHOTS, CTX, DC, GLM = (

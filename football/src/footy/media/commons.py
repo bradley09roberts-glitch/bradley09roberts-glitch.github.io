@@ -173,16 +173,12 @@ FREE_LICENCE = re.compile(
 
 def licence_is_free(short_name: str | None, code: str | None = None) -> bool:
     """CC0, public domain, CC BY or CC BY-SA, by Commons' licence name or machine code
-    ("CC BY-SA 4.0", "cc-by-sa-4.0", "Public domain", "pd"). NC and ND never pass."""
-    for value in (code, short_name):
-        if not value:
-            continue
-        text = re.sub(r"[\s_-]+", " ", value.strip().casefold())
-        if re.search(r"\b(nc|nd)\b", text):
-            return False
-        if FREE_LICENCE.fullmatch(text):
-            return True
-    return False
+    ("CC BY-SA 4.0", "cc-by-sa-4.0", "Public domain", "pd"). NC and ND never pass, in
+    either field: when the two disagree, the more restrictive one wins."""
+    texts = [re.sub(r"[\s_-]+", " ", v.strip().casefold()) for v in (code, short_name) if v]
+    if any(re.search(r"\b(nc|nd)\b", text) for text in texts):
+        return False
+    return any(FREE_LICENCE.fullmatch(text) for text in texts)
 
 
 class _Text(HTMLParser):

@@ -7,6 +7,23 @@
   "colours": "P6364 official colour, with the colour's P465 sRGB hex"
  },
  "teams": {
+  "alb-dinamo-city": {
+   "qid": "Q34120",
+   "wikidata_label": "KS Dinamo Tirana",
+   "crest_file": null,
+   "venue": {
+    "qid": "Q1783346",
+    "name": "Selman Stërmasi Stadium",
+    "image_file": "Selman Stërmasi Stadium.jpg"
+   },
+   "colours": [
+    {
+     "qid": "Q1088",
+     "name": "blue",
+     "hex": "#0000FF"
+    }
+   ]
+  },
   "alb-egnatia": {
    "qid": "Q1302027",
    "wikidata_label": "KF Egnatia",
@@ -7546,6 +7563,17 @@
    },
    "colours": []
   },
+  "mlt-hamrun-spartans": {
+   "qid": "Q343030",
+   "wikidata_label": "Ħamrun Spartans F.C.",
+   "crest_file": null,
+   "venue": {
+    "qid": "Q312415",
+    "name": "Victor Tedesco Stadium",
+    "image_file": "Victor Tedesco Stadium.jpg"
+   },
+   "colours": []
+  },
   "mlt-hibernians": {
    "qid": "Q936187",
    "wikidata_label": "Hibernians F.C.",
@@ -7569,11 +7597,21 @@
    "colours": []
   },
   "mlt-sliema-wanderers": {
-   "qid": "Q127269055",
-   "wikidata_label": "Sliema Wanderers",
+   "qid": "Q1289495",
+   "wikidata_label": "Sliema Wanderers F.C.",
    "crest_file": null,
-   "venue": null,
-   "colours": []
+   "venue": {
+    "qid": "Q1354010",
+    "name": "Ta' Qali National Stadium",
+    "image_file": "Malta TaQali.JPG"
+   },
+   "colours": [
+    {
+     "qid": "Q1088",
+     "name": "blue",
+     "hex": "#0000FF"
+    }
+   ]
   },
   "mlt-valletta": {
    "qid": "Q331589",
@@ -10625,6 +10663,17 @@
      "hex": "#007FFF"
     }
    ]
+  },
+  "ukr-dnipro-1": {
+   "qid": "Q30964198",
+   "wikidata_label": "SC Dnipro-1",
+   "crest_file": "SC Dnipro-1 (Ukraine) white background CMYK.svg",
+   "venue": {
+    "qid": "Q1233005",
+    "name": "Dnipro Arena",
+    "image_file": "Dnipro Arena.JPG"
+   },
+   "colours": []
   },
   "ukr-dynamo-kyiv": {
    "qid": "Q179075",

@@ -21,10 +21,11 @@ from footy.models import EuroMatch, Match, Team, TeamAlias
 from footy.reference import REFERENCE_DIR
 
 ENTITY = "http://www.wikidata.org/entity/"
-UK, SPAIN, FRANCE, MONACO, POLAND, NETHERLANDS, UKRAINE = (
-    "Q145", "Q29", "Q142", "Q235", "Q36", "Q55", "Q212"
+UK, SPAIN, FRANCE, MONACO, POLAND, NETHERLANDS, UKRAINE, MALTA = (
+    "Q145", "Q29", "Q142", "Q235", "Q36", "Q55", "Q212", "Q233"
 )  # fmt: skip
 CLUB, WOMEN, DISAMBIGUATION, MULTISPORT = "Q476028", "Q51481377", "Q4167410", "Q2385804"
+MENS_TEAM = "Q103229495"
 PL, LALIGA, LIGUE1, EKSTRAKLASA, I_LIGA, EREDIVISIE, WOMENS_LEAGUE = (
     "Q9448", "Q324867", "Q13394", "Q44763", "Q163046", "Q167541", "Q900"
 )  # fmt: skip
@@ -71,6 +72,13 @@ ITEMS = {
     "Q51": {"en": "Zagłębie Lubin", "P17": [POLAND], "P118": [EKSTRAKLASA]},
     "Q60": {"en": "Willem II", "P17": [NETHERLANDS], "P118": [EREDIVISIE]},
     "Q70": {"en": "Zlahoda", "aliases": ["Dnipro-1"], "P17": [UKRAINE], "P118": [WOMENS_LEAGUE]},
+    # Malta: each club's item, and an item for its first men's team (part of the club, P361)
+    # that carries the bare club name but no sitelinks, so no picture or venue either.
+    "Q1289495": {"en": "Sliema Wanderers F.C.", "P17": [MALTA], "sitelinks": 33},
+    "Q127269055": {"en": "Sliema Wanderers", "P31": [MENS_TEAM], "P17": [MALTA]},
+    "Q343030": {"en": "Ħamrun Spartans F.C.", "P17": [MALTA], "sitelinks": 35},
+    "Q127269053": {"en": "Ħamrun Spartans", "P31": [MENS_TEAM], "P17": [MALTA]},
+    "Q127269099": {"en": "Gżira United", "P31": [MENS_TEAM], "P17": [MALTA]},  # nothing else
 }
 ITEMS["Q50"]["P118"] = [I_LIGA]
 for item in ITEMS.values():
@@ -134,6 +142,9 @@ class FakeWdqs:
                 if it.get("P576"):
                     p = "http://www.wikidata.org/prop/direct/P576"
                     rows.append(binding(item=qid, p=p, value="2019-08-27T00:00:00Z"))
+                if it.get("sitelinks"):
+                    p = "http://wikiba.se/ontology#sitelinks"
+                    rows.append(binding(item=qid, p=p, value=str(it["sitelinks"])))
         elif "?label" in q:  # labels of leagues and competition classes
             for qid in re.findall(r"wd:(Q\d+)", q):
                 if qid in LABELS:
@@ -164,6 +175,10 @@ def test_normalise():
     assert normalise("Brighton & Hove Albion") == "brighton and hove albion"
     assert normalise("FC") == "fc"  # nothing but legal-form words: kept
     assert mapping.strict("F.C. Köln") == "fc koln"
+    # Letters NFKD leaves alone are spelt out, as English names write them.
+    assert mapping.strict("Ħamrun Spartans") == "hamrun spartans"
+    assert mapping.strict("Breiðablik") == "breidablik"
+    assert mapping.strict("Þróttur") == "throttur"
 
 
 def test_build_mapping_rules(tmp_path):
@@ -233,6 +248,25 @@ def test_uefa_only_teams_need_no_league(tmp_path):
     assert rows["eng-man-united"].qid == "Q18656"  # the reserve side (P831) rejected
     assert rows["esp-barcelona"].qid == "Q7156"  # its parent is a multi-sport club
     assert "no league to check" in rows["esp-barcelona"].note
+
+
+def test_an_item_without_sitelinks_gives_way_to_a_name_match_with_some(tmp_path):
+    teams = {
+        t.team_key: t
+        for t in [
+            team("mlt-sliema-wanderers", "Sliema Wanderers", "MLT", uefa_only=True),
+            team("mlt-hamrun-spartans", "Hamrun Spartans", "MLT", uefa_only=True),
+            team("mlt-gzira-united", "Gzira United", "MLT", uefa_only=True),
+        ]
+    }
+    rows = build_mapping(teams, FakeWdqs().client(tmp_path))
+    # The first team's item matches strictly, the club's only with "F.C." ignored; the club,
+    # which some Wikipedia describes, is taken.
+    assert rows["mlt-sliema-wanderers"].qid == "Q1289495"
+    assert rows["mlt-hamrun-spartans"].qid == "Q343030"
+    assert "ignoring legal-form words" in rows["mlt-hamrun-spartans"].note
+    # With nothing better, an item without sitelinks is still taken.
+    assert rows["mlt-gzira-united"].qid == "Q127269099"
 
 
 def test_a_club_matched_by_two_teams_is_given_to_neither(tmp_path):

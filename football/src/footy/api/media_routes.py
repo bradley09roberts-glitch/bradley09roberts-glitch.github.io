@@ -26,6 +26,7 @@ from footy.models import Team
 TEAM_KEY = re.compile(r"[a-z0-9][a-z0-9-]{0,63}")
 PICTURE_FILE = re.compile(r"(crest|venue)\.(png|jpg|gif|webp)")
 CACHE = "public, max-age=86400"
+NOSNIFF = {"X-Content-Type-Options": "nosniff"}  # a picture is only ever its declared type
 # An SVG opened on its own is a document: allow it no scripts, fetches or frames.
 SVG_CSP = "default-src 'none'; style-src 'unsafe-inline'"
 
@@ -57,7 +58,7 @@ def make_media_router(engine_fn: Callable[[], Engine], settings: Settings) -> AP
         return Response(
             badge_svg(team_key, name, hexes),
             media_type="image/svg+xml",
-            headers={"Cache-Control": CACHE, "Content-Security-Policy": SVG_CSP},
+            headers={"Cache-Control": CACHE, "Content-Security-Policy": SVG_CSP, **NOSNIFF},
         )
 
     @r.get("/media/teams/{team_key}/{filename}")
@@ -68,6 +69,6 @@ def make_media_router(engine_fn: Callable[[], Engine], settings: Settings) -> AP
         path = (root / team_key / filename).resolve()
         if root not in path.parents or not path.is_file():
             raise HTTPException(404, "no such picture")
-        return FileResponse(path, headers={"Cache-Control": CACHE})
+        return FileResponse(path, headers={"Cache-Control": CACHE, **NOSNIFF})
 
     return r

@@ -137,6 +137,22 @@ Chosen settings (the four registered candidates) and their training-season score
 The reference columns are `market_tilt_shots` (with prices) and `congestion_context_on_elo`
 (without), replayed on the same fixtures.
 
+- **The stackers are the best of their search** by the mean of the two seasons.
+- **The mixtures are near-ties, not the best.** In the last mixture grid, with prices, all six
+  members at eta 100 or 50 had a lower two-season mean (0.95759) than the chosen setting
+  (0.95760). Without prices, eta 0.5 was ahead of 0.3 by 0.00001. The setting chosen is within
+  0.00002 of the best in both cases, far inside the noise. No validation data was involved:
+  the recorded forecasts end on 1 July 2023.
+- **The members' own settings were not all chosen before these seasons.** Their fitted
+  parameters are out of sample for every record, but some of their settings are not:
+  - the shots model's settings were chosen on 2022/23, as were MarketTilt's weights;
+  - `congestion_context_on_elo`'s base (`elo_goals_gd`) was tuned on the mean of 2022/23
+    and 2023/24 (D-027).
+
+  So on 2022/23 these members look better than they would out of sample, and on validation
+  ctx does too. A learner that trusts whichever member has done best recently inherits that,
+  and the search could have favoured ctx for the same reason.
+
 What the weights learned on the training seasons (average over the season's forecasts):
 
 | Mixture | Season | Shots | Ctx | Dixon-Coles | GLM booster |
@@ -180,6 +196,13 @@ contributions (each fixture's mean of metric ÷ baseline mean).
   market's for every priced fixture. `ml_online_market` gains 0.0007 in BTTS log loss and
   0.0002 in O/U 3.5. By league it is better in the Premier League, La Liga and Ligue 1, and
   worse in Serie A and (by 0.0002) the Bundesliga.
+- **One validation fixture had no usable prices:** Newcastle v Nottingham Forest on 26 Dec
+  2023 kicked off at 12:30 UTC, before the 13:00 collection deadline. It is the only reason the
+  two models' 1X2 scores differ on validation. Its share of the composite difference is
+  +0.000006.
+- **All four candidates use ctx,** whose base was tuned partly on 2023/24 (D-027). Their
+  validation scores share some of ctx's flattering, not only their pure target's.
+  `ml_online_market` gave ctx 0.46 of its weight on validation (0.33 on test).
 - **Without prices both learners lose to `congestion_context_on_elo`,** mainly on the totals:
   +0.0013 to +0.0023 in each O/U log loss. That target's base was partly tuned on 2023/24 (D-027),
   so its validation score is flattering. But the learners also lost in 8 of 11 months, so this
@@ -217,6 +240,11 @@ Run once, with nothing changed after validation (`data/backtests/ml_online_marke
 
 Under D-027 a challenger must be at least as good on test, so it does not replace
 `market_tilt_shots`.
+
+The test seasons were run twice more, with nothing changed and nothing chosen from them:
+
+- once to read `ml_online_market`'s weights for the table above;
+- once by the audit, on the Bundesliga, which gave forecasts identical to the saved ledger.
 
 ## Learning curve (`data/reports/ml_learning_curve.json`)
 
@@ -256,6 +284,11 @@ D-013 / D-024).
     while the prices are really used.
 - **The learners only ever train on the stream's records.** Each record is a match final before
   the cutoff, forecast at its own decision time.
+- **Fixed in the audit: weights carried back in time.** When a mixture is fitted at an earlier
+  cutoff than its last fit, its stream starts again, but its weights used to stay as learned
+  from the later matches. The runner and `footy.live` only move forward (live builds a new model
+  each run), so no reported number was affected. The weights now start again with the stream.
+  `test_weights_learned_later_are_forgotten_when_time_goes_backwards` failed before the fix.
 
 ## Runtime and cost
 
@@ -292,6 +325,42 @@ with prices, and `congestion_context_on_elo` for fixtures without (D-028, propos
   - Members whose shapes differ more would help too: the bivariate and dispersion family was
     recorded, but the search did not choose it.
 
+## Audit (22 October 2026)
+
+An independent check of this note against the code, the scratch scripts and the saved ledgers.
+The recommendation stands.
+
+- **Reproduction.** Through the real runner, with today's code (including the fix above):
+  - `ml_online_market`, validation, all five leagues (1,752 fixtures), matched the saved
+    ledger in every probability and score (largest difference 4e-16). Its average weights
+    were those in the table above.
+  - `ml_stack_market`, validation, Bundesliga (306 fixtures): identical, with no fallback of the
+    six-market tilt.
+  - `ml_online_market`, test, Bundesliga (611 fixtures): identical.
+  - On Premier League 2022/23, the runner and the replay agree exactly for the stackers and to
+    within 0.00008 per fixture for the mixtures. The recorded forecasts match the saved
+    shots and Dixon-Coles ledgers to within 0.00004 and 0.00018.
+- **Coherence.** Every market of every forecast is read off one score grid: a mixture of grids,
+  or a tilt of the reference grid. The runner refuses any batch whose grid does not sum to 1
+  (within 1e-6). The saved ML ledgers have no gaps, 1X2 sums within 7e-16 of 1, over-lines that
+  never increase, and BTTS never above over 1.5.
+- **Leakage.** None found in the reported runs:
+  - prices are pre-closing only, quoted by each match's deadline and before kickoff, and
+    published on its collection day;
+  - recorded matches carry their own deadline, so a live run's decision time never applies to
+    them;
+  - the weights and meta-models learn only from matches in the history the runner passes, which
+    is final before each cutoff.
+
+  One latent leak was fixed (see Leakage).
+- **Protocol.**
+  - Every setting came from 2021/22 and 2022/23: the recorded forecasts end on 1 July 2023.
+  - Four named candidates had one validation run, and only `ml_online_market` was run on test
+    for the evidence. The two later re-runs are listed under Test.
+  - Three things are added as caveats above: the mixtures' settings are near-ties, some
+    members' settings were tuned on the search season or on validation, and the weights
+    collapsed in two leagues.
+
 ## Caveats
 
 - **Size of the search.**
@@ -313,7 +382,13 @@ with prices, and `congestion_context_on_elo` for fixtures without (D-028, propos
   midweek batches too), so their warm starts differ: up to 0.0002 in probability.
 - **A very high learning rate.** The mixture with prices (eta 20) behaves like "follow the
   recent leader", and with no fixed share a member's weight can collapse for a whole season
-  (the shots model's did in the 2022/23 replay).
+  (the shots model's did in the 2022/23 replay). On validation it collapsed in two leagues:
+  in the Premier League and Ligue 1 the GLM booster held all but 1e-15 of the weight at every
+  batch. There the learner was in effect the GLM booster's shape tilted onto the prices, and
+  did not keep learning in any useful sense.
+- **The members' settings.** The shots model and ctx had settings chosen on 2022/23, and ctx's
+  base also on 2023/24 (see Tuning). The search seasons and validation are therefore not fully
+  out of sample for those members, which favours learners that trust them. Test is clean.
 - **Live use is untested.** The model + market candidates implement what `footy.live` expects
   (`decision_time`, `last_used`, `provenance`) and use `MarketTilt`'s price rules. They have
   never been run live.

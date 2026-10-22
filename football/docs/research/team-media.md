@@ -13,27 +13,33 @@ For every team, `GET /api/teams/{team_key}/media` returns:
 | `venue` | The home ground's name, and its photo once downloaded (else `url: null`) | Wikidata P115 (home venue), its English label and P18 (image) |
 | `colours` | The club's official colours, `{name, hex}`, the badge's background first | Wikidata P6364 (official colour) with P465 (sRGB hex) |
 
-Every picture carries `licence`, `attribution` (the text to display) and `source_url` (the
-Commons file page). Example, before anything is downloaded:
+Every picture carries `licence`, `licence_url`, `author`, `attribution` (the text to
+display) and `source_url` (the Commons file page). A downloaded picture is shown only while
+it is of the Commons file `reference/team_media.json` names now: one left from an earlier
+crest or venue, or from a Wikidata item since corrected, falls back to the generated badge
+(or no photo) until the new file is downloaded. Example, before anything is downloaded:
 
 ```json
 {
   "team_key": "eng-arsenal",
   "wikidata_url": "https://www.wikidata.org/wiki/Q9617",
   "crest": {"url": "/media/teams/eng-arsenal/badge.svg", "kind": "generated", "licence": null,
+            "licence_url": null, "author": null,
             "attribution": "Generated badge, not the club's crest: colours from Wikidata (CC0)",
             "source_url": "https://www.wikidata.org/wiki/Q9617"},
-  "venue": {"name": "Emirates Stadium", "url": null, "licence": null, "attribution": null,
-            "source_url": null},
+  "venue": {"name": "Emirates Stadium", "url": null, "licence": null, "licence_url": null,
+            "author": null, "attribution": null, "source_url": null},
   "colours": [{"name": "red", "hex": "#FF0000"}, {"name": "white", "hex": "#FFFFFF"}]
 }
 ```
 
 Pictures are served from `data/media/teams/<team_key>/` under `/media/teams/<team_key>/`:
 `crest.png`, `venue.jpg` and the generated `badge.svg` (made on request, never stored). Only
-those names can be fetched; manifests and anything else under `data/` cannot. The Vite dev
-server proxies only `/api`, so the frontend needs `/media` added to its proxy (not done
-here: `frontend/` belongs to another change).
+those names can be fetched (sent with `X-Content-Type-Options: nosniff`, the badge also with
+a Content-Security-Policy that allows no scripts); manifests, anything else under `data/` and
+team folders that link outside `data/media/teams/` cannot. The Vite dev server proxies only
+`/api`, so the frontend needs `/media` added to its proxy (not done here: `frontend/` belongs
+to another change).
 
 ## Sources and licences
 
@@ -69,7 +75,8 @@ The downloader reads each file's `LicenseShortName` and `License` code from the 
 (`imageinfo`, `extmetadata`) and keeps the file only if it is CC0, public domain
 (including "PD-…" templates), CC BY or CC BY-SA, any version or national port. Anything
 else (GFDL alone, "Copyrighted free use", NC or ND variants, anything unrecognised) is
-refused: nothing is saved, and the refusal is logged in the team's `manifest.json` under
+refused, and so is a file whose two fields disagree when either says NC or ND. For a refused
+file nothing is saved, and the refusal is logged in the team's `manifest.json` under
 `refused` with the licence it found. A refused file is not asked for again.
 
 ### How attribution is shown
@@ -79,8 +86,10 @@ licence and its URL, the author (`Artist`, HTML stripped), the credit, whether a
 required, the usage terms, any restrictions, the image's SHA-256 and the time it was fetched.
 It also holds the text to display, built as title, author, licence and source:
 `Emirates Stadium.jpg by Jane Doe, CC BY-SA 4.0, via Wikimedia Commons`. The API returns that
-text with the file page link; the site should show it next to the picture (a caption or
-tooltip) or in a credits list on the team page, linked to `source_url`. The thumbnails are
+text with the author, the licence and its link (`licence_url`, which CC BY and BY-SA ask to
+be given) and the file page link; the site should show it next to the picture (a caption or
+tooltip) or in a credits list on the team page, linked to `source_url`, with the licence
+name linked to `licence_url`. The thumbnails are
 Wikimedia's own resized copies of the original, under the original's licence.
 
 ## The generated badge
@@ -107,8 +116,12 @@ team with a league or UEFA match since 2024/25 (717 teams). Built by
    English and language-neutral labels and English aliases (118 queries for 59 Wikidata
    countries), then a few batched queries for the candidates' facts (P31, P17, P118 league, P2094 competition class, P831
    parent club, P576 dissolved, sitelinks).
-3. Names are compared strictly (case, accents, punctuation ignored), then, only if that finds
-   nothing, loosely (legal-form words such as FC, AC, SV, Calcio also ignored).
+3. Names are compared strictly (case, accents, punctuation ignored; letters such as ħ, ð
+   and þ spelt h, d and th), then, only if that finds nothing, loosely (legal-form words such
+   as FC, AC, SV, Calcio also ignored). An item without sitelinks (no Wikipedia describes it)
+   is dropped from both passes when another name match has some: Malta's first-team items
+   ("Sliema Wanderers", part of the club's item "Sliema Wanderers F.C.") carry the bare club
+   name and match strictly, but hold no crest, venue or league.
 4. Rejected: women's, reserve, B, C and youth teams (by class, a parent club that is itself a
    football club, a women's or youth competition class, a women's league, or a label such
    as "Arsenal W.F.C.", "Sevilla FC C", "Real Madrid Castilla"), dissolved clubs, national
@@ -122,13 +135,34 @@ team with a league or UEFA match since 2024/25 (717 teams). Built by
    unmapped, `ambiguous` (candidates in the note) or `unresolved`.
 
 Then every remaining team in the five top leagues, the Championship and the 2026/27 league
-phases, and most others, was checked by hand against the same query results: 142 rows are
-`manual`, each with its evidence in the note (the label, the league, and why the other
-candidates are other clubs). `--map` keeps manual rows. Three automatic matches were wrong
-before the last two rules were added (CD Albacete for Albacete Balompié, Zagłębie Sosnowiec
-for Zagłębie Lubin, and a women's club for Dnipro-1); all three rules are now tested.
+phases, and most others, was checked by hand against the same query results: 144 rows are
+`manual` (142 then, 2 added in the review below), each with its evidence in the note (the
+label, the league, and why the other candidates are other clubs). `--map` keeps manual rows.
+Three automatic matches were wrong before the last two rules were added (CD Albacete for
+Albacete Balompié, Zagłębie Sosnowiec for Zagłębie Lubin, and a women's club for Dnipro-1);
+all three rules are now tested.
 
-### Coverage (22 October 2026)
+### Review (22 October 2026)
+
+An independent review re-checked every `alias` and `manual` row (330) and all 372
+`exact_label` rows against the query service (label, description, English Wikipedia article,
+country, class, league, parent club, dissolution): right club, right country, not a women's,
+reserve or B team. All but one were right. Changes:
+
+| Team | Was | Now | Why |
+| --- | --- | --- | --- |
+| `mlt-sliema-wanderers` | Q127269055 "Sliema Wanderers" | Q1289495 Sliema Wanderers F.C. | The old item is the club's first-team item (part of Q1289495, P361): no sitelinks, crest, venue or league. Fixed in the code (the sitelinks rule in step 3), so `--map` gives the same |
+| `mlt-hamrun-spartans` | unresolved | Q343030 Ħamrun Spartans F.C. | "Ħ" was dropped instead of read as "H"; fixed in the code (step 3) |
+| `alb-dinamo-city` | unresolved | Q34120 (manual) | Its English Wikipedia article is "FC Dinamo City", the name Dinamo Tirana took; its English label still has the old name |
+| `ukr-dnipro-1` | unresolved | Q30964198 SC Dnipro-1 (manual) | The club of the July 2024 qualifiers; its item is a defunct club (dissolved 2024), which the automatic pass skips |
+| `deu-regensburg` | Q265570 | Q265570 | Unchanged club; the note no longer counts a duplicate item without sitelinks |
+
+`kaz-yelimay` stays Q120081555, the club founded in 2022 that plays in the Premier League
+(English Wikipedia's "FC Yelimay" article sits on the older Spartak Semey item). With the
+rows above, `uv run footy team-media --map --offline` reproduces the CSV exactly; the four
+new teams' facts were fetched on 22 October and merged into `team_media.json`.
+
+### Coverage (22 October 2026, after the review)
 
 | Group | Teams | Mapped (automatic + manual) | Unmapped | Crest file (P154) | Venue | Venue photo (P18) | Colours |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -142,15 +176,15 @@ for Zagłębie Lubin, and a women's club for Dnipro-1); all three rules are now 
 | Europa League 2026/27 league phase | 36 | 36 (35 + 1) | 0 | 19 | 36 | 35 | 23 |
 | Conference League 2026/27 league phase | 36 | 36 (33 + 3) | 0 | 12 | 36 | 34 | 14 |
 | The 20 other league divisions | 416 | 409 (296 + 113) | 7 | 135 | 395 | 372 | 155 |
-| UEFA matches only | 194 | 186 (167 + 19) | 8 | 41 | 167 | 142 | 50 |
-| **All teams** | **717** | **702 (560 + 142)** | **15** | **206** | **669** | **620** | **287** |
+| UEFA matches only | 194 | 189 (168 + 21) | 5 | 42 | 171 | 146 | 52 |
+| **All teams** | **717** | **705 (561 + 144)** | **12** | **207** | **673** | **624** | **289** |
 
 A team counts in every division it played in since 2024/25 (a club promoted from the
 2. Bundesliga is in both D1 and the other divisions). "Colours" counts clubs with at
 least one official colour that has a hex value; Wikidata's colours are mostly plain named
 colours ("red" is `#FF0000`), not exact kit shades.
 
-### Unmapped (15)
+### Unmapped (12)
 
 | Team | Why |
 | --- | --- |
@@ -159,14 +193,15 @@ colours ("red" is `#FF0000`), not exact kit shades.
 | `esp-celta-b`, `esp-sociedad-b` | Reserve sides playing in Segunda: B teams are excluded by design |
 | `ita-padova` | The only Padova item, Calcio Padova, is marked dissolved (2014); the refounded club has no clear item |
 | `rou-gloria-buzau` | The only item is marked dissolved; the current club has none |
-| `tur-erzurumspor` | The only item is marked dissolved; Erzurumspor FK has none in the club classes |
-| `rou-metaloglobus-bucharest`, `mlt-hamrun-spartans`, `smr-tre-penne`, `blr-ml-vitebsk`, `alb-dinamo-city`, `gib-magpies` | No club item with an English or "mul" label of that name in the country (Dinamo City may be the renamed Dinamo Tirana, and FCB Magpies may be F.C. Magpies; neither is confirmed by Wikidata, so not guessed) |
-| `alb-elbasani` | Two candidates, KS Elbasani and AF Elbasani, in different divisions; not guessed |
-| `ukr-dnipro-1` | The only name match plays in the Ukrainian Women's League; SC Dnipro-1 has no club item in the country |
+| `tur-erzurumspor` | The name match Q1366316 is marked dissolved (2010). The item with English Wikipedia's "Erzurumspor F.K." article, Q2426819, had the English label and description of Atlético Morelia (a Mexican club) on 22 October 2026, so its facts are not trusted until that is repaired |
+| `smr-tre-penne` | Q704857, the item with English Wikipedia's "SP Tre Penne" article, had a vandalised English label and description on 22 October 2026; not taken until they are repaired |
+| `rou-metaloglobus-bucharest`, `blr-ml-vitebsk`, `gib-magpies` | No club item with an English or "mul" label of that name in the country (FCB Magpies may be F.C. Magpies, Q19577058; not confirmed by Wikidata, so not guessed) |
+| `alb-elbasani` | Two candidates, KS Elbasani (First Division) and AF Elbasani (Superliga); the July 2026 qualifiers don't say which; not guessed |
 
 ## Media facts
 
-`reference/team_media.json` holds one entry per mapped team (702): `qid`, `wikidata_label`,
+`reference/team_media.json` holds one entry per mapped team (705; the four teams changed in
+the review were fetched on 22 October, the rest on 21 October): `qid`, `wikidata_label`,
 `crest_file` (P154), `venue` (`qid`, `name`, `image_file`) and `colours` (`qid`, `name`,
 `hex`). Of several logos or venues, a current one (no end time) is taken, preferred rank
 first, then the latest start time. Built by `uv run footy team-media --facts` (15 queries,
@@ -190,7 +225,7 @@ uv run footy team-media --download --team eng-liverpool   # or a few teams first
 uv run footy team-media                  # summary: mapped, facts, downloaded, refused
 ```
 
-- About 206 crests and 620 venue photos: two requests each (the API, then the thumbnail),
+- About 207 crests and 624 venue photos: two requests each (the API, then the thumbnail),
   one request per second in all, so about 28 minutes for a full run.
 - The first HTTP 429 or 403 stops the whole run. The report gives `stopped_at` (team and
   URL) and how many teams finished; a 429's Retry-After is saved in

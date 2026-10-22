@@ -778,3 +778,25 @@ settings. Four named candidates went to validation.
 - **What stays in the lab.** The four candidates remain registered, with their ledgers in
   `data/backtests/ml_*`. A month-by-month learning curve for a website panel is in
   `data/reports/ml_learning_curve.json`, with a summary in `data/reports/ml_selection.json`.
+
+**Audit (22 Oct 2026).** The recommendation stands; every number above is confirmed.
+
+- **Reproduced exactly.** The runner re-ran `ml_online_market` on validation in all five
+  leagues and `ml_stack_market` in the Bundesliga: every forecast matched the saved ledgers
+  (largest difference 4e-16). `ml_online_market` on the Bundesliga's test seasons did too.
+- **No leakage in the reported runs.** Prices are pre-closing only, quoted by each match's
+  deadline and before kickoff. The weights and meta-models learn only from matches final
+  before each cutoff. Every market comes from one grid that sums to 1.
+- **One latent leak fixed.** A mixture fitted at an earlier cutoff than its last fit kept the
+  weights it had learned from later matches. Neither the runner nor `footy.live` goes back in
+  time, so no number changed. A test now covers it.
+- **Caveats added.**
+  - **Member tuning:** all four candidates use `congestion_context_on_elo`, whose base was
+    tuned on 2022/23 and 2023/24. The shots model was tuned on 2022/23. So the ML search
+    seasons and validation flatter learners that trust these members. Test is clean.
+  - **Chosen settings:** the two mixture settings are near-ties, within 0.00002 of the best
+    two-season mean, rather than the best.
+  - **Extra test runs:** the test seasons were run twice more, unchanged. One run read the
+    weights and the other was the audit's reproduction.
+  - **Collapsed weights:** on validation the mixture with prices put all its weight on the
+    GLM booster in the Premier League and Ligue 1.

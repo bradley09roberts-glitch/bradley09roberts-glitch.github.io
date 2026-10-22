@@ -122,6 +122,27 @@ def test_weights_learn_to_prefer_the_better_member_and_the_grid_is_their_mixture
     assert headline(led)["1X2"]["rps"] < headline(fr)["1X2"]["rps"]
 
 
+def test_weights_learned_later_are_forgotten_when_time_goes_backwards():
+    """A mixture fitted at a late cutoff and then at an earlier one (its stream starts again)
+    forecasts exactly as a fresh one fitted at the earlier cutoff: no weight learned from the
+    matches in between survives."""
+    from footy.modeling.walkforward import RESULT_COLUMNS, training_history
+
+    df = synthetic_league(seed=14, seasons=("2223", "2324"), teams=10)
+    days = df[df.season == "2324"].groupby("cutoff_utc").cutoff_date.first()
+    early, late = days.index[3], days.index[-1]
+    fresh = _mixture(eta=0.5)
+    fresh.fit(training_history(df, days[early]), early)
+    reused = _mixture(eta=0.5)
+    reused.fit(training_history(df, days[late]), late)
+    assert not np.allclose(reused.weights("E0"), fresh.weights("E0"))  # it did learn later on
+    reused.fit(training_history(df, days[early]), early)
+    np.testing.assert_allclose(reused.weights("E0"), fresh.weights("E0"))
+    assert reused.updates == fresh.updates
+    fx = df[df.cutoff_utc == early].drop(columns=RESULT_COLUMNS)
+    np.testing.assert_allclose(reused.predict(fx).grid, fresh.predict(fx).grid)
+
+
 def test_per_division_weights_learn_only_from_their_division():
     df = synthetic_league(seed=10, seasons=("2223", "2324"), teams=10)
     other = synthetic_league(seed=11, seasons=("2223", "2324"), teams=10)

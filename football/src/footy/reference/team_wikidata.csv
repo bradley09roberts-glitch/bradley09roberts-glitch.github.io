@@ -1,5 +1,5 @@
 team_key,qid,wikidata_label,method,note
-alb-dinamo-city,,,,"unresolved: no club matched ('Dinamo City', 'FC Dinamo City')"
+alb-dinamo-city,Q34120,KS Dinamo Tirana,manual,"manual: Q34120's English Wikipedia article is 'FC Dinamo City', the name Dinamo Tirana took (its English label still has the old name); league (P118) Albanian Superliga"
 alb-egnatia,Q1302027,KF Egnatia,manual,manual: label 'KF Egnatia' = 'Egnatia' less 'KF'; league (P118) Albanian Superliga
 alb-elbasani,,,,unresolved: no club matched ('Elbasani')
 alb-partizani,Q845772,Partizani Tirana,manual,manual: 'Partizani' is in the label; league (P118) Albanian Superliga
@@ -133,7 +133,7 @@ deu-osnabruck,Q160530,VfL Osnabrück,exact_label,"label 'VfL Osnabrück' = 'Osna
 deu-paderborn,Q160532,SC Paderborn 07,manual,manual: 'Paderborn' is the label's one place name; league (P118) Bundesliga
 deu-preussen-munster,Q316865,SC Preußen Münster,alias,alias 'Preussen Munster' = 'Preußen Münster'; league (P118) confirms it
 deu-rb-leipzig,Q702455,RB Leipzig,exact_label,label 'RB Leipzig' = 'RB Leipzig'; league (P118) confirms it
-deu-regensburg,Q265570,SSV Jahn Regensburg,alias,"alias 'SSV Regensburg' = 'Regensburg', ignoring legal-form words; league (P118) confirms it, of 2 name matches"
+deu-regensburg,Q265570,SSV Jahn Regensburg,alias,"alias 'SSV Regensburg' = 'Regensburg', ignoring legal-form words; league (P118) confirms it"
 deu-schalke-04,Q32494,Schalke 04,exact_label,label 'Schalke 04' = 'Schalke 04'; league (P118) confirms it
 deu-st-pauli,Q6463,FC St. Pauli,alias,alias 'St. Pauli' = 'St Pauli'; league (P118) confirms it
 deu-stuttgart,Q4512,VfB Stuttgart,exact_label,label 'VfB Stuttgart' = 'VfB Stuttgart'; league (P118) confirms it
@@ -467,10 +467,10 @@ mkd-tikves,Q2412557,GFK Tikveš,manual,manual: 'GFK Tikvesh' is the label transl
 mkd-vardar,Q335190,FK Vardar,exact_label,"label 'FK Vardar' = 'Vardar', ignoring legal-form words; no league to check (UEFA matches only)"
 mlt-birkirkara,Q803976,Birkirkara F.C.,exact_label,label 'Birkirkara F.C.' = 'Birkirkara FC'; no league to check (UEFA matches only)
 mlt-floriana,Q728557,Floriana F.C.,exact_label,label 'Floriana F.C.' = 'Floriana FC'; no league to check (UEFA matches only)
-mlt-hamrun-spartans,,,,unresolved: no club matched ('Hamrun Spartans')
+mlt-hamrun-spartans,Q343030,Ħamrun Spartans F.C.,exact_label,"label 'Ħamrun Spartans F.C.' = 'Hamrun Spartans', ignoring legal-form words; no league to check (UEFA matches only)"
 mlt-hibernians,Q936187,Hibernians F.C.,exact_label,label 'Hibernians F.C.' = 'Hibernians FC'; no league to check (UEFA matches only)
 mlt-marsaxlokk,Q386670,Marsaxlokk F.C.,exact_label,label 'Marsaxlokk F.C.' = 'Marsaxlokk FC'; no league to check (UEFA matches only)
-mlt-sliema-wanderers,Q127269055,Sliema Wanderers,exact_label,label 'Sliema Wanderers' = 'Sliema Wanderers'; no league to check (UEFA matches only)
+mlt-sliema-wanderers,Q1289495,Sliema Wanderers F.C.,exact_label,"label 'Sliema Wanderers F.C.' = 'Sliema Wanderers', ignoring legal-form words; no league to check (UEFA matches only)"
 mlt-valletta,Q331589,Valletta F.C.,manual,"manual: label 'Valletta F.C.'; league (P118) Maltese Premier League, 46 sitelinks; Q127269064 'FC Valletta' has none"
 mne-buducnost,Q219264,FK Budućnost Podgorica,exact_label,label 'FK Budućnost Podgorica' = 'FK Budućnost Podgorica'; no league to check (UEFA matches only)
 mne-decic,Q920281,FK Dečić,exact_label,"label 'FK Dečić' = 'Dečić', ignoring legal-form words; no league to check (UEFA matches only)"
@@ -697,7 +697,7 @@ tur-rizespor,Q272712,Çaykur Rizespor,alias,alias 'Rizespor' = 'Rizespor'; leagu
 tur-samsunspor,Q430107,Samsunspor FC,exact_label,"label 'Samsunspor FC' = 'Samsunspor', ignoring legal-form words; league (P118) confirms it"
 tur-sivasspor,Q372599,Sivasspor,exact_label,label 'Sivasspor' = 'Sivasspor'; league (P118) confirms it
 tur-trabzonspor,Q192641,Trabzonspor,exact_label,label 'Trabzonspor' = 'Trabzonspor'; league (P118) confirms it
-ukr-dnipro-1,,,,"unresolved: no club matched ('Dnipro-1', 'SK Dnipro-1'); rejected Q56246637 Zlahoda-Dnipro-1: plays in a women's league (Ukrainian Women's League)"
+ukr-dnipro-1,Q30964198,SC Dnipro-1,manual,"manual: SC Dnipro-1, the club of the 2024/25 UECL qualifiers (July 2024); its item is a defunct club (P576 2024), which the automatic pass skips; the only name match it found, Q56246637 Zlahoda-Dnipro-1, is a women's club"
 ukr-dynamo-kyiv,Q179075,FC Dynamo Kyiv,alias,alias 'Dynamo Kyiv' = 'Dynamo Kyiv'; no league to check (UEFA matches only)
 ukr-kryvbas,,,,ambiguous: Q750434 FC Kryvbas Kryvyi Rih (exact_label 'FC Kryvbas Kryvyi Rih'); Q104841018 FC Kryvbas Kryvyi Rih (exact_label 'FC Kryvbas Kryvyi Rih')
 ukr-lnz-cherkasy,Q55189861,FC LNZ Cherkasy,alias,alias 'LNZ Cherkasy' = 'LNZ Cherkasy'; no league to check (UEFA matches only)

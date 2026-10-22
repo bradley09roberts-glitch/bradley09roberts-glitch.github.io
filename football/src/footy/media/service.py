@@ -1,6 +1,8 @@
 """What GET /api/teams/{team_key}/media returns: the club's crest if a freely licensed one has
 been downloaded, otherwise our generated badge; the home venue with its photo when one has
-been downloaded; and the club's official colours. Nothing here makes a network request.
+been downloaded; and the club's official colours. Each picture comes with what its licence
+asks to be shown (licence and its link, author, source, attribution text), and only while it
+is of the file reference/team_media.json names now. Nothing here makes a network request.
 """
 
 import json
@@ -53,13 +55,30 @@ def ordered_colours(team_key: str, colours: list[dict]) -> list[dict]:
     ]
 
 
-def _picture(team_dir: Path, entry: dict | None) -> dict | None:
-    """A downloaded picture's manifest entry, if its file is there and its licence free."""
-    if not entry or not (team_dir / entry.get("file", "")).is_file():
+def _picture(team_dir: Path, entry: dict | None, commons_file: str | None) -> dict | None:
+    """A downloaded picture's manifest entry, if its file is there, its licence free, and it
+    is of the Commons file the facts name now: a picture left from an earlier crest or venue,
+    or from a Wikidata item since corrected, is not shown."""
+    if not entry or not commons_file or entry.get("commons_file") != commons_file:
+        return None
+    if not (team_dir / entry.get("file", "")).is_file():
         return None
     if not licence_is_free(entry.get("licence")):
         return None
     return entry
+
+
+def _credit(entry: dict | None) -> dict:
+    """What must be shown with a picture: CC BY and BY-SA ask for the author, the source and
+    the licence with a link to it (all None when there is no picture)."""
+    entry = entry or {}
+    return {
+        "licence": entry.get("licence"),
+        "licence_url": entry.get("licence_url"),
+        "author": entry.get("author"),
+        "attribution": entry.get("attribution"),
+        "source_url": entry.get("source_url"),
+    }
 
 
 def team_media(team_key: str, settings: Settings, facts_path: Path | None = None) -> dict:
@@ -70,21 +89,19 @@ def team_media(team_key: str, settings: Settings, facts_path: Path | None = None
     wikidata_url = WIKIDATA_ITEM_URL.format(qid=qid) if qid else None
     colours = ordered_colours(team_key, facts.get("colours") or [])
 
-    crest_entry = _picture(team_dir, files.get("crest"))
+    crest_entry = _picture(team_dir, files.get("crest"), facts.get("crest_file"))
     if crest_entry is not None:
         crest = {
             "url": f"{MEDIA_URL}/{team_key}/{crest_entry['file']}",
             "kind": "crest",
-            "licence": crest_entry.get("licence"),
-            "attribution": crest_entry.get("attribution"),
-            "source_url": crest_entry.get("source_url"),
+            **_credit(crest_entry),
         }
     else:
         has_colours = any(c["hex"] for c in colours)
         crest = {
             "url": f"{MEDIA_URL}/{team_key}/badge.svg",
             "kind": "generated",
-            "licence": None,
+            **_credit(None),
             "attribution": (
                 "Generated badge, not the club's crest"
                 + (": colours from Wikidata (CC0)" if has_colours else "")
@@ -94,14 +111,12 @@ def team_media(team_key: str, settings: Settings, facts_path: Path | None = None
 
     venue = None
     venue_facts = facts.get("venue") or {}
-    photo = _picture(team_dir, files.get("venue"))
+    photo = _picture(team_dir, files.get("venue"), venue_facts.get("image_file"))
     if venue_facts.get("name") or photo is not None:
         venue = {
             "name": venue_facts.get("name"),
             "url": f"{MEDIA_URL}/{team_key}/{photo['file']}" if photo else None,
-            "licence": photo.get("licence") if photo else None,
-            "attribution": photo.get("attribution") if photo else None,
-            "source_url": photo.get("source_url") if photo else None,
+            **_credit(photo),
         }
     return {
         "team_key": team_key,

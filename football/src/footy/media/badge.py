@@ -29,6 +29,8 @@ SKIP_WORDS = {
     "ik", "nk", "of", "rc", "sc", "sk", "ss", "ssc", "sv", "the", "ud", "us",
 }  # fmt: skip
 VOWELS = set("AEIOUY")
+# Characters XML 1.0 can't hold at all, even escaped (control characters, U+FFFE, U+FFFF).
+XML_INVALID = re.compile("[\x00-\x08\x0b\x0c\x0e-\x1f\ufffe\uffff]")
 
 
 def short_name(name: str) -> str:
@@ -101,6 +103,7 @@ def pick_colours(hexes: list[str], team_key: str) -> tuple[str, str]:
 
 def badge_svg(team_key: str, name: str, hexes: list[str] | None = None) -> str:
     """The badge as an SVG document (128 x 128)."""
+    name = re.sub(r"\s+", " ", XML_INVALID.sub("", name)).strip()  # escaping can't fix these
     background, band = pick_colours(hexes or [], team_key)
     letters = short_name(name)
     text = max(["#FFFFFF", "#111111"], key=lambda h: contrast(background, h))
