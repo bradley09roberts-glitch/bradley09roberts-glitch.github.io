@@ -730,3 +730,51 @@ scheduled check-ins) no longer migrate the database; they refuse to run until so
 up `data/` and runs `uv run footy migrate`. Migration 0006 (distinct names for the two
 `raw_files` unique keys) had been applied by the capture loop before a backup was taken;
 row counts, raw-file hashes, integrity and the spot-check were unchanged afterwards.
+
+## D-028 Machine learning on top of the models; no switch (2026-10-22, proposed)
+
+**Status: proposed.** For the lead and the owner to accept; nothing in
+`primary_models.json` has changed.
+
+**Why:** the owner asked to "add machine learning so it learns stuff and hopefully gets
+better". Every model here is already refitted at each decision batch, and the `ml_gbm` family
+(D-025 composite 0.9564 on validation) had lost to the models of record. What was missing
+was a learner that learns from the models' own out-of-sample track record and keeps learning
+as results arrive. Full write-up: [docs/research/machine-learning.md](docs/research/machine-learning.md).
+
+**Built** (`footy.modeling.lab.ml_stream`, `ml_online`, `ml_stack`):
+
+- **A stream of every member model's forecasts.** Each match's forecast is made at its own
+  decision time, with prices only under `MarketTilt`'s rules. This is what the learners train
+  on, inside the walk-forward run.
+- **`ml_online_*`: mixture weights over the members' score grids,** updated by an
+  exponentiated-gradient (Hedge) step on the D-025 loss after every settled match.
+- **`ml_stack_*`: ridge logistic meta-models** (multinomial for 1X2) that correct a reference
+  forecast, made one coherent grid by a six-market exponential tilt.
+
+Every setting was chosen on 2021/22 and 2022/23 only: about 600 mixture and 100 stacker
+settings. Four named candidates went to validation.
+
+| Five leagues | Validation 2023/24 | Target on validation | Test 2024/25+2025/26 | Target on test |
+| --- | --- | --- | --- | --- |
+| `ml_online_market` (prices) | 0.94455 | `market_tilt_shots` 0.94488 | 0.95574 | 0.95546 |
+| `ml_stack_market` (prices) | 0.94484 | 0.94488 | not run (not selected, D-025) | – |
+| `ml_stack_pure` (no prices) | 0.95386 | `congestion_context_on_elo` 0.95174 | not run (lost validation) | – |
+| `ml_online_pure` (no prices) | 0.95421 | 0.95174 | not run (lost validation) | – |
+
+- **On validation,** `ml_online_market` beat its target by 0.00033 (95% CI −0.00116 to
+  +0.00055), so it had the one test run.
+- **On test it was worse by 0.00028** (95% CI −0.00024 to +0.00079): RPS identical, and worse
+  on O/U 1.5, O/U 3.5 and BTTS. With prices, the learner can only choose the grid's shape. It
+  mostly chose the shapes of `congestion_context_on_elo` and `ml_gbm_glm_boost`, and the shots
+  model's shape did better on test (as with `market_tilt_ctx` in D-027).
+
+**Recommendation under D-027: no switch.**
+
+- **With prices:** `market_tilt_shots` stays. The challenger is not at least as good on test.
+  Strictly, it was also never the lowest validation composite of every candidate compared,
+  since `market_tilt_ctx`, `_elo` and `_ens` scored 0.9441–0.9444 in round 4.
+- **Without prices:** `congestion_context_on_elo` stays. Neither learner beat it on validation.
+- **What stays in the lab.** The four candidates remain registered, with their ledgers in
+  `data/backtests/ml_*`. A month-by-month learning curve for a website panel is in
+  `data/reports/ml_learning_curve.json`, with a summary in `data/reports/ml_selection.json`.
