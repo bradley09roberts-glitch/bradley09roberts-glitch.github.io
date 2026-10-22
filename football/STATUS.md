@@ -5,6 +5,10 @@ from this file; scheduled check-ins follow its "Check-in runbook"._
 
 ## Standing rules
 
+- **Private repository (D-030).** The project lives in the private repository
+  `bradley09roberts-glitch/football-model`, branch `main`. In this working copy `origin` is that
+  repository and `public` is the FightBase site: never push football work to `public`.
+
 - **Records are immutable.** Genuine pre-match records are append-only: never edit or delete
   a line of `records/predictions/*.jsonl` or a `predictions` row. A correction is a new record.
 - **Prices stay private.** Never show, commit or quote a football-data price (D-013); records
@@ -249,7 +253,8 @@ pgrep -fa "^/bin/bash data/logs/capture_loop" || (nohup data/logs/capture_loop.s
 ### Every check-in: end
 
 1. Commit and push at once what the check-in wrote: `git add records/predictions` (plus any
-   `comparisons/results_<date>.json`), `git commit`, `git push`.
+   `comparisons/results_<date>.json`), `git commit`, `git push origin main` (the private
+   repository, D-030; never push football work to the `public` remote).
 2. Refresh the phone copy ("Publishing the phone copy") when anything was published or settled.
 3. Update "Published predictions" and "Scheduled check-ins" above.
 4. Check that a check-in is scheduled at least 7 days ahead; if not, say so first.

@@ -934,3 +934,23 @@ each names the entry and the audit item.
   describe `congestion_context_on_elo` and `elo_goals_gd` as goal-based Elo. They also use
   shots on target (blend 0.4) and red cards: "Elo on goals and shots on target, with red
   cards, congestion and context".
+
+## D-030 The project moves to a private repository (2026-10-22)
+
+**Decision:** the project lives in the private repository `bradley09roberts-glitch/football-model`
+(branch `main`, project in `football/`), not on a branch of the public
+`bradley09roberts-glitch.github.io`. Supersedes D-001's location.
+
+**Why:** the audit (M4) found the public repository exposed the records, the docs and the
+owner's ChatGPT comparison data, and that D-013's publication rules had assumed a private home.
+The owner chose to make it private (22 Oct). Making the github.io repository itself private
+would take the FightBase site offline (GitHub Pages needs a public repository on a free plan).
+
+**How:** the branch `claude/football-predictor` (68 commits, head `bc2cd069`) was pushed
+unchanged to the private `main` and checked commit for commit; the server's bootstrap archive
+(backtest ledgers, reports, lab results and the UEFA CSV: model outputs only, no prices) is on
+the private branch `bootstrap-data`. This working copy now has `origin` = the private repository
+(local branch `main`) and `public` = github.io (local branch `fightbase-main`). The public branch
+is deleted by the owner (the session's permission check refused a destructive push). Anything
+copied while the branch was public (19-22 Oct) can't be recalled; the audit found no secret in
+the history.
