@@ -9,9 +9,11 @@
 #   europe/                         the 2026/27 UEFA CSVs built from Wikipedia, a fallback
 #                                   while Wikimedia refuses a server
 # Never: data/raw (football-data's files carry bookmakers' prices), the database, media,
-# logs, or anything with a price column. The script refuses to build if any CSV or JSON
-# ledger has a price-like column, if a file isn't one of the expected kinds, or if any file
-# holds a secret from .env.
+# logs, anything with a price column, or UEFA.com content (DECISIONS.md D-023: its terms
+# forbid scripted collection; europe/uefa_2627_crosscheck.csv, written before 22 Oct, is
+# left out). The script refuses to build if any CSV or JSON ledger has a price-like column,
+# if a CSV has a UEFA.com column (uefa_*), if a file isn't one of the expected kinds, or if
+# any file holds a secret from .env.
 #
 # Output: bootstrap-data.tar.xz split into parts under 50 MB (GitHub's warning size), with
 # SHA256SUMS (parts and the whole archive), FILES.sha256 (every file, relative to data/),
@@ -24,9 +26,11 @@ project=$(cd "$here/.." && pwd)
 data=${FOOTY_DATA_DIR:-$project/data}
 part_size=${PART_SIZE:-45m}
 dirs=(backtests backtests_euro reports lab europe)
+# left out (paths relative to data/): UEFA.com content kept from before 22 Oct (D-023)
+exclude=(europe/uefa_2627_crosscheck.csv)
 
 if [[ $# -ne 1 || $1 == -h || $1 == --help ]]; then
-  sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//'
+  sed -n '2,21p' "$0" | sed 's/^# \{0,1\}//'
   exit 2
 fi
 out=$1
@@ -43,12 +47,16 @@ done
 echo "Checking $data (${dirs[*]}) ..."
 # Every check reads the files itself; the secret check reads .env without printing it or
 # putting it on a command line.
-python3 -I - "$data" "$project/.env" "${dirs[@]}" <<'PY'
+list=$(mktemp)
+trap 'rm -f "$list"' EXIT
+python3 -I - "$data" "$project/.env" "$list" "${exclude[*]}" "${dirs[@]}" <<'PY'
 import csv, json, pathlib, re, sys
 
 data = pathlib.Path(sys.argv[1])
 env = pathlib.Path(sys.argv[2])
-dirs = sys.argv[3:]
+listing = pathlib.Path(sys.argv[3])
+exclude = set(sys.argv[4].split())
+dirs = sys.argv[5:]
 ALLOWED = {".csv", ".json"}
 # football-data's bookmaker columns (B365H, PSCH, AvgC>2.5, MaxH, BWA, ...) and generic names
 BOOK = re.compile(
@@ -56,7 +64,8 @@ BOOK = re.compile(
     r"(H|D|A|>2\.5|<2\.5|AHH|AHA|CH|CD|CA)$"
 )
 WORDS = re.compile(r"price|odds|closing|implied|consensus|devig|bookmaker|overround", re.I)
-problems, files, ledgers = [], 0, 0
+UEFA_COM = re.compile(r"^uefa_", re.I)  # columns read from UEFA.com pages (D-023)
+problems, files, ledgers, kept = [], 0, 0, []
 
 def check_columns(cols, where):
     for c in cols:
@@ -70,8 +79,12 @@ for d in dirs:
             continue
         if not p.is_file():
             continue
-        files += 1
         rel = p.relative_to(data)
+        if str(rel) in exclude:
+            print(f"  left out: {rel}")
+            continue
+        files += 1
+        kept.append(str(rel))
         if p.suffix not in ALLOWED:
             problems.append(f"{rel}: unexpected file type")
             continue
@@ -79,6 +92,9 @@ for d in dirs:
             with p.open(newline="", encoding="utf-8") as f:
                 header = next(csv.reader(f), [])
             check_columns(header, str(rel))
+            uefa = [c for c in header if UEFA_COM.match(c)]
+            if uefa:
+                problems.append(f"{rel}: UEFA.com content (D-023), columns {uefa[:4]}")
             ledgers += p.name == "ledger.csv"
         elif p.name == "ledger.json":
             rows = json.loads(p.read_text(encoding="utf-8"))
@@ -95,29 +111,30 @@ if env.is_file():
         if sep and re.search(r"TOKEN|KEY|SECRET|PASSWORD", k) and len(v) >= 8:
             secrets.append(v.encode())
 if secrets:
-    for d in dirs:
-        for p in (data / d).rglob("*"):
-            if p.is_file() and not p.is_symlink():
-                blob = p.read_bytes()
-                if any(s in blob for s in secrets):
-                    problems.append(f"{p.relative_to(data)}: holds a secret from .env")
+    for rel in kept:
+        if any(s in (data / rel).read_bytes() for s in secrets):
+            problems.append(f"{rel}: holds a secret from .env")
 
 if problems:
     print("Refused, nothing written:", *problems[:40], sep="\n  ", file=sys.stderr)
     sys.exit(1)
-print(f"  {files} files ({ledgers} ledgers): no price-like columns, no secrets, only CSV and JSON")
+listing.write_bytes(b"".join(r.encode() + b"\0" for r in sorted(kept)))
+print(
+    f"  {files} files ({ledgers} ledgers): no price-like columns, no UEFA.com content, "
+    "no secrets, only CSV and JSON"
+)
 PY
 
 stage=$(mktemp -d "$out/.stage.XXXXXX")
-trap 'rm -rf "$stage"' EXIT
+trap 'rm -rf "$stage" "$list"' EXIT
 
 echo "Hashing every file ..."
-(cd "$data" && find "${dirs[@]}" -type f -print0 | LC_ALL=C sort -z | xargs -0 sha256sum) \
-  >"$stage/FILES.sha256"
+# exactly the files the check passed (its list), for the hashes and for the archive
+(cd "$data" && xargs -0 sha256sum <"$list") >"$stage/FILES.sha256"
 
 echo "Compressing (xz) ..."
 # Sorted names, no owner names: the same data gives the same tar stream.
-tar --sort=name --owner=0 --group=0 --numeric-owner -C "$data" -cf - "${dirs[@]}" \
+tar --sort=name --owner=0 --group=0 --numeric-owner -C "$data" --null -T "$list" -cf - \
   | xz -T0 -6 >"$stage/bootstrap-data.tar.xz"
 (cd "$stage" && split -b "$part_size" -d -a 3 bootstrap-data.tar.xz bootstrap-data.tar.xz.part-)
 
@@ -135,8 +152,11 @@ sums = dict(reversed(line.split(maxsplit=1)) for line in (stage / "SHA256SUMS").
 parts = sorted(p for p in stage.iterdir() if ".part-" in p.name)
 archive = stage / "bootstrap-data.tar.xz"
 
-def tree(d):
-    files = [p for p in (data / d).rglob("*") if p.is_file()]
+archived = [line.split(maxsplit=1)[1] for line in (stage / "FILES.sha256").read_text().splitlines()]
+
+
+def tree(d):  # what is in the archive (FILES.sha256), not everything in data/<d>
+    files = [data / rel for rel in archived if rel.startswith(f"{d}/")]
     return {"files": len(files), "bytes": sum(p.stat().st_size for p in files)}
 
 print(json.dumps({
@@ -150,6 +170,7 @@ print(json.dumps({
     "checks": [
         "only .csv and .json files",
         "no price-like column in any CSV header or ledger.json record",
+        "no UEFA.com content (D-023): no uefa_* column; europe/uefa_2627_crosscheck.csv left out",
         "no secret from .env in any file",
         "no data/raw, no database, no media, no logs",
     ],
@@ -163,7 +184,7 @@ cat >"$stage/README.md" <<'MD'
 # Bootstrap data for a new server
 
 Backtest ledgers, reports and lab tables from `data/` (no `data/raw`, no database, no
-prices), for `football/deploy/bootstrap-data.sh`. The archive `bootstrap-data.tar.xz` is
+prices, no UEFA.com content), for `football/deploy/bootstrap-data.sh`. The archive `bootstrap-data.tar.xz` is
 split into parts under 50 MB; `SHA256SUMS` covers the parts and the whole archive,
 `FILES.sha256` every file (paths relative to `data/`), and `MANIFEST.json` says what is in it.
 

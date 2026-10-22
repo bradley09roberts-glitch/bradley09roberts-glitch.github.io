@@ -1,0 +1,12 @@
+# Installed by deploy/setup.sh. OnFailure handler of every footy-* job: a push notification
+# when a job failed without sending its own (killed at its time limit, crashed).
+[Unit]
+Description=Football model: notify that %i failed
+
+[Service]
+Type=oneshot
+User=@USER@
+Group=@USER@
+WorkingDirectory=@PROJECT@
+ExecStart=@PROJECT@/deploy/jobs/notify-failure.sh %i
+TimeoutStartSec=2min

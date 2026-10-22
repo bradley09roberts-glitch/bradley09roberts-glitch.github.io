@@ -1,0 +1,12 @@
+# Installed by deploy/setup.sh; times are UK time (Europe/London), summer or winter.
+[Unit]
+Description=Football model: UEFA results and settlement, Tuesday to Thursday 23:30
+
+[Timer]
+OnCalendar=Tue..Thu *-*-* 23:30:00 Europe/London
+Persistent=true
+AccuracySec=1min
+Unit=footy-uefa-night.service
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,5 @@
+# shellcheck settings for deploy/ (validated with shellcheck 0.11)
+# SC2119: run_doctor passes its own arguments on; callers needn't pass the script's.
+disable=SC2119
+external-sources=true
+source-path=SCRIPTDIR

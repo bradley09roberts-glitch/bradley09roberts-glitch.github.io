@@ -1,0 +1,19 @@
+# Installed by deploy/setup.sh (placeholders @...@ filled in); docs/server.md, "Operator".
+[Unit]
+Description=Football model: pre-match odds snapshots every 5 minutes (deploy/jobs/capture-odds.sh)
+After=network-online.target
+Wants=network-online.target
+OnFailure=footy-failure@%n.service
+
+[Service]
+Type=oneshot
+User=@USER@
+Group=@USER@
+WorkingDirectory=@PROJECT@
+Environment=PATH=@HOME@/.local/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=@PROJECT@/deploy/jobs/capture-odds.sh
+TimeoutStartSec=4min
+NoNewPrivileges=true
+Nice=0
+PrivateTmp=true
+ProtectSystem=full

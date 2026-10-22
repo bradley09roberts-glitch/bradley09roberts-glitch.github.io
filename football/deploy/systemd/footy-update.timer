@@ -1,0 +1,12 @@
+# Installed by deploy/setup.sh; times are UK time (Europe/London), summer or winter.
+[Unit]
+Description=Football model: weekly code update with a migration guard, Wednesday 04:00
+
+[Timer]
+OnCalendar=Wed *-*-* 04:00:00 Europe/London
+Persistent=true
+AccuracySec=1min
+Unit=footy-update.service
+
+[Install]
+WantedBy=timers.target

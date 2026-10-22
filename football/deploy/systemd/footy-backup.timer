@@ -1,0 +1,12 @@
+# Installed by deploy/setup.sh; times are UK time (Europe/London), summer or winter.
+[Unit]
+Description=Football model: nightly database backup, 03:30
+
+[Timer]
+OnCalendar=*-*-* 03:30:00 Europe/London
+Persistent=true
+AccuracySec=1min
+Unit=footy-backup.service
+
+[Install]
+WantedBy=timers.target

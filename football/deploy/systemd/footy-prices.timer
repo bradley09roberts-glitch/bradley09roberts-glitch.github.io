@@ -1,0 +1,14 @@
+# Installed by deploy/setup.sh; times are UK time (Europe/London), summer or winter.
+[Unit]
+Description=Football model: Tuesday and Friday prices and model + market records, 12:40 (retries 14:20, 15:20)
+
+[Timer]
+OnCalendar=Tue,Fri *-*-* 12:40:00 Europe/London
+OnCalendar=Tue,Fri *-*-* 14:20:00 Europe/London
+OnCalendar=Tue,Fri *-*-* 15:20:00 Europe/London
+Persistent=true
+AccuracySec=1min
+Unit=footy-prices.service
+
+[Install]
+WantedBy=timers.target

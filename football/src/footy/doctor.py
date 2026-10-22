@@ -10,6 +10,8 @@ Checks:
   (fd_update, settle, predict, ...), a failed latest run, and runs left "running" by a kill.
 - `timers`: the last success of every scheduled job (deploy/jobs/*.sh write
   `<state>/last-success-<job>`), when the state folder exists (the server).
+- `notes`: standing warnings the jobs leave there (`<state>/warn-<topic>`), e.g. Wikipedia
+  not answering the server since the bootstrap.
 - `settlements`: genuine pre-match records still unsettled 3 hours after kick-off; a problem
   once a league game is 4 days past kick-off or a UEFA game 2 days (results sources lag).
 - `fetches`: failed requests in the last 48 hours by source and HTTP status; a problem when a
@@ -72,7 +74,10 @@ SETTLE_GRACE = {"domestic": timedelta(days=4), "uefa": timedelta(days=2)}
 UEFA = {"UCL", "UEL", "UECL", "UCLQ", "UELQ", "UECLQ"}
 FETCH_WINDOW = timedelta(hours=48)
 MAIN_SOURCES = {"football-data", "football-data-fixtures", "wikipedia", "sportmonks"}
-FETCH_OK = {"new_revision", "unchanged", "not_modified", "cached"}
+# fetch_log outcomes that are failures; everything else (new_revision, unchanged, cached,
+# not_modified, inbox_new, inbox_same, and not_found: a page or season file that doesn't
+# exist yet) is an answer
+FETCH_FAILED = {"error"}
 UNPUSHED_GRACE = timedelta(hours=2)
 MIN_FREE_BYTES = 2 * 1024**3
 MIN_FREE_FRACTION = 0.10
@@ -246,25 +251,58 @@ def check_timers(state_dir: Path | None, now: datetime) -> Check:
     if state_dir is None or not state_dir.is_dir():
         return Check("timers", SKIPPED, "no job state folder (not the server)")
     details, status = [], OK
+    late = waiting = 0
+    # a job that hasn't run yet is only late once the server has been up longer than its gap
+    ready_at = _read_stamp(state_dir / "bootstrap.done")
     for job, limit in TIMER_MAX_AGE.items():
         ok_at = _read_stamp(state_dir / f"last-success-{job}")
         failed_at = _read_stamp(state_dir / f"last-failure-{job}")
+        started_at = _read_stamp(state_dir / f"last-start-{job}")
+        ended_at = max((t for t in (ok_at, failed_at) if t), default=None)
         flag, line = OK, f"{job}: last success {_uk(ok_at)}"
-        if ok_at is None or now - ok_at > limit:
+        if started_at is None and ended_at is None:
+            new_server = ready_at is None or now - ready_at <= limit
+            flag = WARN if new_server else PROBLEM
+            line += " (hasn't run yet)"
+        elif (
+            started_at and (ended_at is None or started_at > ended_at) and now - started_at < limit
+        ):
+            line += f"; running since {_uk(started_at)}"
+        elif ok_at is None or now - ok_at > limit:
             flag = PROBLEM
             line += f", expected at least every {_span(limit)}"
         if failed_at is not None and (ok_at is None or failed_at > ok_at):
             flag = PROBLEM
             line += f"; failed {_uk(failed_at)} (journalctl -u footy-{job})"
+        late += flag == PROBLEM
+        waiting += flag == WARN
         status = worst(status, flag)
         details.append(("" if flag == OK else f"[{flag}] ") + line)
-    bad = [d for d in details if d.startswith("[")]
+    parts = [f"{late} late or failing"] if late else []
+    parts += [f"{waiting} not run yet"] if waiting else []
     summary = (
-        f"all {len(TIMER_MAX_AGE)} scheduled jobs succeeded on time"
-        if not bad
-        else f"{len(bad)} of {len(TIMER_MAX_AGE)} scheduled jobs late or failing"
+        f"all {len(TIMER_MAX_AGE)} scheduled jobs on time"
+        if not parts
+        else f"{', '.join(parts)} (of {len(TIMER_MAX_AGE)} scheduled jobs)"
     )
-    return Check("timers", status, summary, bad)
+    return Check("timers", status, summary, [d for d in details if d.startswith("[")])
+
+
+def check_notes(state_dir: Path | None) -> Check:
+    """Standing warnings the jobs leave in the state folder (`warn-<topic>`, one paragraph
+    each, removed by the job that resolves it), e.g. Wikipedia not answering the server."""
+    if state_dir is None or not state_dir.is_dir():
+        return Check("notes", SKIPPED, "no job state folder (not the server)")
+    notes = []
+    for p in sorted(state_dir.glob("warn-*")):
+        try:
+            text = " ".join(p.read_text().split())
+        except OSError:
+            continue
+        notes.append(f"{p.name.removeprefix('warn-')}: {text[:300]}")
+    if not notes:
+        return Check("notes", OK, "no standing warnings from the jobs")
+    return Check("notes", WARN, f"{_plural(len(notes), 'standing warning')}", notes)
 
 
 def _read_stamp(path: Path) -> datetime | None:
@@ -340,7 +378,7 @@ def check_fetches(s: Session, now: datetime) -> Check:
     latest: dict[str, tuple[str, int | None, datetime]] = {}
     for source, outcome, status, at in rows:
         latest[source] = (outcome, status, _aware(at))
-        if outcome not in FETCH_OK:
+        if outcome in FETCH_FAILED:
             failures[source][f"HTTP {status}" if status else outcome] += 1
     if not rows:
         return Check("fetches", OK, "no requests in the last 48 h")
@@ -349,10 +387,10 @@ def check_fetches(s: Session, now: datetime) -> Check:
         outcome, code, at = latest[source]
         last_ok = s.scalar(
             select(func.max(FetchLog.requested_at)).where(
-                FetchLog.source == source, FetchLog.outcome.in_(FETCH_OK)
+                FetchLog.source == source, FetchLog.outcome.not_in(FETCH_FAILED)
             )
         )
-        failing_now = outcome not in FETCH_OK
+        failing_now = outcome in FETCH_FAILED
         flag = (PROBLEM if source in MAIN_SOURCES else WARN) if failing_now else OK
         status = worst(status, flag)
         counts = ", ".join(f"{n} x {k}" for k, n in failures[source].most_common())
@@ -611,6 +649,7 @@ def run(
             Check("database", PROBLEM if schema_ok else WARN, f"can't read the tables: {e}")
         )
     checks.append(check_timers(options.state_dir, now))
+    checks.append(check_notes(options.state_dir))
     checks.append(
         check_records(
             engine,
