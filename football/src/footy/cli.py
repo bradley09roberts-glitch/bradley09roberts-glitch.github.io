@@ -101,6 +101,13 @@ def main(argv: list[str] | None = None) -> int:
 
     sub.add_parser("settle", help="settle published predictions whose results are in")
 
+    ir = sub.add_parser(
+        "import-records",
+        help="load records/predictions/*.jsonl into a new or rebuilt database, keeping every "
+        "id (sha256 checked), then settle; publishing refuses until the database holds them",
+    )
+    ir.add_argument("--dir", help="the records folder (default records/predictions)")
+
     fr = sub.add_parser(
         "final-report", help="validation selection, one test run, benchmark, profit"
     )
@@ -126,6 +133,18 @@ def main(argv: list[str] | None = None) -> int:
     eu.add_argument(
         "--no-rebuild", action="store_true", help="load uefa_2627.csv as it is, without rebuilding"
     )
+
+    eir = sub.add_parser(
+        "euro-import-results",
+        help="enter UEFA results read in news reports, two publishers each (DECISIONS.md D-029)",
+    )
+    eir.add_argument("file", help="JSON like comparisons/results_2026-10-21.json")
+    eir.add_argument(
+        "--correct",
+        action="store_true",
+        help="replace a different stored result (written to data_corrections first)",
+    )
+    eir.add_argument("--dry-run", action="store_true", help="report what would change only")
 
     ec = sub.add_parser(
         "euro-crosscheck", help="compare the openfootball matches with Wikipedia's match boxes"
@@ -227,7 +246,21 @@ def main(argv: list[str] | None = None) -> int:
         help="make one Commons API request and report whether Wikimedia still returns 429",
     )
 
+    doc = sub.add_parser(
+        "doctor",
+        help="health report: jobs, settlements, fetches, records, disk, website "
+        "(docs/server.md); exit 1 on a problem",
+    )
+    doc.add_argument("--json", action="store_true", help="the report as JSON")
+    doc.add_argument("--quiet", action="store_true", help="only problems and warnings")
+    doc.add_argument("--web", action="store_true", help="check the API and site addresses too")
+    doc.add_argument("--summary", action="store_true", help="add the last 7 days in numbers")
+
     args = parser.parse_args(argv)
+    if args.command == "doctor":
+        from footy.doctor import main as doctor_main
+
+        return doctor_main(args)
     if args.command == "set-model-of-record":
         return _set_model_of_record(args)
     if args.command == "team-stats":
@@ -391,6 +424,25 @@ def main(argv: list[str] | None = None) -> int:
             res = settle(get_engine())
             ctx.detail.update(res)
         print(json.dumps(res))
+    elif args.command == "import-records":
+        from pathlib import Path
+
+        from footy.db import SchemaNotCurrent, get_engine, require_head
+        from footy.publish import RECORDS_DIR, PublishError, import_records, settle
+
+        engine = get_engine()
+        try:  # never migrates (see require_head)
+            require_head(engine)
+        except SchemaNotCurrent as e:
+            print(f"Refused: {e}")
+            return 1
+        try:
+            res = import_records(engine, Path(args.dir) if args.dir else RECORDS_DIR)
+        except PublishError as e:
+            print(f"Refused, nothing imported: {e}")
+            return 1
+        res["settle"] = settle(engine)
+        print(json.dumps(res, indent=2, default=str))
     elif args.command == "euro-update":
         from pathlib import Path
 
@@ -409,7 +461,40 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps(detail, indent=2, default=str))
         wiki = detail.get("wikipedia", {})
         failed = wiki.get("rebuild_error") or str(wiki.get("csv", "")).startswith("missing")
+        # A fetch that failed (refused, or a network error) is a failure too, though the stored
+        # pages were loaded: the results are not up to date (the job is "partial").
+        gap = detail.get("wikipedia_gap", {})
+        failed = failed or wiki.get("fetch_errors") or gap.get("fetch_errors")
         return 1 if failed else 0
+    elif args.command == "euro-import-results":
+        from pathlib import Path
+
+        from footy.db import SchemaNotCurrent, get_engine, require_head
+        from footy.europe.manual_results import ManualImportError, import_results
+        from footy.ingest.jobs import job_run
+
+        engine = get_engine()
+        try:  # never migrates (see require_head)
+            require_head(engine)
+        except SchemaNotCurrent as e:
+            print(f"Refused: {e}")
+            return 1
+        path = Path(args.file)
+        try:
+            if args.dry_run:
+                report = import_results(
+                    engine, settings.raw_dir, path, correct=args.correct, dry_run=True
+                )
+            else:
+                with job_run(engine, "euro_import_results") as ctx:
+                    report = import_results(engine, settings.raw_dir, path, correct=args.correct)
+                    ctx.detail.update(report.as_dict())
+                    ctx.partial = bool(report.refused)
+        except (ManualImportError, OSError) as e:
+            print(f"Refused: {e}")
+            return 1
+        print(json.dumps(report.as_dict(), indent=2, ensure_ascii=False))
+        return 1 if report.refused else 0
     elif args.command == "euro-crosscheck":
         from footy.db import get_engine
         from footy.europe.of_crosscheck import run_crosscheck
@@ -500,7 +585,13 @@ def _finish_killed_publish(dry_run: bool) -> None:
     """Finish the records of a publish that a container restart cut short, before anything
     else is published (footy.publish.recover_pending; a dry run only says if one is due)."""
     from footy.db import get_engine
-    from footy.publish import PENDING_PREFIX, RECORDS_DIR, recover_pending
+    from footy.publish import (
+        PENDING_PREFIX,
+        RECORDS_DIR,
+        PublishError,
+        check_records,
+        recover_pending,
+    )
 
     if dry_run:
         if RECORDS_DIR.is_dir() and any(RECORDS_DIR.glob(f"{PENDING_PREFIX}*.json")):
@@ -509,6 +600,12 @@ def _finish_killed_publish(dry_run: bool) -> None:
     n = recover_pending(get_engine())
     if n:
         print(f"finished {n} publish(es) cut short by a restart", flush=True)
+    # refuse before any model is fitted if the database lacks published records (a rebuilt
+    # database: `footy import-records`); `publish` itself refuses too
+    try:
+        check_records(get_engine())
+    except PublishError as e:
+        raise SystemExit(f"Refused: {e}") from None
 
 
 def _publish_shadows(args, parser) -> int:

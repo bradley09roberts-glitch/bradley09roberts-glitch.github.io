@@ -127,24 +127,52 @@ class RecordsOfRecord:
     its genuine pre-match records (00:00 UK on its date for a record that has none). A kickoff
     brought forward after the first record is therefore honoured: a fixture that kicked off
     before a switch never takes the new period. A genuine record can only be saved before its
-    own kickoff, so once the fixture has kicked off no new record can move that time."""
+    own kickoff, so once the fixture has kicked off no new record can move that time.
+
+    `schedule` holds each fixture's date and kickoff as last known, for display: the latest
+    genuine record of the fixture that has a kickoff, else the played match where the pairing
+    meets once a season (a record dated by a placeholder, such as La Liga matchday 10 of
+    2026/27 listed on its Sunday, is shown on the day the match was played)."""
 
     def __init__(self, s: Session, primary: dict):
         self.periods = _as_periods(primary)
         self.genuine: dict[str, set[str]] = {}
         self.when: dict[str, datetime] = {}
+        self.schedule: dict[str, tuple[date, datetime | None]] = {}
         rows = s.execute(
             select(
                 Prediction.fixture_ref,
                 Prediction.model_name,
                 Prediction.kickoff_utc,
                 Prediction.match_date,
-            ).where(Prediction.record_type == "genuine_prematch")
+            )
+            .where(Prediction.record_type == "genuine_prematch")
+            .order_by(Prediction.id)
         ).all()
         for ref, model, kickoff, day in rows:
             self.genuine.setdefault(ref, set()).add(model)
             t = models_of_record.fixture_time(kickoff, day)
             self.when[ref] = min(self.when.get(ref, t), t)
+            if kickoff is not None:
+                self.schedule[ref] = (day, kickoff)
+        undated = set(self.genuine) - set(self.schedule)
+        if undated:
+            for ref, day, kickoff in s.execute(
+                text(
+                    "SELECT DISTINCT p.fixture_ref, m.match_date, m.kickoff_utc FROM predictions p "
+                    "JOIN matches m ON m.division = p.competition AND m.season = p.season "
+                    "AND m.home_team = p.home_team AND m.away_team = p.away_team "
+                    "WHERE p.kickoff_utc IS NULL AND p.record_type = 'genuine_prematch'"
+                )
+            ):
+                division = DIVISIONS.get(ref.split(":", 1)[0])
+                if ref in undated and division is not None and division.max_meetings == 1:
+                    k = None if kickoff is None else datetime.fromisoformat(str(kickoff))
+                    self.schedule[ref] = (date.fromisoformat(str(day)[:10]), k)
+
+    def schedule_of(self, p: Prediction) -> tuple[date, datetime | None]:
+        """The date and kickoff to show for a record's fixture (see the class docstring)."""
+        return self.schedule.get(p.fixture_ref, (p.match_date, p.kickoff_utc))
 
     def order_for(self, fixture_ref: str, competition: str) -> list[str]:
         """The ordered model list of the period that applies to this fixture."""
@@ -389,7 +417,10 @@ def make_router(engine_fn: Callable[[], Engine], settings: Settings) -> APIRoute
         return {t.team_key: t.name for t in s.scalars(select(Team))}
 
     def settlements(s: Session) -> dict[int, PredictionSettlement]:
-        return {x.prediction_id: x for x in s.scalars(select(PredictionSettlement))}
+        """Each prediction's latest settlement (footy.publish.latest_settlements)."""
+        from footy.publish import latest_settlements
+
+        return latest_settlements(s)
 
     def badge_letters(s: Session) -> dict[str, str]:
         """Every team's badge letters, different for teams that meet (TeamsIndex.shorts)."""
@@ -419,6 +450,12 @@ def make_router(engine_fn: Callable[[], Engine], settings: Settings) -> APIRoute
         features = json.loads(p.features) if p.features else {}
         basis = basis_of(features)
         entry = (shadow or {}).get(competition_group(p.competition), {}).get(p.model_name)
+        # the fixture's date and kickoff as last known; the record's own when they differ
+        day, kickoff = ror.schedule_of(p)
+        moved = (day.isoformat(), iso_utc(kickoff)) != (
+            p.match_date.isoformat(),
+            iso_utc(p.kickoff_utc),
+        )
         out = {
             "id": p.id,
             "is_primary": ror.is_primary(p),
@@ -427,8 +464,16 @@ def make_router(engine_fn: Callable[[], Engine], settings: Settings) -> APIRoute
             "competition": p.competition,
             "competition_name": COMPETITION_NAMES.get(p.competition, p.competition),
             "season": p.season,
-            "match_date": p.match_date.isoformat(),
-            "kickoff_utc": iso_utc(p.kickoff_utc),
+            "match_date": day.isoformat(),
+            "kickoff_utc": iso_utc(kickoff),
+            **(
+                {
+                    "recorded_match_date": p.match_date.isoformat(),
+                    "recorded_kickoff_utc": iso_utc(p.kickoff_utc),
+                }
+                if moved
+                else {}
+            ),
             "home_team": p.home_team,
             "away_team": p.away_team,
             "home_name": names.get(p.home_team, p.home_team),

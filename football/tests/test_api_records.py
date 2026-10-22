@@ -406,19 +406,19 @@ def test_appending_a_period_never_changes_a_fixture_that_kicked_off_before_it(
     switch = KICKOFF + timedelta(hours=1)
     tilt_features = {"model_params": TILT_PARAMS, "market_prices_used": SYNTHETIC_MARKET}
 
-    def both(home, away, day, base_kickoff, tilt_kickoff=None):
+    def both(home, away, day, base_kickoff, tilt_kickoff=None, comp="E0"):
         """A base_m record, then a tilt_m record (with its own kickoff if given)."""
         tk = base_kickoff if tilt_kickoff is None else tilt_kickoff
         (b,) = pub(
             migrated_engine,
             tmp_path,
-            [FixtureIn("E0", "2627", day, base_kickoff, home, away)],
+            [FixtureIn(comp, "2627", day, base_kickoff, home, away)],
             "base_m",
         )
         (t,) = pub(
             migrated_engine,
             tmp_path,
-            [FixtureIn("E0", "2627", day, tk, home, away, features=tilt_features)],
+            [FixtureIn(comp, "2627", day, tk, home, away, features=tilt_features)],
             "tilt_m",
         )
         return b, t
@@ -437,7 +437,12 @@ def test_appending_a_period_never_changes_a_fixture_that_kicked_off_before_it(
             True,
         ),
         "kickoff unknown, switch day": (both("eng-mockford", "eng-sampleton", DAY, None), True),
-        "kickoff unknown, next day": (both("eng-mockford", "eng-sampleton", nxt, None), False),
+        # another competition: an E0 pairing meets once a season, so the same pairing on
+        # another day would be the same fixture (footy.publish.FixtureIn.key)
+        "kickoff unknown, next day": (
+            both("eng-mockford", "eng-sampleton", nxt, None, comp="E1"),
+            False,
+        ),
     }
     primary_file("base_m")
     before = {cid: c["is_primary"] for cid, c in fixture_cards(client).items()}

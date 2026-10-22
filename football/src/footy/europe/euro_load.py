@@ -16,9 +16,20 @@ Team names resolve only through reference/team_aliases.csv (sources "openfootbal
 
 Idempotent: re-running over the same raw revisions changes nothing. Rows are matched on the
 table's unique key (competition, season, date, home, away). A row that a (source, competition,
-season) no longer produces is deleted, since a rescheduled fixture comes back under a new date;
-nothing is deleted from a file that had parse errors. A changed result (a row that was not
-"scheduled") from a newer raw revision is written to `data_corrections` (entity "euro_match").
+season) no longer produces is deleted, since a rescheduled fixture comes back under a new date,
+but never while any parse, build or mapping error is outstanding (a row the build dropped is
+not a row the source dropped; the job is then `partial`), and a row with a result (not
+"scheduled") only with a `data_corrections` entry (field "deleted"). A changed result from a
+newer raw revision is written to `data_corrections` (entity "euro_match").
+
+A result entered by `footy euro-import-results` (source "manual", DECISIONS.md D-029) sits on
+the same row. A source that later gives the same result takes the row over (confirmed); one
+that gives another result corrects it, with a `data_corrections` entry and a
+`manual_result_disagrees` error (job `partial`); one that has no result yet leaves it alone.
+The loaders never delete a manual row.
+
+At the end the whole table goes through `footy.europe.euro_integrity`; any error makes the job
+`partial`.
 """
 
 import csv
@@ -27,7 +38,7 @@ import os
 import subprocess
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from pathlib import Path
 
 from sqlalchemy import Engine, delete, select
@@ -38,10 +49,13 @@ from footy.europe.openfootball import FILES, PARSER_VERSION, SOURCE, OFParse, pa
 from footy.ingest.fd_import import _replace_issues, alias_map, sync_reference
 from footy.ingest.fd_parse import Issue
 from footy.ingest.raw_store import latest_revision, read_raw, store_raw
-from footy.models import DataCorrection, EuroMatch, RawFile, RawImport, utcnow
+from footy.models import DataCorrection, EuroMatch, JobRun, RawFile, RawImport, utcnow
 
 WIKI_SOURCE = "wikipedia"
 WIKI_SEASON = "2627"
+MANUAL_SOURCE = "manual"  # footy.europe.manual_results (DECISIONS.md D-029)
+# A job still "running" after this long was killed (container restart): no job takes an hour.
+STALE_RUN_AFTER = timedelta(hours=6)
 FIRST_SEASON = "1819"
 OF_REPO_URL = "https://raw.githubusercontent.com/openfootball/champions-league"
 DEFAULT_OF_DIR = PROJECT_ROOT.parent.parent / "openfootball" / "champions-league"
@@ -99,10 +113,15 @@ class LoadStats:
     deleted: int = 0
     corrections: int = 0
     skipped_rows: int = 0
+    kept_rows: int = 0  # stale rows not deleted (load errors, or no correction possible)
+    manual_confirmed: int = 0  # manual results the source now gives too
+    manual_corrected: int = 0  # manual results the source gives differently (flagged)
+    manual_kept: int = 0  # manual results the source has no result for yet
     issues: Counter = field(default_factory=Counter)
+    disagreements: list[str] = field(default_factory=list)
 
     def as_dict(self) -> dict:
-        return {
+        out = {
             "inserted": self.inserted,
             "updated": self.updated,
             "relinked": self.relinked,
@@ -112,6 +131,12 @@ class LoadStats:
             "skipped_rows": self.skipped_rows,
             "issues": dict(sorted(self.issues.items())),
         }
+        for name in ("kept_rows", "manual_confirmed", "manual_corrected", "manual_kept"):
+            if getattr(self, name):
+                out[name] = getattr(self, name)
+        if self.disagreements:
+            out["manual_disagreements"] = self.disagreements
+        return out
 
 
 # --- openfootball -----------------------------------------------------------------------
@@ -294,6 +319,8 @@ def wikipedia_rows(
             exclusion = None
             if r["status"] == "played" and (home_goals is None or away_goals is None):
                 exclusion = "no_regulation_score"
+            elif r["status"] in ("awarded", "cancelled"):  # as openfootball's (D-023)
+                exclusion = r["status"]
             rows.append(
                 EuroRowIn(
                     competition=r["competition"],
@@ -334,18 +361,22 @@ def upsert_group(
     allow_delete: bool = True,
     now: datetime | None = None,
 ) -> list[Issue]:
-    """Make the stored rows of one (source, competition, season) equal to `rows`."""
+    """Make the stored rows of one (source, competition, season) equal to `rows`.
+
+    Rows another source owns for the same (competition, season) are left alone, except a
+    manual result (`MANUAL_SOURCE`) on a key `rows` also has: see `_meet_manual`."""
     now = now or utcnow()
-    existing = {
-        (m.match_date, m.home_team, m.away_team): m
-        for m in session.scalars(
-            select(EuroMatch).where(
-                EuroMatch.source == source,
-                EuroMatch.competition == competition,
-                EuroMatch.season == season,
-            )
+    existing: dict[tuple, EuroMatch] = {}
+    manual: dict[tuple, EuroMatch] = {}
+    for m in session.scalars(
+        select(EuroMatch).where(
+            EuroMatch.source.in_((source, MANUAL_SOURCE)),
+            EuroMatch.competition == competition,
+            EuroMatch.season == season,
         )
-    }
+    ):
+        key = (m.match_date, m.home_team, m.away_team)
+        (existing if m.source == source else manual)[key] = m
     seen: set[tuple] = set()
     issues: list[Issue] = []
     for row in rows:
@@ -356,6 +387,9 @@ def upsert_group(
             continue
         seen.add(key)
         current = existing.get(key)
+        if current is None and key in manual:
+            issues += _meet_manual(session, source, manual[key], row, stats, now)
+            continue
         if current is None:
             session.add(
                 EuroMatch(
@@ -408,14 +442,122 @@ def upsert_group(
         else:
             stats.unchanged += 1
     stale = [m for k, m in existing.items() if k not in seen]
-    if stale and allow_delete:
-        session.execute(delete(EuroMatch).where(EuroMatch.id.in_([m.id for m in stale])))
-        stats.deleted += len(stale)
-    elif stale:
+    if stale and not allow_delete:
+        stats.kept_rows += len(stale)
         issues.append(
             Issue(0, "warning", "stale_rows_kept", f"{len(stale)} stored rows not in this load")
         )
+        stale = []
+    doomed = []
+    for m in stale:
+        if m.status == "scheduled":
+            doomed.append(m.id)
+        elif _record_deletion(session, m, now):
+            doomed.append(m.id)
+            stats.corrections += 1
+        else:
+            stats.kept_rows += 1
+            issues.append(
+                Issue(0, "error", "result_row_kept", f"#{m.id} {_describe(m)}: no raw revision")
+            )
+    if doomed:
+        session.execute(delete(EuroMatch).where(EuroMatch.id.in_(doomed)))
+        stats.deleted += len(doomed)
     session.flush()
+    return issues
+
+
+def _describe(m: EuroMatch) -> str:
+    score = "" if m.home_goals is None else f" {m.home_goals}-{m.away_goals}"
+    return (
+        f"{m.competition} {m.season} {m.stage} {m.match_date} {m.home_team} v {m.away_team} "
+        f"{m.status}{score}"
+    )
+
+
+def _record_deletion(session: Session, m: EuroMatch, now: datetime) -> bool:
+    """Write the `data_corrections` entry for deleting a row that has a result; False when it
+    can't be written (no raw revision to name), in which case the row must stay."""
+    if m.raw_file_id is None:
+        return False
+    raw = session.get(RawFile, m.raw_file_id)
+    newest = latest_revision(session, raw.source, raw.logical_key) if raw else None
+    session.add(
+        DataCorrection(
+            entity="euro_match",
+            entity_id=m.id,
+            field="deleted",
+            old_value=_describe(m),
+            new_value=None,
+            old_raw_file_id=m.raw_file_id,
+            new_raw_file_id=newest.id if newest else m.raw_file_id,
+            detected_at=now,
+        )
+    )
+    return True
+
+
+def _meet_manual(
+    session: Session, source: str, current: EuroMatch, row: EuroRowIn, stats: LoadStats, now
+) -> list[Issue]:
+    """A source row on the key of a manual result (D-029).
+
+    - No result in the source yet (scheduled, or played without a regulation score): the manual
+      row stays as it is.
+    - The same result: the source takes the row over (its kick-off, stage, reference and raw
+      revision), so the result is now the source's.
+    - Another result: the source's result replaces the manual one, each changed field with a
+      `data_corrections` entry, and the disagreement is reported as an error for a person to
+      look at (a settlement made from the manual score is not changed by this)."""
+    has_result = row.status != "scheduled" and not (
+        row.status == "played" and (row.home_goals is None or row.away_goals is None)
+    )
+    if not has_result:
+        stats.manual_kept += 1
+        return []
+    fields = ("status", "home_goals", "away_goals", "extra_time", "penalties")
+    changed = [f for f in fields if getattr(current, f) != getattr(row, f)]
+    issues: list[Issue] = []
+    if changed:
+        if row.raw_file_id is None or current.raw_file_id is None:
+            stats.manual_kept += 1
+            return [
+                Issue(
+                    0,
+                    "error",
+                    "manual_result_disagrees",
+                    f"#{current.id} {_describe(current)}: {source} has "
+                    f"{row.status} {row.home_goals}-{row.away_goals}, not applied "
+                    "(no raw revision to record the correction against)",
+                )
+            ]
+        for name in changed:
+            old, new = getattr(current, name), getattr(row, name)
+            session.add(
+                DataCorrection(
+                    entity="euro_match",
+                    entity_id=current.id,
+                    field=name,
+                    old_value=None if old is None else str(old),
+                    new_value=None if new is None else str(new),
+                    old_raw_file_id=current.raw_file_id,
+                    new_raw_file_id=row.raw_file_id,
+                    detected_at=now,
+                )
+            )
+            stats.corrections += 1
+        text = (
+            f"#{current.id} {_describe(current)} (manual) but {source} has {row.status} "
+            f"{row.home_goals}-{row.away_goals}: {source}'s result taken"
+        )
+        stats.disagreements.append(text)
+        issues.append(Issue(0, "error", "manual_result_disagrees", text))
+        stats.manual_corrected += 1
+    else:
+        stats.manual_confirmed += 1
+    current.source = source
+    for name, new in row.values().items():
+        setattr(current, name, new)
     return issues
 
 
@@ -461,7 +603,12 @@ def run_euro_update(
 
     of_dir = openfootball_dir or Path(os.environ.get("FOOTY_OPENFOOTBALL_DIR", DEFAULT_OF_DIR))
     csv_path = wiki_csv or settings.data_dir / "europe" / "uefa_2627.csv"
+    interrupted = mark_interrupted_runs(engine)
+    # One client for every fetch of the job, so that one refusal stops them all.
+    client = _wiki_client() if fetch_wikipedia else None
     with job_run(engine, "euro_update") as ctx:
+        if interrupted:
+            ctx.detail["interrupted_runs"] = interrupted
         with Session(engine) as s:
             sync_reference(s)
             s.commit()
@@ -525,31 +672,75 @@ def run_euro_update(
                         )
                     )
                 s.commit()
-                if has_errors:
+                if any(i.severity == "error" for i in issues):
                     ctx.partial = True
         ctx.detail["openfootball"] = of_stats.as_dict() | {"files": len(raws)}
 
         # 2. Seasons openfootball lacks (2025/26 UEL and UECL), from stored Wikipedia pages.
-        ctx.detail["wikipedia_gap"] = _load_gap_seasons(engine, settings, ctx, fetch_wikipedia)
+        ctx.detail["wikipedia_gap"] = _load_gap_seasons(engine, settings, ctx, client)
 
         # 3. Wikipedia 2026/27: optionally re-fetch, rebuild the CSV, load it.
         ctx.detail["wikipedia"] = _load_wikipedia(
-            engine, settings, ctx, csv_path, rebuild_2627, fetch_wikipedia, fetch_uefa
+            engine, settings, ctx, csv_path, rebuild_2627, client, fetch_uefa
         )
 
         with Session(engine) as s:
             ctx.detail["table"] = summarise_table(s)
+            ctx.detail["integrity"] = integrity_summary(s)
+        if ctx.detail["integrity"]["errors"]:
+            ctx.partial = True
         return ctx.detail
 
 
-def _load_gap_seasons(engine, settings, ctx, fetch: bool) -> dict:
+def _wiki_client():
+    from footy.europe.wiki_fetch import WikiClient
+
+    return WikiClient()
+
+
+def integrity_summary(session: Session, now: datetime | None = None) -> dict:
+    """`footy.europe.euro_integrity` over the whole table: counts per check, and the errors."""
+    from footy.europe.euro_integrity import ERROR, WARNING, check_database
+
+    report = check_database(session, now)
+    errors = [f for f in report.findings if f.severity == ERROR]
+    return {
+        "errors": len(errors),
+        "warnings": sum(f.severity == WARNING for f in report.findings),
+        "checks": {f"{sev} {check}": n for (sev, check), n in sorted(report.counts().items())},
+        "error_findings": [f"{f.check}: {f.detail}" for f in errors[:20]],
+    }
+
+
+def mark_interrupted_runs(
+    engine: Engine, *, older_than: timedelta = STALE_RUN_AFTER, now: datetime | None = None
+) -> list[int]:
+    """Mark job runs (of any job) still "running" long after they started as "interrupted":
+    their process was killed (the container restarts every hour or two) before `job_run` could
+    record an outcome. Returns their ids."""
+    now = now or utcnow()
+    with Session(engine) as s:
+        runs = s.scalars(
+            select(JobRun).where(JobRun.status == "running", JobRun.started_at < now - older_than)
+        ).all()
+        for run in runs:
+            run.status = "interrupted"
+            run.error = (
+                f"still 'running' at {now:%Y-%m-%d %H:%M} UTC, {older_than} after it started: "
+                "the process was killed before it could record an outcome"
+            )
+        s.commit()
+        return [r.id for r in runs]
+
+
+def _load_gap_seasons(engine, settings, ctx, client) -> dict:
     """2025/26 Europa League and Conference League from Wikipedia (footy.europe.wikipedia_seasons).
-    With `fetch`, pages not yet in the raw store are fetched first (completed seasons are
+    With a `client`, pages not yet in the raw store are fetched first (completed seasons are
     fetched once)."""
     from footy.europe.wikipedia_seasons import GAP_PAGES, gap_matches
 
     detail: dict = {}
-    if fetch:
+    if client is not None:
         from footy.europe.build_2627 import fetch_wikipedia as fetch_pages
 
         with Session(engine) as s:
@@ -557,9 +748,14 @@ def _load_gap_seasons(engine, settings, ctx, fetch: bool) -> dict:
                 p for p in GAP_PAGES if latest_revision(s, WIKI_SOURCE, p.page.logical_key) is None
             ]
         if todo:
-            detail["fetch"] = dict(
-                Counter(r.outcome for r in fetch_pages(engine, settings.raw_dir, specs=todo))
+            fetched = fetch_pages(
+                engine, settings.raw_dir, client=client, specs=todo, job_run_id=ctx.run_id
             )
+            detail["fetch"] = dict(Counter(r.outcome for r in fetched))
+            failed = [r for r in fetched if r.outcome in ("error", "skipped")]
+            if failed:
+                detail["fetch_errors"] = [f"{r.logical_key}: {r.error}" for r in failed]
+                ctx.partial = True
     stats = LoadStats()
     with Session(engine) as s:
         result = gap_matches(s, settings.raw_dir)
@@ -602,9 +798,11 @@ def _load_gap_seasons(engine, settings, ctx, fetch: bool) -> dict:
         has_errors = has_errors or any(sev == "error" for _, sev, _, _ in result.issues)
         complete = "missing" not in result.pages.values()
         for (comp, season), rows in sorted(groups.items()):
-            upsert_group(
+            extra = upsert_group(
                 s, WIKI_SOURCE, comp, season, rows, stats, allow_delete=complete and not has_errors
             )
+            stats.issues.update(i.code for i in extra)
+            has_errors = has_errors or any(i.severity == "error" for i in extra)
         raw_ids = {m.raw_file_id for m in result.matches} | set(by_raw)
         for raw_id in sorted(raw_ids):
             _replace_issues(s, raw_id, by_raw.get(raw_id, []))
@@ -615,20 +813,32 @@ def _load_gap_seasons(engine, settings, ctx, fetch: bool) -> dict:
     return detail
 
 
-def _load_wikipedia(engine, settings, ctx, csv_path, rebuild, fetch, fetch_uefa) -> dict:
+def _load_wikipedia(engine, settings, ctx, csv_path, rebuild, client, fetch_uefa) -> dict:
     detail: dict = {}
+    fetch = client is not None
     if fetch or fetch_uefa:
         from footy.europe.build_2627 import fetch_uefa_pages, fetch_wikipedia
         from footy.europe.wikipedia_2627 import build_uefa_2627
 
         if fetch:
-            fetched = fetch_wikipedia(engine, settings.raw_dir)
+            fetched = fetch_wikipedia(
+                engine, settings.raw_dir, client=client, job_run_id=ctx.run_id
+            )
             detail["fetch_wikipedia"] = dict(Counter(r.outcome for r in fetched))
+            failed = [r for r in fetched if r.outcome in ("error", "skipped")]
+            if failed:  # the job carries on with the stored pages, but says so
+                detail["fetch_errors"] = [
+                    f"{r.logical_key}: {(r.error or '')[:300]}" for r in failed
+                ]
+                ctx.partial = True
         if fetch_uefa:
             with Session(engine) as s:
                 rows = build_uefa_2627(s, settings.raw_dir).rows
             fetched = fetch_uefa_pages(engine, settings.raw_dir, rows)
             detail["fetch_uefa"] = dict(Counter(r.outcome for r in fetched))
+    # Any build-stage error (a box or page the parser could not read, a missing page, a
+    # failed rebuild) means the CSV may lack rows the source still has: nothing is deleted.
+    build_errors = False
     if rebuild:
         from footy.europe.build_2627 import build_all
 
@@ -637,8 +847,15 @@ def _load_wikipedia(engine, settings, ctx, csv_path, rebuild, fetch, fetch_uefa)
                 built = build_all(s, settings.raw_dir, settings.data_dir)
             detail["rebuilt_rows"] = len(built.wikipedia.rows)
             detail["rebuild_issues"] = dict(Counter(i.code for i in built.wikipedia.issues))
+            if built.errors or built.wikipedia.missing_pages:
+                build_errors = True
+                detail["rebuild_errors"] = [
+                    f"{i.code}: {i.detail} ({i.ref})" for i in built.errors[:20]
+                ] + [f"missing page: {k}" for k in built.wikipedia.missing_pages]
         except Exception as exc:  # the stored CSV is still loaded; the failure is reported
             detail["rebuild_error"] = f"{type(exc).__name__}: {exc}"
+            build_errors = True
+        if build_errors:
             ctx.partial = True
     if not csv_path.is_file():
         detail["csv"] = f"missing: {csv_path}"
@@ -652,7 +869,7 @@ def _load_wikipedia(engine, settings, ctx, csv_path, rebuild, fetch, fetch_uefa)
         groups: dict[tuple[str, str], list[EuroRowIn]] = defaultdict(list)
         for r in rows:
             groups[(r.competition, r.season)].append(r)
-        has_errors = any(i.severity == "error" for _, i in pairs)
+        has_errors = build_errors or any(i.severity == "error" for _, i in pairs)
         extra: list[Issue] = []
         for (comp, season), group in sorted(groups.items()):
             extra += upsert_group(
@@ -668,7 +885,7 @@ def _load_wikipedia(engine, settings, ctx, csv_path, rebuild, fetch, fetch_uefa)
     stats.skipped_rows += sum(1 for _, i in pairs if i.severity == "error")
     stats.issues.update(i.code for _, i in pairs)
     stats.issues.update(i.code for i in extra)
-    if has_errors:
+    if has_errors or any(i.severity == "error" for i in extra):
         ctx.partial = True
     linked = sum(1 for r in rows if r.raw_file_id is not None)
     detail |= stats.as_dict() | {"csv": str(csv_path), "rows": len(rows), "raw_linked": linked}

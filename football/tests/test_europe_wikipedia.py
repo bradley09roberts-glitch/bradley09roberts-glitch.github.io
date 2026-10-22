@@ -13,7 +13,6 @@ import httpx
 from sqlalchemy.orm import Session
 
 from footy.europe.build_2627 import build_all
-from footy.europe.uefa_crosscheck import names_agree, parse_uefa_match_page
 from footy.europe.wiki_fetch import USER_AGENT, WikiClient, WikiPage, fetch_wiki_page
 from footy.europe.wikipedia_2627 import (
     CSV_COLUMNS,
@@ -152,33 +151,6 @@ def test_page_without_cet_statement_is_refused():
     assert [i.code for i in parsed.issues] == ["time_basis_unknown"]
 
 
-def test_uefa_match_page_json_ld_and_name_matching():
-    # Synthetic page with the same JSON-LD shape as UEFA.com match pages.
-    event = {
-        "@context": "https://schema.org/",
-        "@type": "LiveBlogPosting",
-        "mainEntity": {
-            "@type": "SportsEvent",
-            "url": "https://www.uefa.com/uefachampionsleague/match/123/",
-            "eventStatus": "EventScheduled",
-            "startDate": "2026-10-21T16:45:00+00:00",
-            "location": {"name": "Giuseppe Sinigaglia", "address": {"addressCountry": "ITA"}},
-            "homeTeam": {"name": "Como"},
-            "awayTeam": {"name": "Man Utd"},
-        },
-    }
-    html = f'<script type="application/ld+json">{json.dumps(event)}</script>'
-    parsed = parse_uefa_match_page(html, "123")
-    assert parsed is not None
-    assert parsed.start_utc == datetime(2026, 10, 21, 16, 45, tzinfo=UTC)
-    assert (parsed.home, parsed.away, parsed.venue_country) == ("Como", "Man Utd", "ITA")
-    assert parse_uefa_match_page(html, "999") is None
-    assert names_agree("Manchester United", "Man Utd")
-    assert names_agree("NEC", "N.E.C.")
-    assert names_agree("Heart of Midlothian", "Hearts")
-    assert not names_agree("Arsenal", "Chelsea")
-
-
 def test_wiki_client_honours_retry_after():
     responses = [
         httpx.Response(429, headers={"Retry-After": "14"}),
@@ -216,14 +188,12 @@ def test_fetch_store_then_build_csv(migrated_engine, settings):
         assert res.outcome == "new_revision" and res.revid == 1381234244
         again = fetch_wiki_page(s, client, settings.raw_dir, spec.page)
         assert again.outcome == "unchanged" and again.raw_file_id == res.raw_file_id
-        # A UEFA page placing Bayern v Arsenal in Germany agrees with Wikipedia (not neutral).
+        # A stored UEFA.com page is never read (terms 6.2, D-023): a page that would make
+        # Bayern v Arsenal neutral changes nothing.
         ld = {
             "@type": "SportsEvent",
             "url": "https://www.uefa.com/uefachampionsleague/match/2049598/",
-            "startDate": "2026-10-21T19:00:00+00:00",
-            "location": {"address": {"addressCountry": "GER"}},
-            "homeTeam": {"name": "Bayern München"},
-            "awayTeam": {"name": "Arsenal"},
+            "location": {"address": {"addressCountry": "ITA"}},
         }
         store_raw(
             s,
@@ -244,8 +214,8 @@ def test_fetch_store_then_build_csv(migrated_engine, settings):
     bayern = next(r for r in out if r["home_name"] == "Bayern Munich")
     assert bayern["kickoff_utc"] == "2026-10-21T19:00:00+00:00"
     assert (bayern["status"], bayern["home_goals"], bayern["neutral"]) == ("scheduled", "", "0")
-    (check,) = built.checks
-    assert check.kickoff_agrees and check.teams_agree and check.uefa_neutral is False
+    assert "UEFA.com" not in bayern["source_ref"]
+    assert set(built.paths) == {"matches", "teams"}  # no UEFA cross-check file
     assert built.wikipedia.missing_pages == [p.page.logical_key for p in PAGES[1:]]
 
 

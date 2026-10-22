@@ -12,8 +12,19 @@ Rules (see docs/europe/uefa-2627.md):
 - Scores are regulation time. For a match that went to extra time the regulation score is
   rebuilt from the goal minutes (90+x counts, 91 and later doesn't), and only kept when the
   goal list adds up to the final score. Extra time and penalties are flags only.
+- Extra time is recognised from the box's `aet` flag or `{{aet}}`, and, outside the league
+  phase, also from a goal after the 90th minute (not 90+x), a penalty shoot-out, or the page's
+  own summary table marking the leg a.e.t. (sources do omit the marker). A two-legged tie, or
+  a single-match tie, must then go to extra time exactly when it is level after 90 minutes;
+  where it doesn't, both legs keep no regulation score (status played, nothing to settle) and
+  an error is reported for a person to look at.
+- Walkovers and awarded results are stored as `awarded` (with the awarded score, if given);
+  abandoned, postponed or suspended matches as `postponed`, cancelled ones as `cancelled`, with
+  no score (a score at the time of abandonment is not a result). A box that is not played
+  doesn't count as a leg, so its replay keeps the leg number.
 - `neutral` is set when the stadium line names a country other than the home team's (for
-  example Shakhtar Donetsk at Stamford Bridge, London, England).
+  example Shakhtar Donetsk at Stamford Bridge, London, England), or by `venue_overrides.csv`
+  (a venue a permitted second source gives where the English page doesn't name the country).
 - Every problem found is returned as a `ParseIssue`; nothing is silently dropped or guessed.
 
 Wikipedia text is CC BY-SA 4.0; the CSV keeps the page, section and revision of every row.
@@ -191,7 +202,7 @@ class EuroRow:
     extra_time: bool
     penalties: bool
     neutral: bool
-    status: str  # played | scheduled
+    status: str  # played | scheduled | postponed | cancelled | awarded
     source_ref: str
     season: str = SEASON
     source: str = SOURCE
@@ -199,6 +210,7 @@ class EuroRow:
     home_wiki_title: str | None = None
     away_wiki_title: str | None = None
     final_score: tuple[int, int] | None = None  # as listed, after extra time if any
+    goals_text: tuple[str, str] = ("", "")  # the box's goals1 and goals2 (not in the CSV)
 
     def csv_row(self) -> dict[str, str]:
         def opt(v) -> str:
@@ -287,6 +299,13 @@ _GOAL = re.compile(r"\{\{\s*goal\s*\|([^{}]*)\}\}", re.I)
 _MINUTE = re.compile(r"'*(\d{1,3})'*\s*(?:\+\s*(\d{1,2}))?'*")
 _UEFA_MATCH = re.compile(r"uefa\.com/[a-z]+/match/(\d+)|UEFA match attendance\s*\|\s*(\d+)", re.I)
 _TRUE = {"y", "yes", "1", "true"}
+_AWARDED = re.compile(r"awarded|\bawd\b|w/o|walkover", re.I)
+_NOT_PLAYED = re.compile(
+    r"\b(?:postponed|abandoned|suspended|called off|cancell?ed)\b|\b(?:P|A)\s*[-–−]\s*(?:P|A)\b"
+)
+_NOT_PLAYED_WORDS = re.compile(r"\b(?:postponed|abandoned|suspended|called off|cancell?ed)\b", re.I)
+_AET = re.compile(r"\{\{\s*aet\s*\}\}|a\.\s*e\.\s*t\.?|after extra time", re.I)
+_PSO = re.compile(r"\{\{\s*(?:pso|pen\.?|pens)\b|\bp(?:en)?s?\.?\s*\)|on penalties", re.I)
 
 
 def strip_comments(text: str) -> str:
@@ -451,6 +470,23 @@ def regulation_goals(value: str) -> int:
     return sum(1 for minute, _ in goal_minutes(value) if minute <= 90)
 
 
+def regulation_from_goals(score: tuple[int, int], goals: tuple[str, str]) -> tuple[int, int] | None:
+    """The score after 90 minutes of a match that went to extra time, from the goal minutes;
+    None unless the goal lists add up to the final score."""
+    listed = (len(goal_minutes(goals[0])), len(goal_minutes(goals[1])))
+    if listed != score:
+        return None
+    return regulation_goals(goals[0]), regulation_goals(goals[1])
+
+
+def not_played_status(text: str) -> str | None:
+    """ "cancelled" or "postponed" (abandoned, suspended, called off, P–P, A–A) when a score
+    line says the match was not played to a result."""
+    if not (_NOT_PLAYED_WORDS.search(text) or _NOT_PLAYED.search(text)):
+        return None
+    return "cancelled" if re.search(r"cancell?ed", text, re.I) else "postponed"
+
+
 def kickoff_from_box(match_date: date, time_value: str) -> tuple[datetime | None, str | None]:
     """UTC kick-off from a CET/CEST time; the second item describes any disagreement with the
     venue-local time given in parentheses."""
@@ -559,34 +595,65 @@ def parse_page(
         home_country = _country(home_code, ref, out.issues)
         away_country = _country(away_code, ref, out.issues)
 
-        stage = _stage(spec, box.sections, home, away, legs_seen, ref, out.issues)
-        if stage is None:
-            continue
-
         score_raw = p.get("score", "")
         score_text = plain_text(score_raw)
+        marks = _REF.sub("", score_raw)  # footnotes may mention an earlier postponement
         score = parse_score(score_raw)
-        if score_text and score is None:
+        status = "scheduled"
+        if _AWARDED.search(marks):
+            status = "awarded"
+            out.issues.append(ParseIssue("warning", "awarded_result", score_text or marks, ref))
+        elif (not_played := not_played_status(marks)) is not None:
+            status, score = not_played, None
+            out.issues.append(ParseIssue("warning", f"{status}_match", score_text or marks, ref))
+
+        # A match that was not played is not a leg: its replay keeps the leg number.
+        stage = _stage(
+            spec,
+            box.sections,
+            home,
+            away,
+            legs_seen,
+            ref,
+            out.issues,
+            counts=status not in ("postponed", "cancelled"),
+        )
+        if stage is None:
+            continue
+        if status == "scheduled" and score_text and score is None:
             out.issues.append(ParseIssue("error", "unparsed_score", score_text, ref))
             continue
-        if re.search(r"awarded|\bawd\b|w/o|walkover", score_raw, re.I):
-            out.issues.append(ParseIssue("error", "awarded_result", score_text, ref))
-            continue
-        extra_time = p.get("aet", "").strip().lower() in _TRUE or bool(
-            re.search(r"\{\{\s*aet\s*\}\}|a\.e\.t\.", score_raw, re.I)
-        )
+
+        extra_time = p.get("aet", "").strip().lower() in _TRUE or bool(_AET.search(marks))
         penalties = bool(p.get("penaltyscore", "").strip()) or bool(
-            re.search(r"\{\{\s*pso\b", score_raw, re.I)
+            re.search(r"\{\{\s*pso\b", marks, re.I)
         )
+        goals = (p.get("goals1", ""), p.get("goals2", ""))
         home_goals = away_goals = None
-        status = "scheduled"
-        if score is not None:
+        if status == "awarded":
+            if score is not None:
+                home_goals, away_goals = score
+            extra_time = penalties = False
+        elif score is not None:
             status = "played"
             home_goals, away_goals = score
-            listed_goals = (
-                len(goal_minutes(p.get("goals1", ""))),
-                len(goal_minutes(p.get("goals2", ""))),
-            )
+            if not extra_time and spec.kind != "league":
+                why = []
+                if any(minute > 90 for minute, _ in goal_minutes(goals[0] + goals[1])):
+                    why.append("a goal after the 90th minute")
+                if penalties:
+                    why.append("a penalty shoot-out")
+                if why:
+                    extra_time = True
+                    out.issues.append(
+                        ParseIssue(
+                            "warning",
+                            "extra_time_inferred",
+                            f"no extra-time marker, but {' and '.join(why)}",
+                            ref,
+                        )
+                    )
+            listed_goals = (len(goal_minutes(goals[0])), len(goal_minutes(goals[1])))
             if not extra_time and listed_goals != score:
                 out.issues.append(
                     ParseIssue(
@@ -597,23 +664,19 @@ def parse_page(
                     )
                 )
             if extra_time:
-                listed = (
-                    len(goal_minutes(p.get("goals1", ""))),
-                    len(goal_minutes(p.get("goals2", ""))),
-                )
-                if listed == score:
-                    home_goals = regulation_goals(p.get("goals1", ""))
-                    away_goals = regulation_goals(p.get("goals2", ""))
-                else:
+                regulation = regulation_from_goals(score, goals)
+                if regulation is None:
                     out.issues.append(
                         ParseIssue(
                             "error",
                             "regulation_score_unknown",
-                            f"after extra time {score[0]}–{score[1]}, goal list {listed}",
+                            f"after extra time {score[0]}–{score[1]}, goal list {listed_goals}",
                             ref,
                         )
                     )
                     home_goals = away_goals = None
+                else:
+                    home_goals, away_goals = regulation
         elif extra_time or penalties:
             out.issues.append(ParseIssue("warning", "flags_without_score", score_text, ref))
 
@@ -660,6 +723,7 @@ def parse_page(
                 home_wiki_title=home_title,
                 away_wiki_title=away_title,
                 final_score=score,
+                goals_text=goals,
             )
         )
 
@@ -668,6 +732,7 @@ def parse_page(
         out.issues.extend(validate_league_phase(spec, out.rows, out.teams, page_ref))
     else:
         out.issues.extend(check_against_summaries(wikitext, out.rows, page_ref))
+        out.issues.extend(check_ties(out.rows))
     return out
 
 
@@ -679,7 +744,12 @@ def _stage(
     legs_seen: dict[tuple[str, str], Counter],
     ref: str,
     issues: list[ParseIssue],
+    *,
+    counts: bool = True,
 ) -> str | None:
+    """The row's stage. In qualifying rounds the leg is the tie's n-th box; a box that does
+    not count (a postponed or cancelled match) takes the number of the next leg without
+    using it up."""
     if spec.kind == "league":
         for title in reversed(sections):
             m = re.fullmatch(r"Matchday (\d+)", title)
@@ -697,8 +767,9 @@ def _stage(
     path = next((code for t in sections for name, code in PATHS.items() if name in t.lower()), None)
     key = (round_name, path or "")
     tie = "|".join(sorted((_norm(home), _norm(away))))
-    legs_seen[key][tie] += 1
-    leg = legs_seen[key][tie]
+    leg = legs_seen[key][tie] + 1
+    if counts:
+        legs_seen[key][tie] = leg
     if leg > 2:
         issues.append(ParseIssue("error", "tie_seen_three_times", tie, ref))
         return None
@@ -858,6 +929,7 @@ def check_against_summaries(wikitext: str, rows: list[EuroRow], page_ref: str) -
                 )
                 continue
             matched.add(id(row))
+            issues.extend(_summary_extra_time(row, listed))
             expected = parse_score(listed)
             if expected is not None and flip:
                 expected = (expected[1], expected[0])
@@ -878,6 +950,128 @@ def check_against_summaries(wikitext: str, rows: list[EuroRow], page_ref: str) -
                     "warning", "box_not_in_summary", f"{r.home_name} v {r.away_name}", r.source_ref
                 )
             )
+    return issues
+
+
+def _summary_extra_time(row: EuroRow, listed: str) -> list[ParseIssue]:
+    """The summary table marks a leg a.e.t. (or on penalties) but its box doesn't: the box's
+    score is after extra time, so the regulation score is rebuilt from its goal minutes (or
+    left unknown)."""
+    text = _REF.sub("", listed)
+    aet = bool(_AET.search(text))
+    pens = bool(re.search(r"\{\{\s*pso\b", text, re.I)) or bool(_PSO.search(text))
+    if row.status != "played" or row.extra_time or not (aet or pens):
+        return []
+    row.extra_time = True
+    row.penalties = row.penalties or pens
+    issues = [
+        ParseIssue(
+            "warning",
+            "extra_time_from_summary",
+            f"{row.home_name} v {row.away_name}: summary {plain_text(listed)!r}, box without aet",
+            row.source_ref,
+        )
+    ]
+    regulation = regulation_from_goals(row.final_score, row.goals_text) if row.final_score else None
+    if regulation is None:
+        row.home_goals = row.away_goals = None
+        issues.append(
+            ParseIssue(
+                "error",
+                "regulation_score_unknown",
+                f"after extra time {row.final_score}, goal list does not add up",
+                row.source_ref,
+            )
+        )
+    else:
+        row.home_goals, row.away_goals = regulation
+    return issues
+
+
+def check_ties(rows: list[EuroRow]) -> list[ParseIssue]:
+    """A tie goes to extra time exactly when it is level after 90 minutes: over both legs for a
+    two-legged tie (in the second leg; never in the first), in the match itself for a
+    single-match round (the preliminary round). Where that fails, the box is missing an
+    extra-time marker or has a wrong score, so neither leg keeps a regulation score (nothing to
+    settle or fit) until the page or the parser is fixed. The away goals rule was abolished
+    in 2021."""
+    issues: list[ParseIssue] = []
+    ties: dict[tuple, dict[int, EuroRow]] = defaultdict(dict)
+    for r in rows:
+        m = re.fullmatch(r"(.+) leg (\d)", r.stage)
+        if m is None or r.status != "played":
+            continue
+        tie = (m.group(1), frozenset((_norm(r.home_name), _norm(r.away_name))))
+        ties[tie][int(m.group(2))] = r
+
+    def hold(legs: list[EuroRow], detail: str) -> None:
+        for r in legs:
+            r.home_goals = r.away_goals = None
+        issues.append(ParseIssue("error", "tie_inconsistent", detail, legs[-1].source_ref))
+
+    for (round_stage, _), legs in ties.items():
+        first, second = legs.get(1), legs.get(2)
+        if round_stage.startswith("Preliminary"):  # single matches (semi-finals and final)
+            for r in legs.values():
+                if r.home_goals is None:
+                    continue
+                level = r.home_goals == r.away_goals
+                if level != r.extra_time:
+                    hold(
+                        [r],
+                        f"{r.home_name} v {r.away_name}: single match, level after 90 "
+                        f"{level}, extra time {r.extra_time}",
+                    )
+            continue
+        if first is not None and first.extra_time:
+            hold([first], f"{first.home_name} v {first.away_name}: extra time in a first leg")
+            continue
+        if first is None or second is None or None in (first.home_goals, second.home_goals):
+            continue
+        # Goals of the first leg's home team (a) and away team (b) over both legs, after 90.
+        a = first.home_goals + second.away_goals
+        b = first.away_goals + second.home_goals
+        if (a == b) != second.extra_time:
+            hold(
+                [first, second],
+                f"{first.home_name} v {first.away_name}: aggregate {a}–{b} after 90 minutes, "
+                f"extra time {second.extra_time}",
+            )
+    return issues
+
+
+# --- venue overrides --------------------------------------------------------------------
+
+VENUE_OVERRIDES = Path(__file__).with_name("venue_overrides.csv")
+
+
+def apply_venue_overrides(rows: list[EuroRow], path: Path = VENUE_OVERRIDES) -> list[ParseIssue]:
+    """Set `neutral` from `venue_overrides.csv` (a venue a permitted second source states where
+    the English page's stadium line names no country). Each change is noted in the row's
+    `source_ref`; an override that matches no row is reported."""
+    issues: list[ParseIssue] = []
+    if not path.is_file():
+        return issues
+    by_key = {(r.competition, r.season, r.match_date, r.home_name, r.away_name): r for r in rows}
+    with path.open(newline="", encoding="utf-8") as f:
+        for o in csv.DictReader(f):
+            key = (
+                o["competition"],
+                o["season"],
+                date.fromisoformat(o["match_date"]),
+                o["home_name"],
+                o["away_name"],
+            )
+            row = by_key.get(key)
+            if row is None:
+                issues.append(
+                    ParseIssue("warning", "venue_override_unmatched", " ".join(map(str, key)), "")
+                )
+                continue
+            neutral = o["neutral"].strip() in ("1", "true", "True")
+            if row.neutral != neutral:
+                row.neutral = neutral
+                row.source_ref += f"; neutral: {o['venue']} per {o['source']}"
     return issues
 
 
@@ -929,6 +1123,7 @@ def build_uefa_2627(
                 "scheduled": sum(r.status == "scheduled" for r in parsed.rows),
             }
         )
+    result.issues.extend(apply_venue_overrides(result.rows))
     result.rows.sort(
         key=lambda r: (r.competition, r.match_date, r.kickoff_utc or _MAX, r.home_name)
     )

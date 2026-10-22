@@ -236,17 +236,19 @@ def test_fixtures_that_have_kicked_off_are_skipped(engine, stub, tmp_path):
                     "eng-g",
                     "eng-h",
                 ),
-                # today, and no kick-off time: its day has begun
+                # today, and no kick-off time: its round has begun
                 (_match(date(2026, 10, 23), None, "I", "J", 14), "eng-i", "eng-j"),
-                # later, but no kick-off time yet: a shadow record waits for one
-                (_match(date(2026, 10, 26), None, "K", "L", 15), "eng-k", "eng-l"),
+                # Monday, no kick-off time: its round began on Friday, 00:00 UK
+                (_match(date(2026, 10, 26), None, "M", "N", 16), "eng-k", "eng-i"),
+                # midweek, but no kick-off time yet: a shadow record waits for one
+                (_match(date(2026, 10, 28), None, "K", "L", 15), "eng-k", "eng-l"),
             ]
         )
     )
     out = _run_one(engine)
     assert out.error is None
-    assert out.published == 2 and out.fixtures == 5
-    assert out.skipped == {live.KICKED_OFF: 1, live.DAY_STARTED: 1, live.NO_KICKOFF: 1}
+    assert out.published == 2 and out.fixtures == 6
+    assert out.skipped == {live.KICKED_OFF: 1, live.DAY_STARTED: 2, live.NO_KICKOFF: 1}
     assert [r["fixture_ref"] for r in _lines(tmp_path)] == [AB, CD]
 
 
@@ -604,13 +606,13 @@ def test_an_undated_fixture_waits_unless_it_already_has_a_record_without_a_time(
     """A record without a kick-off time dates its fixture from 00:00 UK, so a shadow record
     without one could move the fixture into an earlier model-of-record period; where the
     model of record's own record has no time either, nothing can move."""
-    kl = "E0:2627:2026-10-26:eng-k:eng-l"
-    stub([(_match(date(2026, 10, 26), None, "K", "L", 15), "eng-k", "eng-l")])
+    kl = "E0:2627:2026-10-28:eng-k:eng-l"
+    stub([(_match(date(2026, 10, 28), None, "K", "L", 15), "eng-k", "eng-l")])
     assert _run_one(engine).skipped == {live.NO_KICKOFF: 1}
     mp = markets_from_grid(poisson_grid([1.2], [1.0], -0.05), [1.2], [1.0])
     publish(
         engine,
-        [FixtureIn("E0", "2627", date(2026, 10, 26), None, "eng-k", "eng-l")],
+        [FixtureIn("E0", "2627", date(2026, 10, 28), None, "eng-k", "eng-l")],
         mp,
         model_name="of_record",
         model_version="v",
@@ -632,3 +634,26 @@ def test_the_command_refuses_a_model_that_is_not_listed(capsys):
         main(["publish-shadows", "--group", "uefa", "--models", "ml_online_market", "--dry-run"])
     assert e.value.code == 2
     assert "not listed as uefa shadow models: ml_online_market" in capsys.readouterr().err
+
+
+def test_a_fixture_re_dated_since_its_record_is_not_recorded_again(engine, stub, tmp_path):
+    """openfootball's placeholder date (a whole round on its Sunday, no times) is replaced by
+    the real one once football-data lists the fixture (audit M1, 22 Oct 2026): the model's
+    record of the placeholder still counts, so it isn't fitted or recorded again."""
+    stub([(_match(date(2026, 10, 25), None, "A", "B", 10), "eng-a", "eng-b")])
+    placeholder = "E0:2627:2026-10-25:eng-a:eng-b"
+    first = shadows.run_one(
+        engine,
+        _shadow(),
+        Fixed,
+        days=4,
+        divisions=["E0"],
+        now=datetime(2026, 10, 21, 12, tzinfo=UTC),
+        undated={placeholder},  # as when the model of record had recorded it without a time
+    )
+    assert first.published == 1 and Fixed.fits == 1
+    stub([(_match(date(2026, 10, 24), LATER, "A", "B", 10), "eng-a", "eng-b")])
+    again = _run_one(engine)
+    assert again.published == 0 and again.skipped == {live.RECORDED: 1}
+    assert Fixed.fits == 1
+    assert [r["fixture_ref"] for r in _lines(tmp_path)] == [placeholder]

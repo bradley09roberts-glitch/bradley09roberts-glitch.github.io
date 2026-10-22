@@ -2,9 +2,23 @@
 
 A published prediction is written twice: to the append-only `predictions` table, and as one
 JSON line appended to records/predictions/<UK date of creation>.jsonl, which is committed to
-git. The git history then shows each prediction existed before kickoff; the database can be
-rebuilt from those files. Nothing is ever updated or deleted: corrections and new editions
-are new rows that name what they supersede and why.
+git. The git history then shows each prediction existed before kickoff. Nothing is ever
+updated or deleted: corrections and new editions are new rows that name what they supersede
+and why.
+
+The records files are the master copy. `fd-update` and `euro-update` rebuild the match data
+but not the predictions: a new database gets them back with `import_records` (`footy
+import-records`), which keeps every record's id, checks each line's sha256 and settles them
+again. Until then `publish` refuses to write (`check_records`): a database that lacks records
+the files hold would hand out their ids again and record their fixtures a second time.
+
+A fixture's identity: in a league where a pairing meets once a season (`max_meetings` = 1,
+e.g. the core ten) it is the pairing in the season, whatever its date, because a date can
+change after records are made (a placeholder date, a postponement, a date moved for
+television). A second record of the same pairing by the same model is never made, and a new
+model's record takes the `fixture_ref` of the pairing's first record, so every model's
+record of the match stays under one reference. Elsewhere (UEFA competitions, leagues where a
+pairing can meet more than once) the identity is the reference, which includes the date.
 
 The two stay in step even if the process is killed at any moment (the container restarts
 without warning). `publish` takes the database's write lock before it reads anything, so
@@ -30,8 +44,9 @@ from sqlalchemy import Engine, select, text
 from sqlalchemy.orm import Session
 
 from footy.config import PROJECT_ROOT
+from footy.ingest.fd_parse import model_cutoff
 from footy.modeling.grid import TOTAL_LINES, MarketProbs
-from footy.models import Prediction, PredictionSettlement, utcnow
+from footy.models import Prediction, PredictionSettlement, Team, utcnow
 from footy.reference import DIVISIONS
 
 RECORDS_DIR = PROJECT_ROOT / "records" / "predictions"
@@ -59,14 +74,41 @@ class FixtureIn:
             f"{self.competition}:{self.season}:{self.match_date}:{self.home_team}:{self.away_team}"
         )
 
+    @property
+    def key(self) -> str:
+        """The fixture's identity (see the module docstring): the pairing in the season where
+        a pairing meets once a season, otherwise the reference."""
+        return fixture_key(
+            self.competition, self.season, self.match_date, self.home_team, self.away_team
+        )
+
+
+def single_meeting(competition: str) -> bool:
+    """True for a league where a home team hosts an away team once a season (the core ten
+    and the other `max_meetings` = 1 leagues); False for UEFA competitions and leagues where
+    a pairing can meet more than once (D-022)."""
+    d = DIVISIONS.get(competition)
+    return d is not None and d.max_meetings == 1
+
+
+def fixture_key(competition: str, season: str, match_date, home: str, away: str) -> str:
+    """A fixture's identity: `competition:season:*:home:away` in a single-meeting league
+    (its date can change), otherwise its reference `competition:season:date:home:away`."""
+    if single_meeting(competition):
+        return f"{competition}:{season}:*:{home}:{away}"
+    return f"{competition}:{season}:{match_date}:{home}:{away}"
+
 
 def pre_match_deadline(fx: FixtureIn) -> datetime:
-    """The kickoff, or when the kickoff time isn't announced yet, 00:00 UK on the match day."""
+    """The kickoff, or when the kickoff time isn't known, 00:00 UK on the first day of the
+    fixture's round: the Friday for a Friday-to-Monday date, the Tuesday for a Tuesday-to-
+    Thursday date (the D-012 collection day, `fd_parse.model_cutoff`). A date without a time
+    can be a placeholder (openfootball lists a whole round on its Sunday until the times are
+    announced, e.g. La Liga matchday 10 on 25 Oct 2026), so the deadline can't wait for the
+    day itself: a game moved to the Friday would already have been played."""
     if fx.kickoff_utc is not None:
         return fx.kickoff_utc
-    return datetime(
-        fx.match_date.year, fx.match_date.month, fx.match_date.day, tzinfo=UK
-    ).astimezone(UTC)
+    return model_cutoff(fx.match_date)
 
 
 def market_dict(mp: MarketProbs, j: int) -> dict:
@@ -120,8 +162,12 @@ def publish(
     records_dir: Path = RECORDS_DIR,
 ) -> list[int]:
     """Save predictions. A genuine pre-match record must be made before kickoff; an existing
-    record for the same fixture, edition and model is never duplicated. Without a fixed `now`
-    the records are stamped once the write lock is held, just before they are written."""
+    record for the same fixture (`FixtureIn.key`), edition and model is never duplicated: its
+    id is returned instead. A new record of a single-meeting pairing that already has records
+    under another date takes their `fixture_ref` (see the module docstring); its own date and
+    kickoff are saved as they are now known. Without a fixed `now` the records are stamped
+    once the write lock is held, just before they are written. Refuses (PublishError) while
+    the records files hold records the database lacks (`check_records`)."""
     ids = []
     new: list[Prediction] = []
     with Session(engine) as s:
@@ -133,21 +179,15 @@ def publish(
                 if now >= pre_match_deadline(fx):
                     raise PublishError(f"{fx.ref}: kickoff has passed; cannot publish as pre-match")
         recovered = _recover(s, records_dir)
+        _check_records_in(s, records_dir)
         for j, fx in enumerate(fixtures):
-            existing = s.scalar(
-                select(Prediction.id).where(
-                    Prediction.fixture_ref == fx.ref,
-                    Prediction.edition == edition,
-                    Prediction.model_name == model_name,
-                    Prediction.record_type == record_type,
-                )
-            )
+            ref, existing = _identify(s, fx, edition, model_name, record_type)
             if existing is not None:
                 ids.append(existing)
                 continue
             probs = market_dict(mp, j)
             row = Prediction(
-                fixture_ref=fx.ref,
+                fixture_ref=ref,
                 competition=fx.competition,
                 season=fx.season,
                 kickoff_utc=fx.kickoff_utc,
@@ -180,6 +220,47 @@ def publish(
     return ids
 
 
+def _identify(
+    s: Session, fx: FixtureIn, edition: str, model_name: str, record_type: str
+) -> tuple[str, int | None]:
+    """The `fixture_ref` a new record of `fx` takes, and the id of this model's existing record
+    of the fixture (edition and type), if it has one. In a single-meeting league the fixture
+    is the pairing in the season (any date) and the reference is its first record's."""
+    if not single_meeting(fx.competition):
+        existing = s.scalar(
+            select(Prediction.id).where(
+                Prediction.fixture_ref == fx.ref,
+                Prediction.edition == edition,
+                Prediction.model_name == model_name,
+                Prediction.record_type == record_type,
+            )
+        )
+        return fx.ref, existing
+    rows = s.execute(
+        select(
+            Prediction.id,
+            Prediction.fixture_ref,
+            Prediction.edition,
+            Prediction.model_name,
+            Prediction.record_type,
+        )
+        .where(
+            Prediction.competition == fx.competition,
+            Prediction.season == fx.season,
+            Prediction.home_team == fx.home_team,
+            Prediction.away_team == fx.away_team,
+        )
+        .order_by(Prediction.id)
+    ).all()
+    ref = rows[0].fixture_ref if rows else fx.ref
+    mine = (
+        r.id
+        for r in rows
+        if (r.edition, r.model_name, r.record_type) == (edition, model_name, record_type)
+    )
+    return ref, next(mine, None)
+
+
 def recorded_refs(
     engine: Engine,
     model_name: str,
@@ -187,8 +268,8 @@ def recorded_refs(
     edition: str = "early",
     record_type: str = "genuine_prematch",
 ) -> set[str]:
-    """The fixtures that already have a record of this model, edition and type: the ones
-    `publish` would not record again."""
+    """The fixtures that already have a record of this model, edition and type (their
+    references)."""
     with Session(engine) as s:
         return set(
             s.scalars(
@@ -199,6 +280,34 @@ def recorded_refs(
                 )
             )
         )
+
+
+def recorded_fixtures(
+    engine: Engine,
+    model_name: str,
+    *,
+    edition: str = "early",
+    record_type: str = "genuine_prematch",
+) -> set[str]:
+    """The fixtures `publish` would not record again for this model, edition and type: their
+    references and their identities (`FixtureIn.key`), so a fixture whose date has changed
+    since its record is recognised by `fx.key in ...`."""
+    with Session(engine) as s:
+        rows = s.execute(
+            select(
+                Prediction.fixture_ref,
+                Prediction.competition,
+                Prediction.season,
+                Prediction.match_date,
+                Prediction.home_team,
+                Prediction.away_team,
+            ).where(
+                Prediction.model_name == model_name,
+                Prediction.edition == edition,
+                Prediction.record_type == record_type,
+            )
+        ).all()
+    return {r.fixture_ref for r in rows} | {fixture_key(*r[1:]) for r in rows}
 
 
 PENDING_PREFIX = ".publish-pending-"
@@ -364,11 +473,218 @@ def recover_pending(engine: Engine, records_dir: Path = RECORDS_DIR) -> int:
     return len(done)
 
 
+@dataclass(frozen=True)
+class RecordLine:
+    """One line of a records file: where it is and what it records."""
+
+    file: str
+    line_no: int
+    id: int
+    fixture_ref: str
+    model_name: str
+
+
+# (size, mtime) -> the lines of a records file, so a publish doesn't re-read unchanged files
+_SCANNED: dict[Path, tuple[tuple[int, int], list[RecordLine]]] = {}
+
+
+def _scan_records(records_dir: Path) -> list[RecordLine]:
+    """Every line of every records file (records_dir/*.jsonl), in file and line order."""
+    out: list[RecordLine] = []
+    if not records_dir.is_dir():
+        return out
+    for path in sorted(records_dir.glob("*.jsonl")):
+        st = path.stat()
+        sig = (st.st_size, st.st_mtime_ns)
+        hit = _SCANNED.get(path)
+        if hit is None or hit[0] != sig:
+            lines = []
+            for n, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+                if line.strip():
+                    p = json.loads(line)
+                    lines.append(
+                        RecordLine(path.name, n, p["id"], p["fixture_ref"], p["model_name"])
+                    )
+            hit = (sig, lines)
+            _SCANNED[path] = hit
+        out.extend(hit[1])
+    return out
+
+
+IMPORT_HINT = "run `uv run footy import-records` (after `fd-update` and `euro-update`)"
+
+
+def _records_problems(s: Session, records_dir: Path) -> list[str]:
+    """Why the database doesn't hold every record the records files hold (empty if it does):
+    an id or fixture_ref it lacks, an id it holds for a different record, or a smaller
+    largest id (it would hand that id out again)."""
+    lines = _scan_records(records_dir)
+    if not lines:
+        return []
+    db = {
+        r.id: (r.fixture_ref, r.model_name)
+        for r in s.execute(select(Prediction.id, Prediction.fixture_ref, Prediction.model_name))
+    }
+    problems = []
+    missing = [x for x in lines if x.id not in db]
+    if missing:
+        ids = sorted({x.id for x in missing})
+        problems.append(
+            f"{len(ids)} record id(s) in the records files are not in the database "
+            f"(e.g. {ids[:5]}; {missing[0].file} line {missing[0].line_no})"
+        )
+    clash = [x for x in lines if x.id in db and db[x.id] != (x.fixture_ref, x.model_name)]
+    if clash:
+        x = clash[0]
+        problems.append(
+            f"{len(clash)} record id(s) belong to different records in the database and the "
+            f"records files (e.g. id {x.id}: {x.model_name} {x.fixture_ref} in {x.file} line "
+            f"{x.line_no}, {db[x.id][1]} {db[x.id][0]} in the database)"
+        )
+    refs = {x.fixture_ref for x in lines} - {ref for ref, _ in db.values()}
+    if refs:
+        problems.append(
+            f"{len(refs)} fixture_ref(s) in the records files are not in the database "
+            f"(e.g. {sorted(refs)[:3]})"
+        )
+    top = max(x.id for x in lines)
+    if top > max(db, default=0):
+        problems.append(
+            f"the records files' largest id {top} is above the database's {max(db, default=0)}"
+        )
+    return problems
+
+
+def _check_records_in(s: Session, records_dir: Path) -> None:
+    problems = _records_problems(s, records_dir)
+    if problems:
+        raise PublishError(
+            "refused: the database doesn't hold every published record, so a new record could "
+            f"reuse an id or record a fixture twice: {'; '.join(problems)}. {IMPORT_HINT}"
+        )
+
+
+def check_records(engine: Engine, records_dir: Path = RECORDS_DIR) -> None:
+    """Raise PublishError if the records files hold a record the database lacks (an id or
+    fixture_ref it doesn't have, an id it holds for another record, or a larger id): the
+    check `publish` makes before it writes, for a command to make before it starts."""
+    with Session(engine) as s:
+        _check_records_in(s, records_dir)
+
+
+def _line_payload(line: str, where: str) -> dict:
+    """A records-file line's record, after checking its sha256 (PublishError if it fails)."""
+    rec = json.loads(line)
+    sha = rec.pop("sha256", None)
+    got = hashlib.sha256(json.dumps(rec, sort_keys=True).encode()).hexdigest()
+    if sha != got:
+        raise PublishError(f"{where}: sha256 doesn't match the record (saved {sha}, got {got})")
+    return rec
+
+
+def _advance_sequence(s: Session) -> None:
+    """Make the next new record's id follow the largest one. SQLite gives an INTEGER PRIMARY
+    KEY without AUTOINCREMENT max(id) + 1 by itself; PostgreSQL's sequence must be moved."""
+    if s.get_bind().dialect.name == "postgresql":
+        s.execute(
+            text(
+                "SELECT setval(pg_get_serial_sequence('predictions', 'id'), "
+                "(SELECT max(id) FROM predictions))"
+            )
+        )
+
+
+def import_records(engine: Engine, records_dir: Path = RECORDS_DIR) -> dict:
+    """Load every record of the records files into the predictions table, keeping its id
+    (after a rebuilt or lost database). Every line's sha256 is checked first and nothing is
+    written unless all are sound. A record the database already holds must be the same
+    record (id, fixture, model, creation time); anything else is refused. A killed
+    publish's note is finished first. Run `settle` afterwards (the CLI command does)."""
+    with Session(engine) as s:
+        _hold_write_lock(s)
+        recovered = _recover(s, records_dir)
+        s.flush()
+        records: list[tuple[str, dict]] = []
+        files = sorted(records_dir.glob("*.jsonl")) if records_dir.is_dir() else []
+        for path in files:
+            for n, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+                if line.strip():
+                    where = f"{path.name} line {n}"
+                    records.append((where, _line_payload(line, where)))
+        seen: dict[int, str] = {}
+        for where, rec in records:
+            if rec["id"] in seen:
+                raise PublishError(f"{where}: id {rec['id']} is also on {seen[rec['id']]}")
+            seen[rec["id"]] = where
+        have = {
+            r.id: r
+            for r in s.execute(
+                select(
+                    Prediction.id,
+                    Prediction.fixture_ref,
+                    Prediction.model_name,
+                    Prediction.created_at_utc,
+                )
+            )
+        }
+        teams = set(s.scalars(select(Team.team_key)))
+        lacking = sorted({t for _, r in records for t in (r["home_team"], r["away_team"])} - teams)
+        if lacking:
+            raise PublishError(
+                f"{len(lacking)} team(s) the records name are not in the database "
+                f"(e.g. {lacking[:5]}): run `fd-update` and `euro-update` first"
+            )
+        added = present = 0
+        for where, rec in records:
+            old = have.get(rec["id"])
+            if old is None:
+                s.add(_row_from_line(rec))
+                added += 1
+                continue
+            created = datetime.fromisoformat(rec["created_at_utc"])
+            old_created = old.created_at_utc
+            if old_created.tzinfo is None:
+                old_created = old_created.replace(tzinfo=UTC)
+            if (old.fixture_ref, old.model_name) != (rec["fixture_ref"], rec["model_name"]) or (
+                old_created.replace(microsecond=0) != created
+            ):
+                raise PublishError(
+                    f"{where}: id {rec['id']} is a different record in the database "
+                    f"({old.model_name} {old.fixture_ref} made {old.created_at_utc}); "
+                    "nothing imported"
+                )
+            present += 1
+        s.flush()
+        _advance_sequence(s)
+        s.commit()
+    for note in recovered:
+        note.unlink(missing_ok=True)
+    return {
+        "files": len(files),
+        "records": len(records),
+        "imported": added,
+        "already_present": present,
+        "largest_id": max(seen, default=None),
+    }
+
+
+def latest_settlements(s: Session, ids: list[int] | None = None) -> dict[int, PredictionSettlement]:
+    """Each prediction's latest settlement (the highest settlement id wins), optionally only
+    for `ids`. Settlements are append-only, so a correction is a later row."""
+    q = select(PredictionSettlement).order_by(PredictionSettlement.id)
+    if ids is not None:
+        q = q.where(PredictionSettlement.prediction_id.in_(ids))
+    return {x.prediction_id: x for x in s.scalars(q)}
+
+
 def settle(engine: Engine, now: datetime | None = None) -> dict:
-    """Settle every unsettled prediction whose match now has a final regulation-time score."""
+    """Settle every unsettled prediction whose match now has a final regulation-time score.
+    Holds the write lock from the start (as `publish` does), so two runs at once take turns
+    and the second finds nothing left to settle instead of settling the same records again."""
     now = now or utcnow()
     done = 0
     with Session(engine) as s:
+        _hold_write_lock(s)
         settled = set(s.scalars(select(PredictionSettlement.prediction_id)))
         pending = [p for p in s.scalars(select(Prediction)) if p.id not in settled]
         for p in pending:
@@ -403,7 +719,7 @@ def settle(engine: Engine, now: datetime | None = None) -> dict:
                     away_goals=ag,
                     status="settled",
                     outcomes=json.dumps(outcomes, sort_keys=True),
-                    source="euro_matches" if p.competition in ("UCL", "UEL", "UECL") else "matches",
+                    source=_settlement_source(s, p),
                 )
             )
             done += 1
@@ -424,6 +740,22 @@ def _final_score(s: Session, p: Prediction) -> tuple[int, int] | None:
     if r is None or r[0] is None:
         return None
     return int(r[0]), int(r[1])
+
+
+def _settlement_source(s: Session, p: Prediction) -> str:
+    """"matches", "euro_matches", or "euro_matches:manual" for a UEFA score entered by hand
+    from news reports (`footy euro-import-results`, DECISIONS.md D-029): a later source may
+    confirm or correct that row, so the settlement keeps where its score came from."""
+    if p.competition not in ("UCL", "UEL", "UECL"):
+        return "matches"
+    source = s.execute(
+        text(
+            "SELECT source FROM euro_matches WHERE competition = :c AND home_team = :h AND "
+            "away_team = :a AND match_date = :d AND status = 'played'"
+        ),
+        {"c": p.competition, "h": p.home_team, "a": p.away_team, "d": p.match_date},
+    ).scalar()
+    return "euro_matches:manual" if source == "manual" else "euro_matches"
 
 
 def _domestic_score(s: Session, p: Prediction):

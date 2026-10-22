@@ -114,8 +114,17 @@ def test_load_resolves_teams_and_flags(tmp_path, settings, migrated_engine):
         teams = set(s.scalars(select(Team.team_key)))
         assert all(r.home_team in teams and r.away_team in teams for r in rows.values())
         runs = s.scalars(select(JobRun).where(JobRun.job == "euro_update")).all()
-        assert [r.status for r in runs] == ["ok"]
-        assert json.loads(runs[0].detail)["table"]["totals"]["rows"] == 4
+        detail = json.loads(runs[0].detail)
+        assert detail["table"]["totals"]["rows"] == 4
+        # A two-match group and a one-match league phase are not whole competitions: the
+        # integrity checks run at the end of every load say so, and only they make it partial.
+        assert [r.status for r in runs] == ["partial"]
+        errors = {c for c in detail["integrity"]["checks"] if c.startswith("error")}
+        assert errors == {
+            "error group_shape",
+            "error league_phase_matches",
+            "error league_phase_teams",
+        }
 
 
 def test_rerun_creates_no_duplicates_and_changes_nothing(tmp_path, settings, migrated_engine):

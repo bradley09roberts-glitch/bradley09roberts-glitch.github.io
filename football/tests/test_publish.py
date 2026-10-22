@@ -119,7 +119,12 @@ def test_settlement_marks_every_market(migrated_engine, tmp_path):
     )
 
 
-def test_unannounced_kickoff_must_be_published_before_the_match_day(migrated_engine, tmp_path):
+def test_unannounced_kickoff_must_be_published_before_its_round_starts(migrated_engine, tmp_path):
+    """A date without a time can be a placeholder (openfootball listed La Liga matchday 10 of
+    2026/27 on Sunday 25 Oct while its games ran Friday to Monday), so the deadline is 00:00
+    UK on the first day of the round: the Friday for a Friday-to-Monday date, the Tuesday for
+    a midweek one. Before 22 Oct 2026 the deadline was 00:00 UK on the date itself, after the
+    real Friday and Saturday kick-offs."""
     setup(migrated_engine)
     fx = FixtureIn("E0", "2627", date(2026, 10, 25), None, "eng-testtown", "eng-mockford")
     mp = markets_from_grid(poisson_grid([1.2], [1.0]))
@@ -130,10 +135,20 @@ def test_unannounced_kickoff_must_be_published_before_the_match_day(migrated_eng
         data_freshness={},
         records_dir=tmp_path / "r",
     )
-    assert publish(migrated_engine, [fx], mp, now=datetime(2026, 10, 24, 22, 59, tzinfo=UTC), **kw)
+    # 00:00 UK on Friday 23 Oct is 23:00 UTC on Thursday 22 Oct (summer time)
+    assert publish(migrated_engine, [fx], mp, now=datetime(2026, 10, 22, 22, 59, tzinfo=UTC), **kw)
     fx2 = FixtureIn("E0", "2627", date(2026, 10, 25), None, "eng-mockford", "eng-testtown")
-    with pytest.raises(PublishError):
-        publish(migrated_engine, [fx2], mp, now=datetime(2026, 10, 24, 23, 0, tzinfo=UTC), **kw)
+    with pytest.raises(PublishError, match="kickoff has passed"):
+        publish(migrated_engine, [fx2], mp, now=datetime(2026, 10, 22, 23, 0, tzinfo=UTC), **kw)
+    # a Monday date: its round started on the Friday too
+    mon = FixtureIn("E0", "2627", date(2026, 10, 26), None, "eng-mockford", "eng-testtown")
+    with pytest.raises(PublishError, match="kickoff has passed"):
+        publish(migrated_engine, [mon], mp, now=datetime(2026, 10, 24, 12, 0, tzinfo=UTC), **kw)
+    # a Thursday date: its round starts on the Tuesday (00:00 UK, GMT from 25 Oct)
+    thu = FixtureIn("E0", "2627", date(2026, 10, 29), None, "eng-sampleton", "eng-testtown")
+    with pytest.raises(PublishError, match="kickoff has passed"):
+        publish(migrated_engine, [thu], mp, now=datetime(2026, 10, 27, 0, 0, tzinfo=UTC), **kw)
+    assert publish(migrated_engine, [thu], mp, now=datetime(2026, 10, 26, 23, 59, tzinfo=UTC), **kw)
 
 
 def insert_result(conn, division, day, hg, ag, meeting=1):

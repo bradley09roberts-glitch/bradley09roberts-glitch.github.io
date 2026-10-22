@@ -12,6 +12,13 @@ tilt, i.e. the I-projection onto the targets). Its 1X2 and O/U 2.5 then equal th
 exactly; O/U 1.5 and 3.5, BTTS and the scores follow from the tilted grid, so every market
 stays coherent. A fixture without usable prices keeps the base model's grid unchanged.
 
+Prices are found by fixture (division, date, home, away). In a league where a pairing meets
+once a season, a fixture with no prices under its own date takes the prices the book lists
+for the same pairing in the same season under another date (`_same_pairing`): a schedule's
+date can be a placeholder (openfootball listed La Liga matchday 10 of 2026/27 on its Sunday)
+while football-data dates the fixture as it will be played. The staleness rule below then
+uses the date the prices were listed under.
+
 Usable prices: phase 'pre_closing'; quoted no later than the prediction is made (the
 fixture's `deadline_utc` in backtests, the time of the run when live); quoted before the
 kickoff where it is known; and published no earlier than 00:00 UK on the fixture's own D-012
@@ -34,6 +41,8 @@ from footy.ingest.fd_parse import model_cutoff
 from footy.modeling.base import ALL_MARKETS
 from footy.modeling.grid import GOALS, MarketProbs, markets_from_grid
 from footy.modeling.market import devig_shin
+from footy.reference import DIVISIONS
+from footy.seasons import calendar_season_key, current_season, is_calendar_season
 
 BOOKS = ("B365", "Avg")  # both quoted in every period and in fixtures.csv (no Pinnacle there)
 KEY = ["division", "date", "home_team", "away_team"]
@@ -183,6 +192,52 @@ def default_prices() -> pd.DataFrame:
     return book
 
 
+def _season_of(day, like: str | None) -> str:
+    """The season key of a date, in the form of `like` (a calendar season such as "2626" for
+    leagues played within a year, else a split season such as "2627")."""
+    d = pd.Timestamp(day).date()
+    if like is not None and is_calendar_season(like):
+        return calendar_season_key(d.year)
+    return current_season(d)
+
+
+def _same_pairing(
+    book: pd.DataFrame, fixtures: pd.DataFrame, idx: pd.MultiIndex, missing: np.ndarray
+) -> dict[int, pd.Timestamp]:
+    """For each fixture `missing` prices under its own date in a league where a pairing meets
+    once a season (`max_meetings` = 1): the one other date the book lists the same pairing
+    under in the same season (the fixture's `season` column, else its date's). None where
+    there is no such date or more than one."""
+    divs = idx.get_level_values("division")
+    want = [
+        j
+        for j in np.flatnonzero(missing)
+        if (d := DIVISIONS.get(divs[j])) is not None and d.max_meetings == 1
+    ]
+    if not want or book.empty:
+        return {}
+    homes, aways = idx.get_level_values("home_team"), idx.get_level_values("away_team")
+    keys = book.index.to_frame(index=False)
+    keys = keys[keys["home_team"].isin({homes[j] for j in want})]
+    seasons = (
+        fixtures["season"].astype(str).tolist()
+        if "season" in fixtures.columns
+        else [None] * len(fixtures)
+    )
+    out = {}
+    for j in want:
+        season = seasons[j] or _season_of(idx.get_level_values("date")[j], None)
+        rows = keys[
+            (keys["division"] == divs[j])
+            & (keys["home_team"] == homes[j])
+            & (keys["away_team"] == aways[j])
+        ]
+        days = [d for d in rows["date"] if _season_of(d, season) == season]
+        if len(days) == 1:
+            out[j] = pd.Timestamp(days[0])
+    return out
+
+
 # The six blocks the three indicators split a grid into: result (home, draw, away) x over 2.5.
 _RESULT = np.stack([FEATURES[0], FEATURES[1], 1.0 - FEATURES[0] - FEATURES[1]])  # (3, 11, 11)
 _OVER_BLOCK = _RESULT * FEATURES[2]
@@ -268,6 +323,25 @@ class MarketTilt:
             names=KEY,
         )
         mk = book.reindex(idx).reset_index(drop=True)
+        # a single-meeting pairing listed under another date in the same season (a placeholder
+        # or changed date): its prices, and that date for the staleness rule
+        moved = _same_pairing(
+            book, fixtures, idx, pd.to_datetime(mk["quote_time_utc"], utc=True).isna().to_numpy()
+        )
+        if moved:
+            dates = list(idx.get_level_values("date"))
+            for j, day in moved.items():
+                dates[j] = day
+            idx = pd.MultiIndex.from_arrays(
+                [
+                    idx.get_level_values("division"),
+                    pd.to_datetime(pd.Series(dates)).to_numpy(),
+                    idx.get_level_values("home_team"),
+                    idx.get_level_values("away_team"),
+                ],
+                names=KEY,
+            )
+            mk = book.reindex(idx).reset_index(drop=True)
         qt = pd.to_datetime(mk["quote_time_utc"], utc=True)
         if "deadline_utc" in fixtures.columns:  # backtest: made at the collection deadline
             made = pd.to_datetime(fixtures["deadline_utc"], utc=True).reset_index(drop=True)

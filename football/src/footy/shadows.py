@@ -227,16 +227,18 @@ def run_one(
 ) -> Outcome:
     """Publish one shadow model's records (or, dry, say what it would publish). `now` fixes
     the time (tests); live runs leave it out so footy.live checks the clock itself.
-    `recorded`: the fixtures the model has already recorded; `undated`: the fixtures that
-    already have a genuine record without a kick-off time (both read from the predictions
-    table by default). Exceptions are caught and reported in the outcome.
+    `recorded`: the fixtures the model has already recorded, by reference or identity
+    (`publish.recorded_fixtures`, so a single-meeting pairing re-dated since its record is not
+    recorded again); `undated`: the fixtures that already have a genuine record without a
+    kick-off time (both read from the predictions table by default). Exceptions are caught
+    and reported in the outcome.
 
     A fixture whose kick-off time isn't known yet is left out unless it is in `undated`. A
     record without a kick-off time dates its fixture from 00:00 UK (`RecordsOfRecord` takes
     the earliest time of a fixture's genuine records), so a shadow record could otherwise
     move the fixture into an earlier model-of-record period; where a record without the time
     already exists, the fixture is dated from 00:00 UK anyway."""
-    from footy.publish import recorded_refs
+    from footy.publish import recorded_fixtures
 
     out = Outcome(shadow.group, shadow.model, shadow.role, dry_run)
     t0 = time.perf_counter()
@@ -244,7 +246,7 @@ def run_one(
     records: list[dict] = []
     errors = []
     try:
-        exclude = recorded if recorded is not None else recorded_refs(engine, shadow.model)
+        exclude = recorded if recorded is not None else recorded_fixtures(engine, shadow.model)
         kw = dict(
             now=now,
             days=days,

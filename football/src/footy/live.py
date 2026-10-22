@@ -3,15 +3,18 @@
 Domestic: the selected model is fitted per league (league + second tier) on the results final
 before today (UK) from the same window as the walk-forward backtest
 (footy.modeling.walkforward.training_history, three years), then predicts this week's
-fixtures from the openfootball schedules (team mapping verified against played results).
+fixtures from the openfootball schedules (team mapping verified against played results),
+dated by football-data's fixtures.csv wherever it lists them (`footy.fixtures.upcoming`).
 European: the pan-European model is fitted on all domestic and UEFA results before today
 and predicts scheduled UEFA matches.
 Early edition = no lineup or injury information. Lineup editions are not produced (no
 lineup source on the current provider plan), so they are recorded as unavailable.
 
 Both leave out a fixture past its pre-match deadline (`publish.pre_match_deadline`: the
-kickoff, or 00:00 UK on its day when the kickoff isn't known) and any fixture in `exclude`
-(e.g. the ones the model has already recorded, `publish.recorded_refs`) before fitting, and
+kickoff, or 00:00 UK on the first day of its round when the kickoff isn't known) and any
+fixture in `exclude` by reference or identity (e.g. the ones the model has already recorded,
+`publish.recorded_fixtures`: a single-meeting pairing whose date has changed since its record
+is still recorded) before fitting, and
 can report every fixture they leave out and why (`skipped`). Given `undated_ok`, they also
 leave out a fixture whose kick-off time isn't known yet unless its reference is in it. A live
 run (no `now` given) checks the clock again once the forecasts are made, leaves out a fixture
@@ -39,7 +42,7 @@ LEAGUE_OF = {**{k: k for k in SECOND_TIER}, **{v: k for k, v in SECOND_TIER.item
 
 # Why a fixture in the window is not (or in a dry run would not be) published.
 KICKED_OFF = "kicked off"
-DAY_STARTED = "match day started and no kick-off time is known"
+DAY_STARTED = "its round has started (00:00 UK on its first day) and no kick-off time is known"
 RECORDED = "already recorded for this model"
 NO_PRICES = "no usable prices (a model + market forecast publishes only with prices)"
 LATE = "kicked off before the forecast was ready"
@@ -60,7 +63,7 @@ def _not_due(
     """Why a fixture is left out before fitting (None: it is due a forecast)."""
     if now >= pre_match_deadline(fx):
         return KICKED_OFF if fx.kickoff_utc is not None else DAY_STARTED
-    if fx.ref in exclude:
+    if fx.ref in exclude or fx.key in exclude:
         return RECORDED
     if undated_ok is not None and fx.kickoff_utc is None and fx.ref not in undated_ok:
         return NO_KICKOFF
@@ -191,7 +194,12 @@ def predict_domestic(
                     features={
                         "home_matches_in_window": int(counts.get(h, 0)),
                         "away_matches_in_window": int(counts.get(a, 0)),
-                        "fixture_source": f"openfootball schedule line {x.line_no}",
+                        "fixture_source": f"openfootball schedule line {x.line_no}"
+                        + (
+                            f"; date and kick-off from {x.date_source}"
+                            if getattr(x, "date_source", None)
+                            else ""
+                        ),
                         "team_mapping_verified_on": check["checked_results"],
                         "model_params": model.params(),
                     }
