@@ -131,7 +131,7 @@ def world(settings, migrated_engine, tmp_path):
         migrated_engine,
         tmp_path,
         [fx("eng-testtown", "eng-sampleton"), fx("eng-sampleton", "eng-mockford")],
-        "base_m",
+        "dixon_coles",  # a model of record: its records are the Past page's cards
     )
     market = {
         "books": ["Avg"],
@@ -145,7 +145,7 @@ def world(settings, migrated_engine, tmp_path):
     features = {
         "home_matches_in_window": 40,
         "away_matches_in_window": 38,
-        "model_params": {"base": "base_m", "w_1x2": 1.0, "w_ou": 1.0, "devig": "shin"},
+        "model_params": {"base": "dixon_coles", "w_1x2": 1.0, "w_ou": 1.0, "devig": "shin"},
         "market_prices_used": market,
     }
     (tilt,) = pub(migrated_engine, tmp_path, [fx("eng-testtown", "eng-sampleton", features)], "t")
@@ -243,8 +243,8 @@ def read_site(out):
 
 
 def resolve_parts(doc, body):
-    """A body with its shared parts put back, as frontend/src/snapshot.ts does: a top-level
-    field holding only {"$part": n} is the file's n-th part."""
+    """A body with its shared parts put back, as frontend/src/snapshot.ts does: a field
+    holding only {"$part": n}, at the top level or one level down, is the file's n-th part."""
     parts = doc.get("parts") or []
     if not parts or not isinstance(body, dict):
         return body
@@ -252,6 +252,11 @@ def resolve_parts(doc, body):
     for k, v in body.items():
         if isinstance(v, dict) and list(v) == [PART_REF]:
             out[k] = parts[v[PART_REF]]
+        elif isinstance(v, dict):
+            out[k] = {
+                ik: parts[iv[PART_REF]] if isinstance(iv, dict) and list(iv) == [PART_REF] else iv
+                for ik, iv in v.items()
+            }
     return out
 
 
@@ -310,6 +315,7 @@ def test_export_covers_every_frontend_request(settings, migrated_engine, world, 
     for rt in FRONTEND_PAST_RECORD_TYPES:
         expected |= {f"/api/past?limit=500&record_type={rt}"}
         expected |= {f"/api/past?competition={c}&limit=500&record_type={rt}" for c in ("E0", "UCL")}
+        expected |= {f"/api/past?limit=60&models=all&record_type={rt}"}
     expected |= {f"/api/predictions/{i}" for i in world["ids"]}
     # Every model: each fixture's list (both fixtures have genuine records), the leaderboards
     # and the backtest explorer's models list (no curated ledger here, so no match lists).
@@ -381,7 +387,13 @@ def test_first_screen_in_snapshot_json_the_rest_in_shards(settings, world, tmp_p
     # The fixtures, and the Data page's tables, each in a file of their own.
     assert where["/api/fixtures?days=30"] == "snapshot-fixtures-1.json"
     data = ("/api/coverage", "/api/import-issues", "/api/refresh-history?limit=200")
-    assert {where[k] for k in data} == {"snapshot-data-1.json"}
+    assert {where[k] for k in (*data, "/api/fetch-status")} == {"snapshot-data-1.json"}
+    # The Past page's lists in files of their own; Performance's latest match on the first.
+    assert where["/api/past?limit=1&record_type=genuine_prematch"] == "snapshot.json"
+    past = {
+        name for key, name in where.items() if key.startswith("/api/past?") and "=1&" not in key
+    }
+    assert past == {"snapshot-past-1.json"}
     assert {where[f"/api/predictions/{i}"] for i in world["ids"]} == {"snapshot-matches-1.json"}
     lab = {name for key, name in where.items() if key.startswith("/api/backtests/")}
     assert lab == {"snapshot-lab-1.json"}
@@ -435,6 +447,7 @@ def test_page_is_body_content_with_relative_references(settings, world, tmp_path
     assert shards == {
         "snapshot-fixtures-1.json",
         "snapshot-data-1.json",
+        "snapshot-past-1.json",
         "snapshot-matches-1.json",
         "snapshot-lab-1.json",
         "snapshot-teams-1.json",

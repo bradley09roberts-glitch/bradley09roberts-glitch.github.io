@@ -5,12 +5,12 @@
 
 import { useLayoutEffect, useMemo, useRef, type FocusEvent } from "react";
 import { endpoints, useApi, type FixturesResponse, type PredictionCard } from "../api";
-import { BasisBadge, EditionBadge, RecordTypeBadge } from "../components/Badge";
+import { BasisBadge, EditionBadge, RecordTypeBadge, isConsensus } from "../components/Badge";
 import { CompetitionChip, CompetitionMark } from "../components/CompetitionMark";
 import { FreshnessBadge } from "../components/FreshnessBadge";
 import { MarketGrid } from "../components/MarketGrid";
 import { ProbBar } from "../components/ProbBar";
-import { Signals, hasOdds } from "../components/Signals";
+import { ClosingPriceNote, ModelAlone, Signals, hasOdds, pickLabel } from "../components/Signals";
 import { ApiView, Empty, StaleNotice } from "../components/StateViews";
 import { TeamBadge } from "../components/TeamBadge";
 import { TeamLink } from "../components/TeamLink";
@@ -57,6 +57,7 @@ export function Fixtures({ query }: PageProps) {
       </header>
 
       <RefreshNotice />
+      <ClosingPriceNote />
 
       <div className="filters" role="group" aria-label="Fixture window">
         <span className="filter-label">Show</span>
@@ -313,12 +314,15 @@ function FixtureCard({ cards }: { cards: PredictionCard[] }) {
   if (!card) return null;
   const x = card.probabilities["1X2"];
   const day = londonDayKey(card.kickoff_utc, card.match_date);
+  // Where the match result is the bookmakers' consensus, the pure model's own beside it.
+  const consensus = isConsensus(card);
+  const pure = consensus ? (others.find((o) => o.basis === "model_only") ?? null) : null;
   return (
     <article className="card fixture">
       <div className="fx-head">
         <CompetitionChip code={card.competition} name={card.competition_name} />
         <span className="fx-tags">
-          <BasisBadge basis={card.basis} />
+          <BasisBadge basis={card.basis} consensus={consensus} />
         </span>
       </div>
       <div className="fx-body">
@@ -346,11 +350,13 @@ function FixtureCard({ cards }: { cards: PredictionCard[] }) {
           <KickoffStatus card={card} />
         </p>
       </div>
+      {consensus && <p className="consensus-cap small">Bookmakers' consensus (margins removed)</p>}
       {x ? (
-        <ProbBar probs={x} homeName={card.home_name} awayName={card.away_name} />
+        <ProbBar probs={x} homeName={card.home_name} awayName={card.away_name} pickLabel={pickLabel(card)} />
       ) : (
         <p className="muted small">No match-result probabilities in this record.</p>
       )}
+      {pure && <ModelAlone pure={pure} homeName={card.home_name} awayName={card.away_name} />}
       <MarketGrid probabilities={card.probabilities} lines={CARD_LINES} variant="compact" />
       <Signals
         card={card}

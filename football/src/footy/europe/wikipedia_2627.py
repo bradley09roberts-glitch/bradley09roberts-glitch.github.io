@@ -300,10 +300,8 @@ _MINUTE = re.compile(r"'*(\d{1,3})'*\s*(?:\+\s*(\d{1,2}))?'*")
 _UEFA_MATCH = re.compile(r"uefa\.com/[a-z]+/match/(\d+)|UEFA match attendance\s*\|\s*(\d+)", re.I)
 _TRUE = {"y", "yes", "1", "true"}
 _AWARDED = re.compile(r"awarded|\bawd\b|w/o|walkover", re.I)
-_NOT_PLAYED = re.compile(
-    r"\b(?:postponed|abandoned|suspended|called off|cancell?ed)\b|\b(?:P|A)\s*[-–−]\s*(?:P|A)\b"
-)
 _NOT_PLAYED_WORDS = re.compile(r"\b(?:postponed|abandoned|suspended|called off|cancell?ed)\b", re.I)
+_NOT_PLAYED_SCORE = re.compile(r"\b(?:P|A)\s*[-–−]\s*(?:P|A)\b")  # "P–P", "A–A" (case matters)
 _AET = re.compile(r"\{\{\s*aet\s*\}\}|a\.\s*e\.\s*t\.?|after extra time", re.I)
 _PSO = re.compile(r"\{\{\s*(?:pso|pen\.?|pens)\b|\bp(?:en)?s?\.?\s*\)|on penalties", re.I)
 
@@ -482,7 +480,7 @@ def regulation_from_goals(score: tuple[int, int], goals: tuple[str, str]) -> tup
 def not_played_status(text: str) -> str | None:
     """ "cancelled" or "postponed" (abandoned, suspended, called off, P–P, A–A) when a score
     line says the match was not played to a result."""
-    if not (_NOT_PLAYED_WORDS.search(text) or _NOT_PLAYED.search(text)):
+    if not (_NOT_PLAYED_WORDS.search(text) or _NOT_PLAYED_SCORE.search(text)):
         return None
     return "cancelled" if re.search(r"cancell?ed", text, re.I) else "postponed"
 
@@ -959,7 +957,7 @@ def _summary_extra_time(row: EuroRow, listed: str) -> list[ParseIssue]:
     left unknown)."""
     text = _REF.sub("", listed)
     aet = bool(_AET.search(text))
-    pens = bool(re.search(r"\{\{\s*pso\b", text, re.I)) or bool(_PSO.search(text))
+    pens = bool(_PSO.search(text))
     if row.status != "played" or row.extra_time or not (aet or pens):
         return []
     row.extra_time = True

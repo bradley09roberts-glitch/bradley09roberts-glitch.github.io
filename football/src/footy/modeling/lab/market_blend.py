@@ -17,7 +17,8 @@ once a season, a fixture with no prices under its own date takes the prices the 
 for the same pairing in the same season under another date (`_same_pairing`): a schedule's
 date can be a placeholder (openfootball listed La Liga matchday 10 of 2026/27 on its Sunday)
 while football-data dates the fixture as it will be played. The staleness rule below then
-uses the date the prices were listed under.
+takes the later of the two dates' collection days (the same Friday for a placeholder in the
+same round; a game moved to a later round never takes its old date's prices).
 
 Usable prices: phase 'pre_closing'; quoted no later than the prediction is made (the
 fixture's `deadline_utc` in backtests, the time of the run when live); quoted before the
@@ -323,8 +324,9 @@ class MarketTilt:
             names=KEY,
         )
         mk = book.reindex(idx).reset_index(drop=True)
+        own_days = pd.Series(idx.get_level_values("date")).dt.date
         # a single-meeting pairing listed under another date in the same season (a placeholder
-        # or changed date): its prices, and that date for the staleness rule
+        # or changed date): its prices, and that date for the staleness rule too
         moved = _same_pairing(
             book, fixtures, idx, pd.to_datetime(mk["quote_time_utc"], utc=True).isna().to_numpy()
         )
@@ -367,11 +369,15 @@ class MarketTilt:
         # publication time is unknown is refused too: it could be from any earlier collection.
         pub = mk["published_utc"] if "published_utc" in mk else mk["quote_time_utc"]
         pub = pd.to_datetime(pub, utc=True)
-        days = pd.Series(idx.get_level_values("date")).dt.date
-        first = {d: model_cutoff(d) for d in days.unique()}
+        # Prices listed under another date (`_same_pairing`) must be no older than either
+        # date's collection day: a placeholder in the same round has the same one, and a game
+        # moved to a later round can't take the prices of its old date's collection.
+        listed = pd.Series(idx.get_level_values("date")).dt.date
+        first = {d: model_cutoff(d) for d in {*own_days.unique(), *listed.unique()}}
+        since = [max(first[a], first[b]) for a, b in zip(own_days, listed, strict=True)]
         refuse(pub.isna(), "publication time unknown (no readable Last-Modified)")
         refuse(
-            ~(pub >= pd.to_datetime(days.map(first), utc=True)),
+            ~(pub >= pd.to_datetime(pd.Series(since, index=mk.index), utc=True)),
             "published before the fixture's collection day",
         )
         ok = qt.notna() & refused.isna()

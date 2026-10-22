@@ -18,11 +18,15 @@ export function ProbBar({
   homeName,
   awayName,
   size = "regular",
+  pickLabel = "Pick",
 }: {
   probs: OneXTwo;
   homeName: string;
   awayName: string;
   size?: "regular" | "large";
+  /** The tag on the most likely outcome: "Pick", or "Bookies' favourite" where the figures
+   * are the bookmakers' consensus. */
+  pickLabel?: string;
 }) {
   const [ref, reveal] = useReveal<HTMLDivElement>();
   const pick = pickOf(probs);
@@ -40,7 +44,8 @@ export function ProbBar({
               <span className="probbar-value">{formatPct(x.p)}</span>
               {x.code === pick && (
                 <span className="pick-tag">
-                  Pick<span className="visually-hidden"> (most likely)</span>
+                  {pickLabel}
+                  <span className="visually-hidden"> (most likely)</span>
                 </span>
               )}
             </span>

@@ -16,10 +16,11 @@ make snapshot OUT=<folder> PAGE=<dir>/football-model.html   # also the one-file 
 
 | File | What it answers | Fetched |
 | --- | --- | --- |
-| `snapshot.json` | What every page needs first: health, past results, performance, hit rates, the list of backtest runs, the saved reports and the D-028 summary, the two model leaderboards and the backtest explorer's models list; and the list of shard files with the request keys each answers | At start-up |
+| `snapshot.json` | What every page needs first: health, performance and its latest settled match, hit rates, the list of backtest runs, the saved reports and the D-028 summary, the two model leaderboards and the backtest explorer's models list; and the list of shard files with the request keys each answers | At start-up |
 | `snapshot-fixtures-1.json` | The fixtures for the next 30 days (`/api/fixtures?days=30`: per fixture, the record of record and its partner with the other basis, and a count of every model's records; docs/model-comparison.md); the page takes every shorter window (1 to 30 days) from it, as the API would (`derived` in `snapshot.ts`) | The first time the fixtures or the Data page is opened (the default page, so on every first visit) |
-| `snapshot-data-1.json` | The Data page's coverage, import issues and refresh history | The first time the Data page is opened |
-| `snapshot-matches-<n>.json` | Match pages (`/api/predictions/{id}`, with their `teams` block) and each fixture's every-model list (`/api/fixtures/{ref}/models`), a fixture's pages and list always in one file | The first time a match page is opened |
+| `snapshot-data-1.json` | The Data page's coverage, import issues, refresh history and downloads by source (`/api/fetch-status`) | The first time the Data page is opened |
+| `snapshot-past-<n>.json` | The Past page's lists (22 Oct audit, H2): one card per match, the record Performance counts, for every competition and each one (`/api/past?limit=500&record_type=…`, with `competition=`), and every model's cards for the newest 60 matches (`/api/past?limit=60&models=all&record_type=…`; a competition's is that list filtered, `derived` in `snapshot.ts`, marked `truncated`) | The first time the Past page is opened |
+| `snapshot-matches-<n>.json` | Match pages (`/api/predictions/{id}`, with their `teams` block) and each fixture's every-model list (`/api/fixtures/{ref}/models`), a fixture's pages and list always in one file; for older fixtures the record of record's pages only (below, "Which match pages") | The first time a match page is opened |
 | `snapshot-lab-<n>.json` | Backtest summaries (`/api/backtests/{run}/summary`), each run's in one file | The first time a run is opened in the lab |
 | `snapshot-teams-1.json` | The teams list alone (`/api/teams`) | The first time the teams list is opened |
 | `snapshot-teams-<n>.json` (n ≥ 2) | Per team: profile, match log and media (`/api/teams/{key}`, `/api/teams/{key}/matches`, `/api/teams/{key}/media`), a team never split across files | The first time one of those teams is opened |
@@ -31,7 +32,7 @@ Each data file has the same shape (`format`, `taken_at_utc`, `bodies`, `entries`
 made at, `generated_at_utc`; and `parts`, below, when a body uses one). `snapshot.json` adds
 `shards`: `[{"file", "bytes", "keys"}]`.
 
-**Shared parts** (`footy-api-snapshot/3`). Every record of a fixture has its own match page,
+**Shared parts** (`footy-api-snapshot/3`; one level down since `/4`). Every record of a fixture has its own match page,
 and each page repeats the fixture's form and stats (`teams`), recent results (`recent`) and
 list of records (`editions`): about 7 KB of an 11 KB page. With a model of record, its
 fallbacks and some twenty shadow models per fixture (`footy publish-shadows`), that repetition
@@ -40,12 +41,15 @@ more (`PART_FIELDS`, `PART_MIN_BYTES`) is written once per file, in the file's `
 and the page holds `{"$part": n}` in its place; identical values share one part, and a
 fixture's pages are always in the same file. `snapshot.ts` (`resolveParts`) puts them back
 before a page sees the body, so every body is still the API's own response. Nothing else
-uses parts.
+uses parts. Since `footy-api-snapshot/4` a field one level down can be a part too: a record's
+model parameters (`features.model_params`, the same on every record of a model, about a
+quarter of each page; 1,089 pages held 930 KB of them in only 22 distinct values).
 
 `frontend/src/snapshot.ts` looks a request up in `snapshot.json`, then in the shard that lists
 its key, fetching that shard once (a failed load is retried by "Try again"); a key in no file
 answers "Not in this snapshot". A snapshot from before shards existed
-(`footy-api-snapshot/1`, no `shards`) or before parts (`footy-api-snapshot/2`) still loads.
+(`footy-api-snapshot/1`, no `shards`), before parts (`footy-api-snapshot/2`) or before nested
+parts (`footy-api-snapshot/3`) still loads.
 
 A shard is closed once it holds 2 MB (`SHARD_TARGET_BYTES`), or 1 MB for team and match pages
 (`PAGE_SHARD_TARGET_BYTES`), as either is often the first page opened from a shared link: on
@@ -68,6 +72,18 @@ The explorer filters by team and by model on the page, from the division-season 
 `team=`, `models=`, `offset=` or another `limit` answer "Not in this snapshot". A division and
 season holding more than 1,000 matches (`FRONTEND_BACKTEST_LIMIT`; the most is 380) refuses
 the export rather than carry a partial list.
+
+## Which match pages
+
+Every record has a match page on the site, but the copy keeps them for a rolling window
+(`FULL_PAGE_DAYS`, 10 days; 22 Oct audit, H3): for a fixture dated 10 days before the
+export or later (every upcoming one included), every model's pages and the fixture's
+every-model list; for an older fixture, only its record of record's pages (each edition; the
+earliest record where no model of record has one), which are what Performance, the Past page
+and the team pages link to. Before the window the copy grew by about 6 to 10 MB a week of
+shadow pages and would have passed the host's 64 MB in early November. A link to a page the
+copy doesn't hold is drawn as plain text (`MatchLink`, `useMatchPageCheck`), as a team without
+a page is; a match page whose every-model list isn't held leaves that section out.
 
 ## Which teams have pages
 
@@ -115,6 +131,15 @@ default page (the latest 100 matches) and the media response. Filters, older log
 
 The site is written to a staging folder and swapped in only when it passes; an earlier
 snapshot's shard files and pictures that the new one doesn't have are removed.
+
+**Warnings** (the export still succeeds): the report's `warnings` lists any file, the file
+count or the total within a fifth (`WARN_FRACTION`) of its limit, and a projection that comes
+within a fifth of the 64 MB in two weeks or less; `footy export-snapshot` also prints each one
+on stderr as `WARNING: …`. `projection` estimates the total ahead from this export: the bytes of
+a fixture's full pages and of the pages kept after the window, the fixtures of the busier of
+the last and the next seven days, the window once full, and the weekly growth (lasting pages
+and two past cards per fixture), with `weeks_to_warning` and `weeks_to_limit`. Team pages,
+which grow with each match played, are not projected.
 
 ## Publishing
 

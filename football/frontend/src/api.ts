@@ -89,6 +89,32 @@ export type JobRun = {
 
 export type RefreshHistory = { runs: JobRun[] };
 
+/** One download attempt from the fetch log (/api/fetch-status). */
+export type FetchAttempt = {
+  at_utc: string | null;
+  /** new_revision | unchanged | not_modified | cached | not_found | error */
+  outcome: string;
+  http_status: number | null;
+  /** Which file or page (the source's own name for it). */
+  key: string;
+  error: string | null;
+  job_run_id: number | null;
+};
+
+/** How one source's downloads are going: failing when its latest attempt failed. */
+export type FetchSource = {
+  source: string;
+  attempts: number;
+  failing: boolean;
+  failures_since_ok: number;
+  failing_since_utc: string | null;
+  last_attempt: FetchAttempt;
+  last_ok_utc: string | null;
+  last_error: FetchAttempt | null;
+};
+
+export type FetchStatus = { generated_at_utc: string; sources: FetchSource[] };
+
 export type ImportIssue = {
   severity: string;
   code: string;
@@ -189,6 +215,10 @@ export type PredictionCard = {
   notes: string | null;
   settlement: Settlement | null;
   value_selection?: ValueSelection;
+  /** Model + market records only: the markets ("1X2", "OU_2.5") whose figures are the
+   * bookmakers' de-vigged consensus itself (the prices given all the weight), so the pick
+   * there is the bookmakers' favourite. Absent in older copies. */
+  consensus_markets?: string[];
   /** Fixtures list only: how many models have a genuine pre-match record for this fixture.
    * The list carries the record of record and its partner with the other basis; every
    * model's record is on the match page (`/api/fixtures/{ref}/models`). */
@@ -248,7 +278,13 @@ export type Counterpart = Pick<
   | "created_at_utc"
   | "probabilities"
   | "selections"
->;
+  | "consensus_markets"
+> & {
+  /** "base": a model + market record's own base model; "built_on": a model + market record
+   * built on this one; "pure_record_of_record": the fixture's pure record of record, standing
+   * in where the base model saved none. Absent in older copies. */
+  relation?: "base" | "built_on" | "pure_record_of_record";
+};
 
 export type PredictionDetail = PredictionCard & {
   /** The feature snapshot saved with the prediction (window sizes, model parameters, …). */
@@ -338,7 +374,38 @@ export type FixturesResponse = {
   competitions: { code: string; name: string; fixtures: PredictionCard[] }[];
 };
 
-export type PastResponse = { record_type: RecordType; matches: PredictionCard[] };
+/** A past-list card: the record's own card without the fields the list never shows (each
+ * record's page has them). */
+export type PastCard = Omit<
+  PredictionCard,
+  | "probabilities"
+  | "notes"
+  | "data_freshness"
+  | "missing_fields"
+  | "training_cutoff_utc"
+  | "model_version"
+  | "value_selection"
+> & {
+  /** The card the list's tally counts: for a genuine record, the one Performance counts (the
+   * first edition of the fixture's record of record). Absent in older copies. */
+  counted?: boolean;
+  /** How many models have a settled record for this fixture. */
+  models_for_fixture?: number;
+  /** Older copies sent whole cards. */
+  probabilities?: Probabilities;
+};
+
+export type PastResponse = {
+  record_type: RecordType;
+  /** "record": one card per fixture (the counted record); "all": every model's. Absent in
+   * older copies (which listed every model's). */
+  models?: "record" | "all";
+  /** Fixtures listed. */
+  fixtures?: number;
+  /** True when older fixtures were left out (the limit). */
+  truncated?: boolean;
+  matches: PastCard[];
+};
 
 // ---------------------------------------------------------------------------------------------
 // /api/performance
@@ -406,6 +473,9 @@ export type BacktestRun = {
   leagues: string[] | null;
   created_at_utc: string | null;
   headline: Headline | null;
+  /** False when the run's ledger is withheld match by match (its figures are the bookmakers'
+   * consensus); only its summaries are sent. Absent in older copies. */
+  per_match?: boolean;
 };
 
 export type BacktestsResponse = { runs: BacktestRun[] };
@@ -462,8 +532,10 @@ export type HitRate = {
   ci95: [number, number] | null;
 };
 
-/** A model's hit rate and the frequency baseline's on the same fixtures. */
-export type HitRateCell = HitRate & { baseline: HitRate | null };
+/** A model's hit rate and the frequency baseline's on the same fixtures; for league games'
+ * match result and over/under 2.5, the bookmakers' favourite's too (`favourite`, on the
+ * fixtures with prices; absent elsewhere and in older copies). */
+export type HitRateCell = HitRate & { baseline: HitRate | null; favourite?: HitRate };
 
 /** Games where the favourite (match result) or the likelier side (two-way markets) had at
  * least `threshold`; `share` is games ÷ of_games. */
@@ -501,6 +573,8 @@ export type HitRateTable = {
   seasons: string[];
   games: number;
   rows: HitRateRow[];
+  /** How the bookmakers' favourite is chosen (league-game tables only). */
+  favourite_note?: string;
 };
 
 export type PrematchHitRow = { code: string; name: string; games: number; markets: Record<string, HitRate> };
@@ -1099,7 +1173,14 @@ function endpoint<T>(path: string, query?: Record<string, QueryValue>): Endpoint
 
 const seg = (s: string | number) => encodeURIComponent(String(s));
 
-export type PastQuery = { competition?: string; record_type?: RecordType; limit?: number };
+export type PastQuery = {
+  competition?: string;
+  record_type?: RecordType;
+  /** "all" for every model's cards; one card per fixture when left out. */
+  models?: "all";
+  /** Fixtures. */
+  limit?: number;
+};
 export type SummaryQuery = { league?: string; season?: string };
 
 export const endpoints = {
@@ -1107,6 +1188,7 @@ export const endpoints = {
   coverage: () => endpoint<CoverageResponse>("/api/coverage"),
   refreshHistory: (limit?: number) => endpoint<RefreshHistory>("/api/refresh-history", { limit }),
   importIssues: () => endpoint<ImportIssues>("/api/import-issues"),
+  fetchStatus: () => endpoint<FetchStatus>("/api/fetch-status"),
   fixtures: (days?: number) => endpoint<FixturesResponse>("/api/fixtures", { days }),
   prediction: (id: number | string) => endpoint<PredictionDetail>(`/api/predictions/${seg(id)}`),
   past: (q: PastQuery = {}) => endpoint<PastResponse>("/api/past", q),

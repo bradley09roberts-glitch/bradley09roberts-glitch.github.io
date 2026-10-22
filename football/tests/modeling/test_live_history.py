@@ -47,9 +47,12 @@ def test_live_fits_on_the_backtests_history(monkeypatch):
     day = target.cutoff_date
     assert (df.date < day - timedelta(days=HISTORY_DAYS)).any()  # the window really binds
 
+    # with a kickoff time: an undated fixture's deadline is 00:00 UK on the first day of its
+    # round, which an hour into the collection day has passed for a weekend fixture
+    kickoff = (target.date + pd.Timedelta(hours=15)).tz_localize("UTC").to_pydatetime()
     fx = [
         (
-            ScheduledMatch(target.date.date(), None, "H", "A", None, None, 1),
+            ScheduledMatch(target.date.date(), kickoff, "H", "A", None, None, 1),
             target.home_team,
             target.away_team,
         )

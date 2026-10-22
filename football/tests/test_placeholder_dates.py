@@ -1,7 +1,7 @@
 """Placeholder fixture dates (audit M1, 22 Oct 2026). openfootball listed every La Liga matchday
-10 game of 2026/27 on "Sun Oct 25" without times while they ran Friday to Monday. The price
-join, the record's identity, the pre-match deadline and settlement must not depend on such a
-date. SYNTHETIC fixtures, teams, prices and schedules throughout."""
+10 game of 2026/27 on "Sun Oct 25" without times, a placeholder (matchdays 8 and 9 ran Friday
+to Monday). The price join, the record's identity, the pre-match deadline and settlement must
+not depend on such a date. SYNTHETIC fixtures, teams, prices and schedules throughout."""
 
 import json
 from datetime import UTC, date, datetime
@@ -81,6 +81,52 @@ def test_fixtures_csv_dates_a_placeholder_fixture():
             "openfootball": ["2026-10-25", None],
             "football_data": ["2026-10-23", "2026-10-23T19:00:00+00:00"],
         }
+    ]
+
+
+def test_a_firm_schedule_kickoff_earlier_than_fixtures_csv_stands():
+    """The pre-match deadline is never later than a kick-off either source gives. Where the
+    schedule has a firm kick-off earlier than fixtures.csv's (a stale file: the latest stored
+    copy lasts until the next Tuesday or Friday fetch, so a game brought forward meanwhile is
+    still listed at its old time), the schedule's stands; a record made between the two
+    would otherwise be made after the real kick-off. An earlier fixtures.csv kick-off, or one
+    for a schedule date without a time, is still used."""
+    sat = ScheduledMatch(
+        date(2026, 10, 24), datetime(2026, 10, 24, 14, 0, tzinfo=UTC), "A", "B", None, None, 1
+    )
+    sun = ScheduledMatch(
+        date(2026, 10, 25), datetime(2026, 10, 25, 15, 0, tzinfo=UTC), "C", "D", None, None, 2
+    )
+    fixtures = [
+        (sat, "esp-a", "esp-b"),
+        (sun, "esp-c", "esp-d"),
+        (_placeholder("E", "F", 3), "esp-e", "esp-f"),
+    ]
+    snap = _snapshot(
+        ("SP1", "2026-10-25", "15:00", "esp-a", "esp-b"),  # later than the schedule's Saturday
+        ("SP1", "2026-10-24", "13:00", "esp-c", "esp-d"),  # earlier than the schedule's Sunday
+        ("SP1", "2026-10-26", "20:00", "esp-e", "esp-f"),  # the placeholder's real date
+    )
+    out, changed = with_fd_dates(fixtures, "SP1", snap, date(2026, 10, 23))
+    (ab, _, _), (cd, _, _), (ef, _, _) = out
+    assert (ab.match_date, ab.kickoff_utc, ab.date_source) == (
+        sat.match_date,
+        sat.kickoff_utc,
+        None,
+    )
+    assert (cd.match_date, cd.kickoff_utc) == (
+        date(2026, 10, 24),
+        datetime(2026, 10, 24, 12, 0, tzinfo=UTC),
+    )
+    assert (ef.match_date, ef.kickoff_utc) == (
+        date(2026, 10, 26),
+        datetime(2026, 10, 26, 20, 0, tzinfo=UTC),
+    )
+    kept = [c for c in changed if c.get("kept")]
+    assert [c["fixture"] for c in kept] == ["esp-a v esp-b"]
+    assert [c["fixture"] for c in changed if not c.get("kept")] == [
+        "esp-c v esp-d",
+        "esp-e v esp-f",
     ]
 
 
@@ -251,6 +297,30 @@ def test_the_pairing_join_is_only_for_single_meeting_leagues_and_the_same_season
     assert used.used_1x2.tolist() == [False, False, False]
 
 
+def test_prices_listed_under_another_date_are_never_older_than_the_fixtures_own_collection():
+    """A postponed game (listed for Saturday 24 Oct in Friday's file, now on Wednesday 28 Oct)
+    must not take Friday's prices on Tuesday 27 Oct while that file is still the latest: the
+    staleness rule takes the later of the two dates' collection days (for a placeholder in the
+    same round, as La Liga matchday 10, both are the same Friday)."""
+    book = _book(("SP1", "2026-10-24", "esp-a", "esp-b"))
+    m = MarketTilt(Fixed, 1.0, 1.0, "t", prices=lambda: book)
+    m.fit(pd.DataFrame(), pd.Timestamp("2026-10-27", tz="UTC"))
+    m.decision_time = datetime(2026, 10, 27, 14, tzinfo=UTC)
+    fx = pd.DataFrame(
+        {
+            "division": ["SP1"],
+            "season": "2627",
+            "date": pd.to_datetime(["2026-10-28"]),
+            "home_team": ["esp-a"],
+            "away_team": ["esp-b"],
+            "kickoff_utc": [datetime(2026, 10, 28, 20, tzinfo=UTC)],
+        }
+    )
+    m.predict(fx)
+    assert m.last_used.used_1x2.tolist() == [False]
+    assert m.last_used.refused[0] == "published before the fixture's collection day"
+
+
 # ---- identity: one record per model and single-meeting pairing --------------------------------
 
 
@@ -386,3 +456,63 @@ def test_the_site_shows_a_re_dated_fixture_on_its_real_date(client, engine, tmp_
         )
     body = client.get(f"/api/predictions/{only}").json()
     assert (body["match_date"], body["recorded_match_date"]) == ("2026-10-24", "2026-10-25")
+
+
+def _fixtures_at(client, monkeypatch, when: datetime, days: int) -> list[dict]:
+    """/api/fixtures as it answers at `when` (UTC)."""
+    import footy.api.routes as routes
+
+    class At(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return when if tz is None else when.astimezone(tz)
+
+    monkeypatch.setattr(routes, "datetime", At)
+    body = client.get("/api/fixtures", params={"days": days}).json()
+    return [c for comp in body["competitions"] for c in comp["fixtures"]]
+
+
+def test_the_fixtures_list_takes_a_re_dated_fixture_by_its_real_date(
+    client, engine, tmp_path, monkeypatch
+):
+    """/api/fixtures lists the fixtures from yesterday to `days` ahead by the date each is
+    last known by, not by each record's own date: on Friday every model's record of a game
+    re-dated to that Friday is counted (the placeholder's records too), and on Sunday the
+    game played on Friday is no longer listed through the records dated by the placeholder."""
+    _publish(engine, tmp_path, PLACEHOLDER, "m", datetime(2026, 10, 21, tzinfo=UTC))
+    _publish(engine, tmp_path, REAL, "priced", datetime(2026, 10, 23, 12, tzinfo=UTC))
+    cards = _fixtures_at(client, monkeypatch, datetime(2026, 10, 23, 13, tzinfo=UTC), 1)
+    assert {c["fixture_ref"] for c in cards} == {PLACEHOLDER.ref}
+    assert {c["models_for_fixture"] for c in cards} == {2}
+    assert {c["match_date"] for c in cards} == {"2026-10-23"}
+    assert _fixtures_at(client, monkeypatch, datetime(2026, 10, 25, 12, tzinfo=UTC), 3) == []
+
+
+def test_settle_names_records_made_after_the_real_kickoff(engine, tmp_path):
+    """A record whose fixture was dated later than it was played (a placeholder, or a kickoff
+    brought forward) was made after the real kickoff: settlement says so."""
+    wrong = FixtureIn(
+        "SP1", "2627", date(2026, 10, 24), datetime(2026, 10, 24, 14, tzinfo=UTC), "esp-a", "esp-b"
+    )
+    (late,) = _publish(engine, tmp_path, wrong, "m", datetime(2026, 10, 24, 12, tzinfo=UTC))
+    (fine,) = _publish(engine, tmp_path, PLACEHOLDER, "n", datetime(2026, 10, 21, tzinfo=UTC))
+    with engine.begin() as conn:
+        conn.execute(
+            text(
+                "INSERT INTO raw_files (id, source, logical_key, revision, sha256, size_bytes, "
+                "retrieved_at, storage_path) VALUES (1, 't', 'k', 1, 'x', 1, '2026-10-24', 'p')"
+            )
+        )
+        conn.execute(
+            text(
+                "INSERT INTO matches (division, season, match_date, kickoff_utc, home_team, "
+                "away_team, home_goals, away_goals, result, source_row, first_raw_file_id, "
+                "last_raw_file_id) VALUES ('SP1', '2627', '2026-10-23', '2026-10-23 19:00:00', "
+                "'esp-a', 'esp-b', 2, 1, 'H', 1, 1, 1)"
+            )
+        )
+    assert settle(engine, now=datetime(2026, 10, 25, tzinfo=UTC)) == {
+        "settled": 2,
+        "made_after_kickoff": [late],
+    }
+    assert fine != late

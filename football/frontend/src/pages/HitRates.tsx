@@ -1,7 +1,9 @@
 // The backtest lab's Hit rates tab: how often each model of record's pick was right, per
 // league or competition and per market, on the two test seasons, with the frequency
-// baseline's rate on the same games beneath each one. Then the confidence buckets, then the
-// genuine pre-match record (kept in its own card; the Performance page is its home).
+// baseline's rate on the same games beneath each one and, for league games' match result and
+// over/under 2.5, the bookmakers' favourite's (the benchmark that matters for betting). Then
+// the confidence buckets, then the genuine pre-match record (kept in its own card; the
+// Performance page is its home).
 //
 // Every number comes from /api/hit-rates, which counts the saved test ledgers and the settled
 // pre-match records (footy.modeling.hit_rates). Nothing is worked out here except labels.
@@ -108,8 +110,11 @@ function HitRatesView({ d, showCi, basis }: { d: HitRates; showCi: boolean; basi
         </p>
         <p className="muted small">
           Beneath each rate, in grey, is the <strong>baseline</strong> on the same games: always
-          picking the outcome that had been most common so far. A model is only useful where it
-          beats that.
+          picking the outcome that had been most common so far. Beating it shows a model has learnt
+          something, but a model is useful for betting only where it beats the bookmakers. So for
+          league games' match result and over/under 2.5 the <strong>bookies' favourite</strong> on
+          the same games is shown too. With prices, the model of record's figures there are the
+          bookmakers' consensus, so its pick is the bookies' favourite.
         </p>
         <label className="hit-ci-toggle">
           <input
@@ -168,6 +173,7 @@ function FamilyCard({
   const all = table.rows.find((r) => r.code === "ALL");
   const id = `hits-${table.family}`;
   const uefa = table.family === "uefa";
+  const hasFavourite = table.rows.some((r) => Object.values(r.markets).some((c) => c.favourite));
 
   return (
     <section className="card hit-family" aria-labelledby={id}>
@@ -194,9 +200,12 @@ function FamilyCard({
         <code>{table.baseline_model}</code>.
       </p>
 
+      {all && <AgainstBookmakers table={table} all={all.markets} />}
+
       <p className="muted small hit-legend" aria-hidden="true">
         <span className="hit-legend-model">Hit rate</span>
         <span className="hit-legend-base">baseline</span>
+        {hasFavourite && <span className="hit-legend-fav">bookies' favourite</span>}
         {showCi && <span className="hit-legend-ci">95% interval</span>}
       </p>
       <TableScroll className="hit-scroll" label={`${table.family_name}: hit rates by ${uefa ? "competition" : "league"} and market`}>
@@ -266,6 +275,12 @@ function Cell({ cell, showCi }: { cell: HitRateCell | undefined; showCi: boolean
         <span className="visually-hidden">baseline </span>
         <Rate r={cell.baseline} />
       </span>
+      {cell.favourite && (
+        <span className="cell-sub hit-fav">
+          <span className="visually-hidden">bookies' favourite </span>
+          <Rate r={cell.favourite} />
+        </span>
+      )}
       {showCi && (
         <span className="cell-sub hit-ci">
           <span className="visually-hidden">95% interval </span>
@@ -273,6 +288,74 @@ function Cell({ cell, showCi }: { cell: HitRateCell | undefined; showCi: boolean
         </span>
       )}
     </>
+  );
+}
+
+/** The model beside the bookmakers' favourite and the baseline, over all the games: the row
+ * that says whether the model knows more than the bookmakers (league games only; UEFA
+ * matches have no prices here). */
+function AgainstBookmakers({ table, all }: { table: HitRateTable; all: Record<string, HitRateCell> }) {
+  const keys = (["1X2", "OU_2.5"] as const).filter((k) => all[k]?.favourite);
+  if (keys.length === 0) {
+    return table.family === "uefa" ? (
+      <p className="muted small">
+        No bookmakers' prices are held for UEFA matches, so there is no favourite to compare with.
+      </p>
+    ) : null;
+  }
+  const head: Record<string, string> = { "1X2": "Result", "OU_2.5": "O/U 2.5" };
+  const rows: { label: string; sub: string; get: (c: HitRateCell) => HitRate | null | undefined }[] = [
+    { label: "This model", sub: table.model, get: (c) => c },
+    { label: "Bookies' favourite", sub: "shortest price before the close", get: (c) => c.favourite },
+    { label: "Baseline", sub: "the usual outcome", get: (c) => c.baseline },
+  ];
+  return (
+    <div className="hit-bookies">
+      <h3>Against the bookmakers</h3>
+      <table className="data-table hit-bookies-table">
+        <caption className="visually-hidden">
+          Hit rate of this model, the bookmakers' favourite and the baseline over all the games
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col">All games</th>
+            {keys.map((k) => (
+              <th key={k} scope="col" className="num">
+                {head[k]}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r) => (
+            <tr key={r.label} className={r.label === "Bookies' favourite" ? "hit-fav-row" : undefined}>
+              <th scope="row">
+                {r.label}
+                <span className="cell-sub">{r.sub}</span>
+              </th>
+              {keys.map((k) => {
+                const c = all[k];
+                const x = c ? r.get(c) : undefined;
+                return (
+                  <td key={k} className="num">
+                    <span className="hit-value">
+                      <Rate r={x} />
+                    </span>
+                    {x && <span className="cell-sub">{formatNumber(x.n, 0)} games</span>}
+                  </td>
+                );
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <p className="muted small">
+        {table.favourite_note ??
+          "The bookies' favourite: the outcome with the shortest price before the close, on the same games."}{" "}
+        A model that only matches the favourite adds nothing for betting. Over two test seasons no
+        model beat the closing price.
+      </p>
+    </div>
   );
 }
 

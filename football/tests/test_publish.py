@@ -121,10 +121,10 @@ def test_settlement_marks_every_market(migrated_engine, tmp_path):
 
 def test_unannounced_kickoff_must_be_published_before_its_round_starts(migrated_engine, tmp_path):
     """A date without a time can be a placeholder (openfootball listed La Liga matchday 10 of
-    2026/27 on Sunday 25 Oct while its games ran Friday to Monday), so the deadline is 00:00
-    UK on the first day of the round: the Friday for a Friday-to-Monday date, the Tuesday for
-    a midweek one. Before 22 Oct 2026 the deadline was 00:00 UK on the date itself, after the
-    real Friday and Saturday kick-offs."""
+    2026/27 on Sunday 25 Oct as a placeholder; matchday 9 ran Friday to Monday), so the
+    deadline is 00:00 UK on the first day of the round: the Friday for a Friday-to-Monday
+    date, the Tuesday for a midweek one. Before 22 Oct 2026 it was 00:00 UK on the date
+    itself, after any real Friday and Saturday kick-offs."""
     setup(migrated_engine)
     fx = FixtureIn("E0", "2627", date(2026, 10, 25), None, "eng-testtown", "eng-mockford")
     mp = markets_from_grid(poisson_grid([1.2], [1.0]))

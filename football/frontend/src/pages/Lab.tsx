@@ -1187,6 +1187,20 @@ function ExportLinks({ run }: { run: BacktestRun }) {
       </section>
     );
   }
+  if (run.per_match === false) {
+    // The API refuses this run's ledger (403): match by match its figures are the
+    // bookmakers' consensus, which the backtest explorer withholds too.
+    return (
+      <section className="card" aria-labelledby="lab-export">
+        <h2 id="lab-export">Export the ledger</h2>
+        <p className="muted small">
+          <strong>Summary only.</strong> Match by match, the match-result and over 2.5 goals figures
+          of <strong>{runLabel(run)}</strong> are the bookmakers' consensus with the margins
+          removed, so its ledger isn't offered for download; its summaries above are.
+        </p>
+      </section>
+    );
+  }
   return (
     <section className="card" aria-labelledby="lab-export">
       <h2 id="lab-export">Export the ledger</h2>

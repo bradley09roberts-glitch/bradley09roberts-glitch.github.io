@@ -9,9 +9,10 @@ import {
   type Performance as PerformanceData,
   type PerformanceMarket,
   type PerformanceRecord,
-  type PredictionCard,
+  type PastCard,
 } from "../api";
 import { BasisBadge } from "../components/Badge";
+import { ClosingPriceNote } from "../components/Signals";
 import { ApiView, Empty } from "../components/StateViews";
 import {
   formatLondon,
@@ -53,6 +54,8 @@ export function Performance(_props: PageProps) {
         How often the models of record were right on the test seasons, by league and market, is
         on the lab's <a href={href("/lab", { tab: "hits" })}>Hit rates</a> tab.
       </div>
+
+      <ClosingPriceNote />
 
       <ApiView
         result={perf}
@@ -108,9 +111,10 @@ export function Performance(_props: PageProps) {
             that model's first edition.
           </li>
           <li>
-            <strong>Model + market</strong> records blend in bookmakers' prices collected before
-            the prediction; <strong>model only</strong> records use past results alone. They are
-            counted separately, each fixture once per kind, and neither replaces the other.
+            <strong>Model + market</strong> records use bookmakers' prices collected before the
+            prediction (for league games the match result and over/under 2.5 are the bookmakers'
+            consensus itself); <strong>model only</strong> records use past results alone. They
+            are counted separately, each fixture once per kind, and neither replaces the other.
           </li>
           <li>
             With fewer than {SMALL_SAMPLE} settled matches a market's figures can move a long way
@@ -141,7 +145,7 @@ export function Performance(_props: PageProps) {
   );
 }
 
-function Record({ d, latest }: { d: PerformanceData; latest: PredictionCard | undefined }) {
+function Record({ d, latest }: { d: PerformanceData; latest: PastCard | undefined }) {
   const markets = Object.entries(d.markets).sort(([a], [b]) => marketOrder(a) - marketOrder(b));
   return (
     <>
@@ -218,7 +222,7 @@ const BASES: Basis[] = ["model_and_market", "model_only"];
 
 const BASIS_TEXT: Record<Basis, string> = {
   model_and_market:
-    "Bookmakers' prices collected before the prediction were blended in. Prices arrive on Tuesdays and Fridays, so only fixtures priced by then have one.",
+    "Bookmakers' prices collected before the prediction were used. For league games the match result and over/under 2.5 goals are the bookmakers' consensus with the margins removed, so these figures score the bookmakers, not the model. Prices arrive on Tuesdays and Fridays, so only fixtures priced by then have one.",
   model_only:
     "Past results alone, without prices. These continue for every fixture, so the pure model can still be compared with the market.",
 };
@@ -299,7 +303,7 @@ function Paired({ p }: { p: PerformanceData["paired"] }) {
   );
 }
 
-function LatestSettled({ card }: { card: PredictionCard }) {
+function LatestSettled({ card }: { card: PastCard }) {
   const s = card.settlement;
   if (!s) return null;
   const scored = s.home_goals !== null && s.away_goals !== null;

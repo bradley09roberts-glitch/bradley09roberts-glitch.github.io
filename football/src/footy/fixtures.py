@@ -12,7 +12,8 @@ a whole round on one day without times (La Liga matchdays 10 and 11 of 2026/27 o
 Sundays). Where football-data's `fixtures.csv` (the latest stored copy, D-024) lists a pairing
 of a single-meeting league, its date and UK kick-off time are the authority for that
 fixture (`with_fd_dates`): they come from the bookmakers' own fixture lists and are refreshed
-every Tuesday and Friday.
+every Tuesday and Friday. The one exception keeps the pre-match deadline safe: a firm
+schedule kick-off earlier than the file's stands (the stored file can be days old).
 """
 
 import difflib
@@ -287,7 +288,15 @@ def with_fd_dates(
     fixtures.csv lists the pairing on or after `start` (stale rows of an older file are
     ignored), in a league where a pairing meets once a season (elsewhere a listed pairing
     can't be tied to one meeting, so nothing changes). Where football-data gives no time and
-    the dates agree, the schedule's time is kept. Returns the fixtures and what changed."""
+    the dates agree, the schedule's time is kept.
+
+    The pre-match deadline is never later than a kick-off either source gives: where the
+    schedule has a firm kick-off (a time, on or after `start`) earlier than football-data's
+    deadline for the fixture (its kick-off, or the round start where it has no time), the
+    schedule's date and kick-off stand (the stored fixtures.csv can be days old, so a game
+    brought forward since is still listed at its old time). Returns the fixtures and what
+    changed; a disagreement settled for the schedule is listed with `kept`."""
+    from footy.ingest.fd_parse import model_cutoff
     from footy.publish import single_meeting
 
     if not single_meeting(division):
@@ -311,13 +320,17 @@ def with_fd_dates(
         if ko is None and day == x.match_date:
             ko = x.kickoff_utc
         if (day, ko) != (x.match_date, x.kickoff_utc):
-            changed.append(
-                {
-                    "fixture": f"{h} v {a}",
-                    "openfootball": [str(x.match_date), _iso(x.kickoff_utc)],
-                    "football_data": [str(day), _iso(ko)],
-                }
-            )
+            entry = {
+                "fixture": f"{h} v {a}",
+                "openfootball": [str(x.match_date), _iso(x.kickoff_utc)],
+                "football_data": [str(day), _iso(ko)],
+            }
+            fd_deadline = ko if ko is not None else model_cutoff(day)
+            if x.kickoff_utc is not None and x.match_date >= start and x.kickoff_utc < fd_deadline:
+                changed.append(entry | {"kept": "openfootball: its kick-off is earlier"})
+                out.append((x, h, a))
+                continue
+            changed.append(entry)
             x = replace(x, match_date=day, kickoff_utc=ko, date_source=source)
         out.append((x, h, a))
     return out, changed

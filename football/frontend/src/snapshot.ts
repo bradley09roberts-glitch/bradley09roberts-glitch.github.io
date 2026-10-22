@@ -207,9 +207,28 @@ function fixturesWithin(body: unknown, days: number): unknown {
   };
 }
 
-/** A request answered by filtering another stored response: which key, and how. Only the
- * fixtures windows (every N from 1 to 30 comes from the 30-day one). */
+type PastBody = { fixtures?: number; truncated?: boolean; matches?: { competition?: string; fixture_ref?: string }[] };
+
+/** Every model's past cards for one competition, from the all-competitions list the snapshot
+ * stores (footy/snapshot.py, FRONTEND_PAST_ALL_MODELS): its cards for that competition. The
+ * stored list holds only the newest fixtures, so when it was cut short so is this one
+ * (`truncated`), and the page says so. */
+function pastForCompetition(body: unknown, competition: string): unknown {
+  const b = body as PastBody | null;
+  if (!b || !Array.isArray(b.matches)) return body;
+  const matches = b.matches.filter((c) => c.competition === competition);
+  return { ...b, fixtures: new Set(matches.map((c) => c.fixture_ref)).size, matches };
+}
+
+/** A request answered by filtering another stored response: which key, and how. The fixtures
+ * windows (every N from 1 to 30 comes from the 30-day one), and every model's past cards for
+ * one competition (from the all-competitions list). */
 function derived(key: string): { from: string; make: (body: unknown) => unknown } | null {
+  const past = /^\/api\/past\?competition=([^&]+)&(limit=\d+&models=all&record_type=[a-z_]+)$/.exec(key);
+  if (past) {
+    const competition = decodeURIComponent(past[1] ?? "");
+    return { from: `/api/past?${past[2]}`, make: (body) => pastForCompetition(body, competition) };
+  }
   const m = /^\/api\/fixtures(?:\?days=(\d+))?$/.exec(key);
   if (!m) return null;
   const days = m[1] === undefined ? FIXTURE_DAYS_DEFAULT : Number(m[1]);
@@ -219,21 +238,42 @@ function derived(key: string): { from: string; make: (body: unknown) => unknown 
 
 const PART_REF = "$part";
 
-/** A body as the API sent it: each top-level field that holds only {"$part": n} replaced by
- * the file's n-th shared part (footy/snapshot.py, PART_FIELDS). Other bodies are unchanged. */
+/** The part a value refers to, if it is exactly {"$part": n} with n a part of this file. */
+function partOf(parts: unknown[], value: unknown): { part: unknown } | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const ref = (value as Record<string, unknown>)[PART_REF];
+  if (Object.keys(value).length !== 1 || typeof ref !== "number" || !Number.isInteger(ref) || ref < 0 || ref >= parts.length) {
+    return null;
+  }
+  return { part: parts[ref] };
+}
+
+/** A body as the API sent it: each field that holds only {"$part": n}, at the top level or one
+ * level down (footy-api-snapshot/4, e.g. features.model_params), replaced by the file's n-th
+ * shared part (footy/snapshot.py, PART_FIELDS). Other bodies are unchanged. */
 function resolveParts(source: SnapshotFile, body: unknown): unknown {
   const parts = source.parts;
   if (!parts || parts.length === 0 || !body || typeof body !== "object" || Array.isArray(body)) return body;
   let out: Record<string, unknown> | null = null;
   for (const [key, value] of Object.entries(body as Record<string, unknown>)) {
     if (!value || typeof value !== "object" || Array.isArray(value)) continue;
-    const fields = Object.keys(value);
-    const ref = (value as Record<string, unknown>)[PART_REF];
-    if (fields.length !== 1 || typeof ref !== "number" || !Number.isInteger(ref) || ref < 0 || ref >= parts.length) {
+    const top = partOf(parts, value);
+    if (top) {
+      out ??= { ...(body as Record<string, unknown>) };
+      out[key] = top.part;
       continue;
     }
-    out ??= { ...(body as Record<string, unknown>) };
-    out[key] = parts[ref];
+    let inner: Record<string, unknown> | null = null;
+    for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+      const found = partOf(parts, v);
+      if (!found) continue;
+      inner ??= { ...(value as Record<string, unknown>) };
+      inner[k] = found.part;
+    }
+    if (inner) {
+      out ??= { ...(body as Record<string, unknown>) };
+      out[key] = inner;
+    }
   }
   return out ?? body;
 }

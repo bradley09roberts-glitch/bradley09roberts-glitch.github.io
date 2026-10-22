@@ -559,7 +559,7 @@ def _check_records_in(s: Session, records_dir: Path) -> None:
     problems = _records_problems(s, records_dir)
     if problems:
         raise PublishError(
-            "refused: the database doesn't hold every published record, so a new record could "
+            "the database doesn't hold every published record, so a new record could "
             f"reuse an id or record a fixture twice: {'; '.join(problems)}. {IMPORT_HINT}"
         )
 
@@ -680,9 +680,15 @@ def latest_settlements(s: Session, ids: list[int] | None = None) -> dict[int, Pr
 def settle(engine: Engine, now: datetime | None = None) -> dict:
     """Settle every unsettled prediction whose match now has a final regulation-time score.
     Holds the write lock from the start (as `publish` does), so two runs at once take turns
-    and the second finds nothing left to settle instead of settling the same records again."""
+    and the second finds nothing left to settle instead of settling the same records again.
+
+    `made_after_kickoff` (only when there are any) lists the genuine pre-match records it
+    settled that were made at or after the match's real kickoff as stored with the result
+    (or after its day, where the result has no kickoff): a record dated by a placeholder can
+    have had a later deadline than the real kickoff (audit M1)."""
     now = now or utcnow()
     done = 0
+    late: list[int] = []
     with Session(engine) as s:
         _hold_write_lock(s)
         settled = set(s.scalars(select(PredictionSettlement.prediction_id)))
@@ -691,6 +697,8 @@ def settle(engine: Engine, now: datetime | None = None) -> dict:
             score = _final_score(s, p)
             if score is None:
                 continue
+            if p.record_type == "genuine_prematch" and _made_after_kickoff(s, p):
+                late.append(p.id)
             hg, ag = score
             probs = json.loads(p.probabilities)
             sel = json.loads(p.selections)
@@ -724,7 +732,41 @@ def settle(engine: Engine, now: datetime | None = None) -> dict:
             )
             done += 1
         s.commit()
-    return {"settled": done}
+    return {"settled": done} | ({"made_after_kickoff": late} if late else {})
+
+
+def _made_after_kickoff(s: Session, p: Prediction) -> bool:
+    """True if the record was made at or after the real kickoff of the match that settles it
+    (the kickoff stored with the result), or after its day where none is stored."""
+    if p.competition in ("UCL", "UEL", "UECL"):
+        row = s.execute(
+            text(
+                "SELECT match_date, kickoff_utc FROM euro_matches WHERE competition = :c AND "
+                "home_team = :h AND away_team = :a AND match_date = :d AND status = 'played'"
+            ),
+            {"c": p.competition, "h": p.home_team, "a": p.away_team, "d": p.match_date},
+        ).first()
+    else:
+        row = s.execute(
+            text(
+                "SELECT match_date, kickoff_utc FROM matches WHERE division = :c AND season = :s "
+                "AND home_team = :h AND away_team = :a ORDER BY meeting"
+            ),
+            {"c": p.competition, "s": p.season, "h": p.home_team, "a": p.away_team},
+        ).all()
+        if not single_meeting(p.competition):
+            row = next((r for r in row if str(r[0])[:10] == p.match_date.isoformat()), None)
+        else:
+            row = row[0] if row else None
+    if row is None:
+        return False
+    made = p.created_at_utc if p.created_at_utc.tzinfo else p.created_at_utc.replace(tzinfo=UTC)
+    if row[1] is not None:
+        kickoff = datetime.fromisoformat(str(row[1]))
+        kickoff = kickoff if kickoff.tzinfo else kickoff.replace(tzinfo=UTC)
+        return made >= kickoff
+    day = date.fromisoformat(str(row[0])[:10])
+    return made.astimezone(UK).date() > day
 
 
 def _final_score(s: Session, p: Prediction) -> tuple[int, int] | None:
@@ -743,7 +785,7 @@ def _final_score(s: Session, p: Prediction) -> tuple[int, int] | None:
 
 
 def _settlement_source(s: Session, p: Prediction) -> str:
-    """"matches", "euro_matches", or "euro_matches:manual" for a UEFA score entered by hand
+    """ "matches", "euro_matches", or "euro_matches:manual" for a UEFA score entered by hand
     from news reports (`footy euro-import-results`, DECISIONS.md D-029): a later source may
     confirm or correct that row, so the settlement keeps where its score came from."""
     if p.competition not in ("UCL", "UEL", "UECL"):

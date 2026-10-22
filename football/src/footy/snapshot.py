@@ -15,21 +15,27 @@ shorter window from that response (frontend/src/snapshot.ts, `derived`), as the 
 
 Files (docs/snapshot.md):
 
-- `snapshot.json`: what every page needs first (the status, performance, past results, reports
-  and the list of backtest runs), and the list of shard files with the request keys each one
-  answers;
+- `snapshot.json`: what every page needs first (the status, performance, the latest settled
+  match, reports and the list of backtest runs), and the list of shard files with the request
+  keys each one answers;
 - shard files `snapshot-<family>-<n>.json`, fetched only when a page asks for one of their
-  keys: `fixtures` (the fixtures page), `data` (the Data page's coverage, import issues and
-  refresh history), `matches` (match pages), `lab` (backtest summaries), `teams` (the teams
-  list alone in the first, then each team's profile, match log and media, a team never split
-  across files);
+  keys: `fixtures` (the fixtures page), `data` (the Data page's coverage, import issues,
+  refresh history and downloads by source), `past` (the Past page's lists), `matches` (match
+  pages), `lab` (backtest summaries), `teams` (the teams list alone in the first, then each
+  team's profile, match log and media, a team never split across files);
 - `media/teams/<team_key>/crest.png` and `venue.jpg`: downloaded, freely licensed pictures the
   carried teams' media responses link to (their attribution is in those responses).
+
+Match pages are kept for a rolling window (FULL_PAGE_DAYS): every model's records, and each
+fixture's every-model list, for fixtures from that many days ago on (and every upcoming one);
+before that only each fixture's record of record (each edition of it), the record the Past
+page and Performance count. A link to a page the copy doesn't hold is drawn as plain text.
 
 Before anything is written the output is checked: no football-data price may appear in any
 file (the API already withholds them, D-013/D-024; this is a second line of defence), no
 secret from `.env` or the settings may appear in any file, and the files must fit the limits
-of the host the snapshot is published on (HOST_LIMITS).
+of the host the snapshot is published on (HOST_LIMITS). The export report warns when any of
+them is within WARN_FRACTION of a limit, and projects the total ahead (`projection`).
 
 The request set mirrors frontend/src/pages (see FRONTEND_* below). Keep them in step: a page
 that starts making a new request shows "Not in this snapshot" until it is added here.
@@ -46,7 +52,7 @@ import tempfile
 import time
 from collections.abc import Callable, Iterable, Iterator
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 from typing import Any
 from urllib.parse import quote, unquote
@@ -60,9 +66,10 @@ from sqlalchemy.orm import Session
 from footy.config import PROJECT_ROOT, Settings
 
 # 2: shard files and pictures beside snapshot.json. 3: shared parts (`parts`, see PART_FIELDS).
-FORMAT = "footy-api-snapshot/3"
+# 4: shared parts one level down (`features.model_params`).
+FORMAT = "footy-api-snapshot/4"
 # An earlier snapshot folder is still replaced; the site still reads one.
-EARLIER_FORMATS = ("footy-api-snapshot/1", "footy-api-snapshot/2")
+EARLIER_FORMATS = ("footy-api-snapshot/1", "footy-api-snapshot/2", "footy-api-snapshot/3")
 SNAPSHOT_FILE = "snapshot.json"
 SHARD_FILE = re.compile(r"snapshot-[a-z]+-\d+\.json")
 MEDIA_DIR = "media"
@@ -87,7 +94,12 @@ SHARD_TARGET_BYTES = 2 * MB
 PAGE_SHARD_TARGET_BYTES = 1 * MB
 PAGE_SHARD_FAMILIES = ("matches", "teams")
 SHARD_MAX_BYTES = 12 * MB
-SHARD_FAMILIES = ("fixtures", "data", "matches", "lab", "teams", "backtest")  # in file order
+# Match pages: every model's records for fixtures from this many days before the snapshot on
+# (and every upcoming fixture); before that, each fixture's record of record only.
+FULL_PAGE_DAYS = 10
+# The export report warns when a size or count is within this fraction of its limit.
+WARN_FRACTION = 0.2
+SHARD_FAMILIES = ("fixtures", "data", "past", "matches", "lab", "teams", "backtest")  # file order
 # Shared parts. Every record of a fixture has its own match page, and each page repeats the
 # fixture's form and stats (`teams`), recent results (`recent`) and list of records
 # (`editions`): about 7 KB of a 11 KB page, the same on every page of the fixture. With a
@@ -96,7 +108,10 @@ SHARD_FAMILIES = ("fixtures", "data", "matches", "lab", "teams", "backtest")  # 
 # file, in the file's `parts` list, and the page holds {PART_REF: n} in their place (only a
 # field of at least PART_MIN_BYTES; identical values share one part). frontend/src/snapshot.ts
 # puts them back before a page sees the body, so every body is still the API's own response.
-PART_FIELDS = ("teams", "recent", "editions")
+# A field one level down is named "outer.inner": a record's model parameters
+# (`features.model_params`), the same on every record of a model, are about a quarter of each
+# page.
+PART_FIELDS = ("teams", "recent", "editions", "features.model_params")
 PARTED_KEYS = ("/api/predictions/",)
 PART_REF = "$part"
 PART_MIN_BYTES = 256
@@ -104,16 +119,21 @@ PART_MIN_BYTES = 256
 # ---------------------------------------------------------------------------------------------
 # What the frontend requests (frontend/src/pages and src/api.ts)
 
-# Data.tsx: refreshHistory(HISTORY_LIMIT).
+# Data.tsx: refreshHistory(HISTORY_LIMIT) and the downloads by source.
 FRONTEND_REFRESH_HISTORY_LIMITS = (200,)
+FRONTEND_FETCH_STATUS = "/api/fetch-status"
 # Fixtures.tsx: parseDays() accepts any whole number 1-30 from the address (the buttons give
 # 3, 8 and 14; anything else falls back to 8). Data.tsx asks for 14. Only the 30-day window is
 # stored: snapshot.ts answers every other from it (the same cards, up to today + N days).
 FRONTEND_FIXTURE_DAYS = tuple(range(1, 31))
 SNAPSHOT_FIXTURE_DAYS = 30
-# Past.tsx: two record types (KINDS), LIMIT = 500, with and without a competition.
+# Past.tsx: two record types (KINDS), LIMIT = 500 fixtures (one card each, the counted
+# record), with and without a competition; and "All models" (models=all, ALL_MODELS_LIMIT
+# fixtures with every model's card), held for all competitions only: snapshot.ts answers each
+# competition by filtering it (`derived`), marked `truncated` when it is.
 FRONTEND_PAST_RECORD_TYPES = ("genuine_prematch", "retrospective_backtest")
 FRONTEND_PAST_LIMIT = 500
+FRONTEND_PAST_ALL_MODELS = {"models": "all", "limit": 60}
 # Performance.tsx: the latest genuine pre-match record.
 FRONTEND_PAST_LATEST = {"record_type": "genuine_prematch", "limit": 1}
 # Lab.tsx and Data.tsx: report("model_selection"); Lab.tsx: report("benchmark"); the machine-
@@ -164,6 +184,11 @@ NOT_COVERED = (
     "limit): the page asks for whole divisions and seasons and filters them itself",
     "/api/fixtures/{ref}/models for a fixture without a genuine pre-match record (the API "
     "would answer 404)",
+    "/api/predictions/{id} and /api/fixtures/{ref}/models for a fixture played more than "
+    "FULL_PAGE_DAYS days before the snapshot, except its record of record's pages (the site "
+    "shows such links as plain text)",
+    "/api/past?models=all beyond the newest fixtures it holds; per competition it is the "
+    "all-competitions list filtered (marked truncated)",
 )
 
 # ---------------------------------------------------------------------------------------------
@@ -241,6 +266,8 @@ class Snapshot:
     # team's pages, one backtest run's summaries, one match page), each with whether it gets a
     # file of its own. Every other key is in snapshot.json.
     groups: dict[str, list[tuple[list[str], bool]]] = field(default_factory=dict)
+    # The match pages held (export_snapshot), for the size projection.
+    window: PageWindow | None = None
     _index: dict[str, int] = field(default_factory=dict, repr=False)
     # Per body: its size as written (shared parts replaced by references) and its shared
     # parts (field -> part id). Per part: its value and size, by its JSON text.
@@ -274,7 +301,7 @@ class Snapshot:
         fields: dict[str, int] = {}
         if i in self._parted and isinstance(body, dict):
             for name in PART_FIELDS:
-                value = body.get(name)
+                value = _field(body, name)
                 if not isinstance(value, dict | list):
                     continue
                 text = _dumps(value)
@@ -288,9 +315,7 @@ class Snapshot:
                     self._part_sizes.append(size)
                 fields[name] = pid
         self._parts_of[i] = fields
-        written = (
-            {k: {PART_REF: 0} if k in fields else v for k, v in body.items()} if fields else body
-        )
+        written = _with_refs(body, {name: 0 for name in fields}) if fields else body
         self._sizes[i] = len(_dumps(written).encode("utf-8"))
 
     def body(self, key: str) -> Any:
@@ -318,12 +343,12 @@ class Snapshot:
                 where[i] = len(bodies)
                 body = self.bodies[i]
                 if self._parts_of[i]:
-                    body = dict(body)
-                    for name, pid in self._parts_of[i].items():
+                    for pid in self._parts_of[i].values():
                         if pid not in part_where:
                             part_where[pid] = len(parts)
                             parts.append(self._part_values[pid])
-                        body[name] = {PART_REF: part_where[pid]}
+                    refs = {name: part_where[pid] for name, pid in self._parts_of[i].items()}
+                    body = _with_refs(body, refs)
                 bodies.append(body)
             entries[k] = [status, where[i]]
         return {
@@ -395,6 +420,27 @@ class Snapshot:
         return dict(sorted(out.items()))
 
 
+def _field(body: dict, name: str) -> Any:
+    """A body's field, top level ("teams") or one level down ("features.model_params")."""
+    outer, _, inner = name.partition(".")
+    value = body.get(outer)
+    if not inner:
+        return value
+    return value.get(inner) if isinstance(value, dict) else None
+
+
+def _with_refs(body: dict, refs: dict[str, int]) -> dict:
+    """The body as written: each named field (PART_FIELDS) replaced by {PART_REF: n}."""
+    out = dict(body)
+    for name, n in refs.items():
+        outer, _, inner = name.partition(".")
+        if inner:
+            out[outer] = {**out[outer], inner: {PART_REF: n}}
+        else:
+            out[outer] = {PART_REF: n}
+    return out
+
+
 def _iso_now() -> str:
     return datetime.now(UTC).isoformat(timespec="seconds")
 
@@ -410,16 +456,65 @@ def _past_competitions(engine: Engine) -> list[str]:
     return sorted(seen | set(COMPETITION_NAMES))
 
 
-def _prediction_fixtures(engine: Engine) -> tuple[dict[int, str], set[str]]:
-    """Every prediction's fixture (id -> fixture_ref), and the fixtures with a genuine
-    pre-match record."""
+@dataclass
+class PageWindow:
+    """Which match pages a snapshot holds (FULL_PAGE_DAYS; see the module docstring)."""
+
+    since: date  # fixtures on or after this day keep every page and their every-model list
+    fixture_of: dict[int, str]  # every prediction id -> its fixture
+    fixture_day: dict[str, date]  # fixture -> its day (the latest any record gives)
+    genuine: set[str]  # fixtures with a genuine pre-match record
+    recent: set[str]  # fixtures inside the window
+    kept: set[int]  # prediction ids whose pages are held
+    lasting: set[int]  # of those, the pages kept after the window has passed
+    keys: dict[str, list[str]] = field(default_factory=dict)  # fixture -> its held keys
+
+
+def page_window(engine: Engine, today: date, days: int | None = None) -> PageWindow:
+    """The match pages to hold: every record of a fixture dated `days` (FULL_PAGE_DAYS) before
+    `today` or later; for an older fixture, the editions of its record of record (as
+    /api/performance and the Past page count it), or its earliest record where no model of
+    record has one (as the fixtures list stands one in)."""
+    from footy.api.routes import RecordsOfRecord, model_periods
     from footy.models import Prediction
 
+    since = today - timedelta(days=FULL_PAGE_DAYS if days is None else days)
     with Session(engine) as s:
+        ror = RecordsOfRecord(s, model_periods())
         rows = s.execute(
-            select(Prediction.id, Prediction.fixture_ref, Prediction.record_type)
+            select(
+                Prediction.id,
+                Prediction.fixture_ref,
+                Prediction.record_type,
+                Prediction.model_name,
+                Prediction.competition,
+                Prediction.match_date,
+            ).order_by(Prediction.id)
         ).all()
-    return {i: ref for i, ref, _ in rows}, {ref for _, ref, t in rows if t == "genuine_prematch"}
+    fixture_of = {r.id: r.fixture_ref for r in rows}
+    by_ref: dict[str, list] = {}
+    for r in rows:
+        by_ref.setdefault(r.fixture_ref, []).append(r)
+    day = {ref: max(r.match_date for r in recs) for ref, recs in by_ref.items()}
+    for ref in by_ref:  # a moved fixture is shown on its latest known day
+        known = ror.schedule.get(ref)
+        if known is not None:
+            day[ref] = max(day[ref], known[0])
+    recent = {ref for ref, d in day.items() if d >= since}
+    lasting: set[int] = set()
+    for recs in by_ref.values():
+        primary = {r.id for r in recs if ror.is_primary(r)}
+        lasting |= primary or {recs[0].id}
+    kept = lasting | {r.id for r in rows if r.fixture_ref in recent}
+    return PageWindow(
+        since=since,
+        fixture_of=fixture_of,
+        fixture_day=day,
+        genuine={r.fixture_ref for r in rows if r.record_type == "genuine_prematch"},
+        recent=recent,
+        kept=kept,
+        lasting=lasting,
+    )
 
 
 def _linked_prediction_ids(body: Any) -> Iterator[int]:
@@ -598,24 +693,27 @@ def export_snapshot(
         get("/api/refresh-history", {"limit": limit})
         data_keys.append(canonical_key("/api/refresh-history", {"limit": limit}))
     get("/api/import-issues")
+    get(FRONTEND_FETCH_STATUS)
+    data_keys.append(canonical_key(FRONTEND_FETCH_STATUS))
     snap.group("data", data_keys)
     # One fixtures window; the page takes the shorter ones from it.
     get("/api/fixtures", {"days": SNAPSHOT_FIXTURE_DAYS})
     snap.group("fixtures", [canonical_key("/api/fixtures", {"days": SNAPSHOT_FIXTURE_DAYS})])
     get("/api/performance")
-    get("/api/past", FRONTEND_PAST_LATEST)
+    get("/api/past", FRONTEND_PAST_LATEST)  # Performance's first screen
+    # The Past page's lists, in their own shard files: one card per fixture, with and without
+    # a competition, and every model's cards for the newest fixtures.
     competitions = _past_competitions(engine)
     for record_type in FRONTEND_PAST_RECORD_TYPES:
-        get("/api/past", {"record_type": record_type, "limit": FRONTEND_PAST_LIMIT})
-        for competition in competitions:
-            get(
-                "/api/past",
-                {
-                    "record_type": record_type,
-                    "competition": competition,
-                    "limit": FRONTEND_PAST_LIMIT,
-                },
-            )
+        lists = [{"record_type": record_type, "limit": FRONTEND_PAST_LIMIT}]
+        lists += [
+            {"record_type": record_type, "competition": c, "limit": FRONTEND_PAST_LIMIT}
+            for c in competitions
+        ]
+        lists.append({"record_type": record_type, **FRONTEND_PAST_ALL_MODELS})
+        for params in lists:
+            get("/api/past", params)
+            snap.group("past", [canonical_key("/api/past", params)])
     get("/api/hit-rates")  # Lab.tsx, the Hit rates tab
     for name in FRONTEND_REPORTS:
         get(f"/api/reports/{_encode(name)}")
@@ -632,13 +730,19 @@ def export_snapshot(
     # The backtest explorer: the models list (first screen), then every division and season.
     backtest_matches(get, snap)
 
-    # Every prediction in the database, then any a saved response links to that wasn't there
-    # yet (one published while the export ran), until every link resolves. A fixture's match
-    # pages and its every-model list stay in one shard.
-    refs, genuine = _prediction_fixtures(engine)
-    wanted = set(refs)
+    # The match pages the window keeps (`page_window`), then any a saved response links to
+    # that wasn't there yet (one published while the export ran) or that the window keeps,
+    # until every such link resolves. A fixture's match pages and its every-model list stay in
+    # one shard.
+    window = page_window(engine, datetime.now(UTC).date())
+    snap.window = window
+    refs, genuine = dict(window.fixture_of), set(window.genuine)
+    wanted = set(window.kept)
     done: set[int] = set()
     listed: set[str] = set()
+
+    def keep(pid: int) -> bool:
+        return pid in window.kept or pid not in window.fixture_of
 
     def match_pages() -> None:
         while wanted - done:
@@ -648,6 +752,10 @@ def export_snapshot(
                     page = get(f"/api/predictions/{pid}")
                     ref = page.get("fixture_ref") if isinstance(page, dict) else None
                     refs[pid] = ref or f"#{pid}"
+                    window.recent.add(refs[pid])  # a new record's fixture is upcoming
+                    day = page.get("match_date") if isinstance(page, dict) else None
+                    if refs[pid] not in window.fixture_day and isinstance(day, str):
+                        window.fixture_day[refs[pid]] = date.fromisoformat(day[:10])
                     if isinstance(page, dict) and page.get("record_type") == "genuine_prematch":
                         genuine.add(refs[pid])
                 by_fixture.setdefault(refs[pid], []).append(pid)
@@ -657,15 +765,16 @@ def export_snapshot(
                     get(f"/api/predictions/{pid}")
                     keys.append(canonical_key(f"/api/predictions/{pid}"))
                     done.add(pid)
-                if ref in genuine and ref not in listed:
+                if ref in genuine and ref in window.recent and ref not in listed:
                     path = FRONTEND_FIXTURE_MODELS.format(ref=_encode(ref))
                     get(path)
                     keys.append(canonical_key(path))
                     listed.add(ref)
                 snap.group("matches", keys)
+                window.keys.setdefault(ref, []).extend(keys)
             for status, i in snap.entries.values():
                 if status == 200:
-                    wanted.update(_linked_prediction_ids(snap.bodies[i]))
+                    wanted.update(filter(keep, _linked_prediction_ids(snap.bodies[i])))
 
     match_pages()
     # Team pages: the list in a shard of its own, then each team's pages together.
@@ -679,7 +788,7 @@ def export_snapshot(
     # A record published since the match pages were taken that a team page links to.
     for status, i in snap.entries.values():
         if status == 200:
-            wanted.update(_linked_prediction_ids(snap.bodies[i]))
+            wanted.update(filter(keep, _linked_prediction_ids(snap.bodies[i])))
     match_pages()
     snap.finished_at_utc = _iso_now()
     return snap
@@ -982,6 +1091,114 @@ def limit_problems(files: list[tuple[str, int]]) -> list[str]:
     return problems
 
 
+def size_warnings(files: list[tuple[str, int]]) -> list[str]:
+    """What is within WARN_FRACTION of a HOST_LIMITS limit (or of SHARD_MAX_BYTES) without
+    breaking it: the export still succeeds, but the next ones may be refused."""
+    near = 1 - WARN_FRACTION
+    out = []
+    for name, size in files:
+        text = Path(name).suffix.lower() in TEXT_SUFFIXES
+        limit = HOST_LIMITS["text_file_bytes" if text else "binary_file_bytes"]
+        if SHARD_FILE.fullmatch(Path(name).name):
+            limit = min(limit, SHARD_MAX_BYTES)
+        if near * limit <= size <= limit:
+            out.append(f"{name} is {size:,} bytes, {size / limit:.0%} of its {limit:,}-byte limit")
+    count, total = len(files), sum(size for _, size in files)
+    if near * HOST_LIMITS["files"] <= count <= HOST_LIMITS["files"]:
+        out.append(
+            f"{count} files, {count / HOST_LIMITS['files']:.0%} of the limit of "
+            f"{HOST_LIMITS['files']}"
+        )
+    if near * HOST_LIMITS["total_bytes"] <= total <= HOST_LIMITS["total_bytes"]:
+        out.append(
+            f"{total:,} bytes in all, {total / HOST_LIMITS['total_bytes']:.0%} of the "
+            f"{HOST_LIMITS['total_bytes']:,}-byte limit: the export will soon be refused"
+        )
+    return out
+
+
+PROJECTION_WEEKS = (1, 2, 4, 8, 13)
+
+
+def projection(snap: Snapshot, total: int, today: date | None = None) -> dict | None:
+    """Where the site's total size is heading, from this export's own match pages and past
+    cards (a rough guide: team pages, which grow with each match played, are not projected).
+
+    Per fixture: the bytes of its held match pages and every-model list (`full`), and of the
+    pages kept once the window has passed (`lasting`, its record of record). A week's
+    fixtures: the larger of the last 7 days' and the next 7 days'. Once the window is full it
+    holds about (FULL_PAGE_DAYS / 7 + 1) weeks of fixtures with every page; every week then
+    adds a week's lasting pages and two past cards per fixture (the all-competitions and the
+    competition list, until they reach their limit)."""
+    w = snap.window
+    if w is None:
+        return None
+    today = today or datetime.now(UTC).date()
+
+    def size(keys: list[str]) -> int:
+        bodies = {snap.entries[k][1] for k in keys if k in snap.entries}
+        parts = {p for i in bodies for p in snap._parts_of[i].values()}
+        return snap._bytes(bodies, keys, parts)
+
+    full: dict[str, int] = {}
+    lasting: dict[str, int] = {}
+    for ref, keys in w.keys.items():
+        full[ref] = size(keys)
+        lasting[ref] = size(
+            [k for k in keys if k.startswith("/api/predictions/") and _pid(k) in w.lasting]
+        )
+    recent = [r for r in full if r in w.recent]
+    window_extra = sum(full[r] - lasting[r] for r in recent)
+    day = {r: w.fixture_day.get(r, today) for r in full}
+    last_week = [r for r in full if today - timedelta(days=7) <= day[r] < today]
+    next_week = [r for r in full if today <= day[r] < today + timedelta(days=7)]
+    per_week = max(len(last_week), len(next_week))
+    if not recent or per_week == 0:
+        return {"fixtures_per_week": per_week, "note": "too few recent fixtures to project"}
+    mean_full = sum(full[r] for r in recent) / len(recent)
+    mean_lasting = sum(lasting[r] for r in recent) / len(recent)
+    card = _mean_past_card_bytes(snap)
+    steady_window = per_week * (FULL_PAGE_DAYS / 7 + 1) * (mean_full - mean_lasting)
+    base = total - window_extra + steady_window
+    weekly = per_week * (mean_lasting + 2 * card)
+    limit = HOST_LIMITS["total_bytes"]
+
+    def weeks_to(level: float) -> float | None:
+        if base >= level:
+            return 0.0
+        return round((level - base) / weekly, 1) if weekly > 0 else None
+
+    return {
+        "fixtures_per_week": per_week,
+        "full_page_days": FULL_PAGE_DAYS,
+        "bytes_per_fixture": {"full": round(mean_full), "lasting": round(mean_lasting)},
+        "past_card_bytes": round(card),
+        "window_bytes_now": window_extra,
+        "window_bytes_steady": round(steady_window),
+        "weekly_growth_bytes": round(weekly),
+        "total_bytes": [{"weeks": n, "bytes": round(base + weekly * n)} for n in PROJECTION_WEEKS],
+        "weeks_to_warning": weeks_to((1 - WARN_FRACTION) * limit),
+        "weeks_to_limit": weeks_to(limit),
+        "note": "Team pages, which grow with each match played, are not projected.",
+    }
+
+
+def _pid(key: str) -> int | None:
+    tail = key.removeprefix("/api/predictions/")
+    return int(tail) if tail.isdigit() else None
+
+
+def _mean_past_card_bytes(snap: Snapshot) -> float:
+    """The mean size of a card in the stored past lists (one per fixture), or an estimate."""
+    sizes = [
+        len(_dumps(card).encode("utf-8"))
+        for key, (status, i) in snap.entries.items()
+        if status == 200 and key.startswith("/api/past?") and "models=all" not in key
+        for card in (snap.bodies[i] or {}).get("matches") or []
+    ]
+    return sum(sizes) / len(sizes) if sizes else 2_000.0
+
+
 def _clear_data_files(folder: Path) -> None:
     """Remove an earlier snapshot's shard files and pictures from `folder` (only if it holds
     an earlier snapshot.json), so a smaller snapshot leaves none behind."""
@@ -1106,6 +1323,18 @@ class ExportResult:
     teams: int = 0
     pictures_carried: list[str] = field(default_factory=list)
     pictures_left_out: list[str] = field(default_factory=list)
+    projection: dict | None = None
+
+    def warnings(self) -> list[str]:
+        out = size_warnings(self.files)
+        weeks = (self.projection or {}).get("weeks_to_warning")
+        if weeks is not None and 0 < weeks <= 2:
+            out.append(
+                f"projected to come within {WARN_FRACTION:.0%} of the "
+                f"{HOST_LIMITS['total_bytes']:,}-byte limit in about {weeks} weeks "
+                "(`projection`)"
+            )
+        return out
 
     def report(self) -> dict:
         total = sum(n for _, n in self.files)
@@ -1131,6 +1360,9 @@ class ExportResult:
             "team_pages": self.teams,
             "pictures": {"carried": self.pictures_carried, "left_out": self.pictures_left_out},
             "limits": HOST_LIMITS,
+            # Within WARN_FRACTION of a limit now, or (projected) within two weeks.
+            "warnings": self.warnings(),
+            "projection": self.projection,
             "checks": {
                 "price_like_fields": 0,
                 "secret_values_found": 0,
@@ -1251,4 +1483,5 @@ def run_export(
         teams=len(teams),
         pictures_carried=[pic.path for pic in carried],
         pictures_left_out=[pic.path for pic in left_out],
+        projection=projection(snap, sum(n for _, n in sizes)),
     )

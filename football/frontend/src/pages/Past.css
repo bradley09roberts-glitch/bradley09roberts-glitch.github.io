@@ -1,0 +1,128 @@
+/* Past matches: the record and models switches, the "record of record" line under each match
+   and the every-model table. Colours, type and spacing come from the tokens in styles.css. */
+
+.past-switches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3) var(--sp-5);
+}
+
+.past-switch {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+}
+
+/* Under each match: which model's record it is, and how many others predicted it. */
+.card .past-by {
+  margin: 0;
+  color: var(--text);
+}
+
+.past-by-model {
+  font-weight: 600;
+}
+
+.past-compare {
+  font-weight: 600;
+}
+
+/* "All models": one card per match, a row per model. Wider cards, one column. */
+@media (min-width: 900px) {
+  .past-list-all {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.pmr-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 4px;
+  font-size: var(--fs-sm);
+  table-layout: fixed;
+}
+
+.pmr-table thead th {
+  padding: 0 6px 2px;
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-align: left;
+}
+
+.pmr-table thead th:first-child {
+  width: 34%;
+  padding-left: 0;
+}
+
+.pmr-table tbody th {
+  padding: 4px 6px 4px 0;
+  font-weight: 400;
+  text-align: left;
+  vertical-align: middle;
+  overflow-wrap: anywhere;
+}
+
+.pmr-model {
+  font-weight: 600;
+}
+
+.pmr-table tr.is-counted .pmr-model {
+  font-weight: 700;
+}
+
+.pmr-tag {
+  display: block;
+  margin-top: 1px;
+  font-size: var(--fs-2xs);
+  color: var(--muted);
+}
+
+.pmr-tag-market {
+  color: var(--accent-soft-text);
+}
+
+.pmr-cell {
+  padding: 5px 6px;
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  box-shadow: inset 3px 0 0 var(--border-strong);
+  vertical-align: middle;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.pmr-pick {
+  font-weight: 600;
+}
+
+.pmr-prob {
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.pmr-cell.pm-correct .pmr-prob,
+.pmr-cell.pm-incorrect .pmr-prob {
+  color: var(--text);
+}
+
+.pmr-none {
+  box-shadow: none;
+}
+
+@media (max-width: 420px) {
+  .pmr-table {
+    font-size: var(--fs-xs);
+  }
+
+  .pmr-table thead th:first-child {
+    width: 31%;
+  }
+
+  .pmr-cell {
+    padding: 4px 4px 4px 6px;
+  }
+}

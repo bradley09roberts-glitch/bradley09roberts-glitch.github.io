@@ -725,9 +725,10 @@ def mark_interrupted_runs(
         ).all()
         for run in runs:
             run.status = "interrupted"
+            hours = older_than.total_seconds() / 3600
             run.error = (
-                f"still 'running' at {now:%Y-%m-%d %H:%M} UTC, {older_than} after it started: "
-                "the process was killed before it could record an outcome"
+                f"still 'running' at {now:%Y-%m-%d %H:%M} UTC, over {hours:g} h after it "
+                "started: the process was killed before it could record an outcome"
             )
         s.commit()
         return [r.id for r in runs]

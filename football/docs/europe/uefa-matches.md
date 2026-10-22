@@ -16,11 +16,23 @@ are flags only.
 | English Wikipedia, CC BY-SA 4.0 (MediaWiki API, `action=parse`) | 2025/26 UEL and UECL main tournaments (openfootball has none) | League-phase, knockout-phase and final articles | source `wikipedia`, keys `uel/2526/league-phase`, `uel/2526/knockout-phase`, `uel/2526/final`, and the same for `uecl` |
 | English Wikipedia, via `data/europe/uefa_2627.csv` | 2026/27 | Played matches and scheduled fixtures, built by `footy.europe.build_2627` ([uefa-2627.md](uefa-2627.md)) | the stored 2026/27 pages; every row links to the page revision it came from |
 | English Wikipedia, as a check only | 2018/19 to 2025/26 | 63 season, knockout, qualifying and final articles | source `wikipedia`, keys `<comp>/<season>/<page>` |
+| News reports entered by hand (`footy euro-import-results`, D-029) | 2026/27, only while Wikipedia can't be fetched | Final scores, each from at least two independent publishers, on fixtures already in the table | source `manual`, key `euro-results/<file name>` (the JSON file as given) |
+| German Wikipedia, one fact | 2026/27 | Union Saint-Gilloise v Hapoel Be'er Sheva played in Düsseldorf (neutral) | `src/footy/europe/venue_overrides.csv`, citing the revision |
+
+UEFA.com is not a source: its terms (section 6.2) forbid scripted collection and using its
+content for models (D-023). Since 22 Oct 2026 nothing reads the UEFA.com pages stored before
+the terms were checked, and the build writes no UEFA cross-check.
 
 Fetching: one request at a time, at least 2 s apart, User-Agent
-`footy-personal-model/0.1 (personal non-commercial research)`, backing off on HTTP 429 with
-`Retry-After`. Every response is stored in the raw store before it is parsed. 65 Wikipedia
-pages were fetched on 21 Oct 2026 (46 check pages, 17 finals, 2 gap finals), all HTTP 200.
+`footy-personal-model/0.1 (https://github.com/bradley09roberts-glitch/...; personal
+non-commercial research)`. Server errors (5xx) are retried with backoff. A rate limit (HTTP
+429) is waited out once, and only when `Retry-After` asks for a minute or less; a 403 or 429
+stops every further request of the job (the remaining pages are reported as `skipped`), so a
+block is never prolonged by a retry loop. Every response is stored in the raw store before it
+is parsed. Every failed request is in `fetch_log` with its HTTP status, any `Retry-After`, the
+first 500 bytes of the response body (a block page says who refused) and the `euro_update` job
+it belongs to; a request that succeeded after a retry says so in `error`. 65 Wikipedia pages
+were fetched on 21 Oct 2026 (46 check pages, 17 finals, 2 gap finals), all HTTP 200.
 
 ## What is in the table
 
@@ -231,13 +243,66 @@ cd football
 uv run footy euro-update                     # store openfootball files, load all three sources
 uv run footy euro-update --fetch-wikipedia   # first re-fetch the 2026/27 pages (after a matchday)
 uv run footy euro-crosscheck                 # rerun the comparison (report and CSV only)
+uv run footy euro-import-results FILE --dry-run   # manual results (see above), then without
 ```
 
 `euro-update` is one logged job (`job_runs.job = "euro_update"`) and is idempotent: a re-run
 over the same raw revisions inserts, updates and deletes nothing (checked on 21 Oct 2026:
-3,371 + 342 + 824 rows unchanged). It deletes a stored row only when its source no longer
-produces it (a rescheduled fixture comes back under a new date) and never after a parse error.
-A changed result in a newer raw revision is written to `data_corrections`
-(entity `euro_match`). Without the openfootball clone (`--openfootball-dir`,
+3,371 + 342 + 824 rows unchanged). Without the openfootball clone (`--openfootball-dir`,
 `$FOOTY_OPENFOOTBALL_DIR`, default `../../openfootball/champions-league`), the stored revisions
 are used.
+
+What the job guarantees (since 22 Oct 2026, audit H5, M3 and M14):
+
+- **Deletion.** A stored row is deleted only when its source no longer produces it (a
+  rescheduled fixture comes back under a new date), and never while any error is outstanding:
+  a box or page the 2026/27 parser could not read, a missing page, a failed rebuild, or a team
+  name not in the alias table. A row with a result (anything but "scheduled") is deleted only
+  with a `data_corrections` entry (field `deleted`, the row as it was); where none can be
+  written, the row stays and the job reports `result_row_kept`.
+- **Corrections.** A changed result in a newer raw revision is written to `data_corrections`
+  (entity `euro_match`).
+- **Status.** The job is `partial` (and `footy euro-update` exits 1 for a fetch failure) when a
+  fetch failed or was skipped, the build or the mapping had an error, a row had to be kept, a
+  manual result disagreed, or the integrity checks (`footy.europe.euro_integrity`, run over
+  the whole table at the end; counts and the first 20 errors in `detail.integrity`) found an
+  error. The stored pages are still loaded after a failed fetch.
+- **Interrupted runs.** At the start, any job still "running" six hours after it started (of
+  any kind; its process was killed, e.g. by a container restart) is marked `interrupted`.
+
+## Results entered by hand (`uv run footy euro-import-results FILE`, D-029)
+
+For when Wikipedia can't be fetched (as from 21 Oct 2026, HTTP 403) and published records are
+waiting to be settled. The file is JSON, like `comparisons/results_2026-10-21.json`:
+
+```json
+{"results": [
+  {"fixture_ref": "UCL:2627:2026-10-21:ita-como:eng-man-united", "home_goals": 4, "away_goals": 1,
+   "sources": [{"publisher": "Sky Sports", "url": "https://www.skysports.com/..."},
+               {"publisher": "TNT Sports", "url": "https://www.tntsports.co.uk/..."}]}
+]}
+```
+
+Instead of `fixture_ref`, an entry can give `competition`, `match_date`, `home_team` and
+`away_team` (team keys, or names that resolve to one team in `team_aliases`). The goals are
+the score after 90 minutes plus stoppage time; `extra_time` and `penalties` may be given for a
+knockout match. A source may repeat the score (`home_goals`, `away_goals`), which must agree.
+
+- **Evidence.** At least two independent publishers per score: different names on different
+  web domains. A UEFA.com URL is refused (D-023).
+- **Only existing fixtures.** The match must be in `euro_matches`, not postponed, cancelled or
+  awarded, and must have kicked off at least two hours earlier. Entries for league games are
+  skipped (football-data settles those).
+- **Provenance.** The file is stored in the raw store first (source `manual`). The row gets
+  `source` = `manual`, `raw_file_id` = that revision and a `source_ref` listing the file and
+  every publisher and URL. Its settlements are marked `euro_matches:manual`.
+- **No silent overwrite.** A row that already has the same result is left alone. A different
+  stored result is refused, unless `--correct` is given, which writes each changed field to
+  `data_corrections` first.
+- **Wikipedia has the last word.** On a later `euro-update`, a Wikipedia row with no result
+  yet leaves the manual result alone; the same result takes the row back (source
+  `wikipedia`); another result replaces it, with a `data_corrections` entry and a
+  `manual_result_disagrees` error that makes the job `partial`. A settlement already made from
+  the manual score is not changed by this (settlements are append-only; audit M7).
+- `--dry-run` reports what would change and writes nothing. The command is logged as job
+  `euro_import_results` and exits 1 if any entry was refused.

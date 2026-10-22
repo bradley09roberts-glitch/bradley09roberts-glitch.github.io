@@ -800,3 +800,49 @@ settings. Four named candidates went to validation.
     weights and the other was the audit's reproduction.
   - **Collapsed weights:** on validation the mixture with prices put all its weight on the
     GLM booster in the Premier League and Ligue 1.
+
+## D-029 UEFA results entered by hand from news reports, while Wikipedia is unavailable (2026-10-22)
+
+**Why:** since 18:49 UTC on 21 Oct 2026 en.wikipedia.org has refused this machine (HTTP 403 in
+`fetch_log`; audit M3), and Wikipedia is the only permitted source of 2026/27 UEFA results
+(D-023: openfootball has no 2026/27 folder, UEFA.com's terms forbid its use). Nine Champions
+League fixtures with published genuine pre-match records were left unsettled, and the Europa
+League and Conference League followed on 22 Oct. Their final scores were already known from
+news reports (`comparisons/results_2026-10-21.json`, three or more publishers per game), but
+nothing let them reach `euro_matches`. A results source that settles our own records has to
+be strict, because a wrong score would be settled for good (settlements are append-only).
+
+**Decision:** `uv run footy euro-import-results FILE [--dry-run] [--correct]`
+(`footy.europe.manual_results`; details in
+[docs/europe/uefa-matches.md](docs/europe/uefa-matches.md)).
+
+**Rules.**
+
+- **Two independent publishers per score**, with different names on different web domains,
+  each with the URL where the score was read. A source that states a different score refuses
+  the entry. UEFA.com is never a source (D-023).
+- **Only fixtures already in `euro_matches`**, kicked off at least two hours earlier, and not
+  postponed, cancelled or awarded. The import never creates a fixture. League games are
+  skipped (football-data settles them).
+- **The score after 90 minutes plus stoppage time**, as everywhere in `euro_matches`; extra
+  time and penalties are flags.
+- **Provenance:** the file is stored in the raw store first (source `manual`). The row is
+  marked `source = "manual"`, links that raw revision, and lists every publisher and URL in
+  `source_ref`. Settlements made from it are marked `euro_matches:manual`.
+- **Never a silent overwrite:** a different stored result is refused unless `--correct` is
+  given, and then each changed field goes to `data_corrections` first.
+- **Wikipedia has the last word:** when Wikipedia can be fetched again, `euro-update` confirms
+  a manual result that agrees (the row becomes Wikipedia's) and replaces one that doesn't, with
+  a `data_corrections` entry and a `manual_result_disagrees` error that makes the job
+  `partial`. A settlement already made is not changed automatically (audit M7 covers
+  corrective settlements).
+
+**Sources used first:** the nine Champions League results of 21 Oct 2026 in
+`comparisons/results_2026-10-21.json` (three to five publishers each, among them Sky Sports,
+TNT Sports, beIN Sports, Bundesliga.com, Al Jazeera, NBC Sports, Yahoo Sports, Football
+Italia, Sporza, RTE and CNN Portugal), all read on 21 Oct at about 23:00 UK. Only the
+publishers' facts (the final score) are used; their text is not stored, beyond the URL.
+
+**Not done:** a second automatic results provider (audit improvement); until there is one,
+this import is the fallback, run by a person (or a supervised check-in) with `--dry-run`
+first.

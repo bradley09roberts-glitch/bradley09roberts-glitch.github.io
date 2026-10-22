@@ -85,12 +85,24 @@ shadow's notes and the skips below added:
   without them is skipped ("no usable prices") and left for a later run once the prices are
   out (Friday for weekend games, Tuesday for midweek ones). A record keeps the consensus
   probabilities it used, never a price (D-013).
-- **Before kickoff.** A fixture past its pre-match deadline (its kickoff, or 00:00 UK on its
-  day when no kickoff time is known) is skipped. A live run reads the clock again once the
+- **Before kickoff.** A fixture past its pre-match deadline (its kickoff, or when no kickoff
+  time is known 00:00 UK on the first day of its round: the Friday for a Friday-to-Monday
+  date, the Tuesday for a midweek one) is skipped. A date without a time can be a placeholder
+  (openfootball listed every La Liga matchday 10 game of 2026/27 on Sunday 25 Oct until the
+  kick-off times were announced; matchdays 8 and 9 ran Friday to Monday), so the deadline
+  can't wait for the date itself. Where football-data's
+  `fixtures.csv` lists a league fixture, its date and kick-off time are used instead of the
+  schedule's (`footy.fixtures.upcoming`), except where the schedule has a firm kick-off
+  earlier than that file's: the earlier stands, since the stored file can be days old. A
+  live run reads the clock again once the
   forecasts are made, leaves out any fixture that kicked off while the model was fitting,
   and stamps each record with the time it is written.
 - **Never twice.** A fixture this model has already recorded (same fixture, edition and record
-  type) is skipped before fitting; `publish` would refuse a duplicate anyway. `publish` takes
+  type) is skipped before fitting; `publish` would refuse a duplicate anyway. In a league where
+  a pairing meets once a season the fixture is the pairing, whatever its date: a game re-dated
+  since its record (a placeholder date replaced by the real one) is still recorded, and a new
+  model's record of it takes the reference of the fixture's first record, so the match page
+  lists every model's record together. `publish` takes
   the database's write lock before it checks, so two runs at once (an overlapping check-in)
   still record a fixture once.
 - **One failure doesn't stop the rest.** A model that raises is reported (`FAILED`, with the
@@ -121,8 +133,9 @@ model's description. The roles cite D-028 (machine learning), D-027 (challengers
   its kickoff, or 00:00 UK on its date for a record without a kickoff time. A shadow record
   without a kickoff time could therefore move a fixture into an earlier period. So a shadow
   record waits for the kickoff time ("kick-off time not known yet") unless the fixture
-  already has a record without one, in which case it is dated from 00:00 UK already (the
-  Spanish Sunday games, whose times openfootball doesn't have yet, are the usual case).
+  already has a record without one, in which case it is dated from 00:00 UK already (La
+  Liga matchday 10 of 2026/27, which openfootball listed on Sunday 25 Oct without times as a
+  placeholder, was the case that arose).
 - What remains: a shadow record made with a kickoff that was later moved (brought forward
   before the model of record's record, or moved back after it) carries that time, as any
   genuine record does. It could change a fixture's period only if a model-of-record switch

@@ -10,6 +10,7 @@ de-vigged consensus probabilities it used and where the prices came from.
 """
 
 import json
+import re
 from collections.abc import Callable, Iterable
 from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
@@ -17,14 +18,14 @@ from pathlib import Path
 import pandas as pd
 from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import FileResponse
-from sqlalchemy import Engine, select, text
+from sqlalchemy import Engine, func, select, text
 from sqlalchemy.orm import Session
 
 from footy import model_catalogue as cat
 from footy import models_of_record
 from footy.config import Settings
 from footy.media.service import media_summaries
-from footy.models import Prediction, PredictionSettlement, Team
+from footy.models import FetchLog, Prediction, PredictionSettlement, Team
 from footy.models_of_record import Period
 from footy.reference import DIVISIONS, REFERENCE_DIR
 
@@ -319,24 +320,39 @@ COUNTERPART_FIELDS = (
 )
 
 
-def counterpart(p: Prediction, features: dict, records: list[Prediction]) -> Prediction | None:
+def counterpart(
+    p: Prediction, features: dict, records: list[Prediction], order: list[str] | None = None
+) -> Prediction | None:
     """The same fixture's record with the other basis: for a model + market record, its
     base model's own record; for a model-only record, a model + market record built on it.
-    Same record type; the same edition if there is one, otherwise the latest."""
+    Same record type; the same edition if there is one, otherwise the latest.
+
+    A model + market record whose base model saved no record for the fixture (a learner
+    names no `base`) falls back to the fixture's pure record of record: the first model in
+    `order` (the fixture's list of models of record) with a model-only record, else the
+    earliest model-only record, as /api/performance picks one per basis
+    (`counterpart_relation` says which)."""
 
     def feats(r: Prediction) -> dict:
         return json.loads(r.features) if r.features else {}
 
     if basis_of(features) == MODEL_AND_MARKET:
         base = _params(features).get("base")
-        cands = [
+        pure = [
             r
             for r in records
-            if r.id != p.id
-            and r.record_type == p.record_type
-            and r.model_name == base
-            and basis_of(feats(r)) == MODEL_ONLY
+            if r.id != p.id and r.record_type == p.record_type and basis_of(feats(r)) == MODEL_ONLY
         ]
+        cands = [r for r in pure if r.model_name == base]
+        if not cands and pure:
+            ranked = order or []
+
+            def rank(r: Prediction) -> tuple[int, int]:
+                listed = ranked.index(r.model_name) if r.model_name in ranked else len(ranked)
+                return listed, r.id
+
+            model = min(pure, key=rank).model_name
+            cands = [r for r in pure if r.model_name == model]
     else:
         cands = []
         for r in records:
@@ -354,6 +370,51 @@ def counterpart(p: Prediction, features: dict, records: list[Prediction]) -> Pre
     return max(same or cands, key=lambda r: r.id)
 
 
+def counterpart_relation(features: dict, other: Prediction) -> str:
+    """How `counterpart` chose `other` for a record with these features: "base" (a model +
+    market record's own base model), "built_on" (a model + market record built on this
+    model-only record) or "pure_record_of_record" (the fixture's pure record of record,
+    standing in where the base model saved no record)."""
+    if basis_of(features) != MODEL_AND_MARKET:
+        return "built_on"
+    return "base" if other.model_name == _params(features).get("base") else "pure_record_of_record"
+
+
+# Two probabilities this close are the same figure (a record's own figures beside the
+# consensus it saved, both from one computation).
+SAME_FIGURE = 1e-9
+
+
+def consensus_markets(probabilities: dict, features: dict) -> list[str]:
+    """The markets ("1X2", "OU_2.5") whose figures in a model + market record are the
+    bookmakers' de-vigged consensus it saved: the prices were given all the weight (a tilt
+    with weight 1.0), so the model changed nothing there and its pick is the bookmakers'
+    favourite. Empty for a model-only record or a genuine blend."""
+    m = features.get("market_prices_used")
+    if not isinstance(m, dict):
+        return []
+    out = []
+    x = probabilities.get("1X2")
+    h, d, a = (_prob(m.get(k)) for k in ("p_H", "p_D", "p_A"))
+    if isinstance(x, dict) and None not in (h, d, a):
+        if all(
+            isinstance(x.get(k), int | float) and abs(x[k] - v) <= SAME_FIGURE
+            for k, v in (("H", h), ("D", d), ("A", a))
+        ):
+            out.append("1X2")
+    ou = probabilities.get("OU_2.5")
+    over = _prob(m.get("p_over_2.5"))
+    if isinstance(ou, dict) and over is not None and isinstance(ou.get("O"), int | float):
+        if abs(ou["O"] - over) <= SAME_FIGURE:
+            out.append("OU_2.5")
+    return out
+
+
+# How far a record's own date may be from its fixture's last known date and still be read by
+# /api/fixtures (a placeholder date in the same round, or a postponement of a week or two).
+RE_DATED_MARGIN = timedelta(days=14)
+
+
 def fixture_cards(
     fixture_ref: str, recs: list[Prediction], ror: RecordsOfRecord
 ) -> list[Prediction]:
@@ -368,8 +429,65 @@ def fixture_cards(
     if lead is None:
         lead = min(recs, key=lambda p: (p.created_at_utc, p.id))
     features = json.loads(lead.features) if lead.features else {}
-    other = counterpart(lead, features, recs)
+    other = counterpart(lead, features, recs, ror.order_for(fixture_ref, lead.competition))
     return [lead] if other is None else [lead, other]
+
+
+LEDGER_WITHHELD = (
+    "Summary only: this run's match-result and over 2.5 goals figures are, match by match, "
+    "the bookmakers' consensus with the margin removed, so its ledger is not sent (the "
+    "backtest explorer withholds the same figures). Its summaries are on the lab's pages."
+)
+
+
+def ledger_withheld(run_dir: Path) -> bool:
+    """True for a backtest run whose ledger may not be sent match by match: its model is one
+    the backtest explorer sends as summaries only (footy.backtest_explorer.PRICE_IDENTICAL,
+    the same rule), named by the run's manifest or, without one, its directory."""
+    from footy.backtest_explorer import PRICE_IDENTICAL
+
+    model = run_dir.name.split("__", 1)[0]
+    mf = run_dir / "manifest.json"
+    if mf.exists():
+        try:
+            model = str(json.loads(mf.read_text()).get("model") or model)
+        except ValueError:
+            pass
+    return model in PRICE_IDENTICAL or run_dir.name.split("__", 1)[0] in PRICE_IDENTICAL
+
+
+# /api/past: one card per fixture (the counted record) or every model's.
+PAST_RECORD = "record"
+PAST_ALL = "all"
+# Fields of a card the past list never shows: each record's page has them. Leaving them out
+# keeps the list (and the phone copy, docs/snapshot.md) small.
+PAST_CARD_DROPPED = (
+    "probabilities",
+    "notes",
+    "data_freshness",
+    "missing_fields",
+    "training_cutoff_utc",
+    "model_version",
+    "value_selection",
+)
+
+
+def counted_record(records: list[Prediction], ror: RecordsOfRecord) -> Prediction | None:
+    """The one record of a fixture that its tally counts, from all its records of one type.
+    Genuine pre-match: the first edition of its record of record, as /api/performance counts
+    it (None if no listed model has a record for the fixture). Any other type: the first
+    record of the first listed model, else the earliest record."""
+    if not records:
+        return None
+    if records[0].record_type == "genuine_prematch":
+        primary = [p for p in records if ror.is_primary(p)]
+        return min(primary, key=lambda p: p.id) if primary else None
+    order = ror.order_for(records[0].fixture_ref, records[0].competition)
+
+    def rank(p: Prediction) -> tuple[int, int]:
+        return (order.index(p.model_name) if p.model_name in order else len(order)), p.id
+
+    return min(records, key=rank)
 
 
 def record_standing(
@@ -508,6 +626,8 @@ def make_router(engine_fn: Callable[[], Engine], settings: Settings) -> APIRoute
         vs = value_selection(basis)
         if vs is not None:  # only where real prices were used; never a made-up selection
             out["value_selection"] = vs
+            # Where its figures are the bookmakers' consensus itself, the page says so.
+            out["consensus_markets"] = consensus_markets(probs, features)
         return out
 
     @r.get("/fixtures")
@@ -520,17 +640,26 @@ def make_router(engine_fn: Callable[[], Engine], settings: Settings) -> APIRoute
         `basis` says whether a card used bookmakers' prices."""
         now = datetime.now(UTC)
         today = now.date()
+        first, last = today - timedelta(days=1), today + timedelta(days=days)
         with Session(engine_fn()) as s:
             names, st = teams(s), settlements(s)
             ror = RecordsOfRecord(s, model_periods())
             shadow = cat.load_shadow_models()
+            # A fixture is in the window by the date it is last known by (`RecordsOfRecord.
+            # schedule`), not each record's own: a record dated by a placeholder (audit M1)
+            # can be days off the real date. Records are read with a margin either side.
             rows = s.scalars(
                 select(Prediction)
-                .where(Prediction.match_date >= today - timedelta(days=1))
-                .where(Prediction.match_date <= today + timedelta(days=days))
+                .where(Prediction.match_date >= first - RE_DATED_MARGIN)
+                .where(Prediction.match_date <= last + RE_DATED_MARGIN)
                 .where(Prediction.record_type == "genuine_prematch")
                 .order_by(Prediction.kickoff_utc, Prediction.id)
             ).all()
+            known: dict[str, Prediction] = {}  # each fixture's latest record
+            for p in rows:
+                if p.fixture_ref not in known or p.id > known[p.fixture_ref].id:
+                    known[p.fixture_ref] = p
+            rows = [p for p in rows if first <= ror.schedule_of(known[p.fixture_ref])[0] <= last]
             latest: dict[tuple, Prediction] = {}
             for p in rows:
                 latest[(p.fixture_ref, p.model_name)] = p
@@ -593,12 +722,18 @@ def make_router(engine_fn: Callable[[], Engine], settings: Settings) -> APIRoute
                 }
                 for e in records
             ]
-            other = counterpart(p, features, list(records))
+            other = counterpart(
+                p, features, list(records), ror.order_for(p.fixture_ref, p.competition)
+            )
             if other is None:
                 out["counterpart"] = None
             else:
                 full = card(other, names, st.get(other.id), ror, shadow=shadow)
-                out["counterpart"] = {k: full[k] for k in COUNTERPART_FIELDS}
+                out["counterpart"] = {
+                    **{k: full[k] for k in COUNTERPART_FIELDS},
+                    **{k: full[k] for k in ("consensus_markets",) if k in full},
+                    "relation": counterpart_relation(features, other),
+                }
             out["recent"] = {
                 "home": recent_form(s, p.home_team, p.training_cutoff_utc, names),
                 "away": recent_form(s, p.away_team, p.training_cutoff_utc, names),
@@ -634,10 +769,23 @@ def make_router(engine_fn: Callable[[], Engine], settings: Settings) -> APIRoute
     def past(
         competition: str | None = None,
         record_type: str = "genuine_prematch",
+        models: str = Query(PAST_RECORD, pattern=f"^({PAST_RECORD}|{PAST_ALL})$"),
         limit: int = Query(200, ge=1, le=2000),
     ) -> dict:
-        """Settled predictions, newest first. Genuine pre-match and retrospective records are
-        never mixed in one response."""
+        """Settled predictions, newest fixture first. Genuine pre-match and retrospective
+        records are never mixed in one response.
+
+        `models=record` (the default): one card per fixture, the record /api/performance
+        counts for it (`counted_record`), so the two pages agree; a fixture none of the listed
+        models has a genuine record for is left out, as Performance leaves it out.
+        `models=all`: every model's settled record, each fixture's counted card first, then
+        the others in the order of the models of record and by model. `limit` caps fixtures,
+        not cards; `truncated` says older fixtures were left out. `counted` marks the card
+        Performance counts; `models_for_fixture` counts the models with a settled record.
+
+        A record made of bookmakers' prices alone is never listed (D-013). Cards are the
+        list's own (PAST_CARD_DROPPED: the fields the list never shows are left out); each
+        record's page has the rest."""
         with Session(engine_fn()) as s:
             names, st = teams(s), settlements(s)
             ror = RecordsOfRecord(s, model_periods())
@@ -646,10 +794,62 @@ def make_router(engine_fn: Callable[[], Engine], settings: Settings) -> APIRoute
             if competition:
                 q = q.where(Prediction.competition == competition)
             rows = s.scalars(q.order_by(Prediction.match_date.desc(), Prediction.id.desc())).all()
-            shown = [p for p in rows if p.id in st][:limit]
-            media = team_media(s, shown, names)
-            cards = [card(p, names, st.get(p.id), ror, media, shadow) for p in shown]
-        return {"record_type": record_type, "matches": cards}
+            every: dict[str, list[Prediction]] = {}
+            for p in rows:  # newest fixture first
+                every.setdefault(p.fixture_ref, []).append(p)
+            picked: list[tuple[Prediction, Prediction | None, int]] = []
+            fixtures = 0
+            truncated = False
+            for ref, all_recs in every.items():
+                # Chosen among every record of the fixture, settled or not, as Performance does.
+                counted = counted_record(all_recs, ror)
+                recs = [
+                    p
+                    for p in all_recs
+                    if p.id in st
+                    and not cat.is_market_only(
+                        p.model_name, json.loads(p.features) if p.features else {}
+                    )
+                ]
+                if counted not in recs:
+                    counted = None
+                if not recs or (models == PAST_RECORD and counted is None):
+                    continue
+                if fixtures >= limit:
+                    truncated = True
+                    break
+                fixtures += 1
+                n_models = len({p.model_name for p in recs})
+                if models == PAST_RECORD:
+                    picked.append((counted, counted, n_models))
+                    continue
+                order = ror.order_for(ref, recs[0].competition)
+
+                def rank(x: Prediction, order: list[str] = order, lead=counted) -> tuple:
+                    listed = order.index(x.model_name) if x.model_name in order else len(order)
+                    return (x is not lead, listed, x.model_name, x.id)
+
+                picked.extend((p, counted, n_models) for p in sorted(recs, key=rank))
+            media = team_media(s, (p for p, _, _ in picked), names)
+            cards = [
+                {
+                    **{
+                        k: v
+                        for k, v in card(p, names, st.get(p.id), ror, media, shadow).items()
+                        if k not in PAST_CARD_DROPPED
+                    },
+                    "counted": p is lead,
+                    "models_for_fixture": n,
+                }
+                for p, lead, n in picked
+            ]
+        return {
+            "record_type": record_type,
+            "models": models,
+            "fixtures": fixtures,
+            "truncated": truncated,
+            "matches": cards,
+        }
 
     @r.get("/performance")
     def performance(primary_only: bool = True) -> dict:
@@ -729,6 +929,8 @@ def make_router(engine_fn: Callable[[], Engine], settings: Settings) -> APIRoute
 
     @r.get("/backtests")
     def backtests() -> dict:
+        """Every saved backtest run. `per_match` is false for a run whose ledger is withheld
+        match by match (`ledger_withheld`): its summaries are sent, its ledger file is not."""
         out = []
         for root in (settings.data_dir / "backtests", settings.data_dir / "backtests_euro"):
             for d in sorted(root.glob("*")) if root.exists() else []:
@@ -751,6 +953,7 @@ def make_router(engine_fn: Callable[[], Engine], settings: Settings) -> APIRoute
                                     "headline",
                                 )
                             },
+                            "per_match": not ledger_withheld(d),
                         }
                     )
         return {"runs": out}
@@ -799,9 +1002,14 @@ def make_router(engine_fn: Callable[[], Engine], settings: Settings) -> APIRoute
 
     @r.get("/backtests/{run_id}/ledger.{fmt}")
     def backtest_ledger(run_id: str, fmt: str):
+        """A run's whole ledger, match by match. Refused (403) for a run whose match-result
+        and over 2.5 figures are the bookmakers' consensus match by match (`ledger_withheld`,
+        the explorer's rule): they would be a price in disguise."""
         d = _run_dir(run_id)
         if fmt not in ("csv", "json"):
             raise HTTPException(404, "csv or json")
+        if ledger_withheld(d):
+            raise HTTPException(403, LEDGER_WITHHELD)
         path = d / f"ledger.{fmt}"
         if not path.exists():
             raise HTTPException(404, "not exported")
@@ -819,6 +1027,7 @@ def make_router(engine_fn: Callable[[], Engine], settings: Settings) -> APIRoute
         once with the first edition of its record of record (as /api/performance counts it);
         empty until something is settled."""
         from footy.modeling import hit_rates as hr
+        from footy.modeling.favourite import add_favourites
 
         now = datetime.now(UTC)
         tables, missing = hr.backtest_tables(settings.data_dir)
@@ -826,6 +1035,8 @@ def make_router(engine_fn: Callable[[], Engine], settings: Settings) -> APIRoute
             for k in ("run_created_at_utc", "baseline_run_created_at_utc"):
                 t[k] = iso_utc_text(t[k])
         with Session(engine_fn()) as s:
+            # League games: the bookmakers' favourite on the same fixtures (hit rates only).
+            add_favourites(s, settings.data_dir, tables)
             st = settlements(s)
             ror = RecordsOfRecord(s, model_periods())
             rows = s.scalars(
@@ -864,6 +1075,14 @@ def make_router(engine_fn: Callable[[], Engine], settings: Settings) -> APIRoute
             },
         }
 
+    @r.get("/fetch-status")
+    def fetch_status() -> dict:
+        """How each source's downloads are going, from the fetch log (every attempt, failures
+        included), so a failing source shows even while the jobs that use it end "ok"."""
+        with Session(engine_fn()) as s:
+            sources = fetch_sources(s)
+        return {"generated_at_utc": iso_utc(datetime.now(UTC), "seconds"), "sources": sources}
+
     @r.get("/reports/{name}")
     def report(name: str) -> dict:
         """Saved JSON reports (model selection, benchmark gate, profit simulation)."""
@@ -893,6 +1112,79 @@ def make_router(engine_fn: Callable[[], Engine], settings: Settings) -> APIRoute
 
     r.include_router(make_models_router(engine_fn, settings))
     return r
+
+
+# Fetch log outcomes that are failures (footy.models.FetchLog.outcome); anything else got an
+# answer (a new revision, unchanged, not modified, cached, or not found).
+FETCH_FAILED = ("error",)
+FETCH_ERROR_CHARS = 300
+_URL_QUERY = re.compile(r"""(https?://[^\s'"?#]+)\?[^\s'"]*""")
+
+
+def public_fetch_error(error: str | None) -> str | None:
+    """A fetch error as the API sends it: a URL's query string (where a key could be) cut,
+    and the text cut to FETCH_ERROR_CHARS characters."""
+    if not error:
+        return error
+    text = _URL_QUERY.sub(r"\1?…", error.strip())
+    return text if len(text) <= FETCH_ERROR_CHARS else text[: FETCH_ERROR_CHARS - 1] + "…"
+
+
+def fetch_sources(s: Session) -> list[dict]:
+    """Per source in the fetch log: attempts, the latest attempt and the latest that got an
+    answer, and the latest failure (when, HTTP status, which file, the error). `failing` when
+    the latest attempt failed; `failures_since_ok` counts the failed attempts since the last
+    answer (since the first attempt if none) and `failing_since` is the first of them. Failing
+    sources first, then the most recently tried."""
+
+    def attempt(row: FetchLog | None) -> dict | None:
+        if row is None:
+            return None
+        return {
+            "at_utc": iso_utc(row.requested_at, "seconds"),
+            "outcome": row.outcome,
+            "http_status": row.http_status,
+            "key": row.logical_key,
+            "error": public_fetch_error(row.error),
+            "job_run_id": row.job_run_id,
+        }
+
+    failed = FetchLog.outcome.in_(FETCH_FAILED)
+    newest = (FetchLog.requested_at.desc(), FetchLog.id.desc())
+
+    def latest(*where) -> FetchLog | None:
+        return s.scalars(select(FetchLog).where(*where).order_by(*newest).limit(1)).first()
+
+    out = []
+    for source, n in s.execute(select(FetchLog.source, func.count()).group_by(FetchLog.source)):
+        mine = FetchLog.source == source
+        last, ok, err = latest(mine), latest(mine, ~failed), latest(mine, failed)
+        since = [mine, failed]
+        if ok is not None:
+            since.append(FetchLog.requested_at > ok.requested_at)
+        failures = s.scalar(select(func.count()).select_from(FetchLog).where(*since)) or 0
+        first = s.scalars(
+            select(FetchLog).where(*since).order_by(FetchLog.requested_at, FetchLog.id).limit(1)
+        ).first()
+        out.append(
+            {
+                "source": source,
+                "attempts": int(n),
+                "failing": last is not None and last.outcome in FETCH_FAILED,
+                "failures_since_ok": int(failures),
+                "failing_since_utc": iso_utc(first.requested_at, "seconds") if first else None,
+                "last_attempt": attempt(last),
+                "last_ok_utc": iso_utc(ok.requested_at, "seconds") if ok else None,
+                "last_error": attempt(err),
+            }
+        )
+    failing = [x for x in out if x["failing"]]
+    rest = sorted(
+        (x for x in out if not x["failing"]),
+        key=lambda x: x["last_attempt"]["at_utc"] or "",
+        reverse=True,
+    )
+    return sorted(failing, key=lambda x: x["last_attempt"]["at_utc"] or "", reverse=True) + rest
 
 
 def summarise(rows: list[Prediction], st: dict[int, PredictionSettlement]) -> dict:

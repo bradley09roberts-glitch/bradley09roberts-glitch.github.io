@@ -21,15 +21,17 @@ import {
   RecordTypeBadge,
   basisLabel,
   editionLabel,
+  isConsensus,
   recordTypeLabel,
 } from "../components/Badge";
 import { CompetitionChip } from "../components/CompetitionMark";
 import { FreshnessBadge, freshnessFacts } from "../components/FreshnessBadge";
 import { MarketGrid, totalsIn } from "../components/MarketGrid";
+import { MatchLink } from "../components/MatchLink";
 import { BackLink } from "../components/Nav";
 import { ProbBar } from "../components/ProbBar";
 import { ScoreGrid } from "../components/ScoreGrid";
-import { Signals, fieldName, missingInputs } from "../components/Signals";
+import { ModelAlone, Signals, fieldName, missingInputs, pickLabel } from "../components/Signals";
 import { ApiView, Empty } from "../components/StateViews";
 import { FormPips, Sparkline } from "../components/Svg";
 import { TeamBadge, teamKeyFromName } from "../components/TeamBadge";
@@ -114,6 +116,9 @@ function MatchDetail({ d, focusModels = false }: { d: PredictionDetail; focusMod
   // From 1024 px the evidence column holds the three signals too, so the two columns end
   // close together; on narrower screens they follow the explanation, as before.
   const twoColumns = useMediaQuery("(min-width: 1024px)");
+  // Where the match result is the bookmakers' consensus, the pure model's own beside it.
+  const consensus = isConsensus(d);
+  const pure = d.counterpart?.basis === "model_only" ? d.counterpart : null;
   const signals = (
     <Signals
       card={d}
@@ -132,13 +137,14 @@ function MatchDetail({ d, focusModels = false }: { d: PredictionDetail; focusMod
           <div className="card scoreboard">
             <section aria-labelledby="one-x-two">
               <h2 id="one-x-two" className="sb-title">
-                Match result
+                Match result{consensus && <span className="sb-sub"> · bookmakers' consensus (margins removed)</span>}
               </h2>
               {x ? (
-                <ProbBar probs={x} homeName={d.home_name} awayName={d.away_name} size="large" />
+                <ProbBar probs={x} homeName={d.home_name} awayName={d.away_name} size="large" pickLabel={pickLabel(d)} />
               ) : (
                 <p className="muted">No match-result probabilities in this record.</p>
               )}
+              {consensus && pure && <ModelAlone pure={pure} homeName={d.home_name} awayName={d.away_name} link />}
             </section>
             {p.expected_goals && (
               <section className="sb-xg" aria-labelledby="xg">
@@ -303,7 +309,7 @@ function MatchHero({ d }: { d: PredictionDetail }) {
         </p>
         <ModelLine d={d} />
         <div className="badges mh-badges">
-          <BasisBadge basis={d.basis} />
+          <BasisBadge basis={d.basis} consensus={isConsensus(d)} />
           <RecordTypeBadge type={d.record_type} />
           <EditionBadge edition={d.edition} />
           {s && !scored && <span className="result-tag">{settlementStatusLabel(s.status)}</span>}
@@ -336,9 +342,9 @@ function ModelLine({ d }: { d: PredictionDetail }) {
       {notRecord && (
         <p className="mh-model-note">
           Not this match's model of record.{" "}
-          <a href={href(`/match/${rec.prediction_id}`)}>
+          <MatchLink id={rec.prediction_id}>
             See {rec.label} <span aria-hidden="true">→</span>
-          </a>
+          </MatchLink>
         </p>
       )}
     </div>
@@ -465,33 +471,51 @@ function resultText(x: { H: number; D: number; A: number }, home: string, away: 
   return `${home} win ${formatPct(x.H)}, draw ${formatPct(x.D)}, ${away} win ${formatPct(x.A)}`;
 }
 
+/** Who the pure record beside a model + market one is: its own base model, or (where the base
+ * model saved no record) the fixture's pure record of record, named. */
+function pureName(pure: Counterpart): string {
+  const label = pure.model_label ?? pure.model_name;
+  return pure.relation === "pure_record_of_record"
+    ? `the match's pure record of record, ${label}`
+    : `the pure model, ${label}`;
+}
+
 function MarketBlend({ d }: { d: PredictionDetail }) {
   const m = d.market;
   const pure = d.counterpart?.basis === "model_only" ? d.counterpart : null;
   const pureX = pure?.probabilities["1X2"];
   const when = m?.quote_time_utc ? formatLondon(m.quote_time_utc) : null;
+  const consensus = isConsensus(d);
+  const whenText = when ? (
+    <>
+      available by <strong>{when}</strong> (UK time)
+    </>
+  ) : (
+    "(collection time not recorded)"
+  );
   return (
     <section className="card market-blend" aria-labelledby="blend">
-      <h2 id="blend">Model + market</h2>
+      <h2 id="blend">{consensus ? "Bookmakers' consensus" : "Model + market"}</h2>
       <p>
-        Bookmakers' prices{" "}
-        {when ? (
+        {consensus ? (
           <>
-            available by <strong>{when}</strong> (UK time)
+            Bookmakers' prices {whenText} were taken as they are for the match result and over/under
+            2.5 goals: those figures are the bookmakers' consensus with the margins removed, and the
+            pick is the bookies' favourite. The model only shapes the other goal lines, both teams
+            to score and the scores
           </>
         ) : (
-          "(collection time not recorded)"
-        )}{" "}
-        were blended in
+          <>Bookmakers' prices {whenText} were blended in</>
+        )}
         {pure && pureX ? (
           <>
-            ; the pure model said {resultText(pureX, d.home_name, d.away_name)}.
+            . Model alone: {pureName(pure)}, said {resultText(pureX, d.home_name, d.away_name)}.
           </>
         ) : (
           <>. No pure-model record was saved for this match, so there is nothing to set beside it.</>
         )}
       </p>
-      {pure && <CompareTable d={d} pure={pure} />}
+      {pure && <CompareTable d={d} pure={pure} consensus={consensus} />}
       {m && <MarketSource m={m} d={d} />}
     </section>
   );
@@ -523,18 +547,18 @@ function points(a: number | undefined, b: number | undefined): string {
   return v > 0 ? `+${v}` : v < 0 ? `−${Math.abs(v)}` : "0";
 }
 
-function CompareTable({ d, pure }: { d: PredictionDetail; pure: Counterpart }) {
+function CompareTable({ d, pure, consensus }: { d: PredictionDetail; pure: Counterpart; consensus: boolean }) {
   return (
     <div className="compare">
       <table className="compare-table">
         <caption className="visually-hidden">
-          This model + market record beside the pure model's record for the same match
+          This model + market record beside {pureName(pure)}'s record for the same match
         </caption>
         <thead>
           <tr>
             <th scope="col">Market</th>
-            <th scope="col">Model + market</th>
-            <th scope="col">Pure model</th>
+            <th scope="col">{consensus ? "This record" : "Model + market"}</th>
+            <th scope="col">Model alone</th>
             <th scope="col">
               Change <span className="compare-model">points</span>
             </th>
@@ -552,8 +576,12 @@ function CompareTable({ d, pure }: { d: PredictionDetail; pure: Counterpart }) {
         </tbody>
       </table>
       <p className="muted small">
-        <a href={href(`/match/${pure.id}`)}>Open the pure model's record</a> (
-        <code>{pure.model_name}</code>, saved {formatLondon(pure.created_at_utc)}).
+        {consensus && "This record's match result and over 2.5 goals are the bookmakers' consensus. "}
+        <MatchLink id={pure.id}>Open {pure.model_label ?? pure.model_name}'s record</MatchLink> (saved{" "}
+        {formatLondon(pure.created_at_utc)}
+        {pure.relation === "pure_record_of_record" &&
+          "; this record's own base model saved none for this match, so the match's pure record of record stands in"}
+        ).
       </p>
     </div>
   );
@@ -592,11 +620,13 @@ function MarketSource({ m, d }: { m: MarketUsed; d: PredictionDetail }) {
 function MarketVersion({ d, other }: { d: PredictionDetail; other: Counterpart }) {
   return (
     <div className="notice-info" role="note">
-      <strong>There is also a model + market record for this match.</strong> {other.model_name}{" "}
-      blended bookmakers' prices into this model's numbers (saved {formatLondon(other.created_at_utc)}
-      ).{" "}
+      <strong>There is also a model + market record for this match.</strong>{" "}
+      {isConsensus(other)
+        ? `${other.model_label ?? other.model_name} takes the bookmakers' consensus (margins removed) for the match result and over/under 2.5 goals, and this model's numbers only for the other markets`
+        : `${other.model_label ?? other.model_name} blended bookmakers' prices into this model's numbers`}{" "}
+      (saved {formatLondon(other.created_at_utc)}).{" "}
       {other.is_primary && !d.is_primary && "It is the record of record for this match. "}
-      <a href={href(`/match/${other.id}`)}>See the two side by side</a>.
+      <MatchLink id={other.id}>See the two side by side</MatchLink>.
     </div>
   );
 }
@@ -832,7 +862,7 @@ function Editions({ d }: { d: PredictionDetail }) {
                     {label} <span className="muted">(this page)</span>
                   </strong>
                 ) : (
-                  <a href={href(`/match/${e.id}`)}>{label}</a>
+                  <MatchLink id={e.id}>{label}</MatchLink>
                 )}
               </div>
               <div className="muted small">

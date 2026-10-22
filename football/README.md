@@ -44,6 +44,8 @@ uv run footy fd-update          # migrate, download (polite, cached) and import 
 uv run footy euro-update        # UEFA competitions into euro_matches (openfootball + Wikipedia;
                                 #   --fetch-wikipedia to refresh 2026/27 first)
 uv run footy euro-crosscheck    # openfootball against Wikipedia's match boxes (report only)
+uv run footy euro-import-results FILE --dry-run   # UEFA results from news reports, two
+                                #   publishers each, while Wikipedia is unavailable (D-029)
 uv run footy coverage           # coverage per division, season and field
 uv run footy serve              # API on http://127.0.0.1:8000  (GET /api/health)
 uv run footy capture-odds       # forward odds snapshots (needs a provider key; cron every 5 min)
@@ -53,6 +55,9 @@ uv run footy predict-euro --model pan_euro_mix_mxg --dry-run        # UEFA predi
 uv run footy publish-shadows --group all --dry-run   # every other listed model's own records
                                 #   (docs/shadow-records.md; --days, --models a,b)
 uv run footy settle             # settle published predictions whose results are in
+uv run footy import-records     # a new or rebuilt database: load records/predictions/*.jsonl
+                                #   (ids kept, sha256 checked), then settle; publishing
+                                #   refuses until the database holds every published record
 
 cd frontend
 npm ci

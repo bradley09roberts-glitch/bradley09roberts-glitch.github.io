@@ -544,6 +544,8 @@ def main(argv: list[str] | None = None) -> int:
                 return 1
             report["single_page"] = [{"path": str(p), "bytes": p.stat().st_size} for p in written]
         print(json.dumps(report, indent=2))
+        for warning in report.get("warnings") or []:  # near a host limit: said loudly
+            print(f"WARNING: {warning}", file=sys.stderr)
     elif args.command == "fd-fixtures":
         from sqlalchemy.orm import Session
 

@@ -77,7 +77,8 @@ const BASES: Record<Basis, { label: string; tone: Tone; title: string }> = {
   model_and_market: {
     label: "Model + market",
     tone: "market",
-    title: "Bookmakers' prices, collected before the prediction was saved, were blended in",
+    title:
+      "Bookmakers' prices, collected before the prediction was saved, were used: where they were given all the weight, the figures are the bookmakers' consensus",
   },
   model_only: {
     label: "Model only",
@@ -90,9 +91,26 @@ export function basisLabel(b: Basis | string): string {
   return BASES[b as Basis]?.label ?? b;
 }
 
-/** "Model + market" or "Model only": whether the record used bookmakers' prices. */
-export function BasisBadge({ basis }: { basis: Basis }) {
-  const info = BASES[basis] ?? BASES.model_only;
+/** A model + market record whose match-result figures are the bookmakers' consensus itself
+ * (the prices given all the weight): nothing of the model is in them. */
+const CONSENSUS = {
+  label: "Bookmakers' consensus",
+  tone: "market" as Tone,
+  title:
+    "The match result and over/under 2.5 goals are the bookmakers' prices with their margins removed; the model only shapes the other goal lines, both teams to score and the scores",
+};
+
+/** True when a model + market record's match-result figures are the bookmakers' consensus
+ * (the API's `consensus_markets`). */
+export function isConsensus(c: { basis: Basis; consensus_markets?: string[] }): boolean {
+  return c.basis === "model_and_market" && (c.consensus_markets ?? []).includes("1X2");
+}
+
+/** "Model + market" or "Model only": whether the record used bookmakers' prices; "Bookmakers'
+ * consensus" when `consensus` is set (a model + market record whose match-result figures are
+ * the prices with the margins removed, `isConsensus`). */
+export function BasisBadge({ basis, consensus = false }: { basis: Basis; consensus?: boolean }) {
+  const info = consensus && basis === "model_and_market" ? CONSENSUS : (BASES[basis] ?? BASES.model_only);
   return (
     <Badge tone={info.tone} title={info.title}>
       {info.label}

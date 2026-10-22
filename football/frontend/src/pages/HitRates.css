@@ -117,6 +117,7 @@
 }
 
 .hit-base,
+.hit-fav,
 .hit-ci {
   white-space: nowrap;
 }
@@ -201,4 +202,36 @@
   .hit-value {
     font-size: 1.02rem;
   }
+}
+
+/* The bookmakers' favourite: a third line in a cell, and the "Against the bookmakers" table. */
+.hit-fav {
+  color: var(--accent-soft-text);
+}
+
+.hit-legend-fav {
+  color: var(--accent-soft-text);
+}
+
+.hit-bookies {
+  display: grid;
+  gap: 6px;
+}
+
+.hit-bookies h3 {
+  margin: 0;
+}
+
+.hit-bookies-table th,
+.hit-bookies-table td {
+  padding: 6px 10px;
+}
+
+.hit-bookies-table tbody th {
+  white-space: normal;
+  line-height: 1.25;
+}
+
+.hit-bookies-table .hit-fav-row > * {
+  background: var(--accent-soft);
 }

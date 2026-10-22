@@ -1,13 +1,17 @@
 // Three separate things, never blended into one score:
 // - confidence: how likely the forecast thinks its most likely outcome is (the model's own on a
-//   model-only record; bookmakers' consensus blended with the model on a model + market one);
+//   model-only record; on a model + market one the bookmakers' consensus, margins removed, where
+//   the prices were given all the weight, otherwise the consensus blended with the model);
 // - data completeness: which inputs the prediction had and lacked;
 // - betting edge: whether a price beat the model's probability (needs odds).
 
-import type { JsonValue, PredictionCard } from "../api";
+import type { JsonValue, PredictionCard, Probabilities } from "../api";
 import { formatPct, outcomeLabel } from "../format";
 import { href } from "../router";
+import { isConsensus } from "./Badge";
+import { MatchLink } from "./MatchLink";
 import { pickOf } from "./ProbBar";
+import "./signals.css";
 
 const FIELD_NAMES: Record<string, string> = {
   lineups: "lineups",
@@ -47,10 +51,67 @@ function num(v: JsonValue | undefined): number | null {
   return typeof v === "number" && Number.isFinite(v) ? v : null;
 }
 
-/** Whose probabilities the confidence is: on a model + market record they are the bookmakers'
- * consensus blended with the model, not the model's alone. */
-export function confidenceSource(c: Pick<PredictionCard, "basis">): string {
+/** Whose probabilities the confidence is: on a model + market record whose match result is
+ * the bookmakers' consensus (the prices given all the weight), the bookmakers' alone; on a
+ * genuine blend, the consensus blended with the model; otherwise the model's. */
+export function confidenceSource(c: Pick<PredictionCard, "basis" | "consensus_markets">): string {
+  if (isConsensus(c)) return "bookmakers' consensus, margins removed";
   return c.basis === "model_and_market" ? "bookmakers + model" : "model";
+}
+
+/** The tag on the most likely match result: the bookmakers' favourite where the figures are
+ * their consensus, otherwise the forecast's pick. */
+export function pickLabel(c: Pick<PredictionCard, "basis" | "consensus_markets">): string {
+  return isConsensus(c) ? "Bookies' favourite" : "Pick";
+}
+
+/** One plain line on the benchmark against the bookmakers (D-026, docs/results/domestic.md),
+ * on Fixtures and Performance. */
+export function ClosingPriceNote() {
+  return (
+    <p className="small closing-note" role="note">
+      <strong>Over two test seasons no model beat the closing price.</strong> For league games the
+      match result and over/under 2.5 goals shown first are the bookmakers' consensus with the
+      margins removed, so they say what the bookmakers think, not where they are wrong.{" "}
+      <a href={href("/lab", { tab: "hits" })}>Hit rates against the bookmakers' favourite</a>
+    </p>
+  );
+}
+
+/** The pure model's own match result beside a record whose figures are the bookmakers'
+ * consensus: "Model alone (Elo with congestion): Levante 31%, draw 27%, Ath Bilbao 42%". */
+export function ModelAlone({
+  pure,
+  homeName,
+  awayName,
+  link = false,
+}: {
+  pure: { id: number; model_name: string; model_label?: string; probabilities: Probabilities };
+  homeName: string;
+  awayName: string;
+  /** Link the model's name to its record. */
+  link?: boolean;
+}) {
+  const x = pure.probabilities["1X2"];
+  if (!x) return null;
+  const label = pure.model_label ?? pure.model_name;
+  return (
+    <p className="model-alone small">
+      <span className="muted">Model alone</span>{" "}
+      <span className="muted">
+        (
+        {link ? (
+          <MatchLink id={pure.id} className="model-alone-name">
+            {label}
+          </MatchLink>
+        ) : (
+          label
+        )}
+        ):
+      </span>{" "}
+      {homeName} {formatPct(x.H)} · draw {formatPct(x.D)} · {awayName} {formatPct(x.A)}
+    </p>
+  );
 }
 
 /** The same fixture's model + market record, when this record is model-only. */
@@ -77,6 +138,7 @@ export function Signals({
   const awayN = num(features?.away_matches_in_window);
   const full = variant === "full";
   const blended = card.basis === "model_and_market";
+  const consensus = isConsensus(card);
   // Prices exist for this match, but in its model + market record rather than this one.
   const pricesElsewhere = !vs && !odds && !blended && marketRecord !== null;
 
@@ -104,9 +166,11 @@ export function Signals({
           {!full && <span className="signal-sub">({confidenceSource(card)})</span>}
           {full && (
             <p className="signal-note">
-              {blended
-                ? "The probability of the single most likely result, from the bookmakers' consensus blended with the model. It says how sure this forecast is, not whether a bet is worth taking."
-                : "The probability of the single most likely result. It says how sure the model is, not whether a bet is worth taking."}
+              {consensus
+                ? "The bookmakers' favourite and its probability: their prices with the margins removed, which this record takes as they are. It says how sure the bookmakers are, not the model, and not whether a bet is worth taking."
+                : blended
+                  ? "The probability of the single most likely result, from the bookmakers' consensus blended with the model. It says how sure this forecast is, not whether a bet is worth taking."
+                  : "The probability of the single most likely result. It says how sure the model is, not whether a bet is worth taking."}
             </p>
           )}
         </dd>
@@ -148,7 +212,7 @@ export function Signals({
                 <strong>
                   See the{" "}
                   {full ? (
-                    <a href={href(`/match/${marketRecord.id}`)}>model + market record</a>
+                    <MatchLink id={marketRecord.id}>model + market record</MatchLink>
                   ) : (
                     "model + market record"
                   )}

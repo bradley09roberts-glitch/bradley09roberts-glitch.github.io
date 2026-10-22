@@ -9,6 +9,7 @@ import {
   endpoints,
   useApi,
   type CoverageRow,
+  type FetchSource,
   type FixturesResponse,
   type ImportIssues,
   type JobRun,
@@ -910,12 +911,17 @@ const HISTORY_LIMIT = 200;
 
 function RefreshHistory({ query }: { query: URLSearchParams }) {
   const result = useApi(endpoints.refreshHistory(HISTORY_LIMIT), { freshMs: 15_000 });
+  // Each source's downloads: a failing source shows even while the jobs using it end "OK".
+  const fetches = useApi(endpoints.fetchStatus(), { freshMs: 15_000 });
+  const sources = fetches.data?.sources;
   const job = query.get("job");
   const problemsOnly = query.get("runs") === "problems";
   return (
     <section className="card data-anchor" id="data-refresh" aria-labelledby="data-refresh-h">
       <h2 id="data-refresh-h">Refresh history</h2>
-      <p className="muted small">Every data job, newest first, failures included.</p>
+      <p className="muted small">
+        Every data job, newest first, failures included, then each source's latest downloads.
+      </p>
       <ApiView
         result={result}
         what="the refresh history"
@@ -923,13 +929,115 @@ function RefreshHistory({ query }: { query: URLSearchParams }) {
         isEmpty={(d) => d.runs.length === 0}
         empty={<p className="muted">No job has run yet.</p>}
       >
-        {(d) => <HistoryList runs={d.runs} job={job} problemsOnly={problemsOnly} />}
+        {(d) => (
+          <HistoryList
+            runs={d.runs}
+            job={job}
+            problemsOnly={problemsOnly}
+            failing={sources ? sources.filter((x) => x.failing) : null}
+          />
+        )}
+      </ApiView>
+      <ApiView result={fetches} what="the downloads by source" loadingLines={2}>
+        {(d) => <Downloads sources={d.sources} />}
       </ApiView>
     </section>
   );
 }
 
-function HistoryList({ runs, job, problemsOnly }: { runs: JobRun[]; job: string | null; problemsOnly: boolean }) {
+const SOURCE_NAMES: Record<string, string> = {
+  "football-data": "football-data.co.uk",
+  "football-data-extra": "football-data.co.uk (other leagues)",
+  "football-data-fixtures": "football-data.co.uk (this week's fixtures)",
+  wikipedia: "Wikipedia (English)",
+  "wikipedia-de": "Wikipedia (German)",
+  "wikipedia-es": "Wikipedia (Spanish)",
+  openfootball: "openfootball",
+  sportmonks: "Sportmonks",
+  rsssf: "RSSSF",
+  bbc: "BBC Sport",
+  web: "Other web pages (research)",
+  uefa: "UEFA.com (not used)",
+};
+
+function sourceName(source: string): string {
+  return SOURCE_NAMES[source] ?? source;
+}
+
+/** "HTTP 403" or the outcome, for a failed attempt. */
+function failureText(a: FetchSource["last_attempt"]): string {
+  return a.http_status !== null ? `HTTP ${a.http_status}` : a.outcome.replace(/_/g, " ");
+}
+
+/** "49 failed downloads since 21 Oct 2026, 19:49 (HTTP 403)". */
+function failingText(x: FetchSource): string {
+  const n = x.failures_since_ok;
+  return `${n.toLocaleString("en-GB")} failed ${n === 1 ? "download" : "downloads"}${
+    x.failing_since_utc ? ` since ${formatLondon(x.failing_since_utc)}` : ""
+  } (latest ${failureText(x.last_attempt)})`;
+}
+
+function Downloads({ sources }: { sources: FetchSource[] }) {
+  if (sources.length === 0) return <p className="muted small">No download has been logged yet.</p>;
+  return (
+    <div className="fetch-sources">
+      <h3 id="data-downloads-h">Downloads by source</h3>
+      <p className="muted small">
+        Every download attempt is logged, failures included. A source can fail while the job that
+        uses it still ends "OK", so its latest error is shown here.
+      </p>
+      <ul className="runs" aria-labelledby="data-downloads-h">
+        {sources.map((x) => {
+          const info = x.failing ? statusInfo("failed") : statusInfo("ok");
+          const err = x.last_error;
+          return (
+            <li key={x.source} className={`run run-${info.tone}`}>
+              <span className={`run-status badge badge-${info.tone}`}>
+                <span aria-hidden="true">{info.icon}</span>
+                {x.failing ? "Failing" : "OK"}
+              </span>
+              <div className="run-body">
+                <p className="run-head">
+                  <strong>{sourceName(x.source)}</strong>
+                </p>
+                <p className="muted small">
+                  {x.failing
+                    ? failingText(x)
+                    : `Latest download ${x.last_attempt.at_utc ? formatLondon(x.last_attempt.at_utc) : "at an unknown time"}`}
+                  {x.last_ok_utc
+                    ? x.failing
+                      ? ` · last worked ${formatLondon(x.last_ok_utc)}`
+                      : ""
+                    : " · has never worked"}
+                </p>
+                {err && (
+                  <p className={x.failing ? "run-error" : "muted small"}>
+                    {x.failing ? "Latest error" : "Last failure"}
+                    {err.at_utc && !x.failing ? ` ${formatLondon(err.at_utc)}` : ""}: {err.key} · {failureText(err)}
+                    {err.error && err.error !== failureText(err) ? ` · ${err.error}` : ""}
+                  </p>
+                )}
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
+function HistoryList({
+  runs,
+  job,
+  problemsOnly,
+  failing,
+}: {
+  runs: JobRun[];
+  job: string | null;
+  problemsOnly: boolean;
+  /** Sources whose latest download failed (null until known). */
+  failing: FetchSource[] | null;
+}) {
   const jobs = useMemo(() => [...new Set(runs.map((r) => r.job))], [runs]);
   const activeJob = job && jobs.includes(job) ? job : null;
   const filtered = runs.filter((r) => (!activeJob || r.job === activeJob) && (!problemsOnly || isProblem(r)));
@@ -939,15 +1047,29 @@ function HistoryList({ runs, job, problemsOnly }: { runs: JobRun[]; job: string 
 
   return (
     <>
-      {latestProblem ? (
+      {latestProblem && (
         <StaleNotice>
           Latest problem: <strong>{jobName(latestProblem.job)}</strong>{" "}
           {statusInfo(latestProblem.status).label.toLowerCase()} {latestProblem.started_at ? formatRelative(latestProblem.started_at) : ""}
           {latestProblem.error ? `: ${latestProblem.error}` : "."}
         </StaleNotice>
-      ) : (
+      )}
+      {failing && failing.length > 0 && (
+        <StaleNotice>
+          {failing.length === 1 ? "Downloads failing: " : "Downloads failing from these sources: "}
+          {failing.map((x, i) => (
+            <span key={x.source}>
+              {i > 0 && "; "}
+              <strong>{sourceName(x.source)}</strong>, {failingText(x)}
+            </span>
+          ))}
+          . Details under Downloads by source, below.
+        </StaleNotice>
+      )}
+      {!latestProblem && failing !== null && failing.length === 0 && (
         <p className="small good">
-          <span aria-hidden="true">✓ </span>No failed or partial runs in the last {runs.length} jobs.
+          <span aria-hidden="true">✓ </span>No failed or partial runs in the last {runs.length} jobs, and
+          every source's latest download worked.
         </p>
       )}
 
