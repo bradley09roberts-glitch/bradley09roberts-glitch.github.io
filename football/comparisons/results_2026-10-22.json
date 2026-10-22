@@ -1,0 +1,830 @@
+{
+ "_source": "Final scores (90 minutes plus stoppage time) of the 36 Europa League and Conference League games of 22 Oct 2026 with published records, read from news reports on the night of 22 Oct (about 23:30 UK). Each score was found in two independent publishers' reports and confirmed by a third publisher found separately; UEFA.com and Wikipedia were not used (D-023, D-029). Loaded with footy euro-import-results because Wikipedia refuses this machine.",
+ "status": "news-sourced (D-029): three or more independent publishers per game",
+ "results": [
+  {
+   "fixture_ref": "UECL:2627:2026-10-22:kaz-kairat:grc-panathinaikos",
+   "match": "Kairat v Panathinaikos",
+   "home_goals": 1,
+   "away_goals": 5,
+   "sources": [
+    {
+     "publisher": "t-online",
+     "url": "https://www.t-online.de/sport/live-ticker/fussball/uefa-conference-league/sdc_fm-62589/kairat-panathinaikos-uefa-conference-league-im-liveticker.html"
+    },
+    {
+     "publisher": "Kazinform (qazinform.com)",
+     "url": "https://qazinform.com/news/uefa-conference-league-fc-kairat-fall-to-panathinaikos-at-home-802e21"
+    },
+    {
+     "publisher": "Sport24 (sport24.gr)",
+     "url": "https://www.sport24.gr/football/kairat-panathinaikos-1-5-oi-prasinoi-katavroxthisan-tin-kairat-me-killer-ntesers-ki-ekanan-to-2-2-sti-league-phase/"
+    }
+   ]
+  },
+  {
+   "fixture_ref": "UECL:2627:2026-10-22:esp-getafe:che-lugano",
+   "match": "Getafe v Lugano",
+   "home_goals": 2,
+   "away_goals": 5,
+   "sources": [
+    {
+     "publisher": "t-online",
+     "url": "https://www.t-online.de/sport/live-ticker/fussball/uefa-conference-league/sdc_fm-62585/getafe-fc-lugano-uefa-conference-league-im-liveticker.html"
+    },
+    {
+     "publisher": "SRF",
+     "url": "https://www.srf.ch/sport/fussball/conference-league/5-2-sieg-in-conference-league-trotz-grobem-fehlstart-lugano-fertigt-auch-getafe-ab"
+    },
+    {
+     "publisher": "ElDesmarque (eldesmarque.com)",
+     "url": "https://www.eldesmarque.com/futbol/conference-league/20261022/getafe-lugano-resultado-resumen-goles-jornada-2-conference-league_18_020513967.html"
+    }
+   ]
+  },
+  {
+   "fixture_ref": "UECL:2627:2026-10-22:geo-iberia-1999:swe-mjallby",
+   "match": "Iberia 1999 v Mjallby",
+   "home_goals": 1,
+   "away_goals": 1,
+   "sources": [
+    {
+     "publisher": "SVT Sport",
+     "url": "https://www.svt.se/sport/fotboll/mjallby-fick-medstuds-grejade-poang-i-89e-minuten"
+    },
+    {
+     "publisher": "BuliNews",
+     "url": "https://bulinews.com/fixture/1040109/lineups/fc-iberia-1999-mjallby"
+    },
+    {
+     "publisher": "Goteborgs-Posten (gp.se), TT wire story",
+     "url": "https://www.gp.se/sport/veteranen-raddade-en-mjallby-poang-i-georgien.47e3371b-d9ad-54f7-bfb0-7b771995caf2"
+    }
+   ]
+  },
+  {
+   "fixture_ref": "UECL:2627:2026-10-22:and-inter-escaldes:rou-univ-craiova",
+   "match": "Inter Club d'Escaldes v Univ. Craiova",
+   "home_goals": 1,
+   "away_goals": 3,
+   "sources": [
+    {
+     "publisher": "t-online",
+     "url": "https://www.t-online.de/sport/live-ticker/fussball/uefa-conference-league/sdc_fm-62587/inter-club-descaldes-universitatea-craiova-uefa-conference-league-im-liveticker.html"
+    },
+    {
+     "publisher": "Digi Sport Romania",
+     "url": "https://www.digisport.ro/fotbal/conference-league/inter-descaldes-universitatea-craiova-1-3-campioana-romaniei-a-obtinut-prima-victorie-in-conference-league-4556099"
+    },
+    {
+     "publisher": "Adevarul (adevarul.ro)",
+     "url": "https://adevarul.ro/sport/universitatea-craiova-inter-descaldes-3-1-2565881.html"
+    }
+   ]
+  },
+  {
+   "fixture_ref": "UECL:2627:2026-10-22:cze-jablonec:eng-brighton",
+   "match": "Jablonec v Brighton",
+   "home_goals": 0,
+   "away_goals": 0,
+   "sources": [
+    {
+     "publisher": "Sky Sports",
+     "url": "https://www.skysports.com/football/news/13601272/jablonec-0-0-brighton-fabian-hurzelers-side-shut-out-in-uefa-conference-league-clash"
+    },
+    {
+     "publisher": "t-online",
+     "url": "https://www.t-online.de/sport/live-ticker/fussball/uefa-conference-league/sdc_fm-62589/kairat-panathinaikos-uefa-conference-league-im-liveticker.html"
+    },
+    {
+     "publisher": "Press Association (via The Irish News, irishnews.com)",
+     "url": "https://www.irishnews.com/sport/soccer/brighton-held-to-rare-goalless-draw-by-jablonec-in-czechia-APWBCNX3XJOBJPYSLU4QWM7BHY/"
+    }
+   ]
+  },
+  {
+   "fixture_ref": "UECL:2627:2026-10-22:ltu-kauno-zalgiris:nor-brann",
+   "match": "Kauno Žalgiris v Brann",
+   "home_goals": 1,
+   "away_goals": 4,
+   "sources": [
+    {
+     "publisher": "t-online",
+     "url": "https://www.t-online.de/sport/live-ticker/fussball/uefa-conference-league/sdc_fm-62590/kauno-zalgiris-brann-uefa-conference-league-im-liveticker.html"
+    },
+    {
+     "publisher": "NRK",
+     "url": "https://www.nrk.no/vestland/brann-scoret-fire-i-litauen-1.18062261"
+    },
+    {
+     "publisher": "TV 2 (tv2.no)",
+     "url": "https://www.tv2.no/sport/full-pott-i-europa-for-brann/19351683/"
+    }
+   ]
+  },
+  {
+   "fixture_ref": "UECL:2627:2026-10-22:dnk-nordsjaelland:bgr-cska-sofia",
+   "match": "Nordsjaelland v CSKA Sofia",
+   "home_goals": 2,
+   "away_goals": 2,
+   "sources": [
+    {
+     "publisher": "Sky Sport (Germany)",
+     "url": "https://sport.sky.de/fussball/nordsjaelland-vs-cska-sofia/577916"
+    },
+    {
+     "publisher": "t-online",
+     "url": "https://www.t-online.de/sport/live-ticker/fussball/conference-league/sdc_fm-62594/nordsjaelland-cska-sofia-conference-league-im-liveticker.html"
+    },
+    {
+     "publisher": "TV 2 Sport (Denmark)",
+     "url": "https://sport.tv2.dk/live/fodbold/2026-10-22-fck-faar-point-paa-svaer-udebane-mens-fcn-dummer-sig"
+    },
+    {
+     "publisher": "Tipsbladet (Denmark)",
+     "url": "https://tipsbladet.dk/nyhed/conference-league/to-fcn-stjerner-funklede-en-var-rigtig-skidt"
+    }
+   ]
+  },
+  {
+   "fixture_ref": "UECL:2627:2026-10-22:cyp-pafos:lva-riga",
+   "match": "Pafos v Riga",
+   "home_goals": 1,
+   "away_goals": 1,
+   "sources": [
+    {
+     "publisher": "Sky Sport (Germany)",
+     "url": "https://sport.sky.de/fussball/pafos-vs-riga-fc/577917"
+    },
+    {
+     "publisher": "t-online",
+     "url": "https://www.t-online.de/sport/live-ticker/fussball/uefa-conference-league/sdc_fm-62595/paphos-riga-fc-uefa-conference-league-im-liveticker.html"
+    },
+    {
+     "publisher": "ran (Joyn)",
+     "url": "https://ran.joyn.de/sports/ticker/ma12520761-pafos-fc-riga-fc"
+    },
+    {
+     "publisher": "Terra (Brazil)",
+     "url": "https://www.terra.com.br/esportes/futebol/internacional/brasileiros-marcam-e-pafos-empata-com-riga-na-liga-conferencia,fbaea2a6cbe1efba864ae0e529ccdde2e16cqlz5.html"
+    },
+    {
+     "publisher": "Virgilio Sport (Italy)",
+     "url": "https://sport.virgilio.it/dirette/live/conference-league/22-10-2026/pafos-riga/2685840/"
+    }
+   ]
+  },
+  {
+   "fixture_ref": "UECL:2627:2026-10-22:srb-red-star-belgrade:dnk-fc-copenhagen",
+   "match": "Red Star Belgrade v FC Copenhagen",
+   "home_goals": 2,
+   "away_goals": 2,
+   "sources": [
+    {
+     "publisher": "t-online",
+     "url": "https://www.t-online.de/sport/live-ticker/fussball/uefa-conference-league/sdc_fm-62584/roter-stern-kopenhagen-uefa-conference-league-im-liveticker.html"
+    },
+    {
+     "publisher": "Bold.dk",
+     "url": "https://bold.dk/fodbold/klubber/fc-koebenhavn/nyheder/carrizo-reddede-fck-efter-serbiske-drommemal"
+    },
+    {
+     "publisher": "TV 2 Sport (Denmark)",
+     "url": "https://sport.tv2.dk/live/fodbold/2026-10-22-fck-faar-point-paa-svaer-udebane-mens-fcn-dummer-sig"
+    },
+    {
+     "publisher": "Sky Sport (Germany)",
+     "url": "https://sport.sky.de/fussball/rs-belgrad-vs-fc-kopenhagen/577906"
+    },
+    {
+     "publisher": "B92 (Serbia)",
+     "url": "https://www.b92.net/sport/fudbal/evrokupovi/278777/crvena-zvezda-remizirala-sa-kopenhagenom-22-za-prve-bodove-u-ligi-konferencije/vest"
+    }
+   ]
+  },
+  {
+   "fixture_ref": "UECL:2627:2026-10-22:tur-trabzonspor:sco-hearts",
+   "match": "Trabzonspor v Hearts",
+   "home_goals": 2,
+   "away_goals": 0,
+   "sources": [
+    {
+     "publisher": "STV News",
+     "url": "https://news.stv.tv/sport/hearts-beaten-by-trabzonspor-as-injury-woes-deepen"
+    },
+    {
+     "publisher": "Turkiye Today",
+     "url": "https://www.turkiyetoday.com/sports/trabzonspor-beat-heart-of-midlothian-2-0-in-conference-league-despite-late-red-card-3230845"
+    },
+    {
+     "publisher": "Sky Sport (Germany)",
+     "url": "https://sport.sky.de/fussball/trabzonspor-vs-hearts/577920"
+    },
+    {
+     "publisher": "Ajansspor (Turkey)",
+     "url": "https://ajansspor.com/haber/trabzonspor-hearts-2-0-mac-sonucu-mac-ozeti-yazili-737126"
+    }
+   ]
+  },
+  {
+   "fixture_ref": "UEL:2627:2026-10-22:arm-ararat-armenia:nld-az-alkmaar",
+   "match": "Ararat-Armenia v AZ Alkmaar",
+   "home_goals": 0,
+   "away_goals": 4,
+   "sources": [
+    {
+     "publisher": "t-online",
+     "url": "https://www.t-online.de/sport/live-ticker/fussball/europa-league/sdc_fm-62455/ararat-armenia-alkmaar-europa-league-im-liveticker.html"
+    },
+    {
+     "publisher": "NOS",
+     "url": "https://nos.nl/artikel/2636250-az-boekt-in-armenie-probleemloos-tweede-europa-league-zege-op-rij"
+    },
+    {
+     "publisher": "Sky Sport (Germany)",
+     "url": "https://sport.sky.de/fussball/ararat-armenia-vs-alkmaar/577777"
+    },
+    {
+     "publisher": "Voetbalflitsen (Netherlands)",
+     "url": "https://voetbalflitsen.com/weslley-patati-leidt-az-met-twee-goals-naar-0-4-zege-bij-ararat-armenia"
+    }
+   ]
+  },
+  {
+   "fixture_ref": "UEL:2627:2026-10-22:hrv-dinamo-zagreb:nld-nijmegen",
+   "match": "Dinamo Zagreb v Nijmegen",
+   "home_goals": 2,
+   "away_goals": 4,
+   "sources": [
+    {
+     "publisher": "Sky Sport (Germany)",
+     "url": "https://sport.sky.de/fussball/zagreb-vs-nec-nijmegen/577782"
+    },
+    {
+     "publisher": "NOS",
+     "url": "https://nos.nl/artikel/2636251-nec-wint-met-4-2-van-dinamo-zagreb-en-boekt-eerste-zege-sinds-augustus"
+    },
+    {
+     "publisher": "Sporting Life",
+     "url": "https://www.sportinglife.com/football/live/243850/dinamo-zagreb-vs-nec/stats"
+    },
+    {
+     "publisher": "Voetbalzone",
+     "url": "https://www.voetbalzone.nl/nieuws/nec-verrast-dinamo-zagreb-in-de-europa-league-en-boekt-eindelijk-weer-eens-een-zege/blta10320c3b0aaa317"
+    },
+    {
+     "publisher": "NL Times",
+     "url": "https://nltimes.nl/2026/10/22/nec-nijmegen-beat-dinamo-zagreb-4-2-first-uefa-europa-league-win"
+    }
+   ]
+  },
+  {
+   "fixture_ref": "UEL:2627:2026-10-22:hun-ferencvaros:prt-torreense",
+   "match": "Ferencváros v Torreense",
+   "home_goals": 4,
+   "away_goals": 1,
+   "sources": [
+    {
+     "publisher": "t-online",
+     "url": "https://www.t-online.de/sport/live-ticker/fussball/europa-league/sdc_fm-62461/ferencvaros-torreense-europa-league-im-liveticker.html"
+    },
+    {
+     "publisher": "nb1.hu",
+     "url": "https://nb1.hu/hir/ferencvaros-torreense-4-1-europa-liga/"
+    },
+    {
+     "publisher": "Index.hu",
+     "url": "https://index.hu/sport/futball/2026/10/22/ferencvaros-torreense-europa-liga-2026-2027-ligaszakasz-3.-fordulo-groupama-arena-helyszini-osszefoglalo/"
+    },
+    {
+     "publisher": "Portugoal",
+     "url": "https://portugoal.net/club-news/6191-europa-league-torreense-hit-by-second-half-storm-as-ferencvaros-win-4-1-in-hungary"
+    }
+   ]
+  },
+  {
+   "fixture_ref": "UEL:2627:2026-10-22:ita-juventus:fra-rennes",
+   "match": "Juventus v Rennes",
+   "home_goals": 2,
+   "away_goals": 2,
+   "sources": [
+    {
+     "publisher": "VAVEL USA",
+     "url": "https://www.vavel.com/en-us/soccer/2026/10/22/1276351-juventus-vs-rennes-live-score-uefa-europa-league-match.html"
+    },
+    {
+     "publisher": "Football Italia",
+     "url": "https://football-italia.net/uel-juventus-2-2-rennes-woltemade-rescue-point/"
+    },
+    {
+     "publisher": "Adnkronos",
+     "url": "https://www.adnkronos.com/sport/europa-league-juventus-rennes_12rthGAqQnZfLWsEJIfLJd"
+    }
+   ]
+  },
+  {
+   "fixture_ref": "UEL:2627:2026-10-22:pol-lech-poznan:eng-sunderland",
+   "match": "Lech Poznan v Sunderland",
+   "home_goals": 1,
+   "away_goals": 1,
+   "sources": [
+    {
+     "publisher": "WP SportoweFakty",
+     "url": "https://sportowefakty.wp.pl/pilka-nozna/1280568/koniec-koszmaru-lecha-poznan-w-lidze-europy-dopadl-rywala-z-premier-league"
+    },
+    {
+     "publisher": "TVP Info",
+     "url": "https://www.tvp.info/96074590/liga-europy-lech-poznan-sunderland-11-remis-i-pierwsze-punkty-kolejorza-w-europejskich-pucharach-wideo"
+    },
+    {
+     "publisher": "Polsat Sport",
+     "url": "https://www.polsatsport.pl/wiadomosc/2026-10-22/przelamanie-przy-bulgarskiej-pierwszy-gol-i-punkt-lecha-w-lidze-europy/"
+    }
+   ]
+  },
+  {
+   "fixture_ref": "UEL:2627:2026-10-22:grc-ofi-crete:deu-leverkusen",
+   "match": "OFI Crete v Leverkusen",
+   "home_goals": 0,
+   "away_goals": 2,
+   "sources": [
+    {
+     "publisher": "beIN SPORTS",
+     "url": "https://www.beinsports.com/en-au/football/uefa-europa-league/articles/ofi-crete-0-2-bayer-leverkusen-hofmann-at-the-double-for-in-form-visitors-2026-10-22"
+    },
+    {
+     "publisher": "Bulinews",
+     "url": "https://bulinews.com/hofmann-double-fires-leverkusen-third-straight-europa-league-win"
+    },
+    {
+     "publisher": "Gazzetta.gr",
+     "url": "https://www.gazzetta.gr/football/europa-league/2579739/ofi-mpager-leberkoyzen-0-2-paradothike-stin-anoterotita"
+    },
+    {
+     "publisher": "ZDFheute (credits the dpa and SID agencies)",
+     "url": "https://www.zdfheute.de/sport/fussball-europa-league-ofi-kreta-bayer-leverkusen-tore-ergebnis-100.html"
+    }
+   ]
+  },
+  {
+   "fixture_ref": "UEL:2627:2026-10-22:aut-sturm-graz:fra-marseille",
+   "match": "Sturm Graz v Marseille",
+   "home_goals": 1,
+   "away_goals": 0,
+   "sources": [
+    {
+     "publisher": "ORF Sport",
+     "url": "https://sport.orf.at/stories/3163909"
+    },
+    {
+     "publisher": "Foot Mercato",
+     "url": "https://www.footmercato.net/live/2101413636880552704-sturm-graz-vs-marseille"
+    },
+    {
+     "publisher": "Le Phoceen",
+     "url": "https://www.lephoceen.fr/infos-om/saison/sturm-graz-1-0-om-une-erreur-trop-d-imprecisions-et-une-troisieme-defaite-en-ligue-europa-238994"
+    }
+   ]
+  },
+  {
+   "fixture_ref": "UEL:2627:2026-10-22:bel-st-gilloise:isr-hapoel-beer-sheva",
+   "match": "St. Gilloise v Hapoel Be'er Sheva",
+   "home_goals": 4,
+   "away_goals": 0,
+   "sources": [
+    {
+     "publisher": "RTBF",
+     "url": "https://www.rtbf.be/article/toujours-invincible-en-europa-league-cette-saison-l-union-saint-gilloise-deroule-contre-l-hapoel-beer-sheva-11804552"
+    },
+    {
+     "publisher": "Sporza",
+     "url": "https://sporza.be/nl/matches/voetbal/eur/uefa-europa-league/2026-2027/leaguefase/03/union-hapoel-beer-sheva-union-haalt-uit-tegen-beer-sheva-brusselaars-winnen-met-4-0-maar-blessures-zijn-domper-op-europees-feest~1781704927665/"
+    },
+    {
+     "publisher": "wiwsport",
+     "url": "https://wiwsport.com/2026/10/22/ligue-europa-lunion-saint-gilloise-deroule-face-a-lhapoel-beer-sheva-4-0/"
+    },
+    {
+     "publisher": "VoetbalNieuws.be",
+     "url": "https://www.voetbalnieuws.be/news/930656/7-op-9-union-duldt-geen-tegenstand-in-nieuwe-europese-triomf"
+    }
+   ]
+  },
+  {
+   "fixture_ref": "UECL:2627:2026-10-22:dnk-aarhus:alb-egnatia",
+   "match": "Aarhus v Egnatia",
+   "home_goals": 1,
+   "away_goals": 1,
+   "sources": [
+    {
+     "publisher": "TV 2 Sport",
+     "url": "https://sport.tv2.dk/live/fodbold/2026-10-22-fcm-skuffer-stort-agf-kaemper-sig-til-point-trods-tidligt-roedt"
+    },
+    {
+     "publisher": "Sky Sports",
+     "url": "https://www.skysports.com/football/agf-aarhus-vs-egnatia/577903"
+    },
+    {
+     "publisher": "TV2 Østjylland",
+     "url": "https://www.tv2ostjylland.dk/aarhus/agf-fik-point-trods-en-hel-kamp-i-undertal-aa342"
+    },
+    {
+     "publisher": "Tipsbladet",
+     "url": "https://www.tipsbladet.dk/nyhed/conference-league/alt-smadret-for-agf-saa-lavede-jakob-poulsen-en-genistreg"
+    },
+    {
+     "publisher": "t-online",
+     "url": "https://www.t-online.de/sport/live-ticker/fussball/uefa-conference-league/sdc_fm-62581/agf-egnatia-uefa-conference-league-im-liveticker.html"
+    }
+   ]
+  },
+  {
+   "fixture_ref": "UECL:2627:2026-10-22:nld-ajax:ita-atalanta",
+   "match": "Ajax v Atalanta",
+   "home_goals": 2,
+   "away_goals": 0,
+   "sources": [
+    {
+     "publisher": "Sky Sport Italia",
+     "url": "https://sport.sky.it/calcio/conference-league/partite/2026/giornata-2/ajax-atalanta/risultato-gol"
+    },
+    {
+     "publisher": "Adnkronos",
+     "url": "https://www.adnkronos.com/sport/conference-league-ajax-atalanta_5UmThwGFFj2GCZr4Gy3R0X"
+    },
+    {
+     "publisher": "Complete Sports",
+     "url": "https://www.completesports.com/conference-league-arokodare-scores-bags-assist-as-ajax-edge-atalanta/"
+    },
+    {
+     "publisher": "ran (ran.joyn.de, ProSiebenSat.1)",
+     "url": "https://ran.joyn.de/sports/ticker/ma12520599-ajax-amsterdam-atalanta"
+    }
+   ]
+  },
+  {
+   "fixture_ref": "UECL:2627:2026-10-22:bih-borac-banja-luka:fin-kups",
+   "match": "Borac Banja Luka v KuPS",
+   "home_goals": 2,
+   "away_goals": 0,
+   "sources": [
+    {
+     "publisher": "Klix.ba",
+     "url": "https://www.klix.ba/sport/nogomet/borac-potpuno-nadigrao-kups-i-ostvario-prvu-pobjedu-u-konferencijskoj-ligi/261022304"
+    },
+    {
+     "publisher": "SuomiFutis",
+     "url": "https://www.suomifutis.com/2026/10/kups-havisi-toistamiseen-konferenssiliigassa/"
+    },
+    {
+     "publisher": "Mondo (mondo.rs)",
+     "url": "https://mondo.rs/Sport/Fudbal/a2300375/borac-banjaluka-pobedio-kups-u-ligi-konferencija.html"
+    },
+    {
+     "publisher": "Vijesti.ba",
+     "url": "https://www.vijesti.ba/clanak/780880/uefa-konferencijska-liga-borac-ocitao-lekciju-finskom-kups-u"
+    },
+    {
+     "publisher": "t-online",
+     "url": "https://www.t-online.de/sport/live-ticker/fussball/uefa-conference-league/sdc_fm-62583/borac-banja-luka-kups-kuopio-uefa-conference-league-im-liveticker.html"
+    }
+   ]
+  },
+  {
+   "fixture_ref": "UECL:2627:2026-10-22:prt-sp-braga:bel-gent",
+   "match": "Sp Braga v Gent",
+   "home_goals": 2,
+   "away_goals": 0,
+   "sources": [
+    {
+     "publisher": "Sporza",
+     "url": "https://sporza.be/nl/matches/voetbal/eur/uefa-conference-league/2026-2027/leaguefase/02/sporting-braga-kaa-gent-na-bekerblamage-nu-ook-tik-in-europa-aa-gent-lijdt-vrij-kansloze-nederlaag-bij-braga~1781705771920/"
+    },
+    {
+     "publisher": "RTP",
+     "url": "https://www.rtp.pt/noticias/futebol-internacional/sporting-de-braga-2-0-gent_d1773575"
+    },
+    {
+     "publisher": "Sky Sport Italia",
+     "url": "https://sport.sky.it/calcio/conference-league/partite/2026/giornata-2/braga-gent/risultato-gol"
+    },
+    {
+     "publisher": "t-online",
+     "url": "https://www.t-online.de/sport/live-ticker/fussball/uefa-conference-league/sdc_fm-62596/braga-kaa-gent-uefa-conference-league-im-liveticker.html"
+    }
+   ]
+  },
+  {
+   "fixture_ref": "UECL:2627:2026-10-22:gib-lincoln-red-imps:nld-twente",
+   "match": "Lincoln Red Imps v Twente",
+   "home_goals": 1,
+   "away_goals": 4,
+   "sources": [
+    {
+     "publisher": "NOS",
+     "url": "https://nos.nl/artikel/2636271-fc-twente-in-gibraltar-moeiteloos-langs-lincoln-red-imps"
+    },
+    {
+     "publisher": "Planetzone Media",
+     "url": "https://www.planetzone.nl/nieuws/sport/fc-twente-boekt-ruime-zege-op-lincoln-red-imps-in-conference-league/"
+    },
+    {
+     "publisher": "TwenteInsite",
+     "url": "https://www.twenteinsite.nl/fc-twente-nieuws/wederom-flinke-wedstrijdpremie-voor-fc-twente-na-zege-op-lincoln-red-imps"
+    },
+    {
+     "publisher": "Gibraltar Chronicle",
+     "url": "https://www.chronicle.gi/lincoln-red-imps-remain-without-a-point-after-defeat-against-twente/"
+    }
+   ]
+  },
+  {
+   "fixture_ref": "UECL:2627:2026-10-22:dnk-midtjylland:bel-st-truiden",
+   "match": "Midtjylland v St Truiden",
+   "home_goals": 0,
+   "away_goals": 1,
+   "sources": [
+    {
+     "publisher": "Sporza",
+     "url": "https://sporza.be/nl/matches/voetbal/eur/uefa-conference-league/2026-2027/leaguefase/02/fc-midtjylland-stvv-live-stvv-leidt-in-denemarken-midtjylland-overheerst-maar-maakt-kansen-niet-af-soelle-soelle-wel~1781705889464/"
+    },
+    {
+     "publisher": "TV 2 Sport",
+     "url": "https://sport.tv2.dk/live/fodbold/2026-10-22-fcm-skuffer-stort-agf-kaemper-sig-til-point-trods-tidligt-roedt"
+    },
+    {
+     "publisher": "Voetbalkrant",
+     "url": "https://www.voetbalkrant.com/nieuws/2026-10-22/stvv-pakt-uit-met-grote-stunt-bij-midtjylland-en-maakt-er-een-heerlijke-belgische-week-van"
+    },
+    {
+     "publisher": "t-online",
+     "url": "https://www.t-online.de/sport/live-ticker/fussball/uefa-conference-league/sdc_fm-62592/midtjylland-sint-truiden-uefa-conference-league-im-liveticker.html"
+    }
+   ]
+  },
+  {
+   "fixture_ref": "UECL:2627:2026-10-22:fra-monaco:deu-freiburg",
+   "match": "Monaco v Freiburg",
+   "home_goals": 3,
+   "away_goals": 0,
+   "sources": [
+    {
+     "publisher": "Bundesliga.com",
+     "url": "https://www.bundesliga.com/en/bundesliga/news/monaco-freiburg-live-conference-league-blog-preview-report-fati-suzuki-brunner-39585"
+    },
+    {
+     "publisher": "franceinfo",
+     "url": "https://www.franceinfo.fr/sports/foot/ligue-europa-conference/l-as-monaco-s-impose-largement-contre-fribourg-en-ligue-conference_8249719.html"
+    },
+    {
+     "publisher": "Foot Mercato",
+     "url": "https://www.footmercato.net/live/8987926877664204287-monaco-vs-fribourg"
+    },
+    {
+     "publisher": "Neue Westfälische (nw.de)",
+     "url": "https://www.nw.de/sport/fussball/24446666_Brunner-trifft-sehenswert-Freiburg-verliert-in-Monaco-klar.html"
+    }
+   ]
+  },
+  {
+   "fixture_ref": "UECL:2627:2026-10-22:che-thun:hrv-hajduk-split",
+   "match": "Thun v Hajduk Split",
+   "home_goals": 0,
+   "away_goals": 1,
+   "sources": [
+    {
+     "publisher": "Sky Sports",
+     "url": "https://www.skysports.com/football/fc-thun-vs-hajduk-split/577919"
+    },
+    {
+     "publisher": "Sportnet.hr",
+     "url": "https://sportnet.hr/vijesti/nogomet-konferencijska-liga/thun-hajduk-01-junacka-pobjeda-u-svicarskoj-hajduk-ostaje-stopostotan-u-konferencijskoj-ligi/634022/"
+    },
+    {
+     "publisher": "tportal.hr",
+     "url": "https://www.tportal.hr/sport/clanak/kapetan-thuna-nakon-poraza-od-hajduka-iznenadio-bizarnom-izjavom-evo-sto-tvrdi-20261022"
+    },
+    {
+     "publisher": "watson.ch (text credited to Keystone-SDA)",
+     "url": "https://www.watson.ch/sport/fc-thun/580112192-conference-league-thun-verliert-gegen-hajduk-split"
+    }
+   ]
+  },
+  {
+   "fixture_ref": "UEL:2627:2026-10-22:tur-besiktas:eng-crystal-palace",
+   "match": "Besiktas v Crystal Palace",
+   "home_goals": 2,
+   "away_goals": 2,
+   "sources": [
+    {
+     "publisher": "Sky Sports",
+     "url": "https://www.skysports.com/football/news/13600940/besiktas-2-2-crystal-palace-jean-philippe-mateta-and-yermey-pino-strike-but-palace-forced-to-settle-for-europa-league-draw-in-istanbul"
+    },
+    {
+     "publisher": "Demirören Haber Ajansı (DHA)",
+     "url": "https://www.dha.com.tr/spor/besiktas-crystal-palace-2-2-2967911"
+    },
+    {
+     "publisher": "Habertürk",
+     "url": "https://www.haberturk.com/spor/besiktas-crystal-palace-maci-canli-anlatim-bjk-c-palace-uefa-sampiyonlar-ligi-maci-kac-kac-mac-skoru-3921609"
+    }
+   ]
+  },
+  {
+   "fixture_ref": "UEL:2627:2026-10-22:eng-bournemouth:ita-milan",
+   "match": "Bournemouth v Milan",
+   "home_goals": 3,
+   "away_goals": 0,
+   "sources": [
+    {
+     "publisher": "Sky Sports",
+     "url": "https://www.skysports.com/football/bournemouth-vs-ac-milan/report/577779"
+    },
+    {
+     "publisher": "VAVEL",
+     "url": "https://www.vavel.com/en-us/soccer/2026/10/22/1276466-bournemouth-3-0-ac-milan-takeaways-player-ratings-uefa-europa-league.html"
+    },
+    {
+     "publisher": "Associated Press (via KIRO 7)",
+     "url": "https://www.kiro7.com/sports/bournemouth-beats-10/AYCPHZW53U52VLF33MSMKH4EEM/"
+    }
+   ]
+  },
+  {
+   "fixture_ref": "UEL:2627:2026-10-22:svn-celje:aut-salzburg",
+   "match": "Celje v Salzburg",
+   "home_goals": 2,
+   "away_goals": 2,
+   "sources": [
+    {
+     "publisher": "Ligaportal.at",
+     "url": "https://www.ligaportal.at/international/europa-league/94842-fc-salzburg-verspielt-sieg-nach-2-0-fuehrung-gegen-nk-celje"
+    },
+    {
+     "publisher": "Salzburg24",
+     "url": "https://www.salzburg24.at/sport/fussball/live-grosse-rotation-bei-red-bull-salzburg-gegen-celje-in-europa-league-art-342125"
+    },
+    {
+     "publisher": "RTV SLO (rtvslo.si)",
+     "url": "https://www.rtvslo.si/sport/nogomet/evropska-liga/celje-salzburg-0-2/797754"
+    }
+   ]
+  },
+  {
+   "fixture_ref": "UEL:2627:2026-10-22:sco-celtic:esp-celta",
+   "match": "Celtic v Celta",
+   "home_goals": 1,
+   "away_goals": 2,
+   "sources": [
+    {
+     "publisher": "The Irish News",
+     "url": "https://www.irishnews.com/sport/soccer/martin-oneill-challenges-celtic-to-find-a-way-in-europe-after-celta-vigo-loss-KNMEYF7GZVJKRONCNNSYOQA2OM/"
+    },
+    {
+     "publisher": "COPE",
+     "url": "https://www.cope.es/programas/tiempo-de-juego/cronica/directo-celtic-celta-europa-league-3a-jornada-22-20261022_3461106.html"
+    },
+    {
+     "publisher": "Sky Sports",
+     "url": "https://www.skysports.com/football/news/13601252/celtic-1-2-celta-vigo-hoops-suffer-third-europa-league-defeat-as-spaniards-stun-with-quick-double"
+    }
+   ]
+  },
+  {
+   "fixture_ref": "UEL:2627:2026-10-22:pol-jagiellonia:bel-anderlecht",
+   "match": "Jagiellonia v Anderlecht",
+   "home_goals": 0,
+   "away_goals": 3,
+   "sources": [
+    {
+     "publisher": "RTBF",
+     "url": "https://www.rtbf.be/article/jagiellonia-bialystok-anderlecht-pas-le-droit-a-l-erreur-pour-les-mauves-direct-video-et-audio-a-21h-11802602"
+    },
+    {
+     "publisher": "Weszlo",
+     "url": "https://weszlo.com/liga-europy-jagiellonia-anderlecht-wynik-meczu-i-relacja-na-zywo-live"
+    },
+    {
+     "publisher": "UA.NEWS (republishing Interia Sport)",
+     "url": "https://ua.news/en/sport/iagelloniia-prograla-anderlekhtu-0-3-u-lizi-evropi-interia-sport"
+    },
+    {
+     "publisher": "t-online",
+     "url": "https://www.t-online.de/sport/live-ticker/fussball/europa-league/sdc_fm-62463/jagiellonia-anderlecht-europa-league-im-liveticker.html"
+    }
+   ]
+  },
+  {
+   "fixture_ref": "UEL:2627:2026-10-22:nor-lillestrom:esp-sociedad",
+   "match": "Lillestrom v Sociedad",
+   "home_goals": 0,
+   "away_goals": 6,
+   "sources": [
+    {
+     "publisher": "Flashscore",
+     "url": "https://www.flashscore.com/news/lillestrom-real-sociedad-europa-league-report-october-22-2026/bLHfkRz3/"
+    },
+    {
+     "publisher": "OKDIARIO",
+     "url": "https://okdiario.com/deportes/real-sociedad-presenta-candidatura-europa-league-machacar-lillestrom-noruega-20612048"
+    },
+    {
+     "publisher": "t-online",
+     "url": "https://www.t-online.de/sport/live-ticker/fussball/europa-league/sdc_fm-62466/lillestrom-real-sociedad-europa-league-im-liveticker.html"
+    }
+   ]
+  },
+  {
+   "fixture_ref": "UEL:2627:2026-10-22:grc-olympiakos:cze-sparta-prague",
+   "match": "Olympiakos v Sparta Prague",
+   "home_goals": 1,
+   "away_goals": 0,
+   "sources": [
+    {
+     "publisher": "To Vima",
+     "url": "https://www.tovima.com/sports/olympiacos-and-sparta-prague-meet-in-europa-league-clash/"
+    },
+    {
+     "publisher": "Mediotiempo",
+     "url": "https://www.mediotiempo.com/futbol/europa-league/resumen-del-partido-olympiacos-1-0-sparta-praha-hormiga-anota-gol-del-triunfo"
+    },
+    {
+     "publisher": "Claro Sports",
+     "url": "https://www.clarosports.com/futbol/europa-league/hormiga-gonzalez-marca-su-segundo-gol-en-la-europa-league-ante-el-sparta-praga/"
+    },
+    {
+     "publisher": "Sky Sport Germany",
+     "url": "https://sport.sky.de/fussball/piraeus-vs-sparta-prag/577790"
+    }
+   ]
+  },
+  {
+   "fixture_ref": "UEL:2627:2026-10-22:cyp-omonia:prt-benfica",
+   "match": "Omonia v Benfica",
+   "home_goals": 1,
+   "away_goals": 4,
+   "sources": [
+    {
+     "publisher": "VAVEL USA",
+     "url": "https://www.vavel.com/en-us/soccer/2026/10/22/1276329-omonia-vs-benfica-live-score-uefa-europa-league.html"
+    },
+    {
+     "publisher": "CNN Brasil",
+     "url": "https://www.cnnbrasil.com.br/esportes/futebol/futebol-internacional/benfica-cresce-no-segundo-tempo-e-goleia-omonia-nicosia-na-europa-league/"
+    },
+    {
+     "publisher": "Claro Sports",
+     "url": "https://www.clarosports.com/futbol/europa-league/benfica-vence-omonia-europa-league/"
+    },
+    {
+     "publisher": "t-online",
+     "url": "https://www.t-online.de/sport/live-ticker/fussball/europa-league/sdc_fm-62469/omonia-nicosia-benfica-europa-league-im-liveticker.html"
+    }
+   ]
+  },
+  {
+   "fixture_ref": "UEL:2627:2026-10-22:deu-hoffenheim:fra-lyon",
+   "match": "Hoffenheim v Lyon",
+   "home_goals": 3,
+   "away_goals": 0,
+   "sources": [
+    {
+     "publisher": "t-online",
+     "url": "https://www.t-online.de/sport/live-ticker/fussball/europa-league/sdc_fm-62462/hoffenheim-lyon-europa-league-liveticker.html"
+    },
+    {
+     "publisher": "Bulinews",
+     "url": "https://bulinews.com/hoffenheim-earn-first-europa-league-points-comfortable-win-over-ligue-1-leaders-lyon"
+    },
+    {
+     "publisher": "Sky Sport Germany",
+     "url": "https://sport.sky.de/fussball/hoffenheim-vs-lyon/577784"
+    }
+   ]
+  },
+  {
+   "fixture_ref": "UEL:2627:2026-10-22:cze-viktoria-plzen:bgr-levski-sofia",
+   "match": "Viktoria Plzeň v Levski Sofia",
+   "home_goals": 1,
+   "away_goals": 2,
+   "sources": [
+    {
+     "publisher": "BTA (Bulgarian News Agency)",
+     "url": "https://www.bta.bg/bg/news/sport/1230741-levski-nadigra-viktoriya-pilzen-i-postigna-parva-pobeda-v-grupata-na-liga-evropa"
+    },
+    {
+     "publisher": "Aktualne.cz",
+     "url": "https://sport.aktualne.cz/fotbal/evropsky-zmar-plzne-se-zase-prohloubil-viktoria-nestacila-ani-na-soupere-z-bulharska/r~aaa29411c9ac12da1714e8bd14301897/"
+    },
+    {
+     "publisher": "FOX Sports",
+     "url": "https://www.foxsports.com/soccer/europa-league-viktoria-plzen-vs-levski-sofia-oct-22-2026-game-boxscore-1006415"
+    },
+    {
+     "publisher": "t-online",
+     "url": "https://www.t-online.de/sport/live-ticker/fussball/europa-league/sdc_fm-62472/vikt-pilsen-levski-sofia-europa-league-im-liveticker.html"
+    }
+   ]
+  }
+ ]
+}

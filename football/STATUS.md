@@ -276,9 +276,10 @@ pgrep -fa "^/bin/bash data/logs/capture_loop" || (nohup data/logs/capture_loop.s
 5. `uv run footy settle`, and check the count against the records waiting.
 6. End.
 
-**Waiting now:** `comparisons/results_2026-10-21.json` (the nine Champions League games of 21
-Oct; Levante is skipped) has not been imported into the real database yet, and the 36 Europa
-League and Conference League games of 22 Oct need their own file.
+**Done 22 Oct, 23:40 UK:** Wikipedia refused again (HTTP 403). `comparisons/results_2026-10-21.json`
+(9 UCL games) and `comparisons/results_2026-10-22.json` (36 UEL/UECL games, three to five
+independent publishers each) were imported with `euro-import-results` and settled: 18 + 216
+records. Every UEFA record published so far is settled.
 
 ### Monday settle (08:10 UK)
 
