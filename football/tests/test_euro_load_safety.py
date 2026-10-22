@@ -100,6 +100,70 @@ def test_unparsable_box_does_not_delete_its_row(settings, migrated_engine, monke
     assert last_run(migrated_engine).status == "partial"
 
 
+def test_a_csv_built_with_errors_deletes_nothing_when_loaded_later(
+    settings, migrated_engine, monkeypatch, tmp_path
+):
+    """The scheduled jobs load the stored CSV as it is (`euro-update --fetch-wikipedia
+    --no-rebuild`) before they rebuild it: a CSV a build with errors wrote lacks the rows it
+    dropped, so loading it later must not delete them either (review of H5)."""
+    monkeypatch.setattr(build_2627, "build_uefa_2627", partial(build_uefa_2627, specs=(QSPEC,)))
+    played = box(8, "Víkingur Reykjavík", "ISL", "Hapoel Be'er Sheva", "ISR", "2–1")
+    page = qualifying(box(7, "Vardar", "MKD", "KuPS", "FIN", "0–2"), played)
+    with Session(migrated_engine) as s:
+        store_page(s, settings.raw_dir, QSPEC, page, revid=1)
+        s.commit()
+    run = partial(run_euro_update, migrated_engine, settings, openfootball_dir=tmp_path / "x")
+    run()
+    with Session(migrated_engine) as s:
+        store_page(s, settings.raw_dir, QSPEC, page.replace("|score = 2–1", "|score = Report"), 2)
+        s.commit()
+    assert run()["wikipedia"]["kept_rows"] == 1  # the build's own load keeps the row
+
+    detail = run(rebuild_2627=False)["wikipedia"]  # the stored CSV, as the jobs load it first
+    kept = euro_rows(migrated_engine)[("isl-vikingur-reykjavik", "isr-hapoel-beer-sheva")]
+    assert (kept.status, kept.home_goals, kept.away_goals) == ("played", 2, 1)
+    assert detail["deleted"] == 0 and detail["kept_rows"] == 1
+    assert detail["csv_build_errors"][0].startswith("unparsed_score: Report")
+    assert last_run(migrated_engine).status == "partial"
+    with Session(migrated_engine) as s:
+        assert s.scalars(select(DataCorrection)).all() == []
+
+    # Once the page reads cleanly again, the marker goes with the next build.
+    with Session(migrated_engine) as s:
+        store_page(s, settings.raw_dir, QSPEC, page, revid=3)
+        s.commit()
+    run()
+    detail = run(rebuild_2627=False)["wikipedia"]
+    assert "csv_build_errors" not in detail and detail["deleted"] == 0
+    assert last_run(migrated_engine).status == "ok"
+
+
+def test_footnotes_in_a_score_do_not_change_its_status():
+    """A footnote template in the score ({{efn}}, {{refn}}, {{notetag}}) may mention an
+    earlier postponement or an awarded penalty: the match was still played (review of H5)."""
+    page = qualifying(
+        box(
+            7,
+            "A",
+            "ENG",
+            "B",
+            "ESP",
+            "2–1{{efn|Originally scheduled for 1 July, but postponed after floods.}}",
+            "|goals1 =\n" + goals(10, 20) + "|goals2 =\n" + goals(30),
+        ),
+        box(14, "B", "ESP", "A", "ENG", "0–0{{notetag|A penalty was awarded but missed.}}"),
+        box(8, "C", "ENG", "D", "ESP", "Cancelled{{refn|group=note|C won on walkover.}}"),
+    )
+    parsed = parse_page(QSPEC, page, revid=1, retrieved_at=RETRIEVED)
+    got = [(r.home_name, r.status, r.stage, r.home_goals, r.away_goals) for r in parsed.rows]
+    assert got == [
+        ("A", "played", "Q1 leg 1", 2, 1),
+        ("B", "played", "Q1 leg 2", 0, 0),
+        ("C", "cancelled", "Q1 leg 1", None, None),
+    ]
+    assert not [i for i in parsed.issues if i.severity == "error"]
+
+
 def test_awarded_walkover_abandoned_replay_and_postponed():
     page = qualifying(
         box(7, "A", "ENG", "B", "ESP", "3–0 (awd.)"),

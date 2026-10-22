@@ -388,6 +388,28 @@ def _remove_templates(text: str) -> str:
             return "".join(out)
 
 
+# Footnote templates ({{efn|...}}, {{refn|...}}, {{notetag|...}}, {{sfn|...}}, {{#tag:ref|...}}):
+# their text is a note about the match, not its result.
+_NOTE_START = re.compile(
+    r"\{\{\s*(?:efn(?:-[a-z]+)?|refn|note\s*tag|ref\s*label|sfnm?|sfnp|cref2?|r|#tag:\s*ref)"
+    r"\s*[|}]",
+    re.I,
+)
+
+
+def strip_notes(value: str) -> str:
+    """`value` without <ref> tags and footnote templates (nested templates included)."""
+    text, out, i = _REF.sub("", value), [], 0
+    while (m := _NOTE_START.search(text, i)) is not None:
+        out.append(text[i : m.start()])
+        try:
+            i = _template_end(text, m.start())
+        except ValueError:  # unclosed: drop the rest
+            return "".join(out)
+    out.append(text[i:])
+    return "".join(out)
+
+
 def plain_text(value: str) -> str:
     """Readable text of a wikitext value: refs and templates removed, links as their label."""
     text = _REF.sub("", value)
@@ -595,7 +617,7 @@ def parse_page(
 
         score_raw = p.get("score", "")
         score_text = plain_text(score_raw)
-        marks = _REF.sub("", score_raw)  # footnotes may mention an earlier postponement
+        marks = strip_notes(score_raw)  # a footnote may mention an earlier postponement
         score = parse_score(score_raw)
         status = "scheduled"
         if _AWARDED.search(marks):
@@ -955,7 +977,7 @@ def _summary_extra_time(row: EuroRow, listed: str) -> list[ParseIssue]:
     """The summary table marks a leg a.e.t. (or on penalties) but its box doesn't: the box's
     score is after extra time, so the regulation score is rebuilt from its goal minutes (or
     left unknown)."""
-    text = _REF.sub("", listed)
+    text = strip_notes(listed)
     aet = bool(_AET.search(text))
     pens = bool(_PSO.search(text))
     if row.status != "played" or row.extra_time or not (aet or pens):

@@ -21,6 +21,7 @@ import {
   RecordTypeBadge,
   basisLabel,
   editionLabel,
+  consensusScope,
   isConsensus,
   recordTypeLabel,
 } from "../components/Badge";
@@ -155,7 +156,11 @@ function MatchDetail({ d, focusModels = false }: { d: PredictionDetail; focusMod
                   home={d.home_name}
                   away={d.away_name}
                   xg={p.expected_goals}
-                  beforePrices={d.basis === "model_and_market" && sameXg(p.expected_goals, d.counterpart)}
+                  beforePrices={
+                    d.basis === "model_and_market" &&
+                    d.counterpart?.relation !== "pure_record_of_record" &&
+                    sameXg(p.expected_goals, d.counterpart)
+                  }
                 />
               </section>
             )}
@@ -499,10 +504,11 @@ function MarketBlend({ d }: { d: PredictionDetail }) {
       <p>
         {consensus ? (
           <>
-            Bookmakers' prices {whenText} were taken as they are for the match result and over/under
-            2.5 goals: those figures are the bookmakers' consensus with the margins removed, and the
-            pick is the bookies' favourite. The model only shapes the other goal lines, both teams
-            to score and the scores
+            Bookmakers' prices {whenText} were taken as they are for {consensusScope(d)}: those
+            figures are the bookmakers' consensus with the margins removed, and the pick is the
+            bookies' favourite. The model only shapes the rest (
+            {consensusScope(d) === "the match result" ? "over/under 2.5 goals, " : ""}the other goal
+            lines, both teams to score and the scores)
           </>
         ) : (
           <>Bookmakers' prices {whenText} were blended in</>
@@ -576,7 +582,7 @@ function CompareTable({ d, pure, consensus }: { d: PredictionDetail; pure: Count
         </tbody>
       </table>
       <p className="muted small">
-        {consensus && "This record's match result and over 2.5 goals are the bookmakers' consensus. "}
+        {consensus && `In this record, ${consensusScope(d)} ${consensusScope(d) === "the match result" ? "is" : "are"} the bookmakers' consensus. `}
         <MatchLink id={pure.id}>Open {pure.model_label ?? pure.model_name}'s record</MatchLink> (saved{" "}
         {formatLondon(pure.created_at_utc)}
         {pure.relation === "pure_record_of_record" &&
@@ -622,7 +628,7 @@ function MarketVersion({ d, other }: { d: PredictionDetail; other: Counterpart }
     <div className="notice-info" role="note">
       <strong>There is also a model + market record for this match.</strong>{" "}
       {isConsensus(other)
-        ? `${other.model_label ?? other.model_name} takes the bookmakers' consensus (margins removed) for the match result and over/under 2.5 goals, and this model's numbers only for the other markets`
+        ? `${other.model_label ?? other.model_name} takes the bookmakers' consensus (margins removed) for ${consensusScope(other)}, and this model's numbers only for the other markets`
         : `${other.model_label ?? other.model_name} blended bookmakers' prices into this model's numbers`}{" "}
       (saved {formatLondon(other.created_at_utc)}).{" "}
       {other.is_primary && !d.is_primary && "It is the record of record for this match. "}

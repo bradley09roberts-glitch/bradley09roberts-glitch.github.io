@@ -3,7 +3,10 @@
 Outputs, under `<data_dir>/europe/`:
 - `uefa_2627.csv`: every match (played, scheduled, postponed, cancelled or awarded) from the
   Wikipedia pages, normalised;
-- `uefa_2627_league_phase_teams.csv`: the 36 teams of each league phase, by pot, with country.
+- `uefa_2627_league_phase_teams.csv`: the 36 teams of each league phase, by pot, with country;
+- `uefa_2627_build_errors.json`, only while the last build had errors (a box or page it could
+  not read, a missing page): the CSV then lacks rows the source still has, so every later load
+  of it, not only the build's own, deletes nothing (`build_errors_path`, footy.europe.euro_load).
 
 UEFA.com is not used (its terms, section 6.2; DECISIONS.md D-023): its match pages are neither
 fetched nor read. The one fact the build used to take from them (Union Saint-Gilloise v Hapoel
@@ -11,6 +14,7 @@ Be'er Sheva played in Düsseldorf, so neutral) now comes from German Wikipedia t
 `venue_overrides.csv` (`footy.europe.wikipedia_2627.apply_venue_overrides`).
 """
 
+import json
 from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
@@ -29,6 +33,7 @@ from footy.europe.wikipedia_2627 import (
     build_uefa_2627,
     write_csv,
 )
+from footy.models import utcnow
 
 
 def fetch_wikipedia(
@@ -81,6 +86,30 @@ class Build2627:
         stored row (a row the build dropped is not a row the source dropped)."""
         return [i for i in self.wikipedia.issues if i.severity == "error"]
 
+    def problems(self) -> list[str]:
+        """The errors and missing pages, as text."""
+        return [f"{i.code}: {i.detail} ({i.ref})" for i in self.errors] + [
+            f"missing page: {k}" for k in self.wikipedia.missing_pages
+        ]
+
+
+def build_errors_path(csv_path: Path) -> Path:
+    """The marker next to a matches CSV that a build with errors wrote."""
+    return csv_path.with_name(f"{csv_path.stem}_build_errors.json")
+
+
+def read_build_errors(csv_path: Path) -> list[str] | None:
+    """The problems of the build that wrote `csv_path`, or None if it had none. A marker that
+    can't be read still counts as errors."""
+    path = build_errors_path(csv_path)
+    if not path.is_file():
+        return None
+    try:
+        problems = json.loads(path.read_text(encoding="utf-8"))["problems"]
+        return [str(p) for p in problems] or [f"{path.name}: empty"]
+    except (OSError, ValueError, KeyError, TypeError) as exc:
+        return [f"{path.name}: unreadable ({type(exc).__name__})"]
+
 
 def build_all(session: Session, raw_dir: Path, data_dir: Path) -> Build2627:
     out = data_dir / "europe"
@@ -88,7 +117,24 @@ def build_all(session: Session, raw_dir: Path, data_dir: Path) -> Build2627:
         "matches": out / "uefa_2627.csv",
         "teams": out / "uefa_2627_league_phase_teams.csv",
     }
+    paths["build_errors"] = build_errors_path(paths["matches"])
     result = build_uefa_2627(session, raw_dir)
+    built = Build2627(result, paths)
+    problems = built.problems()
+    if problems:  # written before the CSV, so a CSV with errors never goes without it
+        out.mkdir(parents=True, exist_ok=True)
+        tmp = paths["build_errors"].with_name(paths["build_errors"].name + ".tmp")
+        tmp.write_text(
+            json.dumps(
+                {"built_at": utcnow().isoformat(timespec="seconds"), "problems": problems},
+                indent=1,
+                ensure_ascii=False,
+            ),
+            encoding="utf-8",
+        )
+        tmp.replace(paths["build_errors"])
     write_csv(paths["matches"], CSV_COLUMNS, (r.csv_row() for r in result.rows))
     write_csv(paths["teams"], TEAM_COLUMNS, (t.csv_row() for t in result.teams))
-    return Build2627(result, paths)
+    if not problems:  # removed only once the clean CSV is in place
+        paths["build_errors"].unlink(missing_ok=True)
+    return built

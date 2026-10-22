@@ -50,7 +50,9 @@ its sense) wherever it shows the numbers.
   shows the consensus probabilities it used). The every-model list shows each record as
   published and says when several model + market records share their figures. Whether these
   shadows should publish at all, or show only BTTS and expected goals, is the owner's call
-  (STATUS.md, open questions).
+  (STATUS.md, open questions). Update, 22 Oct 2026: they publish, as decided in the build that
+  day (STATUS.md, known problem 12); no DECISIONS.md entry records it and the owner hasn't
+  reviewed it yet (audit D3).
 - **Nothing made up.** Every number comes from a saved record, its settlement or a saved
   ledger. Labels and descriptions come from `reference/shadow_models.json` when it gives them,
   else from the catalogue in `model_catalogue.py` (taken from STATUS.md and DECISIONS.md), else

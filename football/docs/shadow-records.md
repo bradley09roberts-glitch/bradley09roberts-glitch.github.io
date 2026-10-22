@@ -24,10 +24,16 @@ description for the website (`footy.model_catalogue` reads the same file).
 | UEFA | `challenger` (D-026) | `pan_euro_mix_mxg_all_ma0`, `pan_euro_mix_mxg_all_ma0.25`, `pan_euro_mix_mxg_all_ma0_w0.8` |
 | UEFA | `baseline` | `euro_frequency` |
 
-Not listed, because they already publish through the models-of-record jobs:
-`market_tilt_shots`, `congestion_context_on_elo` and `dixon_coles` (league games) and
-`pan_euro_mix_mxg` (UEFA). The pan-European Dixon-Coles and Elo parts of the UEFA mixture are
-not registered as models on their own, so they have no shadow records.
+Not listed, because they are models of record (`publish-shadows` refuses a model that
+`primary_models.json` lists from now on): `market_tilt_shots`, `congestion_context_on_elo`
+and `dixon_coles` (league games) and `pan_euro_mix_mxg` (UEFA). They publish through their
+own commands. `dixon_coles`, the reference model and last-resort fallback, is not published
+by any of the earlier check-ins (corrected 22 Oct, audit L6: this page said it already was),
+so the five Serie A games of 28 Oct have no Dixon-Coles record. STATUS.md's check-in runbook
+now publishes it with `footy predict-domestic --model dixon_coles`; the server kit's daily job
+(`deploy/jobs/daily.sh`) publishes only the first pure model of record. The pan-European
+Dixon-Coles and Elo parts of the UEFA mixture are not registered as models on their own, so
+they have no shadow records.
 
 To add a model, append an entry (`model`, `role`, `description`, optionally `decision` for the
 DECISIONS.md entry its notes cite, and `label` for the website). The name must be registered
@@ -100,10 +106,10 @@ shadow's notes and the skips below added:
 - **Never twice.** A fixture this model has already recorded (same fixture, edition and record
   type) is skipped before fitting; `publish` would refuse a duplicate anyway. In a league where
   a pairing meets once a season the fixture is the pairing, whatever its date: a game re-dated
-  since its record (a placeholder date replaced by the real one) is still recorded, and a new
-  model's record of it takes the reference of the fixture's first record, so the match page
-  lists every model's record together. `publish` takes
-  the database's write lock before it checks, so two runs at once (an overlapping check-in)
+  since its record (a placeholder date replaced by the real one) counts as already recorded
+  and is not recorded again, and a new model's record of it takes the reference of the
+  fixture's first record, so the match page lists every model's record together. `publish`
+  takes the database's write lock before it checks, so two runs at once (an overlapping check-in)
   still record a fixture once.
 - **One failure doesn't stop the rest.** A model that raises is reported (`FAILED`, with the
   error) and the next model runs. League games run one league at a time, so a league that

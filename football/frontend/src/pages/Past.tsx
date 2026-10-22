@@ -18,7 +18,7 @@ import {
 } from "../api";
 import { BasisBadge, EditionBadge, RecordTypeBadge, isConsensus } from "../components/Badge";
 import { CompetitionChip } from "../components/CompetitionMark";
-import { MatchLink, useMatchPageCheck } from "../components/MatchLink";
+import { MatchLink, useEveryModelCheck, useMatchPageCheck } from "../components/MatchLink";
 import { ApiView, Empty } from "../components/StateViews";
 import { TeamBadge } from "../components/TeamBadge";
 import { TeamLink } from "../components/TeamLink";
@@ -201,21 +201,25 @@ export function Past({ query }: PageProps) {
         result={result}
         what="past matches"
         loadingLines={4}
-        isEmpty={(d) => d.matches.length === 0}
+        isEmpty={(d) => d.matches.length === 0 && !d.truncated}
         empty={<NoRecords kind={kind} competition={competition} competitionName={competitionName} />}
       >
-        {(data) => (
-          <PastList
-            data={data}
-            kind={kind}
-            mode={mode}
-            line={line}
-            shown={shown}
-            page={page}
-            limit={limit}
-            showCompetition={competition === null}
-          />
-        )}
+        {(data) =>
+          data.matches.length === 0 ? (
+            <NotAmongNewest limit={limit} competitionName={competitionName} />
+          ) : (
+            <PastList
+              data={data}
+              kind={kind}
+              mode={mode}
+              line={line}
+              shown={shown}
+              page={page}
+              limit={limit}
+              showCompetition={competition === null}
+            />
+          )
+        }
       </ApiView>
     </>
   );
@@ -246,6 +250,26 @@ function KindNote({ kind, mode }: { kind: Kind; mode: Mode }) {
         never counted in the pre-match record.
       </div>
     </div>
+  );
+}
+
+/** "All models" for one competition in a copy of the site: the copy holds every model's
+ * records for the newest matches of all competitions only (footy/snapshot.py,
+ * FRONTEND_PAST_ALL_MODELS), and none of them is in this one. Its matches may well be settled:
+ * the one-card-per-match list has them. */
+function NotAmongNewest({ limit, competitionName }: { limit: number; competitionName: string | null }) {
+  const name = competitionName ?? "this competition";
+  return (
+    <Empty title={`No ${name} match among the newest ${formatNumber(limit, 0)}`}>
+      <p>
+        This copy of the site keeps every model's records for the newest {formatNumber(limit, 0)}{" "}
+        settled matches of all competitions only, and none of them is in {name}. Its settled
+        matches are listed with their record of record.
+      </p>
+      <button type="button" onClick={() => setQuery({ models: null, shown: null })}>
+        Show the records of record
+      </button>
+    </Empty>
   );
 }
 
@@ -625,6 +649,8 @@ function PastRow({
   const s = card.settlement;
   const settledMarkets = s ? Object.keys(s.outcomes).length : 0;
   const others = Math.max(0, (card.models_for_fixture ?? 1) - 1);
+  // A copy of the site keeps each fixture's every-model list for recent fixtures only.
+  const compare = useEveryModelCheck()(card.fixture_ref);
 
   return (
     <li>
@@ -658,14 +684,17 @@ function PastRow({
             <span className="above-stretch">
               <span className="muted">
                 {" "}
-                · {others} other {others === 1 ? "model" : "models"} ·{" "}
+                · {others} other {others === 1 ? "model" : "models"}
+                {compare ? " · " : ""}
               </span>
-              <MatchLink id={card.id} query={{ at: "models" }} className="past-compare">
-                Compare every model
-                <span className="visually-hidden">
-                  : {card.home_name} versus {card.away_name}
-                </span>
-              </MatchLink>
+              {compare && (
+                <MatchLink id={card.id} query={{ at: "models" }} className="past-compare">
+                  Compare every model
+                  <span className="visually-hidden">
+                    : {card.home_name} versus {card.away_name}
+                  </span>
+                </MatchLink>
+              )}
             </span>
           )}
         </p>

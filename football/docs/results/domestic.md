@@ -1,5 +1,17 @@
 # Model results (generated 2026-10-21T06:06:00+00:00)
 
+> **Note added by hand, 22 Oct 2026 (audit L4, M2; `footy final-report` rewrites this page).**
+> This is the report of 21 Oct, 06:06 UTC, before round 4 of the model lab. It compares 6 of
+> the 59 models with validation ledgers, and `congestion_context_on_elo`, the pure fallback of
+> record since 10:52 UTC that day, is not on it. The current models of record and the later
+> rounds are in STATUS.md and DECISIONS.md (D-026 to D-028, and the corrections of 22 Oct).
+> `market_tilt_shots`'s match-result and over/under 2.5 figures are the bookmakers'
+> pre-closing consensus with the margins removed, so its 53.4% of results right is what
+> backing the bookmakers' favourite gives (53.5% on the same games); the pure fallback scores
+> 52.5%. The test seasons were consulted more than once while choosing (D-027), so the test
+> figures below helped choose. The pure models against the closing price are added under
+> "Market benchmark".
+
 Selection rule: Lowest composite on validation 2023/24 (mean of model/frequency-baseline over 1X2 RPS and log losses of O/U 1.5, 2.5, 3.5 and BTTS), five leagues pooled on identical fixtures.
 
 Selected model: **market_tilt_shots**. Best composite on validation: market_tilt_shots; best 1X2 accuracy on validation: market_tilt_dc.
@@ -32,6 +44,21 @@ Selected model: **market_tilt_shots**. Best composite on validation: market_tilt
 - avg_OU_2.5: model log loss 0.6725, market 0.6691, difference +0.0034 (95% CI +0.0011 to +0.0055), n=3503
 
 Gate: Model does not beat the closing market; positive ROI is not expected.
+
+Added by hand, 22 Oct 2026 (audit M2, recomputed from the test ledgers): every model against
+the same closing benchmark (Shin de-vigged; 1X2 n=3392, O/U 2.5 n=3374). A positive
+difference means worse than the closing price.
+
+| Model | 1X2 RPS difference (95% CI) | O/U 2.5 log loss difference (95% CI) |
+| --- | ---: | ---: |
+| market_tilt_shots (model + market) | +0.0006 (−0.0002 to +0.0013) | +0.0035 (+0.0011 to +0.0058) |
+| congestion_context_on_elo (best pure model) | +0.0048 (+0.0030 to +0.0066) | +0.0120 (+0.0084 to +0.0155) |
+| dixon_coles | +0.0067 | +0.0127 |
+| baseline_poisson | +0.0076 | +0.0117 |
+| baseline_frequency | +0.0362 | +0.0182 |
+
+No pure model comes near the closing price; the model + market model's figures for these two
+markets are the pre-closing consensus itself.
 
 ## Profit simulation (flat 1 unit, Bet365 pre-closing)
 

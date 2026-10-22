@@ -287,6 +287,11 @@ robots.txt allows `/*/match/`, which is what the earlier session relied on.
 
 The raw store is append-only, so nothing was deleted.
 
+**Update, 22 Oct 2026 (audit M16):** since then nothing reads the stored UEFA.com pages. The
+build no longer writes the UEFA cross-check, and the neutral flag below comes from German
+Wikipedia (`src/footy/europe/venue_overrides.csv`, citing oldid 271428890). What follows
+describes the build before that change.
+
 The stored pages still feed the 2026/27 build in two ways:
 
 - the kick-off cross-check in `uefa_2627_crosscheck.csv`;

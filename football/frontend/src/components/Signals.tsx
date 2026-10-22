@@ -70,10 +70,8 @@ export function pickLabel(c: Pick<PredictionCard, "basis" | "consensus_markets">
 export function ClosingPriceNote() {
   return (
     <p className="small closing-note" role="note">
-      <strong>Over two test seasons no model beat the closing price.</strong> For league games the
-      match result and over/under 2.5 goals shown first are the bookmakers' consensus with the
-      margins removed, so they say what the bookmakers think, not where they are wrong.{" "}
-      <a href={href("/lab", { tab: "hits" })}>Hit rates against the bookmakers' favourite</a>
+      <strong>Over two test seasons no model beat the closing price.</strong>{" "}
+      <a href={href("/lab", { tab: "hits" })}>Against the bookmakers</a>
     </p>
   );
 }

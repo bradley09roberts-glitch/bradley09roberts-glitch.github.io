@@ -281,3 +281,25 @@ def test_cli_dry_run_writes_nothing(tmp_path, monkeypatch, capsys, migrated_engi
     finally:
         config.get_settings.cache_clear()
         db.get_engine.cache_clear()
+
+
+def test_a_fixture_given_twice_in_one_file_is_refused(migrated_engine, settings, tmp_path):
+    """Two entries for one match (a copy-paste slip) are both refused, in the dry run too: the
+    dry run must not report two different scores as both applied (review of M3)."""
+    setup(migrated_engine, settings.raw_dir)
+    other = {
+        "competition": "UCL",
+        "match_date": "2026-10-21",
+        "home_team": "ita-como",
+        "away_team": "eng-man-united",
+    }
+    path = write(tmp_path, [entry(), {**entry(hg=3), "fixture_ref": None, **other}])
+    for dry_run in (True, False):
+        report = import_results(migrated_engine, settings.raw_dir, path, now=AFTER,
+                                dry_run=dry_run, correct=True)  # fmt: skip
+        assert [e.action for e in report.entries] == ["refused", "refused"]
+        assert all("2 entries" in e.detail for e in report.entries)
+    assert (match(migrated_engine).status, match(migrated_engine).source) == (
+        "scheduled",
+        "wikipedia",
+    )

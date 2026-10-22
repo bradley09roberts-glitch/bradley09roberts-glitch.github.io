@@ -257,7 +257,10 @@ What the job guarantees (since 22 Oct 2026, audit H5, M3 and M14):
 - **Deletion.** A stored row is deleted only when its source no longer produces it (a
   rescheduled fixture comes back under a new date), and never while any error is outstanding:
   a box or page the 2026/27 parser could not read, a missing page, a failed rebuild, or a team
-  name not in the alias table. A row with a result (anything but "scheduled") is deleted only
+  name not in the alias table. A build with errors leaves `data/europe/uefa_2627_build_errors.json`
+  next to the CSV it wrote (removed by the next clean build), so a later load of that CSV as it
+  is (`--no-rebuild`, as the scheduled jobs load it before rebuilding) deletes nothing either
+  and reports `csv_build_errors`. A row with a result (anything but "scheduled") is deleted only
   with a `data_corrections` entry (field `deleted`, the row as it was); where none can be
   written, the row stays and the job reports `result_row_kept`.
 - **Corrections.** A changed result in a newer raw revision is written to `data_corrections`
@@ -289,7 +292,8 @@ the score after 90 minutes plus stoppage time; `extra_time` and `penalties` may 
 knockout match. A source may repeat the score (`home_goals`, `away_goals`), which must agree.
 
 - **Evidence.** At least two independent publishers per score: different names on different
-  web domains. A UEFA.com URL is refused (D-023).
+  web domains. A UEFA.com URL is refused (D-023). Where two entries of one file would both set
+  the same match, both are refused (which score is meant is not known).
 - **Only existing fixtures.** The match must be in `euro_matches`, not postponed, cancelled or
   awarded, and must have kicked off at least two hours earlier. Entries for league games are
   skipped (football-data settles those).

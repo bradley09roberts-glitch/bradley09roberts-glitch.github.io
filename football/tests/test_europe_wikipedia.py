@@ -215,8 +215,12 @@ def test_fetch_store_then_build_csv(migrated_engine, settings):
     assert bayern["kickoff_utc"] == "2026-10-21T19:00:00+00:00"
     assert (bayern["status"], bayern["home_goals"], bayern["neutral"]) == ("scheduled", "", "0")
     assert "UEFA.com" not in bayern["source_ref"]
-    assert set(built.paths) == {"matches", "teams"}  # no UEFA cross-check file
+    assert set(built.paths) == {"matches", "teams", "build_errors"}  # no UEFA cross-check
     assert built.wikipedia.missing_pages == [p.page.logical_key for p in PAGES[1:]]
+    # The pages not stored yet are build errors: a marker says the CSV lacks their rows.
+    marker = json.loads(built.paths["build_errors"].read_text(encoding="utf-8"))
+    missing = [f"missing page: {p.page.logical_key}" for p in PAGES[1:]]
+    assert marker["problems"][-len(missing) :] == missing
 
 
 def test_goal_list_that_disagrees_with_score_is_reported():

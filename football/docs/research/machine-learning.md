@@ -147,7 +147,10 @@ The reference columns are `market_tilt_shots` (with prices) and `congestion_cont
   parameters are out of sample for every record, but some of their settings are not:
   - the shots model's settings were chosen on 2022/23, as were MarketTilt's weights;
   - `congestion_context_on_elo`'s base (`elo_goals_gd`) was tuned on the mean of 2022/23
-    and 2023/24 (D-027).
+    and 2023/24 (D-027);
+  - the GLM booster (`ml_gbm_glm_boost`) comes from a family whose builder also ran about 47
+    configurations on 2023/24; the chosen settings are best or near-best on 2021/22 and
+    2022/23 (added 22 Oct 2026, audit M19; DECISIONS.md, corrections of 22 Oct).
 
   So on 2022/23 these members look better than they would out of sample, and on validation
   ctx does too. A learner that trusts whichever member has done best recently inherits that,

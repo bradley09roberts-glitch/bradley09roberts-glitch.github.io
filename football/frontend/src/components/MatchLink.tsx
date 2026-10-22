@@ -12,19 +12,36 @@ import { SNAPSHOT, snapshotHolds, snapshotStatus, subscribeSnapshotStatus } from
 const noSubscription = () => () => {};
 const noStatus = () => null;
 
-/** A test for "this record has a page here": always true in the normal build; in a snapshot,
- * false for a record the copy is known not to hold. Re-renders when snapshot.json loads. */
-export function useMatchPageCheck(): (id: number | null | undefined) => boolean {
+/** A test for "this request is answered here": always true in the normal build; in a
+ * snapshot, false for a request the copy is known not to hold. Re-renders when snapshot.json
+ * loads. */
+function useHeldCheck(): (url: string) => boolean {
   const status = useSyncExternalStore(
     SNAPSHOT ? subscribeSnapshotStatus : noSubscription,
     SNAPSHOT ? snapshotStatus : noStatus,
   );
   return useCallback(
-    (id: number | null | undefined) =>
-      id !== null && id !== undefined && (!SNAPSHOT || snapshotHolds(endpoints.prediction(id)) !== false),
+    (url: string) => !SNAPSHOT || snapshotHolds(url) !== false,
     // The status changes once snapshot.json has loaded; the test then gives final answers.
     [status],
   );
+}
+
+/** A test for "this record has a page here": always true in the normal build; in a snapshot,
+ * false for a record the copy is known not to hold. Re-renders when snapshot.json loads. */
+export function useMatchPageCheck(): (id: number | null | undefined) => boolean {
+  const held = useHeldCheck();
+  return useCallback(
+    (id: number | null | undefined) => id !== null && id !== undefined && held(endpoints.prediction(id)),
+    [held],
+  );
+}
+
+/** A test for "this fixture's every-model list is here" (the match page's "Every model"
+ * section): in a snapshot, only fixtures inside its window of full pages have one. */
+export function useEveryModelCheck(): (fixtureRef: string) => boolean {
+  const held = useHeldCheck();
+  return useCallback((fixtureRef: string) => held(endpoints.fixtureModels(fixtureRef)), [held]);
 }
 
 export function MatchLink({

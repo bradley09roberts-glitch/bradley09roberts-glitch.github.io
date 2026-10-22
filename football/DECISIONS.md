@@ -846,3 +846,91 @@ publishers' facts (the final score) are used; their text is not stored, beyond t
 **Not done:** a second automatic results provider (audit improvement); until there is one,
 this import is the fallback, run by a person (or a supervised check-in) with `--dry-run`
 first.
+
+## Corrections of 2026-10-22 (from the audit of that day)
+
+The entries above stay as written. These notes correct statements in them that the audit
+([docs/audit/2026-10-22-audit.md](docs/audit/2026-10-22-audit.md)) found wrong or overstated;
+each names the entry and the audit item.
+
+- **Open table, D-010 (audit L9).** The Sportmonks token is already in `.env` (free plan), so
+  nothing is waiting on the owner for the free plan. The capture job has stored one capture,
+  88 quotes for Randers v Brøndby on 21 Oct, 5.4 hours late; STATUS's "no snapshots yet" was
+  false. Its reliability problems are audit M18.
+- **D-004 (audit section 5, D8).** "Type-checking catches API-shape drift" is false: the
+  frontend's API types are written by hand and the API returns untyped dictionaries, so a
+  change in a response's shape is not caught.
+- **D-009 (audit L9).** "Not needed until a provider key exists" no longer holds: settling and
+  publishing (M7) depend on scheduled jobs, and the key exists. The server kit
+  ([docs/server.md](docs/server.md)) is ready; the owner's step is creating the server.
+- **D-023 (audit M16).** Until 22 Oct the 147 stored UEFA.com pages were re-read on every
+  rebuild and set one model input, the neutral flag of Union Saint-Gilloise v Hapoel Be'er
+  Sheva (in Düsseldorf), against the terms quoted here. Since 22 Oct nothing reads them: the
+  venue comes from German Wikipedia (`src/footy/europe/venue_overrides.csv`).
+- **D-025 (audit M19).** The rule that "a builder's own search inside a model family uses
+  seasons before 2023/24 only" was written at 03:43 UTC on 21 Oct, after most of the lab had
+  been tuned under a brief that allowed tuning on validation. The searches that also used
+  2023/24:
+  - `dc_tuning`: about 90 configurations, by coordinate descent on 2022/23 and 2023/24 pooled;
+  - `dynamic_ratings`: a search on 2021/22 to 2023/24 pooled, and the blend weights;
+  - `elo_goals`: a search on the mean of 2022/23 and 2023/24 (D-027 disclosed it for
+    `elo_goals_gd`);
+  - `bivariate_dispersion`: its internal search was scored on 2023/24 as well;
+  - `ml_gbm`: about 47 configurations were also run on 2023/24 (the chosen ones are best or
+    near-best on the earlier seasons);
+  - through their bases or members: `congestion_context_*` (`elo_goals_gd`),
+    `goal_calibration_tuned_level` (`dc_tuning_tilt`; its own settings did use only 2021/22
+    and 2022/23), and the ensembles (`elo_goals_wfe`, `congestion_context_on_elo`,
+    `dynamic_ratings_ekf`);
+  - the UEFA round-1 search (xi, rt, Elo K; see D-027 below).
+
+  Not affected: `shots_xg` and `MarketTilt`'s weights (2022/23), `dixon_coles` and the
+  baselines, so the league model of record's own settings are clean. This is selection bias,
+  not leakage: no forecast saw a later result. Its size: `dc_tuning`'s gain over Dixon-Coles
+  is −0.0038 on 2023/24 and −0.0016 to −0.0029 on the unused 2021/22, enough to reorder
+  candidates about 0.001 apart. "Every candidate compared on validation is listed with its
+  number" does not hold for these searches' evaluations.
+- **D-026 (audit L1, L21, M20).**
+  - "Chosen by D-025 on validation and confirmed once on test": the test seasons were
+    consulted more than once (domestic test runs at 06:24 and 10:05 UTC on 21 Oct and 00:18 on
+    22 Oct; UEFA at 01:58, 04:17 and 05:43 on 21 Oct). `market_tilt_shots` stays as the
+    incumbent under D-027 although five later price candidates scored lower on validation; the
+    quoted test figures therefore helped choose.
+  - The 45 live `pan_euro_mix` records were published at 01:58 UTC on 21 Oct, before the 4,815
+    repeat meetings were imported (03:14). Replayed with them, 1X2 moves by up to 0.0506 (Braga
+    v Gent), O/U 3.5 by up to 0.0485 (median 0.0047), and two picks flip. The data
+    fingerprint did not change, so only `job_runs` shows it. The records stay as published.
+    "Both rows use the same data" refers to the backtest table and remains true.
+  - "The profit simulation finds almost nothing to bet": all 72 threshold strategies made no
+    bet on validation, `frozen_on_validation` is empty, and no pure model was simulated, so
+    milestone M5 is only partly done.
+- **D-027 (audit L2, L4, M19, M22, M5).**
+  - "Nine UEFA configurations were compared over rounds 2 and 3": about 30 distinct
+    configurations (33 run names) were compared over six rounds, all on the same 364
+    validation fixtures, and round 1's search was on 2023/24. The deciding gap on validation
+    is noise-sized (`pan_euro_mix_mxg` against `pan_euro_mix` −0.0011, 95% CI −0.0041 to
+    +0.0018); the switch held on test (−0.0020, −0.0034 to −0.0006). The test set also has 458
+    qualifiers that validation never had.
+  - "About 50 pure models have validation ledgers": 59 models have composite ledgers on the
+    same 1,752 fixtures, and the search evaluations behind them are not counted.
+  - `congestion_context_on_elo` "is better in all five leagues and both seasons": true pooled
+    within each league and within each season (barely in Ligue 1, 0.97478 against 0.97489).
+    League by season its composite is worse in 3 of the 10 cells (D1 2024/25 0.9557 against
+    0.9494, F1 2024/25 0.9706 against 0.9703, SP1 2024/25 0.9534 against 0.9518), and its RPS
+    in one (E0 2025/26).
+  - "On the Championship 2023/24 (0.9815 against 0.9874)": no ledger was saved, so the figure
+    can't be regenerated. The Championship has no test ledger either, yet 12 of its
+    fixtures have `congestion_context_on_elo` as record of record (audit L5).
+  - The paired intervals here and in D-028 came from scratch scripts, not from code in the
+    repository; the audit reproduced them exactly with its own code. The backtest manifests
+    record only the commit at HEAD (the 06:24 test ran on a "WIP checkpoint" commit).
+  - "Migrations": true for `capture-odds` and `fd-fixtures` (and now `import-records` and
+    `euro-import-results`), but `fd-update`, `euro-update` and `serve` still migrate on their
+    own, and the check-ins run the first two (audit M5, open).
+- **D-028 (audit M19).** The member-tuning caveat names `congestion_context_on_elo` and the
+  shots model. The GLM booster member (`ml_gbm_glm_boost`) comes from a family that also ran
+  about 47 configurations on 2023/24.
+- **Model descriptions (audit L19).** STATUS (until 22 Oct) and the site's model catalogue
+  describe `congestion_context_on_elo` and `elo_goals_gd` as goal-based Elo. They also use
+  shots on target (blend 0.4) and red cards: "Elo on goals and shots on target, with red
+  cards, congestion and context".

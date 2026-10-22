@@ -1136,8 +1136,10 @@ def projection(snap: Snapshot, total: int, today: date | None = None) -> dict | 
     today = today or datetime.now(UTC).date()
 
     def size(keys: list[str]) -> int:
+        # A fixture's own parts; one level down (model parameters) is shared by every fixture
+        # in a file, so it is left out.
         bodies = {snap.entries[k][1] for k in keys if k in snap.entries}
-        parts = {p for i in bodies for p in snap._parts_of[i].values()}
+        parts = {p for i in bodies for n, p in snap._parts_of[i].items() if "." not in n}
         return snap._bytes(bodies, keys, parts)
 
     full: dict[str, int] = {}
@@ -1328,11 +1330,22 @@ class ExportResult:
     def warnings(self) -> list[str]:
         out = size_warnings(self.files)
         weeks = (self.projection or {}).get("weeks_to_warning")
-        if weeks is not None and 0 < weeks <= 2:
+        total = sum(n for _, n in self.files)
+        # 0 weeks: the window of full pages, once it fills (within days), already puts the
+        # site within WARN_FRACTION of the limit, though today's total may still be below it.
+        if (
+            weeks is not None
+            and weeks <= 2
+            and total < (1 - WARN_FRACTION) * HOST_LIMITS["total_bytes"]
+        ):
+            when = (
+                "once the window of full match pages fills"
+                if weeks == 0
+                else f"in about {weeks} weeks"
+            )
             out.append(
                 f"projected to come within {WARN_FRACTION:.0%} of the "
-                f"{HOST_LIMITS['total_bytes']:,}-byte limit in about {weeks} weeks "
-                "(`projection`)"
+                f"{HOST_LIMITS['total_bytes']:,}-byte limit {when} (`projection`)"
             )
         return out
 

@@ -3,19 +3,24 @@
 Prediction and backtesting for the Premier League, La Liga, Serie A, Bundesliga and Ligue 1,
 covering match result (1X2), total goals (O/U 1.5 / 2.5 / 3.5) and both teams to score.
 
-> **Status (21 Oct 2026): live.** Genuine pre-match predictions are published and saved
-> before kickoff: league games use a model + market blend, UEFA competitions a pan-European
-> model. Both were chosen on 2023/24 and tested once on 2024/25 and 2025/26. The league model
-> is clearly more accurate than the pure models but does not beat the closing price, so no
-> betting edge is claimed. Details and open items: [STATUS.md](STATUS.md); results:
-> [docs/results/domestic.md](docs/results/domestic.md).
+> **Status (22 Oct 2026): live.** Genuine pre-match predictions are published and saved
+> before kickoff. For league games with prices, the match result and over/under 2.5 are the
+> bookmakers' pre-closing consensus with the margins removed, and the model shapes the other
+> markets; without prices a pure model stands in. UEFA competitions use a pan-European model
+> with no price input. Both models were chosen on validation 2023/24 and checked on 2024/25
+> and 2025/26, a test set that was consulted more than once while choosing. The league model
+> beats each of the three pure models tested, but no model here beats the closing price, so
+> no betting edge is claimed. Details and open items: [STATUS.md](STATUS.md); results:
+> [docs/results/domestic.md](docs/results/domestic.md); the audit of 22 Oct:
+> [docs/audit/2026-10-22-audit.md](docs/audit/2026-10-22-audit.md).
 
 ## What this is (and isn't)
 
 - Measured, reproducible probabilities and walk-forward backtests, compared against simple
   baselines and against de-vigged closing odds on the same fixtures.
-- Not a tipping service. No win rate or profit is promised; if the model doesn't beat the
-  closing market, the site says so first.
+- Not a tipping service. No win rate or profit is promised. Over the two test seasons no
+  model beat the closing price: the Fixtures and Performance pages say so in one line, and the
+  Lab gives the figures.
 
 ## Layout
 
@@ -24,7 +29,9 @@ covering match result (1X2), total goals (O/U 1.5 / 2.5 / 3.5) and both teams to
 | `src/footy/` | Python package: config, database, API, ingest, providers, capture |
 | `src/footy/reference/` | Team mapping tables (`teams.csv`, `team_aliases.csv`) |
 | `docs/coverage/` | Generated coverage report (counts only) |
-| `migrations/` | Alembic migrations (SQLite by default, Postgres via `FOOTY_DATABASE_URL`) |
+| `migrations/` | Alembic migrations (SQLite by default, Postgres via `FOOTY_DATABASE_URL`; the write lock that keeps records and settlements single is SQLite-only, so publish on SQLite) |
+| `records/predictions/` | The genuine pre-match records, one JSON line each, append-only (`footy import-records` loads them into a new database) |
+| `deploy/` | Server kit for an always-on host ([docs/server.md](docs/server.md)) |
 | `tests/` | pytest suite |
 | `frontend/` | React + Vite + TypeScript site (mobile-first) |
 | `docs/research/` | Source and provider research with links and retrieval dates |
@@ -55,6 +62,8 @@ uv run footy predict-euro --model pan_euro_mix_mxg --dry-run        # UEFA predi
 uv run footy publish-shadows --group all --dry-run   # every other listed model's own records
                                 #   (docs/shadow-records.md; --days, --models a,b)
 uv run footy settle             # settle published predictions whose results are in
+uv run footy doctor             # health check (read-only): jobs, failed downloads, unsettled
+                                #   records, records files against the database
 uv run footy import-records     # a new or rebuilt database: load records/predictions/*.jsonl
                                 #   (ids kept, sha256 checked), then settle; publishing
                                 #   refuses until the database holds every published record

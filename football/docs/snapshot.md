@@ -134,7 +134,7 @@ snapshot's shard files and pictures that the new one doesn't have are removed.
 
 **Warnings** (the export still succeeds): the report's `warnings` lists any file, the file
 count or the total within a fifth (`WARN_FRACTION`) of its limit, and a projection that comes
-within a fifth of the 64 MB in two weeks or less; `footy export-snapshot` also prints each one
+within a fifth of the 64 MB in two weeks or less (or as soon as the window of full pages fills); `footy export-snapshot` also prints each one
 on stderr as `WARNING: …`. `projection` estimates the total ahead from this export: the bytes of
 a fixture's full pages and of the pages kept after the window, the fixtures of the busier of
 the last and the next seven days, the window once full, and the weekly growth (lasting pages
@@ -182,6 +182,23 @@ for the RPS, and models are columns (`columns`, `models`), not keys. Once a fixt
 are written, each further record of it costs about 3.3 KB of match page and 1.6 KB in the
 fixture's every-model list (averages on 22 October), so twenty shadow records on each of about
 60 league fixtures would add roughly 6 MB.
+
+After the audit fixes (22 October, 21:13 UK, on a copy of the database): **40.46 MB in 54
+files**. The Past page's lists moved to `snapshot-past-1.json` (14 KB: one card per match, the
+cards slimmed to what the list shows, 1.9 KB each against 3.1 KB), shared model parameters cut
+the match pages from 6.29 to 5.47 MB, and every record still has its page (no fixture is older
+than the window yet). The report's projection: about 104 fixtures a week, 55 KB a fixture with
+every page and 13 KB kept after the window, so the window settles near 11 MB and the site then
+grows by about 1.7 MB a week: within a fifth of 64 MB in about three weeks, at the limit in about
+ten. The team pages (22.6 MB, 56% of the site) are now the largest share and are not trimmed
+here; publishing in several batches (the host allows 256 MB per version) would lift the limit.
+
+That projection is optimistic. Settled records cost more: on a copy with every record up to
+25 Oct settled (simulated results) and the window placed as on 2 Nov, the site was 42.60 MB and
+the projection said within a fifth of 64 MB as soon as the window fills and at the limit in
+about 5.6 weeks (records of 22 Oct only, before the price shadow models add about seven records
+per league fixture; review of the audit fixes, 22 Oct). Expect the limit around early December
+unless the window is shortened, team pages are trimmed or the site is published in batches.
 
 Per team: profile about 34 KB (Arsenal 33.6 KB, Aston Villa 35.6 KB), match log about 95 KB,
 media 0.5 KB. Before shards the whole snapshot was one `snapshot.json` of 12.2 MB without team

@@ -312,43 +312,45 @@ function AgainstBookmakers({ table, all }: { table: HitRateTable; all: Record<st
   return (
     <div className="hit-bookies">
       <h3>Against the bookmakers</h3>
-      <table className="data-table hit-bookies-table">
-        <caption className="visually-hidden">
-          Hit rate of this model, the bookmakers' favourite and the baseline over all the games
-        </caption>
-        <thead>
-          <tr>
-            <th scope="col">All games</th>
-            {keys.map((k) => (
-              <th key={k} scope="col" className="num">
-                {head[k]}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((r) => (
-            <tr key={r.label} className={r.label === "Bookies' favourite" ? "hit-fav-row" : undefined}>
-              <th scope="row">
-                {r.label}
-                <span className="cell-sub">{r.sub}</span>
-              </th>
-              {keys.map((k) => {
-                const c = all[k];
-                const x = c ? r.get(c) : undefined;
-                return (
-                  <td key={k} className="num">
-                    <span className="hit-value">
-                      <Rate r={x} />
-                    </span>
-                    {x && <span className="cell-sub">{formatNumber(x.n, 0)} games</span>}
-                  </td>
-                );
-              })}
+      <TableScroll className="hit-scroll" label="Hit rate against the bookmakers' favourite">
+        <table className="data-table hit-bookies-table">
+          <caption className="visually-hidden">
+            Hit rate of this model, the bookmakers' favourite and the baseline over all the games
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">All games</th>
+              {keys.map((k) => (
+                <th key={k} scope="col" className="num">
+                  {head[k]}
+                </th>
+              ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr key={r.label} className={r.label === "Bookies' favourite" ? "hit-fav-row" : undefined}>
+                <th scope="row">
+                  {r.label}
+                  <span className="cell-sub">{r.sub}</span>
+                </th>
+                {keys.map((k) => {
+                  const c = all[k];
+                  const x = c ? r.get(c) : undefined;
+                  return (
+                    <td key={k} className="num">
+                      <span className="hit-value">
+                        <Rate r={x} />
+                      </span>
+                      {x && <span className="cell-sub">{formatNumber(x.n, 0)} games</span>}
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </TableScroll>
       <p className="muted small">
         {table.favourite_note ??
           "The bookies' favourite: the outcome with the shortest price before the close, on the same games."}{" "}

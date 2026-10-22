@@ -195,3 +195,22 @@ def test_a_site_near_the_limit_is_warned_about(settings, world, tmp_path, monkey
     assert (out / "snapshot.json").exists()
     assert any("bytes in all" in w for w in report["warnings"])
     assert report["projection"]["weeks_to_warning"] == 0.0
+
+
+def test_a_projection_already_at_the_warning_level_is_warned_about(tmp_path):
+    """The window of full pages fills within days, so a projection can put the site within a
+    fifth of the limit (weeks_to_warning 0) while today's total is still below it: that is the
+    most urgent case and must still warn (review of the audit fixes, 22 Oct)."""
+    result = snapshot.ExportResult(
+        out=tmp_path,
+        snapshot=snapshot.Snapshot(taken_at_utc="2026-10-22T20:00:00+00:00"),
+        files=[("snapshot.json", 1 * MB)],
+        env_values_shown=[],
+        seconds=0.0,
+        projection={"weeks_to_warning": 0.0, "weeks_to_limit": 3.5},
+    )
+    warned = result.warnings()
+    assert any("projected" in w and "limit" in w for w in warned)
+    # Far from both: nothing to say.
+    result.projection = {"weeks_to_warning": 9.0, "weeks_to_limit": 20.0}
+    assert result.warnings() == []

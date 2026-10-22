@@ -20,6 +20,8 @@ stoppage time. A source may carry its own `home_goals`/`away_goals`, which must 
 Rules:
 - At least two independent publishers per score: different publisher names on different web
   domains. UEFA.com is never a source (its terms, D-023).
+- A match may be given by one usable entry only: where two entries of a file would both set
+  it, both are refused.
 - The match must exist in `euro_matches` (the import never creates fixtures), not be
   postponed, cancelled or awarded, and have kicked off at least two hours earlier.
 - The file is stored in the raw store first (source "manual", key "euro-results/<file name>"),
@@ -242,14 +244,27 @@ def import_results(
                 suffix=path.suffix,
             ).raw
             raw_id = report.raw_file_id = raw.id
+        # A match that two entries of the file would both set is refused (both entries): which
+        # score is meant is not known, and a dry run would report both as applied.
+        times = Counter(_usable_key(s, e) for e in entries if isinstance(e, dict))
         for i, entry in enumerate(entries, 1):
             if not isinstance(entry, dict):
                 report.entries.append(EntryResult(i, repr(entry)[:60], "refused", "not an object"))
                 continue
-            report.entries.append(_apply(s, i, entry, raw_id, path, correct, now))
+            report.entries.append(_apply(s, i, entry, raw_id, path, correct, now, times))
         if not dry_run:
             s.commit()
     return report
+
+
+def _usable_key(s: Session, entry: dict) -> tuple | None:
+    """The match an entry would set, if the entry itself is in order (a UEFA match, a score,
+    enough sources); None otherwise."""
+    key, why = identify(s, entry)
+    score = _score(entry)
+    if key is None or why or score is None or check_sources(entry, score)[1]:
+        return None
+    return key
 
 
 def _apply(
@@ -260,6 +275,7 @@ def _apply(
     path: Path,
     correct: bool,
     now: datetime,
+    times: Counter | None = None,
 ) -> EntryResult:
     label = str(entry.get("match") or entry.get("fixture_ref") or f"entry {i}")
     key, why = identify(s, entry)
@@ -279,6 +295,9 @@ def _apply(
     publishers = [x["publisher"] for x in sources]
     if problems:
         return EntryResult(i, label, "refused", "; ".join(problems), publishers=publishers)
+    if times is not None and times[key] > 1:
+        detail = f"{times[key]} entries of the file give this match"
+        return EntryResult(i, label, "refused", detail, publishers=publishers)
     comp, season, match_date, home, away = key
     row = s.scalar(
         select(EuroMatch).where(

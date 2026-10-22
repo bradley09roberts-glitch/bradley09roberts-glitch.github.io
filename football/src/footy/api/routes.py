@@ -321,17 +321,22 @@ COUNTERPART_FIELDS = (
 
 
 def counterpart(
-    p: Prediction, features: dict, records: list[Prediction], order: list[str] | None = None
+    p: Prediction,
+    features: dict,
+    records: list[Prediction],
+    order: list[str] | None = None,
+    fallback: bool = False,
 ) -> Prediction | None:
     """The same fixture's record with the other basis: for a model + market record, its
     base model's own record; for a model-only record, a model + market record built on it.
     Same record type; the same edition if there is one, otherwise the latest.
 
-    A model + market record whose base model saved no record for the fixture (a learner
-    names no `base`) falls back to the fixture's pure record of record: the first model in
-    `order` (the fixture's list of models of record) with a model-only record, else the
-    earliest model-only record, as /api/performance picks one per basis
-    (`counterpart_relation` says which)."""
+    With `fallback`, a model + market record whose base model saved no record for the fixture
+    (a learner names no `base`) falls back to the fixture's pure record of record: the first
+    model in `order` (the fixture's list of models of record) with a model-only record, else
+    the earliest model-only record, as /api/performance picks one per basis
+    (`counterpart_relation` says which). Without it (footy.model_compare's expected-goals
+    check), only the base model's own record counts."""
 
     def feats(r: Prediction) -> dict:
         return json.loads(r.features) if r.features else {}
@@ -344,7 +349,7 @@ def counterpart(
             if r.id != p.id and r.record_type == p.record_type and basis_of(feats(r)) == MODEL_ONLY
         ]
         cands = [r for r in pure if r.model_name == base]
-        if not cands and pure:
+        if not cands and pure and fallback:
             ranked = order or []
 
             def rank(r: Prediction) -> tuple[int, int]:
@@ -429,7 +434,8 @@ def fixture_cards(
     if lead is None:
         lead = min(recs, key=lambda p: (p.created_at_utc, p.id))
     features = json.loads(lead.features) if lead.features else {}
-    other = counterpart(lead, features, recs, ror.order_for(fixture_ref, lead.competition))
+    order = ror.order_for(fixture_ref, lead.competition)
+    other = counterpart(lead, features, recs, order, fallback=True)
     return [lead] if other is None else [lead, other]
 
 
@@ -723,7 +729,11 @@ def make_router(engine_fn: Callable[[], Engine], settings: Settings) -> APIRoute
                 for e in records
             ]
             other = counterpart(
-                p, features, list(records), ror.order_for(p.fixture_ref, p.competition)
+                p,
+                features,
+                list(records),
+                ror.order_for(p.fixture_ref, p.competition),
+                fallback=True,
             )
             if other is None:
                 out["counterpart"] = None

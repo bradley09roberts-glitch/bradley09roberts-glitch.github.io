@@ -839,6 +839,8 @@ def _load_wikipedia(engine, settings, ctx, csv_path, rebuild, client, fetch_uefa
             detail["fetch_uefa"] = dict(Counter(r.outcome for r in fetched))
     # Any build-stage error (a box or page the parser could not read, a missing page, a
     # failed rebuild) means the CSV may lack rows the source still has: nothing is deleted.
+    from footy.europe.build_2627 import read_build_errors
+
     build_errors = False
     if rebuild:
         from footy.europe.build_2627 import build_all
@@ -848,16 +850,19 @@ def _load_wikipedia(engine, settings, ctx, csv_path, rebuild, client, fetch_uefa
                 built = build_all(s, settings.raw_dir, settings.data_dir)
             detail["rebuilt_rows"] = len(built.wikipedia.rows)
             detail["rebuild_issues"] = dict(Counter(i.code for i in built.wikipedia.issues))
-            if built.errors or built.wikipedia.missing_pages:
+            if problems := built.problems():
                 build_errors = True
-                detail["rebuild_errors"] = [
-                    f"{i.code}: {i.detail} ({i.ref})" for i in built.errors[:20]
-                ] + [f"missing page: {k}" for k in built.wikipedia.missing_pages]
+                detail["rebuild_errors"] = problems[:20]
         except Exception as exc:  # the stored CSV is still loaded; the failure is reported
             detail["rebuild_error"] = f"{type(exc).__name__}: {exc}"
             build_errors = True
-        if build_errors:
-            ctx.partial = True
+    # A CSV that an earlier build with errors wrote (loaded as it is, or because this rebuild
+    # failed) lacks the same rows: its marker says so (footy.europe.build_2627).
+    if not build_errors and (earlier := read_build_errors(csv_path)) is not None:
+        build_errors = True
+        detail["csv_build_errors"] = earlier[:20]
+    if build_errors:
+        ctx.partial = True
     if not csv_path.is_file():
         detail["csv"] = f"missing: {csv_path}"
         ctx.partial = True

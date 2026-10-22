@@ -97,13 +97,22 @@ const CONSENSUS = {
   label: "Bookmakers' consensus",
   tone: "market" as Tone,
   title:
-    "The match result and over/under 2.5 goals are the bookmakers' prices with their margins removed; the model only shapes the other goal lines, both teams to score and the scores",
+    "The match result (and over/under 2.5 goals, where the bookmakers priced it) is the bookmakers' prices with their margins removed; the model only shapes the rest",
 };
 
 /** True when a model + market record's match-result figures are the bookmakers' consensus
  * (the API's `consensus_markets`). */
 export function isConsensus(c: { basis: Basis; consensus_markets?: string[] }): boolean {
   return c.basis === "model_and_market" && (c.consensus_markets ?? []).includes("1X2");
+}
+
+/** Which of a consensus record's figures are the bookmakers' consensus: "the match result and
+ * over/under 2.5 goals", or "the match result" alone where the record's over/under 2.5 is the
+ * model's own (no over/under prices for the match, so nothing to take). */
+export function consensusScope(c: { consensus_markets?: string[] }): string {
+  return (c.consensus_markets ?? []).includes("OU_2.5")
+    ? "the match result and over/under 2.5 goals"
+    : "the match result";
 }
 
 /** "Model + market" or "Model only": whether the record used bookmakers' prices; "Bookmakers'
