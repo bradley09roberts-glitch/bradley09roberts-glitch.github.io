@@ -2,39 +2,65 @@
 // fixture (/api/fixtures/{ref}/models), side by side. The model of record first, then the
 // machine-learning learners, challengers and baselines, each with its role, its match-result
 // split, over 2.5 goals, both teams to score and expected goals; once the match is settled, a
-// tick or cross per market and the match's RPS, with the best score highlighted. On a phone
-// the first few show, with "Show all N models".
+// tick or cross per market and the match's RPS, with the best score highlighted. A long list
+// has a subheading per role. Where the section is too narrow for a row per model (the same
+// 640 px of width the stylesheet's container query uses), the first few show, with "Show all
+// N models".
 //
 // Only genuine pre-match records are here (the response's `kind`); backtests are in the lab.
 // Every number is the record's own; nothing is computed except which RPS is lowest.
 
-import { useState } from "react";
+import { useEffect, useRef, useState, type RefObject } from "react";
 import { endpoints, useApi, type FixtureModel, type FixtureModels, type PredictionDetail } from "../api";
 import { BasisBadge, editionLabel } from "../components/Badge";
-import { Mark, RoleTag, SplitBar, SplitKey, outcomeWord, resultOf, roleRank } from "../components/ModelBits";
+import {
+  Mark,
+  ROLE_GROUPS,
+  RoleTag,
+  SplitBar,
+  SplitKey,
+  outcomeWord,
+  resultOf,
+  roleRank,
+} from "../components/ModelBits";
 import { notInSnapshot } from "../components/StateViews";
-import { formatKickoff, formatLondon, formatNumber, formatPct } from "../format";
-import { useMediaQuery } from "../hooks";
-import { href } from "../router";
+import { formatKickoff, formatLondon, formatNumber, formatPct, parseUtc, settlementStatusLabel } from "../format";
+import { useNarrowerThan } from "../hooks";
+import { href, savedScrollPosition } from "../router";
 import "./MatchModels.css";
 
-/** Rows shown on a phone before "Show all". */
+/** Rows shown in a narrow section before "Show all". */
 const PHONE_ROWS = 5;
+/** Below this section width the rows stack (MatchModels.css, its container query). */
+const ROW_LAYOUT_PX = 640;
+/** A list this long gets a subheading per role. */
+const GROUPED_FROM = PHONE_ROWS + 2;
 
 /** Two RPS values this close are a tie. */
 const TIE = 1e-9;
 
-export function EveryModel({ d }: { d: PredictionDetail }) {
+export function EveryModel({ d, focus = false }: { d: PredictionDetail; focus?: boolean }) {
   // Only fixtures with a genuine pre-match record have a list (the API answers 404 otherwise).
   const genuine = d.record_type === "genuine_prematch";
   const res = useApi(genuine ? endpoints.fixtureModels(d.fixture_ref) : null, { freshMs: 60_000 });
+  const section = useRef<HTMLElement>(null);
+  const loaded = res.data !== undefined;
+  // Opened from a fixture card's "Compare every model": once the list is in, bring it into
+  // view; only on a new visit, so Back keeps the reader's own place.
+  const scrolled = useRef(false);
+  useEffect(() => {
+    if (!focus || !loaded || scrolled.current || savedScrollPosition() !== 0) return;
+    scrolled.current = true;
+    const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    section.current?.scrollIntoView({ block: "start", behavior: reduce ? "auto" : "smooth" });
+  }, [focus, loaded]);
   if (!genuine) return null;
   const { data, error, loading, reload } = res;
   // A fixture the API (or this copy) has no list for: nothing to show, so no section.
   if (!data && error && (error.notFound || notInSnapshot(error))) return null;
 
   return (
-    <section className="card every-model" aria-labelledby="every-model">
+    <section className="card every-model" aria-labelledby="every-model" ref={section} id="models">
       <div className="em-head">
         <h2 id="every-model">Every model</h2>
         <span className="badge badge-good" title="Saved before kickoff and never changed">
@@ -42,7 +68,7 @@ export function EveryModel({ d }: { d: PredictionDetail }) {
         </span>
       </div>
       {data ? (
-        <ModelList f={data} currentId={d.id} />
+        <ModelList f={data} d={d} section={section} />
       ) : error ? (
         <div className="em-error" role="alert">
           <p>Couldn't load the other models' records: {error.message}</p>
@@ -75,8 +101,46 @@ function ordered(models: FixtureModel[]): FixtureModel[] {
     .map((x) => x.m);
 }
 
-function ModelList({ f, currentId }: { f: FixtureModels; currentId: number }) {
-  const phone = useMediaQuery("(max-width: 719px)");
+type Group = { name: string; models: FixtureModel[] };
+
+/** Consecutive models of the same role group ("Models of record", "Machine learning", …). */
+function byRole(models: FixtureModel[]): Group[] {
+  const out: Group[] = [];
+  for (const m of models) {
+    const name = ROLE_GROUPS[m.role] ?? ROLE_GROUPS.other ?? "Other models";
+    const last = out[out.length - 1];
+    if (last && last.name === name) last.models.push(m);
+    else out.push({ name, models: [m] });
+  }
+  return out;
+}
+
+/** True when at least two model + market records give the same match-result figures (to
+ * 0.1 points): each moved its grid onto the same bookmakers' consensus. */
+function sharedConsensus(models: FixtureModel[]): boolean {
+  const seen = new Set<string>();
+  for (const m of models) {
+    const x = m.probabilities["1X2"];
+    if (m.basis !== "model_and_market" || !x) continue;
+    const key = [x.H, x.D, x.A].map((v) => v.toFixed(3)).join("/");
+    if (seen.has(key)) return true;
+    seen.add(key);
+  }
+  return false;
+}
+
+function ModelList({
+  f,
+  d,
+  section,
+}: {
+  f: FixtureModels;
+  d: PredictionDetail;
+  section: RefObject<HTMLElement | null>;
+}) {
+  const currentId = d.id;
+  // The same width the stylesheet's container query reads (the section fills that column).
+  const narrow = useNarrowerThan(section, ROW_LAYOUT_PX);
   const [expanded, setExpanded] = useState(false);
   const [open, setOpen] = useState<string | null>(null);
   const models = ordered(f.models);
@@ -91,9 +155,15 @@ function ModelList({ f, currentId }: { f: FixtureModels; currentId: number }) {
     m.settlement.rps - best < TIE &&
     rpsValues.some((v) => v - best >= TIE);
   const bestModels = models.filter(isBest);
-  const collapsed = phone && !expanded && models.length > PHONE_ROWS + 1;
+  const collapsible = narrow && models.length > PHONE_ROWS + 1;
+  const collapsed = collapsible && !expanded;
   const shown = collapsed ? models.slice(0, PHONE_ROWS) : models;
+  const groups = models.length >= GROUPED_FROM ? byRole(shown) : [{ name: "", models: shown }];
   const anyBeforePrices = models.some((m) => m.expected_goals_before_prices && m.probabilities.expected_goals);
+  const consensus = sharedConsensus(models);
+  const own = d.settlement;
+  const kickoff = f.kickoff_utc ?? d.kickoff_utc;
+  const kickedOff = kickoff !== null && parseUtc(kickoff).getTime() <= Date.now();
 
   return (
     <>
@@ -126,6 +196,14 @@ function ModelList({ f, currentId }: { f: FixtureModels; currentId: number }) {
             </p>
           )}
         </div>
+      ) : own && own.status !== "settled" ? (
+        <p className="muted small">
+          {settlementStatusLabel(own.status)}: no ticks, crosses or scores for this match.
+        </p>
+      ) : kickedOff ? (
+        <p className="muted small">
+          Result not in yet: ticks, crosses and each model's score appear once the match is settled.
+        </p>
       ) : (
         <p className="muted small">
           Not played yet: ticks, crosses and each model's score appear once the match is settled.
@@ -133,30 +211,40 @@ function ModelList({ f, currentId }: { f: FixtureModels; currentId: number }) {
       )}
       <SplitKey home={f.home_name} away={f.away_name} />
 
-      <ol className={`em-list${scored ? " is-settled" : ""}`} aria-label="Every model's record, model of record first">
-        <li className="em-row em-colhead" aria-hidden="true">
+      <div className={`em-table${scored ? " is-settled" : ""}`}>
+        <div className="em-row em-colhead" aria-hidden="true">
           <span>Model</span>
           <span>Match result</span>
           <span className="em-num">Over 2.5</span>
           <span className="em-num">BTTS</span>
           <span className="em-num">xG</span>
           {scored && <span className="em-num">RPS</span>}
-        </li>
-        {shown.map((m) => (
-          <ModelRow
-            key={m.model}
-            m={m}
-            f={f}
-            current={m.prediction_id === currentId}
-            best={isBest(m)}
-            settled={scored}
-            open={open === m.model}
-            onToggle={() => setOpen((o) => (o === m.model ? null : m.model))}
-          />
+        </div>
+        {groups.map((g) => (
+          <div key={g.name || "all"} className="em-group">
+            {g.name && <h3 className="em-group-name">{g.name}</h3>}
+            <ol
+              className="em-list"
+              aria-label={g.name ? `${g.name}: each model's record` : "Every model's record, model of record first"}
+            >
+              {g.models.map((m) => (
+                <ModelRow
+                  key={m.model}
+                  m={m}
+                  f={f}
+                  current={m.prediction_id === currentId}
+                  best={isBest(m)}
+                  settled={scored}
+                  open={open === m.model}
+                  onToggle={() => setOpen((o) => (o === m.model ? null : m.model))}
+                />
+              ))}
+            </ol>
+          </div>
         ))}
-      </ol>
+      </div>
 
-      {phone && models.length > PHONE_ROWS + 1 && (
+      {collapsible && (
         <button type="button" className="em-more" aria-expanded={expanded} onClick={() => setExpanded((e) => !e)}>
           {expanded ? "Show fewer models" : `Show all ${formatNumber(models.length, 0)} models`}
         </button>
@@ -175,8 +263,14 @@ function ModelList({ f, currentId }: { f: FixtureModels; currentId: number }) {
         </li>
         {anyBeforePrices && (
           <li>
-            * A model + market record keeps its pure model's expected goals; the bookmakers' prices move the score
-            probabilities, not these averages.
+            * The same expected goals as its pure model's own record for this match: the bookmakers' prices moved
+            this record's score probabilities, not these averages.
+          </li>
+        )}
+        {consensus && (
+          <li>
+            Model + market records move each model's score grid onto the same bookmakers' consensus, so several of
+            them give the same match-result figures.
           </li>
         )}
         <li>
@@ -255,6 +349,7 @@ function ModelRow({
             homeName={f.home_name}
             awayName={f.away_name}
             correct={s?.markets["1X2"]?.correct ?? null}
+            pick={pickCode(s?.markets["1X2"]?.pick)}
           />
         ) : (
           <span className="muted small">No match result</span>
@@ -301,6 +396,11 @@ function ModelRow({
       </span>
     </li>
   );
+}
+
+/** The settled pick ("H", "D" or "A"), so the mark sits on the outcome it was scored on. */
+function pickCode(v: string | undefined): "H" | "D" | "A" | null {
+  return v === "H" || v === "D" || v === "A" ? v : null;
 }
 
 function Fig({

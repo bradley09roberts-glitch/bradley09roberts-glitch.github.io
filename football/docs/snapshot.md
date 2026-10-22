@@ -17,7 +17,7 @@ make snapshot OUT=<folder> PAGE=<dir>/football-model.html   # also the one-file 
 | File | What it answers | Fetched |
 | --- | --- | --- |
 | `snapshot.json` | What every page needs first: health, past results, performance, hit rates, the list of backtest runs, the saved reports and the D-028 summary, the two model leaderboards and the backtest explorer's models list; and the list of shard files with the request keys each answers | At start-up |
-| `snapshot-fixtures-1.json` | The fixtures for the next 30 days (`/api/fixtures?days=30`); the page takes every shorter window (1 to 30 days) from it, as the API would (`derived` in `snapshot.ts`) | The first time the fixtures or the Data page is opened |
+| `snapshot-fixtures-1.json` | The fixtures for the next 30 days (`/api/fixtures?days=30`: per fixture, the record of record and its partner with the other basis, and a count of every model's records; docs/model-comparison.md); the page takes every shorter window (1 to 30 days) from it, as the API would (`derived` in `snapshot.ts`) | The first time the fixtures or the Data page is opened (the default page, so on every first visit) |
 | `snapshot-data-1.json` | The Data page's coverage, import issues and refresh history | The first time the Data page is opened |
 | `snapshot-matches-<n>.json` | Match pages (`/api/predictions/{id}`, with their `teams` block) and each fixture's every-model list (`/api/fixtures/{ref}/models`), a fixture's pages and list always in one file | The first time a match page is opened |
 | `snapshot-lab-<n>.json` | Backtest summaries (`/api/backtests/{run}/summary`), each run's in one file | The first time a run is opened in the lab |
@@ -102,6 +102,10 @@ default page (the latest 100 matches) and the media response. Filters, older log
 
 - **No prices** (D-013, D-024): every JSON file, as written, is parsed and searched for
   football-data price columns, price-named keys with fractional values and quoted price cells.
+- **No consensus in disguise**: no backtest explorer page may give a summary-only model a
+  per-match cell, or two model + market models the same match-result figures on most matches
+  (`consensus_cells`): those would be the bookmakers' de-vigged consensus match by match, which
+  the price search can't see in plain arrays (docs/model-comparison.md).
 - **No secrets**: every file (pictures included) is searched for secret-named `.env` values and
   the provider credentials in the settings, as written, URL-encoded and JSON-escaped.
 - **The host's limits** (`HOST_LIMITS`, decimal megabytes): the page and each text file at most
@@ -121,25 +125,32 @@ the page with all of those files.
 
 ## Sizes on the real data (22 October 2026)
 
-`make snapshot` on the real database at 10:11 UK time (about two and a half minutes; 2,625
-requests, all 200), before any shadow record was published:
+`make snapshot` on the real database at 13:47 UK time (about seven minutes; 3,489 requests,
+all 200), after the first shadow records were published (fourteen models on most league
+fixtures of 22–26 October, six on the UEFA ones), with the fixtures list carrying only each
+fixture's record of record and its partner, and six model + market models summary only in the
+explorer (docs/model-comparison.md):
 
 | File | Bytes | Answers |
 | --- | ---: | --- |
-| `snapshot.json` | 479,824 | 73 first-screen requests (the two leaderboards and the backtest models list among them) and the shard list |
-| `snapshot-fixtures-1.json` | 527,410 | The 30-day fixtures (every shorter window is taken from it) |
-| `snapshot-data-1.json` | 494,181 | The Data page's coverage, import issues and refresh history |
-| `snapshot-matches-1.json` … `-3.json` | 984,718 + 991,290 + 14,665 | 225 match pages and 114 every-model lists, with shared parts |
+| `snapshot.json` | 506,831 | 73 first-screen requests (the two leaderboards and the backtest models list among them) and the shard list |
+| `snapshot-fixtures-1.json` | 287,192 | The 30-day fixtures, 114 fixtures with one card each (every shorter window is taken from it). Carrying every shadow record made it 2,395,983 |
+| `snapshot-data-1.json` | 495,369 | The Data page's coverage, import issues and refresh history |
+| `snapshot-matches-1.json` … `-7.json` | 0.92–0.99 MB each, the last 541,650; 6,291,027 in all | 1,089 match pages and 114 every-model lists, with shared parts |
 | `snapshot-lab-1.json` … `-4.json` | 1,975,086 + 1,991,029 + 1,917,249 + 553,964 | 1,608 backtest summaries |
 | `snapshot-teams-1.json` | 503,627 | The teams list (873 teams with their names and media) |
 | `snapshot-teams-2.json` … `-25.json` | 0.88–0.99 MB each, the last 759,993 | 190 teams × 3 pages |
-| `snapshot-backtest-1.json` … `-10.json` | 0.34–0.43 MB each | The five leagues' explorer matches, validation and test (22 or 7 models a match) |
-| `snapshot-backtest-11.json`, `-12.json` | 154,840 + 645,541 | UEFA validation (3 competitions) and test (6, with qualifying) |
-| `index.html`, `assets/*.js`, `assets/*.css` | 371 + 469,896 + 102,204 | The site |
-| **Site folder** | **37,797,645 in 50 files** | |
-| One-file page (`--single-page`) | 573,169 | Replaces `index.html` and `assets/`: **48 files, 37.8 MB** to publish |
+| `snapshot-backtest-1.json` … `-10.json` | 0.27–0.35 MB each, 3,186,720 in all | The five leagues' explorer matches, validation and test (22 or 7 models a match, of which 6 or 3 summary only) |
+| `snapshot-backtest-11.json`, `-12.json` | 155,143 + 646,753 | UEFA validation (3 competitions) and test (6, with qualifying) |
+| `index.html`, `assets/*.js`, `assets/*.css` | 371 + 515,958 + 119,419 | The site |
+| **Site folder** | **41,250,014 in 54 files** | |
+| One-file page (`--single-page`) | 636,623 | Replaces `index.html` and `assets/`: **52 files, 41.25 MB** to publish |
 
-The every-model additions cost 12 files and 4.69 MB (the explorer) plus 0.38 MB (the
+The first visit (the Fixtures page) loads the page, `snapshot.json` and the fixtures file:
+1.43 MB, of which 0.79 MB is data (2.9 MB before the fixtures list was slimmed).
+
+In the first export of 22 October (10:11 UK time, before any shadow record), the every-model
+additions cost 12 files and 4.69 MB (the explorer) plus 0.38 MB (the
 fixture lists, inside the match shards); shared parts saved 0.83 MB on the match pages
 (2.82 MB without them). The explorer's cells are three decimal places for probabilities, four
 for the RPS, and models are columns (`columns`, `models`), not keys. Once a fixture's parts

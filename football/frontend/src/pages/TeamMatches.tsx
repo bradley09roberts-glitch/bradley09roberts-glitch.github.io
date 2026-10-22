@@ -32,7 +32,7 @@ import {
   sourceName,
   type CompareRow,
 } from "../components/TeamStats";
-import { formatDate, formatNumber, formatPct, formatTime, marketLabel, seasonLabel } from "../format";
+import { formatDate, formatNumber, formatPct, formatTime, marketLabel, seasonLabel, stageLabel } from "../format";
 import { href, setQuery } from "../router";
 import { explorerHref, teamExplorerTargets } from "../explorer";
 import { SNAPSHOT } from "../snapshot";
@@ -99,12 +99,12 @@ function BacktestLinks({ p }: { p: TeamProfile }) {
   return (
     <div className="ml-backtest">
       <a className="ml-backtest-link" href={link(first)}>
-        What each model predicted for these games (backtest)
-        <span aria-hidden="true"> →</span>
+        What each model predicted for {name}'s {seasonLabel(first.season)} {first.name} games (backtest)
+        <span aria-hidden="true">{"\u00a0"}→</span>
       </a>
       <p className="muted small">
-        Every model's predictions for {name}'s {first.name} matches in {seasonLabel(first.season)}, computed after
-        the fact: not pre-match records.
+        Computed after the fact by replaying that season, for each model that was run on it: not pre-match records,
+        and not the games listed below.
         {rest.length > 0 && (
           <>
             {" "}
@@ -268,7 +268,7 @@ function LogRow({
     <li className={`ml-row${open ? " is-open" : ""}${r.excluded ? " is-excluded" : ""}`}>
       <div className="ml-line">
         <span className="ml-date">{formatDate(r.date)}</span>
-        <span className="ml-comp" title={`${r.competition_name}${r.stage ? ` · ${r.stage}` : ""}`}>
+        <span className="ml-comp" title={`${r.competition_name}${r.stage ? ` · ${stageLabel(r.stage)}` : ""}`}>
           <CompetitionMark code={r.competition} />
           <span className="ml-comp-name">{r.competition_name}</span>
         </span>
@@ -374,7 +374,7 @@ function LogDetail({ id, r, team }: { id: string; r: TeamMatch; team: string }) 
           <dt>Competition</dt>
           <dd>
             {r.competition_name}
-            {r.stage ? ` · ${r.stage}` : ""} · {r.season_label}
+            {r.stage ? ` · ${stageLabel(r.stage)}` : ""} · {r.season_label}
             {r.meeting && r.meeting > 1 ? ` · meeting ${r.meeting}` : ""}
           </dd>
         </div>

@@ -152,7 +152,7 @@ function Common({ r }: { r: LeaderboardRecord }) {
           {h.ci95 && (
             <>
               {" "}
-              · 95%: {formatPct(h.ci95[0])}–{formatPct(h.ci95[1])}
+              · <span className="nowrap">95%: {formatPct(h.ci95[0])}–{formatPct(h.ci95[1])}</span>
             </>
           )}
         </span>

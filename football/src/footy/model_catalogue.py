@@ -5,15 +5,18 @@ records and the live leaderboard; footy.backtest_explorer: the saved walk-forwar
 
 Roles:
 
-- `model_of_record`: named in the period of reference/primary_models.json that applies
-  (D-026). On a match, only the fixture's record of record has it; another listed model with a
-  record for that match is a `fallback_of_record` there.
+- `model_of_record` and `fallback_of_record`: named in the period of
+  reference/primary_models.json that applies (D-026). On a match, only the fixture's record of
+  record is `model_of_record`; another listed model with a record for that match is a
+  `fallback_of_record` there. Away from a match (the leaderboard, the backtest explorer), the
+  first model of the period in force is `model_of_record` and the others are
+  `fallback_of_record` (`role_of`), so a model has the same tag on every page.
 - otherwise the role given in reference/shadow_models.json (written by `footy publish-shadows`:
   `machine_learning`, `challenger`, `baseline` or `earlier_record`), read leniently because the
   file may be missing or still being written;
-- otherwise `earlier_record` for a model of record of an earlier period, else `other`.
-
-The backtest explorer adds `lab_best` (the best candidate of a model-lab family on validation).
+- otherwise `earlier_record` for a model of record of an earlier period, else `other` (the
+  backtest explorer's own default for a model shadow_models.json doesn't list, such as
+  `lab_best`, the best candidate of a model-lab family on validation).
 
 Labels and descriptions below are taken from STATUS.md and DECISIONS.md (D-024 to D-028);
 shadow_models.json's own label or description wins when it gives one. A model that appears in
@@ -181,10 +184,20 @@ CATALOGUE: dict[str, tuple[str, str]] = {
         "A 70/30 mix of pan-European Dixon-Coles and Elo, fitted on goals only. The UEFA "
         "model of record before 21 October 2026.",
     ),
+    "pan_euro_mix_mxg_all_ma0.25": (
+        "Pan-European mix (market xG, all leagues)",
+        "Like the model of record (a quarter goals, three quarters price-implied expected "
+        "goals), but in every league with prices rather than the top five.",
+    ),
+    "pan_euro_mix_mxg_all_ma0": (
+        "Pan-European mix (market xG only, all leagues)",
+        "Like the model of record, but domestic strengths learnt only from price-implied "
+        "expected goals, in every league with prices rather than the top five.",
+    ),
     "pan_euro_mix_mxg_all_ma0_w0.8": (
-        "Pan-European mix (all-league market xG)",
-        "The pan-European mix trained on every league's market expected goals; it led on "
-        "validation but not on test.",
+        "Pan-European mix 80/20 (market xG only, all leagues)",
+        "The all-league, expected-goals-only variant with an 80/20 mix of Dixon-Coles and Elo; "
+        "it led on validation but not on test.",
     ),
     "euro_frequency": (
         "Frequency baseline",
@@ -197,6 +210,15 @@ CATALOGUE: dict[str, tuple[str, str]] = {
 MARKET_ONLY_NAMES = frozenset(
     {"market", "market_consensus", "market_closing", "closing_market", "bookmakers", "closing"}
 )
+# `model_params` keys that name the model under a forecast that used prices: a model + market
+# tilt's `base`, the machine-learning learners' `stream` of members (ml_online_*) or
+# `reference` forecast (ml_stack_*), an ensemble's `members`. Without one, prices alone.
+MODEL_PARAM_KEYS = ("base", "stream", "reference", "members")
+
+
+def names_a_model(params: object) -> bool:
+    """True when a forecast's `model_params` name a model under it (MODEL_PARAM_KEYS)."""
+    return isinstance(params, Mapping) and any(params.get(k) for k in MODEL_PARAM_KEYS)
 
 
 def readable(name: str) -> str:
@@ -208,15 +230,15 @@ def readable(name: str) -> str:
 
 def is_market_only(name: str, features: Mapping | None = None) -> bool:
     """True for a forecast made of bookmakers' prices alone: a market-only name, a record that
-    says so (`market_only`), or one that used prices without a base model to move."""
+    says so (`market_only`), or one that used prices without a model under them
+    (`names_a_model`)."""
     if name in MARKET_ONLY_NAMES or name.startswith(("market_only", "market_consensus")):
         return True
     f = features or {}
     if f.get("market_only") is True:
         return True
-    params = f.get("model_params")
     used = isinstance(f.get("market_prices_used"), dict)
-    return used and not (isinstance(params, dict) and params.get("base"))
+    return used and not names_a_model(f.get("model_params"))
 
 
 # ---------------------------------------------------------------------------------------------
@@ -288,13 +310,19 @@ def role_of(
     current: Iterable[str],
     earlier: Iterable[str],
     shadow_entry: Mapping | None = None,
+    default: str = OTHER,
 ) -> str:
-    """A model's standing role in a group: `current` is the list of models of record in force
-    now, `earlier` every model named in an earlier period."""
-    if name in set(current):
+    """A model's standing role in a group, the same on every page: `current` is the ordered
+    list of models of record in force now (the first is the model of record, the others its
+    fallbacks, used where it has no record), `earlier` every model named in an earlier period;
+    then the role shadow_models.json gives; else `default`."""
+    current = list(current)
+    if current and name == current[0]:
         return MODEL_OF_RECORD
+    if name in current:
+        return FALLBACK_OF_RECORD
     if shadow_entry and shadow_entry.get("role") in SHADOW_ROLES:
         return str(shadow_entry["role"])
     if name in set(earlier):
         return EARLIER_RECORD
-    return OTHER
+    return default

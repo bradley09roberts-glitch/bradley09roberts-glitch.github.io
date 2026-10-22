@@ -12,6 +12,11 @@
 // what the static snapshot holds (one shard file per league and split, fetched on first use).
 // Team and model filters are applied here. With no team chosen the summary is the API's; with a
 // team it is worked out here from the per-match figures, as labelled.
+//
+// Summary-only models (`per_match: false`): six model + market forecasts whose match-result
+// and over 2.5 figures are, match by match, the bookmakers' consensus. The API sends their
+// summary (and each team's, `team_summaries`) but never a match's figures, so they get a tile
+// and no line in the match cards.
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -26,11 +31,21 @@ import {
 } from "../api";
 import { BasisBadge } from "../components/Badge";
 import { SelectField } from "../components/Controls";
-import { RangeBar, ROLE_GROUPS, RoleTag, SplitBar, SplitKey, roleRank, wilson } from "../components/ModelBits";
+import {
+  RangeBar,
+  ROLE_GROUPS,
+  RoleTag,
+  SplitBar,
+  SplitKey,
+  resultOf,
+  roleRank,
+  scoredPick,
+  wilson,
+} from "../components/ModelBits";
 import { ErrorView, Loading, StaleNotice } from "../components/StateViews";
 import { TeamBadge } from "../components/TeamBadge";
 import { TeamLink } from "../components/TeamLink";
-import { formatNumber, formatPct, seasonLabel } from "../format";
+import { formatNumber, formatPct, seasonLabel, stageLabel } from "../format";
 import { useMediaQuery } from "../hooks";
 import { setQuery } from "../router";
 import "./LabExplorer.css";
@@ -95,17 +110,17 @@ function Banner({ explanation }: { explanation?: string }) {
 
 type Order = "old" | "new";
 
-/** The default models: the model of record, the best machine-learning learner on validation,
- * Dixon-Coles and the frequency baseline; topped up to four from the curated order. */
+/** The default models: the model of record and its fallbacks (the models every live match is
+ * counted on, in their order), then the frequency baseline; topped up to four from the curated
+ * order. League games: Shots model + market (summary only), Elo with congestion and context,
+ * Dixon-Coles and the frequency baseline. */
 function defaultModels(models: BacktestModel[]): string[] {
   const out: string[] = [];
   const add = (m: BacktestModel | undefined) => {
     if (m && !out.includes(m.model)) out.push(m.model);
   };
   add(models.find((m) => m.role === "model_of_record"));
-  const validationRps = (m: BacktestModel) => m.splits.find((s) => s.split === "validation")?.mean_rps ?? Infinity;
-  add(models.filter((m) => m.role === "machine_learning").sort((a, b) => validationRps(a) - validationRps(b))[0]);
-  add(models.find((m) => m.model === "dixon_coles"));
+  for (const m of models.filter((x) => x.role === "fallback_of_record")) add(m);
   add(models.find((m) => m.role === "baseline" && m.model.includes("frequency")));
   for (const m of models) {
     if (out.length >= 4) break;
@@ -413,6 +428,8 @@ function Filters({
                       )}
                       {x.label}
                       {x.basis === "model_and_market" && <span className="visually-hidden"> (model + market)</span>}
+                      {x.per_match === false && <span className="bx-chip-note">summary only</span>}
+                      {!ok && <span className="visually-hidden"> (not run on {seasonLabel(season)})</span>}
                     </button>
                   );
                 })}
@@ -432,7 +449,7 @@ function Filters({
           </div>
           {unavailable.length > 0 && (
             <p className="muted small">
-              Greyed out: not run on {seasonLabel(season)}.{" "}
+              Dashed: not run on {seasonLabel(season)}.{" "}
               {seasons.find((s) => s.season === season)?.split === "test"
                 ? "Only the models of record, the leading learner and challenger and the baselines were run once on the test seasons."
                 : ""}
@@ -440,7 +457,9 @@ function Filters({
           )}
           <p className="muted small">
             <span className="bx-chip-market bx-chip-market-key" aria-hidden="true" /> marks model + market forecasts,
-            which use bookmakers' prices collected before each match.
+            which use bookmakers' prices collected before each match. “Summary only”: match by match, that forecast's
+            match-result and over 2.5 figures are the bookmakers' consensus, so only its results over many matches are
+            shown.
           </p>
         </div>
       </div>
@@ -456,7 +475,31 @@ function Filters({
 // ---------------------------------------------------------------------------------------------
 // Results: summary strip and matches
 
-type Col = { index: number; model: string; label: string; role: string; basis: string; info?: BacktestModel };
+type Col = {
+  index: number;
+  model: string;
+  label: string;
+  role: string;
+  basis: string;
+  /** False: a summary only, no per-match figures. */
+  perMatch: boolean;
+  info?: BacktestModel;
+};
+
+/** The team a search means: a key from a link or the list, or typed text that matches one
+ * team's name only ("chel" -> Chelsea); with several matches, those teams. */
+function resolveTeam(
+  data: BacktestMatches,
+  teamParam: string,
+): { key: string | null; needle: string; matching: string[] } {
+  if (teamParam && data.teams[teamParam]) return { key: teamParam, needle: "", matching: [teamParam] };
+  const needle = norm(teamParam);
+  if (!needle) return { key: null, needle: "", matching: [] };
+  const matching = Object.entries(data.teams)
+    .filter(([, t]) => norm(t.name).includes(needle))
+    .map(([k]) => k);
+  return matching.length === 1 ? { key: matching[0] ?? null, needle: "", matching } : { key: null, needle, matching };
+}
 
 function Results({
   data,
@@ -481,24 +524,37 @@ function Results({
 }) {
   const listTop = useRef<HTMLHeadingElement>(null);
   const cols: Col[] = data.models
-    .map((x, index) => ({ ...x, index, info: m.models.find((y) => y.model === x.model && y.group === data.group) }))
+    .map((x, index) => {
+      const info = m.models.find((y) => y.model === x.model && y.group === data.group);
+      return { ...x, index, perMatch: x.per_match !== false && info?.per_match !== false, info };
+    })
     .filter((c) => chosen.includes(c.model) && (data.summary[c.index]?.matches ?? 0) > 0);
+  const lineCols = cols.filter((c) => c.perMatch);
 
   // Team: a key from a link or the list, or text matched against names.
-  const teamKey = teamParam && data.teams[teamParam] ? teamParam : null;
-  const needle = teamKey ? "" : norm(teamParam);
-  const teamText = teamKey ? (data.teams[teamKey]?.name ?? teamKey) : teamParam.trim();
-  const rows = useMemo(() => {
-    const filtered = data.matches.filter(
+  const team = resolveTeam(data, teamParam);
+  const teamKey = team.key;
+  const needle = team.needle;
+  const teamText = teamKey
+    ? (data.teams[teamKey]?.name ?? teamKey)
+    : team.matching.length > 1
+      ? `teams matching “${teamParam.trim()}”`
+      : teamParam.trim();
+  // Every match of the chosen team(s) any chosen model has (the summaries), and those with at
+  // least one per-match figure to show (the list).
+  const modelKey = cols.map((c) => `${c.model}:${c.perMatch}`).join(",");
+  const { teamRows, rows } = useMemo(() => {
+    const byTeam = data.matches.filter(
       (r) =>
         (teamKey
           ? r.home === teamKey || r.away === teamKey
           : !needle || norm(r.home_name).includes(needle) || norm(r.away_name).includes(needle)) &&
-        cols.some((c) => r.p[c.index]),
+        cols.some((c) => r.p[c.index] || !c.perMatch),
     );
-    return order === "new" ? filtered.reverse() : filtered;
+    const listed = byTeam.filter((r) => lineCols.some((c) => r.p[c.index]));
+    return { teamRows: byTeam, rows: order === "new" ? listed.reverse() : listed };
     // `cols` is rebuilt on every render; the models in it are what matters.
-  }, [data, teamKey, needle, order, cols.map((c) => c.model).join(",")]);
+  }, [data, teamKey, needle, order, modelKey]);
 
   const pages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
   const page = Number.isFinite(pageParam) ? Math.min(Math.max(1, pageParam), pages) : 1;
@@ -532,11 +588,13 @@ function Results({
 
   return (
     <>
-      {rows.length > 0 && (
+      {teamRows.length > 0 && (
         <Summary
           data={data}
+          m={m}
           cols={cols}
-          rows={rows}
+          rows={teamRows}
+          teamKey={teamKey}
           where={where}
           split={split}
           splitNote={splitNote}
@@ -553,7 +611,20 @@ function Results({
             Backtest
           </span>
         </div>
-        {rows.length === 0 ? (
+        {teamRows.length > 0 && lineCols.length === 0 ? (
+          <div className="bx-empty">
+            <p>
+              <strong>No match-by-match figures for the chosen models.</strong>
+            </p>
+            <p className="muted small">
+              {cols.map((c) => c.label).join(", ")}: summary only. Match by match, their match-result and over 2.5
+              figures are the bookmakers' consensus. Choose a model without prices above to see each match.
+            </p>
+            <button type="button" onClick={() => setQuery({ models: null, page: null })}>
+              Use the default models
+            </button>
+          </div>
+        ) : rows.length === 0 ? (
           <div className="bx-empty">
             <p>
               <strong>
@@ -574,13 +645,18 @@ function Results({
                 ? `Matches ${formatNumber(start + 1, 0)}–${formatNumber(start + shown.length, 0)} of ${formatNumber(rows.length, 0)}`
                 : `${formatNumber(rows.length, 0)} ${rows.length === 1 ? "match" : "matches"}`}
               {filteredByTeam ? ` with ${teamText}` : ""}, {order === "new" ? "newest" : "oldest"} first.
+              {lineCols.length < cols.length &&
+                ` Summary only, so not in the cards: ${cols
+                  .filter((c) => !c.perMatch)
+                  .map((c) => c.label)
+                  .join(", ")}.`}
             </p>
             <SplitKey>
               <span className="muted">Bold: the model's pick, ✓ right or ✗ wrong</span>
             </SplitKey>
             <ol className="bx-matches">
               {shown.map((r) => (
-                <MatchCard key={`${r.date}-${r.home}-${r.away}`} r={r} cols={cols} data={data} />
+                <MatchCard key={`${r.date}-${r.home}-${r.away}`} r={r} cols={lineCols} data={data} />
               ))}
             </ol>
             {pages > 1 && <Pager page={page} pages={pages} />}
@@ -618,16 +694,20 @@ type Tile = {
 
 function Summary({
   data,
+  m,
   cols,
   rows,
+  teamKey,
   where,
   split,
   splitNote,
   teamText,
 }: {
   data: BacktestMatches;
+  m: BacktestModels;
   cols: Col[];
   rows: BacktestMatch[];
+  teamKey: string | null;
   where: string;
   split: string;
   splitNote: string | null;
@@ -645,6 +725,13 @@ function Summary({
         rps: s?.mean_rps ?? null,
       };
     }
+    if (!col.perMatch) {
+      // No per-match figures: the API's own summary of this team's matches, if one team.
+      const t = teamKey ? data.team_summaries?.[col.model]?.[teamKey] : undefined;
+      if (!t) return { col, matches: 0, right: 0, hit: null, ci: null, rps: null };
+      const [n, k, mean] = t;
+      return { col, matches: n, right: k, hit: n ? k / n : null, ci: wilson(k, n), rps: mean };
+    }
     let n = 0;
     let k = 0;
     let sum = 0;
@@ -659,9 +746,11 @@ function Summary({
   });
   const rpsList = tiles.map((t) => t.rps).filter((v): v is number => v !== null);
   const best = rpsList.length > 1 && Math.max(...rpsList) - Math.min(...rpsList) > 1e-9 ? Math.min(...rpsList) : null;
-  const notes = cols.filter((c) => c.info?.note);
-  const market = cols.filter((c) => c.basis === "model_and_market");
-  const fewest = Math.min(...tiles.map((t) => t.matches));
+  const held = cols.filter((c) => !c.perMatch);
+  const notes = cols.filter((c) => c.perMatch && c.info?.note);
+  const market = cols.filter((c) => c.basis === "model_and_market" && c.perMatch);
+  const counted = tiles.filter((t) => t.matches > 0);
+  const fewest = counted.length ? Math.min(...counted.map((t) => t.matches)) : 0;
 
   return (
     <section className="card bx-summary" aria-labelledby="bx-summary-title">
@@ -682,43 +771,50 @@ function Summary({
                 {t.col.label}
               </span>
               <span className="bx-tile-tags">
-                <RoleTag role={t.col.role} short />
+                <RoleTag role={t.col.role} roles={m.roles} short />
                 {t.col.basis === "model_and_market" && <BasisBadge basis="model_and_market" />}
+                {!t.col.perMatch && <span className="badge bx-held-tag">Summary only</span>}
                 {isBest && <span className="best-tag">Best RPS</span>}
               </span>
-              <dl className="bx-tile-figs">
-                <div>
-                  <dt>Results right</dt>
-                  <dd>
-                    <span className="bx-tile-value">{formatPct(t.hit)}</span>
-                    <span className="bx-tile-sub">
-                      {formatNumber(t.right, 0)} of {formatNumber(t.matches, 0)}
-                      {t.ci && (
-                        <>
-                          {" "}
-                          · 95%: {formatPct(t.ci[0])}–{formatPct(t.ci[1])}
-                        </>
-                      )}
-                    </span>
-                    <RangeBar value={t.hit} ci={t.ci} />
-                  </dd>
-                </div>
-                <div>
-                  <dt>Mean RPS</dt>
-                  <dd>
-                    <span className={`bx-tile-value${isBest ? " is-strong" : ""}`}>
-                      {t.rps !== null ? formatNumber(t.rps, 4) : "—"}
-                    </span>
-                    <span className="bx-tile-sub">lower is better</span>
-                  </dd>
-                </div>
-                <div>
-                  <dt>Matches</dt>
-                  <dd>
-                    <span className="bx-tile-value bx-tile-value-sm">{formatNumber(t.matches, 0)}</span>
-                  </dd>
-                </div>
-              </dl>
+              {t.matches === 0 ? (
+                <p className="bx-tile-sub bx-tile-none">
+                  Not worked out for several teams at once: its match-by-match figures aren't sent. Choose one team.
+                </p>
+              ) : (
+                <dl className="bx-tile-figs">
+                  <div>
+                    <dt>Results right</dt>
+                    <dd>
+                      <span className="bx-tile-value">{formatPct(t.hit)}</span>
+                      <span className="bx-tile-sub">
+                        {formatNumber(t.right, 0)} of {formatNumber(t.matches, 0)}
+                        {t.ci && (
+                          <>
+                            {" "}
+                            · <span className="nowrap">95%: {formatPct(t.ci[0])}–{formatPct(t.ci[1])}</span>
+                          </>
+                        )}
+                      </span>
+                      <RangeBar value={t.hit} ci={t.ci} />
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Mean RPS</dt>
+                    <dd>
+                      <span className={`bx-tile-value${isBest ? " is-strong" : ""}`}>
+                        {t.rps !== null ? formatNumber(t.rps, 4) : "—"}
+                      </span>
+                      <span className="bx-tile-sub">lower is better</span>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Matches</dt>
+                    <dd>
+                      <span className="bx-tile-value bx-tile-value-sm">{formatNumber(t.matches, 0)}</span>
+                    </dd>
+                  </div>
+                </dl>
+              )}
             </li>
           );
         })}
@@ -727,18 +823,25 @@ function Summary({
         {teamText !== null && (
           <li>
             Worked out on this page from the matches listed below (RPS from the per-match figures, rounded to four
-            places).
-            {fewest < 100 && " Fewer than 100 matches: the intervals are wide, and small differences mean little."}
+            places){held.length > 0 ? "; summary-only models' figures for one team are the API's own" : ""}.
+            {fewest > 0 && fewest < 100 && " Fewer than 100 matches: the intervals are wide, and small differences mean little."}
           </li>
         )}
         <li>
           Results right: how often the most likely match result (home, draw or away) happened, with its 95% interval.
           RPS: ranked probability score of the match-result forecast, lower is better.
         </li>
+        {held.length > 0 && (
+          <li>
+            Summary only ({held.map((c) => c.label).join(", ")}):{" "}
+            {m.withheld_note?.replace(/^Summary only:\s*/, "") ??
+              "match by match, these forecasts' match-result and over 2.5 figures are the bookmakers' consensus, so only their results over many matches are shown."}
+          </li>
+        )}
         {market.length > 0 && (
           <li>
-            Model + market forecasts move a model's score grid onto the bookmakers' consensus for the match result and
-            over/under 2.5 goals, so where prices were available they often show the same figures as each other.
+            Model + market forecasts ({market.map((c) => c.label).join(", ")}) use bookmakers' prices collected before
+            each match; the figures shown are the model's own, never the prices.
           </li>
         )}
         {notes.map((c) => (
@@ -766,12 +869,16 @@ function matchDay(isoDate: string): string {
 
 function MatchCard({ r, cols, data }: { r: BacktestMatch; cols: Col[]; data: BacktestMatches }) {
   const [hg, ag] = r.score;
-  const result = hg > ag ? "Home win" : hg < ag ? "Away win" : "Draw";
+  const actual = resultOf(hg, ag);
+  const result = actual === "H" ? "Home win" : actual === "A" ? "Away win" : "Draw";
   return (
     <li className="bx-match">
       <div className="bx-meta">
+        <span className="bx-kind" title="Computed after the fact; not a pre-match record">
+          Backtest
+        </span>
         <span>{matchDay(r.date)}</span>
-        {r.stage && <span className="bx-stage">{r.stage}</span>}
+        {r.stage && <span className="bx-stage">{stageLabel(r.stage)}</span>}
         <span className="bx-result">{result}</span>
       </div>
       <p className="bx-teams">
@@ -790,17 +897,20 @@ function MatchCard({ r, cols, data }: { r: BacktestMatch; cols: Col[]; data: Bac
       <ul className="bx-preds" aria-label="Each chosen model's backtest prediction">
         {cols.map((c) => {
           const cell = r.p[c.index];
+          const probs = cell ? { H: cell[0], D: cell[1], A: cell[2] } : null;
           return (
             <li key={c.model} className={`bx-pred${cell ? "" : " is-missing"}`}>
               <span className="bx-pred-name">{c.label}</span>
-              {cell ? (
+              {cell && probs ? (
                 <>
+                  {/* The ledger's own pick: at three decimals two outcomes can print the same. */}
                   <SplitBar
                     className="bx-pred-split"
-                    probs={{ H: cell[0], D: cell[1], A: cell[2] }}
+                    probs={probs}
                     homeName={r.home_name}
                     awayName={r.away_name}
                     correct={cell[5] === 1}
+                    pick={scoredPick(probs, actual, cell[5] === 1)}
                   />
                   <span className="bx-pred-extra">
                     <span>

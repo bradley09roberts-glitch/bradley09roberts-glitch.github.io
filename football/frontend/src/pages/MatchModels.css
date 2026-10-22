@@ -1,9 +1,12 @@
 /* The match page's "Every model" section (MatchModels.tsx). Phones: one stacked block per model.
-   From 640 px of column width: one row per model under a column header, like a table. */
+   From 640 px of column width: one row per model under a column header, like a table. The
+   script reads the same 640 px (ROW_LAYOUT_PX) to decide whether a long list starts folded. */
 
 .every-model {
   display: grid;
   gap: var(--sp-3);
+  /* Opened from a fixture card's "Compare every model": clear of the sticky bar. */
+  scroll-margin-top: calc(var(--sticky-top) + 16px);
 }
 
 .em-head {
@@ -30,11 +33,28 @@
   margin: 0;
 }
 
+.em-table {
+  border-top: 1px solid var(--border);
+}
+
 .em-list {
   margin: 0;
   padding: 0;
   list-style: none;
-  border-top: 1px solid var(--border);
+}
+
+/* A long list: a subheading per role ("Models of record", "Machine learning", …). */
+.card .em-group-name {
+  margin: 0;
+  padding: 14px 0 6px;
+  border-bottom: 1px solid var(--border);
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+  text-transform: uppercase;
+  color: var(--text-2);
 }
 
 .em-row {
@@ -50,7 +70,7 @@
   border-bottom: 1px solid var(--border);
 }
 
-.em-list.is-settled .em-row {
+.em-table.is-settled .em-row {
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.35fr) minmax(0, 0.85fr);
   grid-template-areas:
     "model model model model"
@@ -236,7 +256,7 @@
 /* Wide enough for a row per model: model | split | over 2.5 | both score | xG | RPS. */
 @container (min-width: 640px) {
   .em-row,
-  .em-list.is-settled .em-row {
+  .em-table.is-settled .em-row {
     grid-template-columns: minmax(9rem, 1.15fr) minmax(7.5rem, 1fr) 3.6rem 3.6rem 5.4rem;
     grid-template-areas:
       "model split ou bt xg"
@@ -246,7 +266,7 @@
     align-items: center;
   }
 
-  .em-list.is-settled .em-row {
+  .em-table.is-settled .em-row {
     grid-template-columns: minmax(9rem, 1.15fr) minmax(7.5rem, 1fr) 3.6rem 3.6rem 5.4rem 3.4rem;
     grid-template-areas:
       "model split ou bt xg rps"
@@ -316,7 +336,8 @@
     white-space: nowrap;
   }
 
-  .em-more {
-    display: none;
+  /* The header row's own rule closes the list's top edge; a group heading sits under it. */
+  .card .em-group-name {
+    padding-top: 12px;
   }
 }

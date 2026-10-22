@@ -52,7 +52,16 @@ import {
 } from "../components/TeamStats";
 import { contrast, mix, parseHex, toHex, type Rgb } from "../colour";
 import { UEFA_HELD, countryName, seasonCompetitions, sortByCompetition } from "../competitions";
-import { formatDate, formatKickoff, formatNumber, formatPct, keepNumberWithName, parseUtc, seasonLabel } from "../format";
+import {
+  formatDate,
+  formatKickoff,
+  formatNumber,
+  formatPct,
+  keepNumberWithName,
+  parseUtc,
+  seasonLabel,
+  stageLabel,
+} from "../format";
 import { useDocumentTitle, useMediaQuery } from "../hooks";
 import { canGoBack, href, setQuery } from "../router";
 import type { PageProps } from ".";
@@ -615,7 +624,7 @@ function UpcomingRow({ f, team }: { f: UpcomingFixture; team: string }) {
     <li className={`up-row${pr ? "" : " is-bare"}`}>
       <div className="up-head">
         <span className="up-when">{formatKickoff(f.kickoff_utc, f.date)}</span>
-        <CompetitionChip code={f.competition} name={f.competition_name} detail={f.stage} />
+        <CompetitionChip code={f.competition} name={f.competition_name} detail={stageLabel(f.stage)} />
       </div>
       <div className="up-match">
         <span className="up-venue" title={f.venue === "H" ? "Home" : f.venue === "A" ? "Away" : "Neutral ground"}>

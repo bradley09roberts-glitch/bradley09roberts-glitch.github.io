@@ -167,10 +167,31 @@ def settlements_for(s: Session, ids: Iterable[int]) -> dict[int, PredictionSettl
     return out
 
 
-def _earlier_models(periods: Mapping, group: str, now: datetime) -> set[str]:
+def earlier_models(periods: Mapping, group: str, now: datetime) -> set[str]:
     """Models named in a period of the group other than the one in force now."""
     current = set(models_of_record.models_at(periods.get(group, []), now))
     return {m for p in periods.get(group, []) for m in p.models} - current
+
+
+def fixture_role(
+    model: str,
+    record: str | None,
+    order: Iterable[str],
+    shadow_group: Mapping,
+    earlier: Iterable[str],
+) -> str:
+    """A model's role on one fixture: `model_of_record` for the fixture's record of record
+    (`record`), `fallback_of_record` for another model of the list that applies to it
+    (`order`), else the role shadow_models.json gives (`shadow_group`: that group's entries),
+    else `earlier_record` for a model of record of an earlier period, else `other`."""
+    if model == record:
+        return cat.MODEL_OF_RECORD
+    if model in set(order):
+        return cat.FALLBACK_OF_RECORD
+    entry = shadow_group.get(model)
+    if entry and entry.get("role") in cat.SHADOW_ROLES:
+        return str(entry["role"])
+    return cat.EARLIER_RECORD if model in set(earlier) else cat.OTHER
 
 
 # ---------------------------------------------------------------------------------------------
@@ -209,7 +230,7 @@ def fixture_models(
     record = ror.model_for(fixture_ref, competition)
     order = ror.order_for(fixture_ref, competition)
     # Models of record of an earlier period only (not of the one in force now).
-    earlier = _earlier_models(periods, group, now)
+    earlier = earlier_models(periods, group, now)
     g_shadow = shadow.get(group, {})
 
     by_model: dict[str, list[Prediction]] = {}
@@ -217,20 +238,36 @@ def fixture_models(
         by_model.setdefault(p.model_name, []).append(p)
 
     def role(model: str) -> str:
-        if model == record:
-            return cat.MODEL_OF_RECORD
-        if model in order:
-            return cat.FALLBACK_OF_RECORD
-        entry = g_shadow.get(model)
-        if entry and entry.get("role") in cat.SHADOW_ROLES:
-            return entry["role"]
-        return cat.EARLIER_RECORD if model in earlier else cat.OTHER
+        return fixture_role(model, record, order, g_shadow, earlier)
+
+    def before_prices(p: Prediction, features: dict, probs: Mapping) -> bool:
+        """True only for a model + market record whose expected goals are its base model's
+        own: equal to that model's record for the fixture (the one the match page compares
+        with, footy.api.routes.counterpart). Records since 21 Oct 2026 take them from the
+        tilted grid (footy.modeling.lab.market_blend), and with no base record to compare,
+        nothing is claimed."""
+        from footy.api.routes import MODEL_AND_MARKET, counterpart
+
+        if basis_of(features) != MODEL_AND_MARKET:
+            return False
+        other = counterpart(p, features, rows)
+        mine = probs.get("expected_goals")
+        theirs = None if other is None else json.loads(other.probabilities).get("expected_goals")
+        if not isinstance(mine, Mapping) or not isinstance(theirs, Mapping):
+            return False
+        return all(
+            (a := _num(mine.get(k))) is not None
+            and (b := _num(theirs.get(k))) is not None
+            and abs(a - b) < 1e-9
+            for k in ("home", "away")
+        )
 
     out_models = []
     for model, recs in by_model.items():
         first = recs[0]
         probs = json.loads(first.probabilities)
-        basis = basis_of(_features(first))
+        features = _features(first)
+        basis = basis_of(features)
         scored = score(probs, st.get(first.id))
         entry = g_shadow.get(model)
         r = role(model)
@@ -255,9 +292,9 @@ def fixture_models(
                     for e in recs[1:]
                 ],
                 "probabilities": shown_probabilities(probs),
-                # A model + market record keeps its base model's expected goals: the prices
-                # move the score grid, not these averages (footy.modeling.lab.market_blend).
-                "expected_goals_before_prices": basis == "model_and_market",
+                # Its expected goals are its base model's own, before the prices (checked
+                # against that model's record; see before_prices).
+                "expected_goals_before_prices": before_prices(first, features, probs),
                 "settlement": None if scored is None else scored.as_json(),
             }
         )
@@ -374,7 +411,7 @@ def leaderboard(
             record_of[ref] = ror.model_for(ref, p.competition)
 
     current = models_of_record.models_at(periods.get(group, []), now)
-    earlier = _earlier_models(periods, group, now)
+    earlier = earlier_models(periods, group, now)
     g_shadow = shadow.get(group, {})
     models: dict[str, dict] = {}
     for (ref, model), p in first.items():

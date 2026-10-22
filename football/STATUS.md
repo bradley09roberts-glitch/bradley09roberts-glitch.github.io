@@ -104,8 +104,37 @@ learning" tab shows the learning curves.
   a free crest, 620 a venue photo). **Nothing is downloaded yet** (Wikimedia answers 429), so
   every club shows a badge drawn from its Wikidata colours. Run
   `uv run footy team-media --download` once Wikimedia allows it.
-- **Snapshot:** sharded (`footy-api-snapshot/2`, [docs/snapshot.md](docs/snapshot.md)): a page
-  plus about 35 JSON files, ~34 MB, team data loaded lazily.
+- **Every model's predictions** (22 Oct, the owner's "I want to see all the predictions for the
+  models"; [docs/model-comparison.md](docs/model-comparison.md)). Genuine pre-match records and
+  backtests are never mixed, and every backtest view says "Backtest":
+  - **Match page, "Every model":** each model's own genuine pre-match record for the fixture
+    (model of record first, then machine learning, challengers, baselines, with subheadings in a
+    long list), ticks or crosses and the RPS once settled. The top of every record's page names
+    its model and role, and any record but the record of record links to it.
+  - **Fixtures:** each card shows the record of record (and its model + market partner) and
+    "also predicted by N other models · Compare every model"; the list no longer carries every
+    shadow record (the 30-day response went from 2.4 MB to 0.29 MB).
+  - **Performance, "Model leaderboard (live)":** every model with settled records, ranked by mean
+    RPS, with results right (95% interval), log losses and the comparison with the record of
+    record; too few games so far to tell models apart.
+  - **Lab, "Explorer" tab:** the saved walk-forward backtests match by match (validation 2023/24,
+    test 2024/25 and 2025/26), filtered by league or competition, season, team and models. Six
+    model + market models (`market_tilt_*`, `ml_online_market`) are **summary only**: match by
+    match their match-result and over 2.5 figures are the bookmakers' de-vigged consensus, so
+    only their results over many matches (and per team) are sent. Team pages link to it.
+  - **Code review (22 Oct, afternoon):** the explorer's ✓ or ✗ now sits on the ledger's own
+    pick where three-decimal rounding ties two outcomes (17 match cards had it on the other
+    one, e.g. Man United 3-2 Newcastle "pick Man United, wrong"); the learners' model + market
+    records (`ml_online_market`, `ml_stack_market`, from Friday) name a `stream` or `reference`,
+    not a `base`, and would have been hidden as market-only (now shown); "pure model's expected
+    goals" (the * on Every model, the match page's xG note) is claimed only where they equal the
+    base model's own record (model + market records take them from the tilted grid since 21 Oct
+    05:23 UTC, so the Levante model of record's page no longer claims it); a summary-only
+    model is never summarised over fewer than 10 matches (the API's team filter gave each
+    opponent's two meetings).
+- **Snapshot:** sharded (`footy-api-snapshot/3`, [docs/snapshot.md](docs/snapshot.md)): a page
+  plus 51 JSON files, 41.25 MB on 22 Oct (13:47 UK), team, match and backtest data loaded
+  lazily; a first visit loads 1.43 MB.
 
 ## Publishing the phone copy
 
@@ -199,3 +228,10 @@ container lives.
     now send contact details in their User-Agent. Retry once per check-in, never in a loop.
 11. **Container restarts** happen every hour or two: they kill the capture loop and any
     running workflow (work on disk survives; commit checkpoints often).
+12. **Price shadow models publish as planned (decided 22 Oct):** the six price shadow models
+    (`market_tilt_ctx`, `_dc`, `_elo`, `_ens`, `ml_online_market`, `ml_stack_market`) publish
+    once each collection day's prices arrive. All but `ml_stack_market` tilt fully onto the
+    prices, so their match-result and over 2.5 figures equal the de-vigged consensus the model of
+    record's own page already shows (D-024): nothing new is exposed, and their other markets
+    (O/U 1.5 and 3.5, BTTS) are what they add. The live pages say when several records share
+    their figures; the backtest explorer withholds those six models' figures match by match.

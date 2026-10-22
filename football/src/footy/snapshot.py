@@ -37,6 +37,7 @@ that starts making a new request shows "Not in this snapshot" until it is added 
 
 from __future__ import annotations
 
+import itertools
 import json
 import re
 import shutil
@@ -499,6 +500,34 @@ def snapshot_teams(engine: Engine, snap: Snapshot) -> list[str]:
     return sorted(wanted & known)
 
 
+def consensus_cells(page: dict) -> str | None:
+    """Why a backtest page would carry the bookmakers' consensus match by match, or None.
+
+    A summary-only model (`per_match` false) must have no per-match cell; and no two model +
+    market models may share their home/draw/away figures on most matches, which is what a
+    model + market ledger tilted fully onto the prices looks like (backtest_explorer,
+    PRICE_IDENTICAL). The price search can't see either: the cells are plain arrays."""
+    models = page.get("models") or []
+    matches = page.get("matches") or []
+    for i, m in enumerate(models):
+        if m.get("per_match") is False and any(r["p"][i] is not None for r in matches):
+            return f"{m['model']} is summary only but has per-match figures"
+    market = [
+        i
+        for i, m in enumerate(models)
+        if m.get("basis") == "model_and_market" and m.get("per_match") is not False
+    ]
+    for a, b in itertools.combinations(market, 2):
+        both = [r["p"] for r in matches if r["p"][a] is not None and r["p"][b] is not None]
+        same = sum(1 for p in both if p[a][:3] == p[b][:3])
+        if both and same > len(both) / 2:
+            return (
+                f"{models[a]['model']} and {models[b]['model']} share their match-result "
+                f"figures on {same} of {len(both)} matches (the bookmakers' consensus?)"
+            )
+    return None
+
+
 def backtest_matches(get: Callable[..., Any], snap: Snapshot) -> None:
     """The backtest explorer's requests: the models list, then each division and season its
     groups cover, one shard per league and split and one per UEFA split. Raises RuntimeError
@@ -519,6 +548,8 @@ def backtest_matches(get: Callable[..., Any], snap: Snapshot) -> None:
                     f"{c['division']} {c['season']}: {page['total']} backtest matches, more than "
                     f"FRONTEND_BACKTEST_LIMIT ({FRONTEND_BACKTEST_LIMIT})"
                 )
+            if problem := consensus_cells(page):
+                raise RuntimeError(f"{c['division']} {c['season']}: {problem}")
             # League games: one file per division and split. UEFA: one per split (its
             # competitions are small).
             split = c.get("split") or c["season"]

@@ -1,5 +1,7 @@
 /* "Model leaderboard (live)" on the Performance page (Leaderboard.tsx). Phones: one block per
-   model with its figures in two columns. From 900 px: a row per model under a column header. */
+   model with its figures in two columns. Once the card itself is wide enough for every column
+   with the model's name at 11rem or more (a container query, 58rem): a row per model under a
+   column header. */
 
 .lb-groups {
   display: grid;
@@ -15,6 +17,7 @@
 .lb {
   display: grid;
   gap: var(--sp-3);
+  container-type: inline-size;
 }
 
 .lb-head {
@@ -234,9 +237,10 @@
   margin-top: 2px;
 }
 
-@media (min-width: 900px) {
+/* 1.9 + 11 + 5.6 + 8.5 + 5.2 + 5.8 + 5.4 + 9 rem and seven 12 px gaps: 57.6rem. */
+@container (min-width: 58rem) {
   .lb-row {
-    grid-template-columns: 1.9rem minmax(0, 15rem) 5.6rem minmax(8.5rem, 1.2fr) 5.2rem 5.8rem 5.4rem minmax(9rem, 1fr);
+    grid-template-columns: 1.9rem minmax(11rem, 15rem) 5.6rem minmax(8.5rem, 1.2fr) 5.2rem 5.8rem 5.4rem minmax(9rem, 1fr);
     grid-template-areas: "rank model n hit rps ou bt vs";
     column-gap: 12px;
     align-items: start;

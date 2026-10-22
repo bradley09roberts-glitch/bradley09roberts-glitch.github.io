@@ -5,7 +5,7 @@
 
 import { useLayoutEffect, useMemo, useRef, type FocusEvent } from "react";
 import { endpoints, useApi, type FixturesResponse, type PredictionCard } from "../api";
-import { BasisBadge, EditionBadge, RecordTypeBadge, basisLabel } from "../components/Badge";
+import { BasisBadge, EditionBadge, RecordTypeBadge } from "../components/Badge";
 import { CompetitionChip, CompetitionMark } from "../components/CompetitionMark";
 import { FreshnessBadge } from "../components/FreshnessBadge";
 import { MarketGrid } from "../components/MarketGrid";
@@ -253,6 +253,31 @@ function FixtureList({ data, competition }: { data: FixturesResponse; competitio
   );
 }
 
+/** Which model the card shows, and how many others predicted the match, with a link to the
+ * match page's "Every model" section. The fixtures list carries only the record of record and
+ * its partner with the other basis; `models_for_fixture` counts every model with a record. */
+function AlsoPredicted({ card, others }: { card: PredictionCard; others: PredictionCard[] }) {
+  const total = card.models_for_fixture ?? others.length + 1;
+  const n = Math.max(0, total - 1);
+  if (n === 0) return null;
+  const label = card.model_label ?? card.model_name;
+  return (
+    <p className="above-stretch also">
+      <span className="muted">{card.is_primary ? "Model of record: " : "Shown: "}</span>
+      <span className="also-model">{label}</span>
+      <span className="muted">
+        {" "}
+        · also predicted by {n} other {n === 1 ? "model" : "models"}
+      </span>{" "}
+      ·{" "}
+      <a className="also-link" href={href(`/match/${card.id}`, { at: "models" })}>
+        Compare every model<span className="visually-hidden">: {card.home_name} versus {card.away_name}</span>{" "}
+        <span aria-hidden="true">→</span>
+      </a>
+    </p>
+  );
+}
+
 /** The result, or that the match has kicked off, under the kick-off time. */
 function KickoffStatus({ card }: { card: PredictionCard }) {
   const s = card.settlement;
@@ -344,24 +369,7 @@ function FixtureCard({ cards }: { cards: PredictionCard[] }) {
         >
           Details <span className="more-arrow">→</span>
         </a>
-        {others.length > 0 && (
-          <p className="above-stretch also">
-            Also predicted by{" "}
-            {others.map((o, i) => (
-              <span key={o.id}>
-                {i > 0 && ", "}
-                <a className="also-model" href={href(`/match/${o.id}`)}>
-                  {o.model_name}
-                </a>
-                <span className="muted"> ({basisLabel(o.basis).toLowerCase()})</span>
-              </span>
-            ))}
-            <span className="muted">
-              {" "}
-              · shown: <span className="also-model">{card.model_name}</span>
-            </span>
-          </p>
-        )}
+        <AlsoPredicted card={card} others={others} />
       </div>
     </article>
   );

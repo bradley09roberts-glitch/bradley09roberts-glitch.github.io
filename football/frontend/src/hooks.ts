@@ -81,6 +81,31 @@ export function useMediaQuery(query: string): boolean {
 }
 
 // ---------------------------------------------------------------------------------------------
+// Element width
+
+/** True while the element is narrower than `px` (its border box), following resizes; false
+ * until it has been measured. For layouts decided by a container query on a box the element
+ * fills, so the script and the stylesheet agree on the same width. */
+export function useNarrowerThan<T extends Element>(ref: RefObject<T | null>, px: number): boolean {
+  const [narrow, setNarrow] = useState(false);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const measure = (width: number) => setNarrow(width > 0 && width < px);
+    measure(el.getBoundingClientRect().width);
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[entries.length - 1];
+      const box = entry?.borderBoxSize?.[0];
+      measure(box ? box.inlineSize : el.getBoundingClientRect().width);
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [ref, px]);
+  return narrow;
+}
+
+// ---------------------------------------------------------------------------------------------
 // The app bar on a phone: it slides away while the reader scrolls down and comes back as soon
 // as they scroll up, reach the top, move keyboard focus into it, or change page. Only the bar
 // itself hides: the strip under the iPhone status bar stays (styles.css, html[data-appbar]).

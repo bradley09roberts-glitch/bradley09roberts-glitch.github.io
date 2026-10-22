@@ -106,15 +106,29 @@ export function Mark({ ok, label }: { ok: boolean; label?: string }) {
 
 const OUTCOME_WORD = { H: "home win", D: "draw", A: "away win" } as const;
 
+/** Decimal places for three percentages: one when two different values would print the same
+ * whole number (a near tie, where the bold pick would otherwise look arbitrary), else none. */
+export function pctDigits(values: number[]): 0 | 1 {
+  for (let i = 0; i < values.length; i++) {
+    for (let j = i + 1; j < values.length; j++) {
+      const a = values[i] ?? 0;
+      const b = values[j] ?? 0;
+      if (a !== b && formatPct(a) === formatPct(b)) return 1;
+    }
+  }
+  return 0;
+}
+
 /**
  * A compact match-result bar: one track split home (blue), draw (grey), away (orange), and the
  * three percentages printed under it (home at the left, draw in the middle, away at the right).
  * The pick (the most likely outcome) is printed in bold and, once the result is known, marked
- * right or wrong. One accessible name says it all.
+ * right or wrong; a near tie prints one decimal place. One accessible name says it all.
  */
 export function SplitBar({
   probs,
   correct,
+  pick: givenPick,
   homeName,
   awayName,
   className,
@@ -122,20 +136,25 @@ export function SplitBar({
   probs: OneXTwo;
   /** Whether the pick happened; undefined or null before the result. */
   correct?: boolean | null;
+  /** The pick that `correct` was scored on (the record's or ledger's own), when known: on a
+   * tie between the printed figures the most likely outcome alone can't say which it was. */
+  pick?: "H" | "D" | "A" | null;
   homeName?: string;
   awayName?: string;
   className?: string;
 }) {
-  const pick = pickOf(probs);
+  const pick = givenPick ?? pickOf(probs);
   const parts = [
     { code: "H" as const, cls: "home", p: probs.H },
     { code: "D" as const, cls: "draw", p: probs.D },
     { code: "A" as const, cls: "away", p: probs.A },
   ];
   const pickWord = pick === "H" ? `${homeName ?? "home"} win` : pick === "A" ? `${awayName ?? "away"} win` : "draw";
+  const digits = pctDigits([probs.H, probs.D, probs.A]);
+  const pct = (v: number) => formatPct(v, digits);
   const label =
-    `${homeName ? `${homeName} win` : "Home win"} ${formatPct(probs.H)}, draw ${formatPct(probs.D)}, ` +
-    `${awayName ? `${awayName} win` : "away win"} ${formatPct(probs.A)}. Pick: ${pickWord}` +
+    `${homeName ? `${homeName} win` : "Home win"} ${pct(probs.H)}, draw ${pct(probs.D)}, ` +
+    `${awayName ? `${awayName} win` : "away win"} ${pct(probs.A)}. Pick: ${pickWord}` +
     (correct === true ? ", right." : correct === false ? ", wrong." : ".");
   return (
     <div className={`split${className ? ` ${className}` : ""}`} role="img" aria-label={label}>
@@ -151,7 +170,7 @@ export function SplitBar({
       <span className="split-nums" aria-hidden="true">
         {parts.map((x) => (
           <span key={x.code} className={`split-num split-${x.cls}${x.code === pick ? " is-pick" : ""}`}>
-            {formatPct(x.p)}
+            {pct(x.p)}
             {x.code === pick && correct !== undefined && correct !== null && (
               <span className={`mark ${correct ? "mark-ok" : "mark-no"}`}>{correct ? "✓" : "✗"}</span>
             )}
@@ -165,6 +184,15 @@ export function SplitBar({
 /** "Home win", "Draw", "Away win" for a final score. */
 export function resultOf(home: number, away: number): "H" | "D" | "A" {
   return home > away ? "H" : home < away ? "A" : "D";
+}
+
+/** The pick a scored forecast was marked on, from the outcome and whether the pick was right:
+ * the outcome itself if right, else the likelier of the other two. Where rounding ties the
+ * printed figures (a backtest cell's three decimals), the most likely of them can't tell. */
+export function scoredPick(probs: OneXTwo, actual: "H" | "D" | "A", right: boolean): "H" | "D" | "A" {
+  if (right) return actual;
+  const [a, b] = (["H", "D", "A"] as const).filter((k) => k !== actual) as ["H" | "D" | "A", "H" | "D" | "A"];
+  return probs[b] > probs[a] ? b : a;
 }
 
 export function outcomeWord(code: "H" | "D" | "A"): string {

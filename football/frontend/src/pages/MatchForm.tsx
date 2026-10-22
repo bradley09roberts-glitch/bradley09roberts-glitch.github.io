@@ -22,7 +22,7 @@ import {
   type CompareRow,
 } from "../components/TeamStats";
 import { LEAGUES_HELD, UEFA_HELD } from "../competitions";
-import { formatDate } from "../format";
+import { formatDate, stageLabel } from "../format";
 import "./MatchForm.css";
 
 type Scope = "all" | CompetitionType;
@@ -249,7 +249,7 @@ function Meeting({ m, home: name }: { m: HeadToHeadMeeting; home: string }) {
           <CompetitionMark code={m.competition} />
           <span className="mf-meet-comp-name">
             {m.competition_name}
-            {m.stage ? ` · ${m.stage}` : ""}
+            {m.stage ? ` · ${stageLabel(m.stage)}` : ""}
           </span>
         </span>
       </span>

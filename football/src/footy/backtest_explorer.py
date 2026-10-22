@@ -16,6 +16,16 @@ the best of each model-lab family, the model + market candidates (D-024, D-027) 
 baselines; for UEFA the model of record, the earlier one, the round-3 challenger and the
 baseline. A purely market-derived ledger is refused (`market_only_ledger`): its probabilities
 would be a de-vigged price (D-013, D-024). No price is read: the ledgers hold none.
+
+Summary only (`PRICE_IDENTICAL`): six model + market ledgers whose match-result and over 2.5
+figures are, match by match, the bookmakers' consensus with the margin removed (the tilt moves
+the grid all the way onto the prices, `w_1x2` = `w_ou` = 1.0, so the base model changes nothing
+there; the online learner mixes grids that were all moved onto the same prices). They agree
+with each other to three decimal places on 5,254 of the 5,255 matches. Their per-match figures
+would be a price in disguise, so only their summaries are sent: over the matches the filters
+select, and per team (`team_summaries`), never over fewer than SUMMARY_ONLY_MIN_MATCHES
+(a summary of one or two matches is close to those matches' own figures). `ml_stack_market` really
+differs (its learners move the result) and keeps its per-match figures.
 """
 
 from __future__ import annotations
@@ -79,16 +89,52 @@ class Curated:
     # (split, run directory), or (split, run directory, the name the ledger was saved under)
     runs: tuple[tuple[str, ...], ...]
     note: str | None = None
+    # False: summaries only, never a match's figures (PRICE_IDENTICAL).
+    per_match: bool = True
 
     def ledger_model(self, run: tuple[str, ...]) -> str:
         return run[2] if len(run) > 2 else self.model
+
+
+# Model + market ledgers whose per-match match-result and over 2.5 figures are the bookmakers'
+# de-vigged consensus itself (see the module docstring): summaries only.
+PRICE_IDENTICAL = frozenset(
+    {
+        "market_tilt_shots",
+        "market_tilt_ctx",
+        "market_tilt_dc",
+        "market_tilt_elo",
+        "market_tilt_ens",
+        "ml_online_market",
+    }
+)
+# A summary-only model's figures over a handful of matches would come close to those matches'
+# own: one match's RPS is the consensus scored on its result. The API's team filter selects a
+# team's season, and an opponent's share of it is just the two meetings (one, if a ledger
+# misses the other), so any summary of a summary-only model over fewer matches than this is
+# withheld (a team's season, the smallest the page shows, is 33 or more).
+SUMMARY_ONLY_MIN_MATCHES = 10
+WITHHELD_NOTE = (
+    "Summary only: match by match, the match-result and over 2.5 goals figures are the "
+    "bookmakers' consensus with the margin removed (the same for each such model + market "
+    "forecast), which would be a price in disguise; only results over many matches are shown."
+)
 
 
 def _dom(model, role, basis, family, test=False, note=None) -> Curated:
     runs = [("validation", f"{model}__validation__2324")]
     if test:
         runs.append(("test", f"{model}__test__2425-2526"))
-    return Curated(model, "domestic", role, basis, family, tuple(runs), note=note)
+    return Curated(
+        model,
+        "domestic",
+        role,
+        basis,
+        family,
+        tuple(runs),
+        note=note,
+        per_match=model not in PRICE_IDENTICAL,
+    )
 
 
 CURATED: tuple[Curated, ...] = (
@@ -158,8 +204,8 @@ CURATED: tuple[Curated, ...] = (
             ("validation", "pan_euro_mix__validation_round3"),
             ("test", "euro_mix_0.7_0.3__test_mxg", "euro_mix_0.7_0.3"),
         ),
-        note="Its test run was saved under its lab name, euro_mix_0.7_0.3: the configuration "
-        "published as pan_euro_mix (data/reports/uefa_selection.json).",
+        note="Its test seasons were run before the model took its published name; it is the "
+        "same model.",
     ),
     Curated(
         "pan_euro_mix_mxg_all_ma0_w0.8",
@@ -184,7 +230,6 @@ CURATED: tuple[Curated, ...] = (
         ),
     ),
 )
-CURATED_BY_NAME = {(c.group, c.model): c for c in CURATED}
 
 
 def division_name(code: str) -> str:
@@ -208,8 +253,7 @@ def market_only_ledger(manifest: Mapping) -> bool:
     params = manifest.get("model_params")
     params = params if isinstance(params, Mapping) else {}
     priced = any(k in params for k in ("books", "devig"))
-    modelled = any(k in params for k in ("base", "stream", "reference", "members"))
-    return cat.is_market_only(name) or (priced and not modelled)
+    return cat.is_market_only(name) or (priced and not cat.names_a_model(params))
 
 
 # ---------------------------------------------------------------------------------------------
@@ -383,12 +427,16 @@ def _roles(periods: Mapping, group: str, now) -> tuple[list[str], set[str]]:
     return current, named - set(current)
 
 
-def role_for(c: Curated, current: Iterable[str], earlier: Iterable[str]) -> str:
-    if c.model in set(current):
-        return cat.MODEL_OF_RECORD
-    if c.model in set(earlier):
-        return cat.EARLIER_RECORD
-    return c.role
+def role_for(
+    c: Curated,
+    current: Iterable[str],
+    earlier: Iterable[str],
+    shadow_entry: Mapping | None = None,
+) -> str:
+    """The model's role as every other page gives it (model_catalogue.role_of): model of record
+    or fallback of record now, else the role shadow_models.json gives it, else an earlier model
+    of record, else the explorer's own (`c.role`)."""
+    return cat.role_of(c.model, current, earlier, shadow_entry, default=c.role)
 
 
 def _round(v: float, n: int) -> float | None:
@@ -438,11 +486,12 @@ def models_body(data_dir: Path, periods: Mapping, now, shadow: Mapping | None = 
                     "model": c.model,
                     "group": group,
                     "label": cat.label_of(c.model, g_shadow.get(c.model)),
-                    "role": role_for(c, current, earlier),
+                    "role": role_for(c, current, earlier, g_shadow.get(c.model)),
                     "family": c.family,
                     "basis": c.basis,
+                    "per_match": c.per_match,
                     "description": cat.description_of(c.model, g_shadow.get(c.model)),
-                    "note": c.note,
+                    "note": c.note if c.per_match else WITHHELD_NOTE,
                     "splits": [
                         {
                             "split": r.split,
@@ -470,6 +519,7 @@ def models_body(data_dir: Path, periods: Mapping, now, shadow: Mapping | None = 
         "splits": SPLIT_NOTES,
         "roles": cat.ROLE_LABELS,
         "columns": list(COLUMNS),
+        "withheld_note": WITHHELD_NOTE,
         "groups": groups,
         "models": models,
     }
@@ -532,6 +582,8 @@ def matches_body(
         mask &= np.any([~np.isnan(t.values[x][:, 0]) for x in chosen], axis=0)
     rows = np.flatnonzero(mask)
     current, earlier = _roles(periods, group, now)
+    by_name = {c.model: c for c in CURATED if c.group == group}
+    g_shadow = (shadow or {}).get(group, {})
 
     summary = []
     for x in chosen:
@@ -540,17 +592,45 @@ def matches_body(
         n = int(have.sum())
         right = int(np.nansum(v[have, 5])) if n else 0
         ci = wilson(right, n)
+        if not by_name[x].per_match and 0 < n < SUMMARY_ONLY_MIN_MATCHES:
+            right, ci, n_scored = None, None, 0  # withheld: too few to be only a summary
+        else:
+            n_scored = n
         summary.append(
             {
                 "model": x,
                 "matches": n,
                 "results_right": right,
-                "hit_rate": right / n if n else None,
+                "hit_rate": right / n if n_scored else None,
                 "ci95": list(ci) if ci else None,
-                "mean_rps": float(np.nanmean(v[have, 6])) if n else None,
+                "mean_rps": float(np.nanmean(v[have, 6])) if n_scored else None,
                 "small_sample": n < SMALL_SAMPLE,
             }
         )
+
+    # Summary-only models: each team's matches among those selected, never a handful
+    # (SUMMARY_ONLY_MIN_MATCHES).
+    team_summaries: dict[str, dict[str, list]] = {}
+    selected = m.iloc[rows]
+    for x in chosen:
+        if by_name[x].per_match:
+            continue
+        v = t.values[x][rows]
+        have = ~np.isnan(v[:, 0])
+        per: dict[str, list] = {}
+        home = selected.home_team.to_numpy()
+        away = selected.away_team.to_numpy()
+        for team in sorted(set(home[have]) | set(away[have])):
+            sel = have & ((home == team) | (away == team))
+            n = int(sel.sum())
+            if n < SUMMARY_ONLY_MIN_MATCHES:
+                continue
+            per[str(team)] = [
+                n,
+                int(np.nansum(v[sel, 5])),
+                _round(float(np.nanmean(v[sel, 6])), RPS_DECIMALS),
+            ]
+        team_summaries[x] = per
 
     page = rows[offset : offset + limit]
     out_matches = []
@@ -561,7 +641,7 @@ def matches_body(
         cells = []
         for x in chosen:
             v = t.values[x][i]
-            if math.isnan(v[0]):
+            if math.isnan(v[0]) or not by_name[x].per_match:
                 cells.append(None)
                 continue
             cells.append(
@@ -589,7 +669,6 @@ def matches_body(
         )
     named = {k: names.get(k, k) for k in sorted(keys)}
     media = media_fn(named)
-    by_name = {c.model: c for c in CURATED if c.group == group}
     return {
         "kind": KIND,
         "explanation": EXPLANATION,
@@ -609,13 +688,18 @@ def matches_body(
         "models": [
             {
                 "model": x,
-                "label": cat.label_of(x, (shadow or {}).get(group, {}).get(x)),
-                "role": role_for(by_name[x], current, earlier),
+                "label": cat.label_of(x, g_shadow.get(x)),
+                "role": role_for(by_name[x], current, earlier, g_shadow.get(x)),
                 "basis": by_name[x].basis,
+                "per_match": by_name[x].per_match,
             }
             for x in chosen
         ],
         "summary": summary,
+        # Summary-only models (no per-match figures): team key -> [matches, results right,
+        # mean RPS] over that team's matches among those selected (a team with fewer than
+        # SUMMARY_ONLY_MIN_MATCHES of them is left out).
+        "team_summaries": team_summaries,
         "teams": {k: {"name": v, "media": media.get(k)} for k, v in named.items()},
         "matches": out_matches,
     }

@@ -119,3 +119,19 @@ def write_curated(data_dir: Path) -> None:
         {"model": "euro_mix_0.7_0.3", "split": "test_mxg", "seasons": ["2425", "2526"]},
         rows("euro_mix_0.7_0.3", ["2425"], (0.35, 0.3, 0.35), division="UCL", key="comp"),
     )
+
+
+def write_price_identical(data_dir: Path) -> None:
+    """A model + market ledger under a curated name whose per-match figures the explorer must
+    never send (backtest_explorer.PRICE_IDENTICAL): market_tilt_shots, validation."""
+    write_run(
+        data_dir / "backtests",
+        "market_tilt_shots__validation__2324",
+        {
+            "model": "market_tilt_shots",
+            "split": "validation",
+            "seasons": ["2324"],
+            "model_params": {"base": "shots_xg_sot_joint_rw", "w_1x2": 1.0, "devig": "shin"},
+        },
+        rows("market_tilt_shots", ["2324"], (0.4321, 0.2468, 0.3211)),
+    )

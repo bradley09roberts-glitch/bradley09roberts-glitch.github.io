@@ -29,6 +29,7 @@ PREDICTION_KEYS = {
     "edition",
     "record_type",
     "model_name",
+    "model_label",
     "model_version",
     "created_at_utc",
     "training_cutoff_utc",
@@ -42,6 +43,8 @@ PREDICTION_KEYS = {
     "market",
     "editions",
     "counterpart",
+    "model_role",
+    "record_of_record",
     "recent",
     "explanation",
 }

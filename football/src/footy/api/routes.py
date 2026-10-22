@@ -20,6 +20,7 @@ from fastapi.responses import FileResponse
 from sqlalchemy import Engine, select, text
 from sqlalchemy.orm import Session
 
+from footy import model_catalogue as cat
 from footy import models_of_record
 from footy.config import Settings
 from footy.media.service import media_summaries
@@ -282,6 +283,7 @@ COUNTERPART_FIELDS = (
     "edition",
     "record_type",
     "model_name",
+    "model_label",
     "model_version",
     "created_at_utc",
     "probabilities",
@@ -324,6 +326,62 @@ def counterpart(p: Prediction, features: dict, records: list[Prediction]) -> Pre
     return max(same or cands, key=lambda r: r.id)
 
 
+def fixture_cards(
+    fixture_ref: str, recs: list[Prediction], ror: RecordsOfRecord
+) -> list[Prediction]:
+    """The records /api/fixtures carries for one fixture, from `recs` (the latest edition of
+    each model's genuine pre-match record): the record of record, then the record with the
+    other basis built with it (`counterpart`), if there is one. If no listed model has a record
+    for the fixture, its first published record stands in (never marked primary)."""
+    if not recs:
+        return []
+    record = ror.model_for(fixture_ref, recs[0].competition)
+    lead = next((p for p in recs if p.model_name == record), None)
+    if lead is None:
+        lead = min(recs, key=lambda p: (p.created_at_utc, p.id))
+    features = json.loads(lead.features) if lead.features else {}
+    other = counterpart(lead, features, recs)
+    return [lead] if other is None else [lead, other]
+
+
+def record_standing(
+    p: Prediction, records: list[Prediction], ror: RecordsOfRecord, shadow: dict
+) -> dict:
+    """Which model a record is and where it stands, for its match page: `model_role` (for a
+    genuine pre-match record, its role on this fixture as the every-model list gives it,
+    footy.model_compare.fixture_role; otherwise its standing role) and `record_of_record` (the
+    fixture's record of record: model, label and the id of its latest genuine pre-match
+    edition; None for a retrospective record, or if no listed model has a record for it).
+    `records` are the fixture's records."""
+    from footy import model_compare  # here: footy.model_compare imports this module
+
+    now = datetime.now(UTC)
+    group = competition_group(p.competition)
+    g_shadow = shadow.get(group, {})
+    earlier = model_compare.earlier_models(ror.periods, group, now)
+    record = None
+    if p.record_type == "genuine_prematch":
+        record = ror.model_for(p.fixture_ref, p.competition)
+        order = ror.order_for(p.fixture_ref, p.competition)
+        role = model_compare.fixture_role(p.model_name, record, order, g_shadow, earlier)
+    else:
+        current = models_of_record.models_at(ror.periods.get(group, []), now)
+        role = cat.role_of(p.model_name, current, earlier, g_shadow.get(p.model_name))
+    editions = [
+        r for r in records if r.model_name == record and r.record_type == "genuine_prematch"
+    ]
+    return {
+        "model_role": role,
+        "record_of_record": None
+        if record is None or not editions
+        else {
+            "model": record,
+            "label": cat.label_of(record, g_shadow.get(record)),
+            "prediction_id": max(r.id for r in editions),
+        },
+    }
+
+
 def make_router(engine_fn: Callable[[], Engine], settings: Settings) -> APIRouter:
     r = APIRouter(prefix="/api")
 
@@ -351,13 +409,16 @@ def make_router(engine_fn: Callable[[], Engine], settings: Settings) -> APIRoute
         st: PredictionSettlement | None,
         ror: RecordsOfRecord,
         media: dict[str, dict] | None = None,
+        shadow: dict | None = None,
     ) -> dict:
         """One record as a card. With `media` (team key -> media summary), the card also
         carries `home_media` and `away_media` (the fixture and past lists send them; the detail
-        sends them in its `teams` block instead, keeping its top-level keys)."""
+        sends them in its `teams` block instead, keeping its top-level keys). `shadow`
+        (model_catalogue.load_shadow_models, read once per request) names the model."""
         probs = json.loads(p.probabilities)
         features = json.loads(p.features) if p.features else {}
         basis = basis_of(features)
+        entry = (shadow or {}).get(competition_group(p.competition), {}).get(p.model_name)
         out = {
             "id": p.id,
             "is_primary": ror.is_primary(p),
@@ -380,6 +441,7 @@ def make_router(engine_fn: Callable[[], Engine], settings: Settings) -> APIRoute
             "edition": p.edition,
             "record_type": p.record_type,
             "model_name": p.model_name,
+            "model_label": cat.label_of(p.model_name, entry),
             "model_version": p.model_version,
             "created_at_utc": iso_utc(p.created_at_utc),
             "training_cutoff_utc": iso_utc(p.training_cutoff_utc),
@@ -405,14 +467,18 @@ def make_router(engine_fn: Callable[[], Engine], settings: Settings) -> APIRoute
 
     @r.get("/fixtures")
     def fixtures(days: int = Query(8, ge=1, le=30)) -> dict:
-        """Upcoming fixtures with their saved predictions (latest edition per fixture/model).
-        Each card says whether it is the fixture's record of record (`is_primary`) and
-        whether it used bookmakers' prices (`basis`)."""
+        """Upcoming fixtures with their saved predictions: per fixture, the record of record
+        (`is_primary`) and the record with the other basis built with it (a model + market
+        record and its pure model's own, `counterpart`), each the latest edition of its model.
+        Every other model's record is on the match page's every-model list
+        (`/api/fixtures/{ref}/models`); `models_for_fixture` counts the models with a record.
+        `basis` says whether a card used bookmakers' prices."""
         now = datetime.now(UTC)
         today = now.date()
         with Session(engine_fn()) as s:
             names, st = teams(s), settlements(s)
             ror = RecordsOfRecord(s, model_periods())
+            shadow = cat.load_shadow_models()
             rows = s.scalars(
                 select(Prediction)
                 .where(Prediction.match_date >= today - timedelta(days=1))
@@ -423,8 +489,22 @@ def make_router(engine_fn: Callable[[], Engine], settings: Settings) -> APIRoute
             latest: dict[tuple, Prediction] = {}
             for p in rows:
                 latest[(p.fixture_ref, p.model_name)] = p
-            media = team_media(s, latest.values(), names)
-            cards = [card(p, names, st.get(p.id), ror, media) for p in latest.values()]
+            by_ref: dict[str, list[Prediction]] = {}
+            for p in latest.values():
+                features = json.loads(p.features) if p.features else {}
+                if not cat.is_market_only(p.model_name, features):  # never shown (D-013)
+                    by_ref.setdefault(p.fixture_ref, []).append(p)
+            kept: list[tuple[Prediction, int]] = []
+            for ref, recs in by_ref.items():
+                kept.extend((p, len(recs)) for p in fixture_cards(ref, recs, ror))
+            media = team_media(s, (p for p, _ in kept), names)
+            cards = [
+                {
+                    **card(p, names, st.get(p.id), ror, media, shadow),
+                    "models_for_fixture": n,
+                }
+                for p, n in kept
+            ]
         groups: dict[str, list] = {}
         for c in sorted(cards, key=lambda c: (c["kickoff_utc"] or c["match_date"], c["id"])):
             groups.setdefault(c["competition"], []).append(c)
@@ -444,7 +524,8 @@ def make_router(engine_fn: Callable[[], Engine], settings: Settings) -> APIRoute
                 raise HTTPException(404, "no such prediction")
             names, st = teams(s), settlements(s)
             ror = RecordsOfRecord(s, model_periods())
-            out = card(p, names, st.get(p.id), ror)
+            shadow = cat.load_shadow_models()
+            out = card(p, names, st.get(p.id), ror, shadow=shadow)
             features = json.loads(p.features) if p.features else {}
             out["features"] = public_features(features)
             out["market"] = market_used(features)
@@ -453,6 +534,7 @@ def make_router(engine_fn: Callable[[], Engine], settings: Settings) -> APIRoute
                 .where(Prediction.fixture_ref == p.fixture_ref)
                 .order_by(Prediction.id)
             ).all()
+            out.update(record_standing(p, records, ror, shadow))
             out["editions"] = [
                 {
                     "id": e.id,
@@ -470,7 +552,7 @@ def make_router(engine_fn: Callable[[], Engine], settings: Settings) -> APIRoute
             if other is None:
                 out["counterpart"] = None
             else:
-                full = card(other, names, st.get(other.id), ror)
+                full = card(other, names, st.get(other.id), ror, shadow=shadow)
                 out["counterpart"] = {k: full[k] for k in COUNTERPART_FIELDS}
             out["recent"] = {
                 "home": recent_form(s, p.home_team, p.training_cutoff_utc, names),
@@ -514,13 +596,14 @@ def make_router(engine_fn: Callable[[], Engine], settings: Settings) -> APIRoute
         with Session(engine_fn()) as s:
             names, st = teams(s), settlements(s)
             ror = RecordsOfRecord(s, model_periods())
+            shadow = cat.load_shadow_models()
             q = select(Prediction).where(Prediction.record_type == record_type)
             if competition:
                 q = q.where(Prediction.competition == competition)
             rows = s.scalars(q.order_by(Prediction.match_date.desc(), Prediction.id.desc())).all()
             shown = [p for p in rows if p.id in st][:limit]
             media = team_media(s, shown, names)
-            cards = [card(p, names, st.get(p.id), ror, media) for p in shown]
+            cards = [card(p, names, st.get(p.id), ror, media, shadow) for p in shown]
         return {"record_type": record_type, "matches": cards}
 
     @r.get("/performance")

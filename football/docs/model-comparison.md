@@ -20,10 +20,37 @@ its sense) wherever it shows the numbers.
 
 - **No prices.** Nothing here reads a bookmaker's price. A forecast made of prices alone (a
   de-vigged consensus) is never shown, live or backtest: `model_catalogue.is_market_only`
-  (a market-only name, a record marked `market_only`, or prices used with no base model) and
-  `backtest_explorer.market_only_ledger` (a ledger whose manifest has books or a de-vig method
-  and no base, member stream or reference model) keep them out. Model + market forecasts
-  (`basis: "model_and_market"`) are model output and are shown, marked.
+  (a market-only name, a record marked `market_only`, or prices used with no model named in
+  `model_params`) and `backtest_explorer.market_only_ledger` (a ledger whose manifest has books
+  or a de-vig method and no model named) keep them out. Both read the same rule,
+  `model_catalogue.names_a_model`: a tilt's `base`, a learner's member `stream` or `reference`
+  forecast, or an ensemble's `members` (the learners name no `base`, so a `base`-only test hid
+  their live records). Model + market forecasts (`basis: "model_and_market"`) are model output
+  and are shown, marked.
+- **No consensus in disguise in the explorer** (decided 22 October 2026, after QA). Six model +
+  market ledgers are, match by match, the bookmakers' consensus with the margin removed: the
+  tilt moves the grid all the way onto the prices (`w_1x2` = `w_ou` = 1.0), so the base model
+  changes nothing in the match result and over 2.5, and `ml_online_market` mixes grids that
+  were all moved onto the same prices. `market_tilt_shots`, `market_tilt_ctx`,
+  `market_tilt_dc`, `market_tilt_elo`, `market_tilt_ens` and `ml_online_market` agree with
+  each other to three decimal places on 5,254 of 5,255 matches (validation and test). Their
+  per-match figures would be football-data's prices in disguise for every past match, so the
+  explorer sends only their summaries (`backtest_explorer.PRICE_IDENTICAL`, `per_match: false`):
+  over the selected matches, and per team (`team_summaries`), never one match and never
+  fewer than 10 (`SUMMARY_ONLY_MIN_MATCHES`: with the API's team filter an opponent's share is
+  just the two meetings, whose mean RPS is close to the consensus itself; the page's own
+  requests, a whole division and season, give each team 33 or more).
+  `ml_stack_market` really differs (0 to 3 matches identical) and keeps its figures. The
+  snapshot export refuses a backtest page where a summary-only model has a cell, or where two
+  model + market models share their match-result figures on most matches
+  (`snapshot.consensus_cells`).
+- **Live, the same six** publish shadow records from Friday 23 October (the model of record
+  already does). Each record's match-result and over 2.5 figures will be that same consensus,
+  which the model of record's own page already shows by design (D-024: a model + market record
+  shows the consensus probabilities it used). The every-model list shows each record as
+  published and says when several model + market records share their figures. Whether these
+  shadows should publish at all, or show only BTTS and expected goals, is the owner's call
+  (STATUS.md, open questions).
 - **Nothing made up.** Every number comes from a saved record, its settlement or a saved
   ledger. Labels and descriptions come from `reference/shadow_models.json` when it gives them,
   else from the catalogue in `model_catalogue.py` (taken from STATUS.md and DECISIONS.md), else
@@ -36,11 +63,27 @@ its sense) wherever it shows the numbers.
 
 | Role | Meaning |
 | --- | --- |
-| `model_of_record` | Named in the period of `primary_models.json` in force (D-026). On one match only the record of record has it. |
-| `fallback_of_record` | On one match: another model listed in that match's period, with a record for it, but not the record of record (e.g. the pure fallback where the model + market record exists). |
-| `challenger`, `machine_learning`, `baseline`, `earlier_record` | The role `shadow_models.json` gives the model (`earlier_record` also for a model of an earlier period that the file doesn't list). |
-| `lab_best` | Backtest explorer only: the best candidate of a model-lab family on validation. |
+| `model_of_record` | On one match: the record of record. Away from a match (leaderboard, explorer, a record's page): the first model of the period of `primary_models.json` in force (D-026). |
+| `fallback_of_record` | On one match: another model listed in that match's period, with a record for it, but not the record of record. Away from a match: the other models of the period in force, in order (`model_catalogue.role_of`), so a model has the same tag on every page. |
+| `challenger`, `machine_learning`, `baseline`, `earlier_record` | The role `shadow_models.json` gives the model (`earlier_record` also for a model of an earlier period that the file doesn't list). The explorer takes these too. |
+| `lab_best` | Backtest explorer only, for a model `shadow_models.json` doesn't list: the best candidate of a model-lab family on validation. |
 | `other` | Anything else (for example when `shadow_models.json` is missing or half-written). |
+
+## Records on the fixtures list and on a record's own page
+
+`/api/fixtures` carries, per fixture, only the record of record and the record with the other
+basis built with it (its model + market partner, or for a model + market record its pure
+model's own; `routes.counterpart`), each the latest edition of its model, plus
+`models_for_fixture`: how many models have a genuine pre-match record for the fixture
+(market-only records are never counted or carried). Every other model's record is on the match
+page's every-model list. With fourteen models a fixture, carrying them all made the 30-day
+response 2.4 MB, the phone's first load.
+
+Every card carries `model_label` (the display name). A record's own page
+(`/api/predictions/{id}`) also carries `model_role` (its role on the fixture, as the every-model
+list gives it; `model_compare.fixture_role`) and `record_of_record` (`model`, `label` and the id
+of its latest genuine pre-match edition; null for a retrospective record), so its top says whose
+forecast it is and links to the record of record.
 
 ## `GET /api/fixtures/{fixture_ref}/models`
 
@@ -80,7 +123,7 @@ publication time.
         "expected_goals": {"home": 1.18, "away": 1.46},
         "top_score": {"score": "1-1", "p": 0.134}
       },
-      "expected_goals_before_prices": true,
+      "expected_goals_before_prices": false,
       "settlement": {
         "markets": {"1X2": {"pick": "A", "actual": "H", "correct": false, "p_actual": 0.276}, …},
         "rps": 0.3613,
@@ -96,8 +139,13 @@ publication time.
 
 (Levante v Athletic Club, 21 October 2026, the first settled league match; probabilities are
 sent at full precision, trimmed here.) `settlement` is null until the match
-is settled (and for a void match). `expected_goals_before_prices`: a model + market record
-keeps its base model's expected goals; the prices move the score grid, not these averages.
+is settled (and for a void match). `expected_goals_before_prices` is true only for a model +
+market record whose expected goals equal its base model's own record for the fixture (the
+record the match page compares with, `counterpart`): the prices then moved its score grid, not
+these averages. Since 21 October 2026 (05:23 UTC) a model + market record takes its expected
+goals from the tilted grid (`footy.modeling.lab.market_blend`), and with no base record to
+compare nothing is claimed, so it is false for most (market_tilt_dc's 03:21 record for
+Levante v Athletic Club is the exception: the same as dixon_coles's).
 
 ## `GET /api/model-leaderboard?group=domestic|uefa`
 
@@ -118,7 +166,7 @@ as `/api/performance` counts it).
              "mean_rps": 0.3613, "mean_log_loss": {"OU_2.5": 0.718, "BTTS": 0.607},
              "small_sample": true, "description": "…"},
   "models": [
-    {"model": "dixon_coles", "label": "Dixon-Coles", "role": "model_of_record",
+    {"model": "dixon_coles", "label": "Dixon-Coles", "role": "fallback_of_record",
      "basis": "model_only", "description": "…",
      "published": 64, "settled": 1, "pending": 63, "void": 0, "records_of_record": 0,
      "results_right": {"n": 1, "correct": 1, "hit_rate": 1.0, "ci95": [0.207, 1.0]},
@@ -165,7 +213,7 @@ and what each group's ledgers cover (`coverage`: division, season, split, matche
   "models": [
     {"model": "market_tilt_shots", "group": "domestic", "label": "Shots model + market",
      "role": "model_of_record", "family": "Model + market", "basis": "model_and_market",
-     "description": "…", "note": null,
+     "per_match": false, "description": "…", "note": "Summary only: match by match, …",
      "splits": [
        {"split": "validation", "run_id": "market_tilt_shots__validation__2324",
         "seasons": ["2324"], "matches": 1752, "mean_rps": 0.1875, "results_right": 0.538},
@@ -182,11 +230,11 @@ marked):
 
 | Model | Role | Test run |
 | --- | --- | --- |
-| `market_tilt_shots`, `congestion_context_on_elo`, `dixon_coles` | Models of record (in order) | yes |
-| `ml_online_market` | Machine learning (with prices) | yes |
+| `market_tilt_shots` (summary only), `congestion_context_on_elo`, `dixon_coles` | Model of record, then its fallbacks | yes |
+| `ml_online_market` (summary only) | Machine learning (with prices) | yes |
 | `ml_stack_market`, `ml_online_pure`, `ml_stack_pure` | Machine learning | no |
-| `market_tilt_ctx` | Model + market candidate | yes |
-| `market_tilt_dc`, `market_tilt_elo`, `market_tilt_ens` | Model + market candidates | no |
+| `market_tilt_ctx` (summary only) | Challenger, model + market | yes |
+| `market_tilt_dc`, `market_tilt_elo`, `market_tilt_ens` (summary only) | Challengers, model + market | no |
 | `elo_goals_gd`, `ensemble_split`, `dynamic_ratings_blend3`, `bivariate_dispersion_sx_birth_time`, `goal_calibration_tuned_level`, `shots_xg_sot_joint_rw`, `dc_tuning_tilt`, `ml_gbm_glm_boost_dc` | Best of each model-lab family | no |
 | `baseline_frequency`, `baseline_poisson` | Baselines | yes |
 | `baseline_elo` | Baseline (match result only: no goal lines, no BTTS) | no |
@@ -196,7 +244,7 @@ UEFA (all three competitions and qualifiers; the round-3 runs, same fixtures):
 | Model | Role | Runs |
 | --- | --- | --- |
 | `pan_euro_mix_mxg` | Model of record | validation, test |
-| `pan_euro_mix` | Earlier model of record | validation, test (saved under its lab name `euro_mix_0.7_0.3`, the configuration published as `pan_euro_mix`: `data/reports/uefa_selection.json`) |
+| `pan_euro_mix` | Earlier model of record | validation, test (the test run is saved under its lab name `euro_mix_0.7_0.3`, the configuration published as `pan_euro_mix`: `data/reports/uefa_selection.json`; the page says only that it is the same model) |
 | `pan_euro_mix_mxg_all_ma0_w0.8` | Challenger (led validation, not test) | validation, test |
 | `euro_frequency` | Baseline | validation, test |
 
@@ -208,10 +256,15 @@ out-of-sample in the D-025 sense.
 One row per match, in date order, with each chosen model's cell (`columns`): home, draw and
 away probabilities, over 2.5 and both-teams-to-score probabilities (three decimal places), the
 match result pick right (1/0) and the match's RPS (four decimal places). A model that did not
-predict a match has `null`; a match no chosen model predicted is left out. `summary` covers
-every match the filters select (not just the page): matches, results right with a 95% Wilson
-interval, mean RPS (from the full-precision ledger values), small-sample flag. `teams` gives
-each team on the page its name and media summary.
+predict a match has `null`, and so does a summary-only model (`per_match: false` in `models`)
+on every match; a match no chosen model predicted is left out. `summary` covers every match
+the filters select (not just the page): matches, results right with a 95% Wilson interval,
+mean RPS (from the full-precision ledger values), small-sample flag. `team_summaries` gives
+each chosen summary-only model's `[matches, results right, mean RPS]` per team over the
+selected matches, so the page can show one team's summary without any match's figures; a
+team with fewer than 10 such matches is left out, and a summary-only model's `summary` over
+fewer than 10 matches gives only `matches` (`SUMMARY_ONLY_MIN_MATCHES`).
+`teams` gives each team on the page its name and media summary.
 
 - `division`: E0, SP1, I1, D1, F1, or UCL, UEL, UECL, UCLQ, UELQ, UECLQ (it sets the group);
   without one, `group` (default `domestic`).
@@ -239,7 +292,8 @@ each team on the page its name and media summary.
 }
 ```
 
-UEFA rows also carry `stage` (for example "League MD3").
+UEFA rows also carry `stage` as the sources write it (for example "League MD3"); the page
+shows it in plain words ("Matchday 3", `stageLabel` in `frontend/src/format.ts`).
 
 ## What the frontend asks for
 

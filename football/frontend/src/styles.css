@@ -2068,10 +2068,15 @@ select {
   color: var(--text-2);
 }
 
+/* The model the card shows (a display name), then a link to the match page's "Every model". */
 .also-model {
-  font-family: var(--font-mono);
-  font-size: 0.95em;
-  overflow-wrap: anywhere;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.also-link {
+  font-weight: 600;
+  white-space: nowrap;
 }
 
 /* ---- 1X2: three big numbers over one split bar ------------------------------------------ */
@@ -3017,6 +3022,62 @@ select {
 
 .mh-badges {
   justify-content: center;
+}
+
+/* Whose forecast this page is: the model's name and role, and on any record but the record of
+   record a link to it. */
+.mh-model {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  text-align: center;
+}
+
+.match-hero .mh-model-line,
+.match-hero .mh-model-note {
+  margin: 0;
+  font-size: var(--fs-sm);
+  line-height: 1.4;
+}
+
+.mh-model-line {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 4px 8px;
+}
+
+.mh-model-by {
+  color: var(--on-pitch-muted);
+}
+
+.mh-model-name {
+  font-weight: 700;
+}
+
+.match-hero .mh-model-note {
+  padding: 3px 10px;
+  border-radius: var(--r-sm);
+  background: rgb(241 246 239 / 0.12);
+  color: var(--on-pitch);
+}
+
+.match-hero .mh-model-note a {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* Role tags on the grass: light ink and a light rule; the model of record keeps its volt dot. */
+.match-hero .badge.role-tag {
+  color: var(--on-pitch);
+  background: transparent;
+  border-color: rgb(241 246 239 / 0.32);
+}
+
+.match-hero .badge.role-model_of_record {
+  background: rgb(241 246 239 / 0.14);
+  border-color: transparent;
 }
 
 .match-hero .freshness {

@@ -177,6 +177,8 @@ export type PredictionCard = {
   edition: Edition;
   record_type: RecordType;
   model_name: string;
+  /** The model's display name (absent in copies made before it was sent). */
+  model_label?: string;
   model_version: string;
   created_at_utc: string;
   training_cutoff_utc: string;
@@ -187,6 +189,10 @@ export type PredictionCard = {
   notes: string | null;
   settlement: Settlement | null;
   value_selection?: ValueSelection;
+  /** Fixtures list only: how many models have a genuine pre-match record for this fixture.
+   * The list carries the record of record and its partner with the other basis; every
+   * model's record is on the match page (`/api/fixtures/{ref}/models`). */
+  models_for_fixture?: number;
 };
 
 export type EditionRef = {
@@ -237,6 +243,7 @@ export type Counterpart = Pick<
   | "edition"
   | "record_type"
   | "model_name"
+  | "model_label"
   | "model_version"
   | "created_at_utc"
   | "probabilities"
@@ -258,6 +265,12 @@ export type PredictionDetail = PredictionCard & {
   teams?: MatchTeams;
   /** Plain-English summary built only from the saved record's numbers. */
   explanation: string;
+  /** This record's model's role on the fixture, as the every-model list gives it (absent in
+   * older copies). */
+  model_role?: ModelRole;
+  /** The fixture's record of record: its model, label and latest genuine pre-match edition.
+   * Null for a retrospective record or a fixture no listed model has a record for. */
+  record_of_record?: { model: string; label: string; prediction_id: number } | null;
 };
 
 /** One side in a match page's `teams` block. */
@@ -894,7 +907,8 @@ export type FixtureModel = {
   published_at_utc: string;
   later_editions: { prediction_id: number; edition: Edition; published_at_utc: string }[];
   probabilities: ModelProbabilities;
-  /** A model + market record keeps its base model's expected goals. */
+  /** A model + market record whose expected goals are its base model's own (equal to that
+   * model's record for the fixture): the prices moved the score grid, not these averages. */
   expected_goals_before_prices: boolean;
   /** Null until settled, and for a void match. */
   settlement: {
@@ -992,6 +1006,9 @@ export type BacktestModel = {
   role: ModelRole;
   family: string | null;
   basis: Basis;
+  /** False: only summaries are sent, never a match's figures (its match-result and over 2.5
+   * figures are the bookmakers' consensus match by match). */
+  per_match?: boolean;
   description: string | null;
   note: string | null;
   splits: BacktestModelSplit[];
@@ -1012,6 +1029,7 @@ export type BacktestModels = {
   splits: Record<string, string>;
   roles: Record<string, string>;
   columns: string[];
+  withheld_note?: string;
   groups: BacktestGroup[];
   models: BacktestModel[];
 };
@@ -1045,7 +1063,10 @@ export type BacktestMatches = {
   count: number;
   offset: number;
   columns: string[];
-  models: { model: string; label: string; role: ModelRole; basis: Basis }[];
+  models: { model: string; label: string; role: ModelRole; basis: Basis; per_match?: boolean }[];
+  /** Summary-only models: team key -> [matches, results right, mean RPS] over that team's
+   * matches among those selected. */
+  team_summaries?: Record<string, Record<string, [number, number, number | null]>>;
   summary: {
     model: string;
     matches: number;

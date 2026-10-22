@@ -301,18 +301,37 @@ function PublishedModels({ result, error }: { result: FixturesResponse | undefin
     }
   }
   if (byModel.size === 0) return <span className="muted">No predictions published for the next 14 days.</span>;
+  // The fixtures list carries each fixture's record of record and its partner; the other
+  // models' predictions are counted (`models_for_fixture`) and shown on each match page.
+  const carried = new Map<string, { cards: number; models: number }>();
+  for (const c of result.competitions.flatMap((x) => x.fixtures)) {
+    const e = carried.get(c.fixture_ref) ?? { cards: 0, models: 0 };
+    e.cards += 1;
+    e.models = Math.max(e.models, c.models_for_fixture ?? 0);
+    carried.set(c.fixture_ref, e);
+  }
+  const more = [...carried.values()].reduce((n, e) => n + Math.max(0, e.models - e.cards), 0);
   return (
-    <ul className="data-model-list">
-      {[...byModel.values()].map((m) => (
-        <li key={`${m.name}@${m.version}`}>
-          <code>{m.name}</code> version <code>{m.version}</code>
-          <span className="muted">
-            {" "}
-            · {m.n} {m.n === 1 ? "prediction" : "predictions"}, latest saved {formatLondon(m.latest)}
-          </span>
-        </li>
-      ))}
-    </ul>
+    <>
+      <ul className="data-model-list">
+        {[...byModel.values()].map((m) => (
+          <li key={`${m.name}@${m.version}`}>
+            <code>{m.name}</code> version <code>{m.version}</code>
+            <span className="muted">
+              {" "}
+              · {m.n} {m.n === 1 ? "prediction" : "predictions"}, latest saved {formatLondon(m.latest)}
+            </span>
+          </li>
+        ))}
+      </ul>
+      {more > 0 && (
+        <span className="cell-sub">
+          Above: each fixture's record of record and, where there is one, its model + market partner. Other models
+          saved {more.toLocaleString("en-GB")} more predictions for the same fixtures: each match page compares every
+          model, and <a href={href("/performance")}>Performance</a> has the live leaderboard.
+        </span>
+      )}
+    </>
   );
 }
 

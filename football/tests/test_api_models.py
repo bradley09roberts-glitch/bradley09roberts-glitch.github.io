@@ -212,7 +212,9 @@ def test_fixture_models_lists_every_genuine_record_record_of_record_first(client
     assert [m["is_record_of_record"] for m in rows] == [True, False, False]
     assert [m["basis"] for m in rows] == ["model_and_market", "model_only", "model_only"]
     tilt, base, shadow = rows
-    assert tilt["expected_goals_before_prices"] is True
+    # tilt_m's expected goals (1.2, 1.3) are not base_m's (1.4, 1.1): no "before prices" claim.
+    assert tilt["expected_goals_before_prices"] is False
+    assert base["expected_goals_before_prices"] is False
     assert shadow["description"] == "SYNTHETIC x" and shadow["label"] == "Shadow x"
     assert base["label"] == "Base m" and base["description"] is None
     # First edition shown, the later one listed.
@@ -257,6 +259,57 @@ def test_fixture_models_without_a_shadow_file(client, world, shadow_file):
     assert {m["model"]: m["role"] for m in rows}["shadow_x"] == "other"
 
 
+def test_before_prices_only_where_the_base_record_has_the_same_expected_goals(
+    client, migrated_engine, tmp_path, world
+):
+    """A model + market record's expected goals are its base model's own only if they match
+    that model's record for the fixture (records since 21 Oct take them from the tilted grid,
+    footy.modeling.lab.market_blend); with no base record to compare with, nothing is claimed."""
+    tilt_features = {"model_params": TILT, "market_prices_used": SYNTHETIC_MARKET}
+    pub(
+        migrated_engine,
+        tmp_path,
+        [fx("eng-testtown", "eng-sampleton", tilt_features)],
+        "tilt_same",
+        lam=(1.4, 1.1),  # base_m's early edition's
+    )
+    orphan = {**tilt_features, "model_params": {**TILT, "base": "not_published"}}
+    pub(migrated_engine, tmp_path, [fx("eng-testtown", "eng-sampleton", orphan)], "tilt_orphan")
+    rows = {m["model"]: m for m in client.get(models_url(REF_A)).json()["models"]}
+    assert rows["tilt_same"]["expected_goals_before_prices"] is True
+    assert rows["tilt_m"]["expected_goals_before_prices"] is False
+    assert rows["tilt_orphan"]["expected_goals_before_prices"] is False
+
+
+def test_machine_learning_records_with_prices_are_shown(client, migrated_engine, tmp_path, world):
+    """The learners name no `base`: they mix a stream of members (`stream`) or correct a
+    reference forecast (`reference`). With prices they are model + market records, never a
+    market-only forecast, so they appear on the fixture's list, the fixtures count and the
+    leaderboard like any model."""
+    stream = {"members": ["base_m", "shadow_x"], "market": True}
+    for name, params in (
+        ("ml_online_market", {"eta": 0.1, "stream": stream, "books": ["B365"], "devig": "shin"}),
+        ("ml_stack_market", {"reference": "tilt_m", "stream": stream, "devig": "shin"}),
+    ):
+        features = {"model_params": params, "market_prices_used": SYNTHETIC_MARKET}
+        assert not model_catalogue.is_market_only(name, features)
+        pub(migrated_engine, tmp_path, [fx("eng-testtown", "eng-sampleton", features)], name)
+    rows = {m["model"]: m for m in client.get(models_url(REF_A)).json()["models"]}
+    assert {rows[m]["basis"] for m in ("ml_online_market", "ml_stack_market")} == {
+        "model_and_market"
+    }
+    assert "mkt_only" not in rows  # still never shown
+    cards = [
+        c
+        for comp in client.get("/api/fixtures").json()["competitions"]
+        for c in comp["fixtures"]
+        if c["fixture_ref"] == REF_A
+    ]
+    assert {c["models_for_fixture"] for c in cards} == {5}
+    board = client.get("/api/model-leaderboard?group=domestic").json()
+    assert {"ml_online_market", "ml_stack_market"} <= {m["model"] for m in board["waiting"]}
+
+
 def test_shadow_file_list_and_mapping_forms(tmp_path):
     assert model_catalogue.load_shadow_models(tmp_path / "missing.json") == {}
     path = tmp_path / "s.json"
@@ -284,6 +337,47 @@ def test_market_only_detection():
     assert not backtest_explorer.market_only_ledger(
         {"model": "market_tilt_dc", "model_params": {"base": "dixon_coles", "books": ["A"]}}
     )
+
+
+# --- The fixtures list and a record's own page ---------------------------------------------
+
+
+def test_fixtures_carry_the_record_of_record_and_its_partner_only(client, world):
+    """/api/fixtures carries each fixture's record of record and the record with the other
+    basis built with it, with a count of every model's records; the rest are on the match
+    page's every-model list."""
+    body = client.get("/api/fixtures").json()
+    cards = [c for comp in body["competitions"] for c in comp["fixtures"]]
+    a = [c for c in cards if c["fixture_ref"] == REF_A]
+    b = [c for c in cards if c["fixture_ref"] == REF_B]
+    # tilt_m (record of record) and base_m's latest edition (its pure model); not shadow_x,
+    # never the market-only record.
+    assert [(c["model_name"], c["is_primary"]) for c in a] == [("base_m", False), ("tilt_m", True)]
+    assert next(c for c in a if c["model_name"] == "base_m")["id"] == world["a_lineup"]
+    assert {c["models_for_fixture"] for c in a} == {3}  # base_m, tilt_m, shadow_x
+    assert [(c["model_name"], c["models_for_fixture"]) for c in b] == [("base_m", 1)]
+    assert a[1]["model_label"] == "Tilt m"
+    assert len(client.get(models_url(REF_A)).json()["models"]) == 3
+
+
+def test_a_record_page_names_its_model_and_the_record_of_record(client, world):
+    def page(key):
+        return client.get(f"/api/predictions/{world[key]}").json()
+
+    shadow = page("a_shadow")
+    assert (shadow["model_label"], shadow["model_role"]) == ("Shadow x", "challenger")
+    assert shadow["record_of_record"] == {
+        "model": "tilt_m",
+        "label": "Tilt m",
+        "prediction_id": world["a_tilt"],
+    }
+    assert page("a_base")["model_role"] == "fallback_of_record"
+    tilt = page("a_tilt")
+    assert tilt["model_role"] == "model_of_record"
+    assert tilt["record_of_record"]["prediction_id"] == world["a_tilt"]
+    assert page("b_base")["model_role"] == "model_of_record"
+    assert page("a_retro")["record_of_record"] is None
+    assert tilt["counterpart"]["model_label"] == "Base m"
 
 
 # --- Leaderboard ----------------------------------------------------------------------------
@@ -314,7 +408,9 @@ def test_leaderboard_counts_settled_first_editions(client, migrated_engine, worl
     # base_m: fixture A settled (first edition, not the lineup one), fixture B pending.
     base = rows["base_m"]
     assert (base["published"], base["settled"], base["pending"]) == (2, 1, 1)
-    assert base["role"] == "model_of_record" and rows["shadow_x"]["role"] == "challenger"
+    # The same tags as on a match page: the first model of record in force, then its fallback.
+    assert rows["tilt_m"]["role"] == "model_of_record"
+    assert base["role"] == "fallback_of_record" and rows["shadow_x"]["role"] == "challenger"
     # Paired with the record of record (tilt_m on fixture A); tilt_m has nothing to pair.
     assert base["vs_record"]["n"] == 1
     assert base["vs_record"]["mean_rps_difference"] == pytest.approx(rps["base_m"] - rps["tilt_m"])
@@ -433,6 +529,88 @@ def test_backtest_matches_filters_and_paging(client, ledgers):
     assert ucl["group"] == "uefa" and ucl["matches"][0]["stage"] is None
     assert [m["model"] for m in ucl["models"]] == ["pan_euro_mix_mxg", "pan_euro_mix"]
     assert ucl["matches"][0]["p"][1][:3] == [0.35, 0.3, 0.35]
+
+
+def test_price_identical_models_send_summaries_never_match_figures(
+    client, ledgers, tmp_path, monkeypatch
+):
+    """market_tilt_shots and the other PRICE_IDENTICAL ledgers are the bookmakers' consensus
+    match by match: their summary is sent, per team too, but no match's figures."""
+    btfixtures.write_price_identical(ledgers)
+    # The synthetic seasons are tiny; the minimum is tested on its own below.
+    monkeypatch.setattr(backtest_explorer, "SUMMARY_ONLY_MIN_MATCHES", 1)
+    primary = tmp_path / "primary_models.json"
+    primary.write_text(json.dumps({"domestic": ["market_tilt_shots", "dixon_coles"]}))
+    monkeypatch.setattr(routes, "PRIMARY_MODELS_PATH", primary)
+    shadow = tmp_path / "shadow_models.json"
+    shadow.write_text(
+        json.dumps({"domestic": [{"model": "baseline_frequency", "role": "challenger"}]})
+    )
+    monkeypatch.setattr(model_catalogue, "SHADOW_MODELS_PATH", shadow)
+    listed = {m["model"]: m for m in client.get("/api/backtest-models").json()["models"]}
+    tilt = listed["market_tilt_shots"]
+    assert tilt["per_match"] is False and tilt["note"] == backtest_explorer.WITHHELD_NOTE
+    assert listed["dixon_coles"]["per_match"] is True
+    # The same tags as on the match pages and the leaderboard; shadow_models.json's role wins
+    # over the explorer's own.
+    assert tilt["role"] == "model_of_record"
+    assert listed["dixon_coles"]["role"] == "fallback_of_record"
+    assert listed["baseline_frequency"]["role"] == "challenger"
+
+    raw = client.get("/api/backtest-matches?division=E0&season=2324&limit=1000")
+    d = raw.json()
+    cols = [m["model"] for m in d["models"]]
+    i = cols.index("market_tilt_shots")
+    assert d["models"][i]["per_match"] is False
+    assert all(m["p"][i] is None for m in d["matches"])
+    assert all(m["p"][cols.index("dixon_coles")] is not None for m in d["matches"])
+    assert "0.432" not in raw.text and "0.321" not in raw.text  # no cell went out
+    s = d["summary"][i]
+    assert (s["matches"], s["results_right"]) == (3, 1)
+    per_team = d["team_summaries"]["market_tilt_shots"]
+    assert set(per_team) == set(btfixtures.TEAMS) and "dixon_coles" not in d["team_summaries"]
+    n, right, mean = per_team["eng-testtown"]  # a home win and an away win: picked home
+    assert (n, right) == (2, 1)
+    home_win = ((1 - 0.4321) ** 2 + (1 - 0.4321 - 0.2468) ** 2) / 2
+    away_win = (0.4321**2 + (0.4321 + 0.2468) ** 2) / 2
+    assert mean == pytest.approx((home_win + away_win) / 2, abs=5e-5)
+    team = client.get("/api/backtest-matches?division=E0&season=2324&team=eng-testtown").json()
+    assert team["summary"][i]["matches"] == 2 and all(m["p"][i] is None for m in team["matches"])
+
+
+def test_summary_only_models_never_summarise_a_handful_of_matches(client, ledgers, monkeypatch):
+    """A summary-only model's figures over one or two matches would give those matches' RPS,
+    which is the bookmakers' consensus scored on the result: the API's team filter selects one
+    team's season, and each opponent's share of it is the two meetings (one, if a ledger
+    misses the other). Below SUMMARY_ONLY_MIN_MATCHES the figures are withheld."""
+    btfixtures.write_price_identical(ledgers)
+    monkeypatch.setattr(backtest_explorer, "SUMMARY_ONLY_MIN_MATCHES", 3)
+    d = client.get("/api/backtest-matches?division=E0&season=2324&limit=1000").json()
+    i = [m["model"] for m in d["models"]].index("market_tilt_shots")
+    assert (d["summary"][i]["matches"], d["summary"][i]["results_right"]) == (3, 1)
+    # Each synthetic team plays two of the three matches: under the minimum, never sent.
+    assert d["team_summaries"]["market_tilt_shots"] == {}
+    team = client.get("/api/backtest-matches?division=E0&season=2324&team=eng-testtown").json()
+    s = team["summary"][i]
+    assert s["matches"] == 2
+    assert s["results_right"] is s["hit_rate"] is s["ci95"] is s["mean_rps"] is None
+    # A model with per-match figures keeps its summary however few the matches.
+    dc = team["summary"][[m["model"] for m in team["models"]].index("dixon_coles")]
+    assert (dc["matches"], dc["results_right"]) == (2, 1) and dc["mean_rps"] is not None
+
+
+def test_snapshot_refuses_consensus_cells():
+    from footy.snapshot import consensus_cells
+
+    tilt = {"model": "a", "basis": "model_and_market"}
+    other = {"model": "b", "basis": "model_and_market"}
+    cell = [0.4, 0.3, 0.3, 0.5, 0.5, 1, 0.2]
+    same = {"models": [tilt, other], "matches": [{"p": [cell, cell]}] * 3}
+    assert "share their match-result figures on 3 of 3" in consensus_cells(same)
+    held = {"models": [{**tilt, "per_match": False}], "matches": [{"p": [cell]}]}
+    assert "summary only" in consensus_cells(held)
+    fine = {"models": [{**tilt, "per_match": False}, other], "matches": [{"p": [None, cell]}]}
+    assert consensus_cells(fine) is None
 
 
 def test_backtest_matches_bad_requests(client, ledgers):

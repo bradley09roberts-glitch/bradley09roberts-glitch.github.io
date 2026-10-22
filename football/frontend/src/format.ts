@@ -127,6 +127,24 @@ export function formatPct(p: number | null | undefined, digits = 0): string {
   return `${pct.toFixed(digits)}%`;
 }
 
+/** A UEFA stage as the sources write it, in plain words: "League MD3" -> "Matchday 3",
+ * "Group MD2" -> "Group matchday 2", "League" -> "League phase", "Q2 leg 1" -> "Qualifying
+ * round 2, leg 1". Anything else is shown as written. */
+export function stageLabel(stage: string): string;
+export function stageLabel(stage: string | null | undefined): string | null;
+export function stageLabel(stage: string | null | undefined): string | null {
+  if (!stage) return stage ?? null;
+  const s = stage.trim();
+  let m = /^League MD\s*(\d+)$/i.exec(s);
+  if (m) return `Matchday ${m[1]}`;
+  m = /^Group MD\s*(\d+)$/i.exec(s);
+  if (m) return `Group matchday ${m[1]}`;
+  if (/^League$/i.test(s)) return "League phase";
+  m = /^Q(\d)(?:\s+leg\s+(\d))?$/i.exec(s);
+  if (m) return `Qualifying round ${m[1]}${m[2] ? `, leg ${m[2]}` : ""}`;
+  return s;
+}
+
 export function formatNumber(n: number | null | undefined, digits?: number): string {
   if (n === null || n === undefined || !Number.isFinite(n)) return "—";
   return n.toLocaleString("en-GB", {

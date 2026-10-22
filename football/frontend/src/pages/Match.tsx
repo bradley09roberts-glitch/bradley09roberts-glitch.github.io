@@ -49,15 +49,17 @@ import {
   outcomeLabel,
   seasonLabel,
   settlementStatusLabel,
+  stageLabel,
   totalLine,
 } from "../format";
 import { useDocumentTitle, useMediaQuery } from "../hooks";
 import { canGoBack, href } from "../router";
 import type { PageProps } from ".";
+import { RoleTag } from "../components/ModelBits";
 import { FormAndStats } from "./MatchForm";
 import { EveryModel } from "./MatchModels";
 
-export function Match({ params }: PageProps) {
+export function Match({ params, query }: PageProps) {
   const id = params.id ?? "";
   const valid = /^\d+$/.test(id);
   const result = useApi(valid ? endpoints.prediction(id) : null);
@@ -90,7 +92,7 @@ export function Match({ params }: PageProps) {
           page still has one. */}
       {!result.data && <h1 className="visually-hidden">Match</h1>}
       <ApiView result={result} what="this prediction" loadingLines={4}>
-        {(d) => <MatchDetail d={d} />}
+        {(d) => <MatchDetail d={d} focusModels={query.get("at") === "models"} />}
       </ApiView>
     </>
   );
@@ -105,7 +107,7 @@ function Section({ title, id, children, className }: { title: string; id: string
   );
 }
 
-function MatchDetail({ d }: { d: PredictionDetail }) {
+function MatchDetail({ d, focusModels = false }: { d: PredictionDetail; focusModels?: boolean }) {
   const p = d.probabilities;
   const x = p["1X2"];
   const s = d.settlement;
@@ -170,7 +172,7 @@ function MatchDetail({ d }: { d: PredictionDetail }) {
 
           {s && <ResultSection d={d} />}
 
-          <EveryModel d={d} />
+          <EveryModel d={d} focus={focusModels} />
 
           <div className="match-pair">
             <Section title="Goals" id="goals">
@@ -220,7 +222,7 @@ function MatchDetail({ d }: { d: PredictionDetail }) {
 
 function stageOf(d: PredictionDetail): string | null {
   const v = d.features.stage;
-  return typeof v === "string" && v.trim() ? v.trim() : null;
+  return typeof v === "string" && v.trim() ? stageLabel(v.trim()) : null;
 }
 
 /** The longest word of a team name, for the hero's font size (styles.css, .mh-name): a long
@@ -299,6 +301,7 @@ function MatchHero({ d }: { d: PredictionDetail }) {
             formatKickoff(d.kickoff_utc, d.match_date)
           )}
         </p>
+        <ModelLine d={d} />
         <div className="badges mh-badges">
           <BasisBadge basis={d.basis} />
           <RecordTypeBadge type={d.record_type} />
@@ -311,11 +314,43 @@ function MatchHero({ d }: { d: PredictionDetail }) {
   );
 }
 
-/** True when the counterpart (if any) has the same expected goals: a model + market record
- * then still carries its pure model's averages. */
+/** Which model made this record and its role on the fixture; on any record but the record of
+ * record, a link to it. Every fixture has a record per model, each with its own page, so the
+ * top of the page says whose forecast it is. */
+function ModelLine({ d }: { d: PredictionDetail }) {
+  const label = d.model_label ?? d.model_name;
+  const role = d.model_role ?? (d.is_primary ? "model_of_record" : null);
+  const rec = d.record_of_record ?? null;
+  const notRecord = rec !== null && rec.model !== d.model_name;
+  return (
+    <div className="mh-model">
+      <p className="mh-model-line">
+        <span className="mh-model-by">Forecast by</span> <strong className="mh-model-name">{label}</strong>
+        {role && (
+          <>
+            {" "}
+            <RoleTag role={role} short />
+          </>
+        )}
+      </p>
+      {notRecord && (
+        <p className="mh-model-note">
+          Not this match's model of record.{" "}
+          <a href={href(`/match/${rec.prediction_id}`)}>
+            See {rec.label} <span aria-hidden="true">→</span>
+          </a>
+        </p>
+      )}
+    </div>
+  );
+}
+
+/** True when the counterpart has the same expected goals: a model + market record then still
+ * carries its pure model's averages. With no counterpart to compare, nothing is claimed: since
+ * 21 Oct 2026 a model + market record takes them from its tilted grid. */
 function sameXg(xg: { home: number; away: number }, other: Counterpart | null): boolean {
   const o = other?.probabilities.expected_goals;
-  if (!o) return other === null;
+  if (!o) return false;
   return Math.abs(o.home - xg.home) < 1e-9 && Math.abs(o.away - xg.away) < 1e-9;
 }
 
