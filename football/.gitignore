@@ -8,3 +8,5 @@ data/
 frontend/node_modules/
 frontend/dist/
 frontend/dist-snapshot/
+# a publish cut short by a restart (footy.publish); finished by the next run
+records/predictions/.publish-pending-*

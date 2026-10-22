@@ -77,6 +77,28 @@ def main(argv: list[str] | None = None) -> int:
     pe.add_argument("--dry-run", action="store_true")
     pe.add_argument("--notes")
 
+    sh = sub.add_parser(
+        "publish-shadows",
+        help="publish every shadow model's own pre-match records beside the models of record "
+        "(reference/shadow_models.json, docs/shadow-records.md)",
+    )
+    sh.add_argument("--group", choices=["domestic", "uefa", "all"], default="all")
+    sh.add_argument(
+        "--days",
+        type=int,
+        help="days ahead (default as predict-domestic and predict-euro: 7 for league games, "
+        "3 for UEFA)",
+    )
+    sh.add_argument("--divisions", default="E0,SP1,I1,D1,F1,E1")
+    sh.add_argument("--comps", default="UCL,UEL,UECL")
+    sh.add_argument("--models", help="comma-separated: only these listed shadow models")
+    sh.add_argument("--dry-run", action="store_true")
+    sh.add_argument(
+        "--json",
+        help="also write every model's outcome (records or dry-run forecasts, and each skipped "
+        "fixture with why) to this file",
+    )
+
     sub.add_parser("settle", help="settle published predictions whose results are in")
 
     fr = sub.add_parser(
@@ -212,6 +234,8 @@ def main(argv: list[str] | None = None) -> int:
         return _team_stats(args)
     if args.command == "team-media":
         return _team_media(args)
+    if args.command == "publish-shadows":
+        return _publish_shadows(args, parser)
     settings = get_settings()
 
     if args.command == "migrate":
@@ -293,6 +317,7 @@ def main(argv: list[str] | None = None) -> int:
         from footy.modeling.registry import candidates
 
         factory = candidates()[args.model]
+        _finish_killed_publish(args.dry_run)
         with job_run(get_engine(), "predict") as ctx:
             out = predict_domestic(
                 get_engine(),
@@ -322,14 +347,18 @@ def main(argv: list[str] | None = None) -> int:
                 )
             if args.model_name not in (None, args.model):
                 parser.error("--model-name can't rename a registered model")
-            if EURO_MODELS[args.model] is None:  # no team ratings: it can't fill a record
-                parser.error(f"{args.model} is a backtest baseline and doesn't publish")
+            if EURO_MODELS[args.model] is None:  # no team ratings: not a model of record
+                parser.error(
+                    f"{args.model} is a baseline: it publishes as a shadow record "
+                    "(footy publish-shadows --group uefa)"
+                )
             model_name, factory = args.model, euro_factory(args.model)
         else:
             model_name = args.model_name or "pan_euro_dc"
             if model_name in EURO_MODELS:  # its records must come from its pinned config
                 parser.error(f"{model_name} is a registered UEFA model: use --model {model_name}")
             factory = _named(make_factory(json.loads(args.config or "{}")), model_name)
+        _finish_killed_publish(args.dry_run)
         with job_run(get_engine(), "predict") as ctx:
             out = predict_euro(
                 get_engine(),
@@ -465,6 +494,79 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps(ctx.detail, indent=2, default=str))
         return 0 if res.outcome != "error" else 1
     return 0
+
+
+def _finish_killed_publish(dry_run: bool) -> None:
+    """Finish the records of a publish that a container restart cut short, before anything
+    else is published (footy.publish.recover_pending; a dry run only says if one is due)."""
+    from footy.db import get_engine
+    from footy.publish import PENDING_PREFIX, RECORDS_DIR, recover_pending
+
+    if dry_run:
+        if RECORDS_DIR.is_dir() and any(RECORDS_DIR.glob(f"{PENDING_PREFIX}*.json")):
+            print("a killed publish is waiting to be finished by the next real run", flush=True)
+        return
+    n = recover_pending(get_engine())
+    if n:
+        print(f"finished {n} publish(es) cut short by a restart", flush=True)
+
+
+def _publish_shadows(args, parser) -> int:
+    from pathlib import Path
+
+    from footy import shadows
+    from footy.db import get_engine
+    from footy.ingest.jobs import job_run
+
+    listed = shadows.load()
+    # UEFA first: its models take about a minute and its games are usually the sooner ones
+    groups = ["uefa", "domestic"] if args.group == "all" else [args.group]
+    models = None
+    if args.models:
+        models = [m.strip() for m in args.models.split(",") if m.strip()]
+        known = {s.model for g in groups for s in listed.get(g, [])}
+        unknown = [m for m in models if m not in known]
+        if unknown:
+            parser.error(f"not listed as {args.group} shadow models: {', '.join(unknown)}")
+    if args.days is not None and args.days < 0:
+        parser.error("--days must be 0 or more")
+    engine = get_engine()
+    print(f"{'dry run: ' if args.dry_run else ''}shadow records, {', '.join(groups)}", flush=True)
+    _finish_killed_publish(args.dry_run)
+    outcomes = []
+    with job_run(engine, "predict") as ctx:
+        for g in groups:
+            days = args.days if args.days is not None else (3 if g == "uefa" else 7)
+            outcomes += shadows.run(
+                engine,
+                [g],
+                days=days,
+                divisions=args.divisions.split(","),
+                comps=args.comps.split(","),
+                models=models,
+                dry_run=args.dry_run,
+                shadows=listed,
+                report=lambda o: print(o.line(), flush=True),
+            )
+        failed = [o.model for o in outcomes if o.error]
+        ctx.partial = bool(failed)
+        ctx.detail.update(
+            kind="shadows",
+            groups=groups,
+            dry_run=args.dry_run,
+            published={o.model: o.published for o in outcomes},
+            failed=failed,
+        )
+    if args.json:
+        Path(args.json).write_text(
+            json.dumps([o.as_json() for o in outcomes], indent=1, default=str) + "\n"
+        )
+    verb = "would publish" if args.dry_run else "published"
+    print(
+        f"{len(outcomes)} models: {verb} {sum(o.published for o in outcomes)} records, "
+        f"{len(failed)} failed{': ' + ', '.join(failed) if failed else ''}"
+    )
+    return 1 if failed else 0
 
 
 def _set_model_of_record(args) -> int:

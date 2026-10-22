@@ -5,10 +5,21 @@ JSON line appended to records/predictions/<UK date of creation>.jsonl, which is 
 git. The git history then shows each prediction existed before kickoff; the database can be
 rebuilt from those files. Nothing is ever updated or deleted: corrections and new editions
 are new rows that name what they supersede and why.
+
+The two stay in step even if the process is killed at any moment (the container restarts
+without warning). `publish` takes the database's write lock before it reads anything, so
+publishers take turns; it saves every row, then writes a pending note (the lines and where
+they go), appends the lines in one write, commits, and deletes the note. A note left behind
+by a killed run is finished by the next `publish` or `recover_pending` (under the same lock,
+before anything else is appended): if the rows were committed it is only deleted; if not,
+the lines are completed in the records file and the rows saved from them, exactly as
+written, so a rerun neither loses nor repeats a record.
 """
 
 import hashlib
 import json
+import os
+import uuid
 from dataclasses import dataclass, field
 from datetime import UTC, date, datetime
 from pathlib import Path
@@ -109,13 +120,20 @@ def publish(
     records_dir: Path = RECORDS_DIR,
 ) -> list[int]:
     """Save predictions. A genuine pre-match record must be made before kickoff; an existing
-    record for the same fixture, edition and model is never duplicated."""
-    now = now or utcnow()
+    record for the same fixture, edition and model is never duplicated. Without a fixed `now`
+    the records are stamped once the write lock is held, just before they are written."""
     ids = []
+    new: list[Prediction] = []
     with Session(engine) as s:
+        _hold_write_lock(s)
+        now = now or utcnow()
+        # every fixture is checked before anything is written
+        if record_type == "genuine_prematch":
+            for fx in fixtures:
+                if now >= pre_match_deadline(fx):
+                    raise PublishError(f"{fx.ref}: kickoff has passed; cannot publish as pre-match")
+        recovered = _recover(s, records_dir)
         for j, fx in enumerate(fixtures):
-            if record_type == "genuine_prematch" and now >= pre_match_deadline(fx):
-                raise PublishError(f"{fx.ref}: kickoff has passed; cannot publish as pre-match")
             existing = s.scalar(
                 select(Prediction.id).where(
                     Prediction.fixture_ref == fx.ref,
@@ -152,12 +170,50 @@ def publish(
             s.add(row)
             s.flush()
             ids.append(row.id)
-            _append_record(records_dir, row, now)
+            new.append(row)
+        # every row is saved (flushed) before a line is written, so a fixture that fails to
+        # save leaves no line behind
+        note = _append_records(records_dir, [_record_line(r, now) for r in new], now)
         s.commit()
+    for path in [*recovered, *([note] if note else [])]:
+        path.unlink(missing_ok=True)
     return ids
 
 
-def _append_record(records_dir: Path, row: Prediction, now: datetime) -> None:
+def recorded_refs(
+    engine: Engine,
+    model_name: str,
+    *,
+    edition: str = "early",
+    record_type: str = "genuine_prematch",
+) -> set[str]:
+    """The fixtures that already have a record of this model, edition and type: the ones
+    `publish` would not record again."""
+    with Session(engine) as s:
+        return set(
+            s.scalars(
+                select(Prediction.fixture_ref).where(
+                    Prediction.model_name == model_name,
+                    Prediction.edition == edition,
+                    Prediction.record_type == record_type,
+                )
+            )
+        )
+
+
+PENDING_PREFIX = ".publish-pending-"
+
+
+def _hold_write_lock(s: Session) -> None:
+    """Take the database's write lock before reading anything (SQLite: BEGIN IMMEDIATE; it
+    waits up to the busy timeout). Publishers then take turns: none can record a fixture
+    between another's check and insert, append to the records file at the same time, or be
+    half-way through while another finishes a killed run's note."""
+    if s.get_bind().dialect.name == "sqlite":
+        s.execute(text("BEGIN IMMEDIATE"))
+
+
+def _record_line(row: Prediction, now: datetime) -> str:
     payload = {
         "id": row.id,
         "fixture_ref": row.fixture_ref,
@@ -182,10 +238,130 @@ def _append_record(records_dir: Path, row: Prediction, now: datetime) -> None:
     }
     line = json.dumps(payload, sort_keys=True)
     payload_sha = hashlib.sha256(line.encode()).hexdigest()
+    return json.dumps({"sha256": payload_sha, **payload}, sort_keys=True) + "\n"
+
+
+def _fsync_dir(path: Path) -> None:
+    fd = os.open(path, os.O_RDONLY)
+    try:
+        os.fsync(fd)
+    finally:
+        os.close(fd)
+
+
+def _append_records(records_dir: Path, lines: list[str], now: datetime) -> Path | None:
+    """Write the pending note, then append `lines` to the day's records file in one write,
+    both forced to disk. Returns the note (deleted once the rows are committed)."""
+    if not lines:
+        return None
     records_dir.mkdir(parents=True, exist_ok=True)
     path = records_dir / f"{now.astimezone(UK).date().isoformat()}.jsonl"
+    offset = path.stat().st_size if path.exists() else 0
+    note = records_dir / f"{PENDING_PREFIX}{uuid.uuid4().hex}.json"
+    tmp = note.with_name(note.name + ".tmp")
+    with tmp.open("w", encoding="utf-8") as f:
+        json.dump({"file": path.name, "offset": offset, "lines": lines}, f)
+        f.flush()
+        os.fsync(f.fileno())
+    os.replace(tmp, note)  # a note is either whole or absent
+    _fsync_dir(records_dir)
     with path.open("a", encoding="utf-8") as f:
-        f.write(json.dumps({"sha256": payload_sha, **payload}, sort_keys=True) + "\n")
+        f.write("".join(lines))
+        f.flush()
+        os.fsync(f.fileno())
+    return note
+
+
+def _row_from_line(p: dict) -> Prediction:
+    """The predictions row a records-file line was written from."""
+
+    def when(v: str | None) -> datetime | None:
+        return None if v is None else datetime.fromisoformat(v)
+
+    return Prediction(
+        id=p["id"],
+        fixture_ref=p["fixture_ref"],
+        competition=p["competition"],
+        season=p["season"],
+        kickoff_utc=when(p["kickoff_utc"]),
+        match_date=date.fromisoformat(p["match_date"]),
+        home_team=p["home_team"],
+        away_team=p["away_team"],
+        edition=p["edition"],
+        record_type=p["record_type"],
+        model_name=p["model_name"],
+        model_version=p["model_version"],
+        training_cutoff_utc=when(p["training_cutoff_utc"]),
+        created_at_utc=when(p["created_at_utc"]),
+        probabilities=json.dumps(p["probabilities"], sort_keys=True),
+        selections=json.dumps(p["selections"], sort_keys=True),
+        features=json.dumps(p["features"], sort_keys=True, default=str),
+        data_freshness=json.dumps(p["data_freshness"], sort_keys=True, default=str),
+        missing_fields=json.dumps(p["missing_fields"]),
+        notes=p["notes"],
+    )
+
+
+def _recover(s: Session, records_dir: Path) -> list[Path]:
+    """Finish every publish a killed run left half-done (its pending note), inside `s`, which
+    holds the write lock. Returns the notes to delete once `s` is committed. Raises
+    PublishError where the records file or the table doesn't match what the note says."""
+    if not records_dir.is_dir():
+        return []
+    for stale in records_dir.glob(f"{PENDING_PREFIX}*.json.tmp"):
+        stale.unlink(missing_ok=True)  # never renamed: nothing was appended after it
+    notes = []
+    for note in records_dir.glob(f"{PENDING_PREFIX}*.json"):
+        data = json.loads(note.read_text(encoding="utf-8"))
+        notes.append((data["file"], data["offset"], note, data["lines"]))
+    done = []
+    for name, offset, note, lines in sorted(notes):
+        payloads = [json.loads(line) for line in lines]
+        saved = dict(
+            s.execute(
+                select(Prediction.id, Prediction.fixture_ref).where(
+                    Prediction.id.in_([p["id"] for p in payloads])
+                )
+            ).all()
+        )
+        if all(saved.get(p["id"]) == p["fixture_ref"] for p in payloads):
+            done.append(note)  # committed: the lines were written before the commit
+            continue
+        if saved:
+            raise PublishError(f"{note}: some of its ids now belong to other records")
+        block = "".join(lines).encode("utf-8")
+        path = records_dir / name
+        with path.open("a+b") as f:
+            f.seek(0)
+            have = f.read()
+            tail = have[offset:]
+            if tail[: len(block)] != block:
+                if len(have) < offset or not block.startswith(tail):
+                    raise PublishError(f"{note}: {name} doesn't hold what it says from {offset}")
+                f.truncate(offset)  # a write cut short: written again whole
+                f.seek(offset)
+                f.write(block)
+                f.flush()
+                os.fsync(f.fileno())
+        for p in payloads:
+            s.add(_row_from_line(p))
+        s.flush()
+        done.append(note)
+    return done
+
+
+def recover_pending(engine: Engine, records_dir: Path = RECORDS_DIR) -> int:
+    """Finish any publish a killed run left half-done (see the module docstring); returns how
+    many were finished. `publish` does this itself before it writes."""
+    if not records_dir.is_dir() or not any(records_dir.glob(f"{PENDING_PREFIX}*")):
+        return 0
+    with Session(engine) as s:
+        _hold_write_lock(s)
+        done = _recover(s, records_dir)
+        s.commit()
+    for note in done:
+        note.unlink(missing_ok=True)
+    return len(done)
 
 
 def settle(engine: Engine, now: datetime | None = None) -> dict:

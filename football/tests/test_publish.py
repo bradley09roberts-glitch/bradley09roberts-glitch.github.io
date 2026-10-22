@@ -1,7 +1,8 @@
 """Publishing and settlement, with SYNTHETIC fixtures and probabilities."""
 
 import json
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
+from pathlib import Path
 
 import pytest
 from sqlalchemy import text
@@ -191,3 +192,223 @@ def test_single_meeting_league_settles_a_moved_match(migrated_engine, tmp_path):
     with migrated_engine.begin() as conn:
         insert_result(conn, "E0", "2026-11-04", 0, 1)
     assert settle(migrated_engine)["settled"] == 1
+
+
+# ---- the records file and the database stay in step -------------------------------------------
+
+
+def _two(home=("eng-testtown", "eng-sampleton"), away=("eng-sampleton", "eng-testtown")):
+    return [
+        FixtureIn("E0", "2627", date(2026, 10, 24), KICKOFF, h, a, features={"lam": 1})
+        for h, a in zip(home, away, strict=True)
+    ]
+
+
+def _publish_two(engine, records_dir, fixtures=None, model_name="m"):
+    fixtures = fixtures or _two()
+    n = len(fixtures)
+    mp = markets_from_grid(poisson_grid([1.6] * n, [1.1] * n, -0.05), [1.6] * n, [1.1] * n)
+    return publish(
+        engine,
+        fixtures,
+        mp,
+        model_name=model_name,
+        model_version="v1",
+        training_cutoff_utc=datetime(2026, 10, 21, tzinfo=UTC),
+        data_freshness={},
+        now=datetime(2026, 10, 22, 9, 0, tzinfo=UTC),
+        records_dir=records_dir,
+    )
+
+
+def _file_and_db(engine, records_dir):
+    """Every line of the records folder, and every row of the predictions table, as
+    (id, fixture_ref, model_name)."""
+    lines = [
+        json.loads(line)
+        for path in sorted(records_dir.glob("*.jsonl"))
+        for line in path.read_text().splitlines()
+    ]
+    with engine.connect() as conn:
+        rows = conn.execute(text("SELECT id, fixture_ref, model_name FROM predictions")).all()
+    return (
+        sorted((r["id"], r["fixture_ref"], r["model_name"]) for r in lines),
+        sorted(tuple(r) for r in rows),
+    )
+
+
+# Where the process is killed: just before the commit (the lines are written), once the pending
+# note is on disk but before the lines are, part-way through writing the lines, and after the
+# commit but before the note is deleted.
+KILL_AT = {
+    "commit": "from sqlalchemy.orm import Session\nSession.commit = lambda self: os._exit(9)",
+    "note": "import footy.publish as p\np._fsync_dir = lambda path: os._exit(9)",
+    "partial": "from sqlalchemy.orm import Session\nSession.commit = lambda self: os._exit(9)",
+    "unlink": "import pathlib\npathlib.Path.unlink = lambda self, missing_ok=False: os._exit(9)",
+}
+
+
+def _kill_during_publish(db_url, records, where):
+    import subprocess
+    import sys
+    import textwrap
+
+    script = "\n".join(
+        [
+            "import os, sys",
+            f"sys.path.insert(0, {str(Path(__file__).parent)!r})",
+            KILL_AT[where],
+            textwrap.dedent(
+                f"""
+                from pathlib import Path
+                from footy.db import make_engine
+                from test_publish import _publish_two
+                _publish_two(make_engine({db_url!r}), Path({str(records)!r}))
+                """
+            ),
+        ]
+    )
+    killed = subprocess.run([sys.executable, "-c", script], capture_output=True, text=True)
+    assert killed.returncode == 9, killed.stderr
+
+
+@pytest.mark.parametrize("where", list(KILL_AT))
+def test_a_publish_killed_at_any_point_leaves_no_orphan_or_duplicate(
+    migrated_engine, db_url, tmp_path, where
+):
+    """The container can be restarted at any moment: a run killed while publishing must not
+    leave lines the database lacks (or rows the file lacks), and the rerun must not record the
+    fixtures again (ids are reused after a rollback)."""
+    setup(migrated_engine)
+    records = tmp_path / "records"
+    _kill_during_publish(db_url, records, where)
+    day = records / "2026-10-22.jsonl"
+    if where == "partial":  # the write was cut short half-way through the second line
+        whole = day.read_bytes()
+        day.write_bytes(whole[: len(whole) - len(whole.splitlines()[-1]) // 2])
+    # the rerun (a later check-in)
+    ids = _publish_two(migrated_engine, records)
+    in_file, in_db = _file_and_db(migrated_engine, records)
+    assert in_file == in_db
+    assert len(in_db) == 2 and sorted(ids) == [r[0] for r in in_db]
+    assert all(json.loads(line) for line in day.read_text().splitlines())
+    assert not list(records.glob(".*"))  # nothing left to recover
+
+
+def test_a_killed_publish_is_finished_even_when_nothing_new_is_published(
+    migrated_engine, db_url, tmp_path
+):
+    """After kickoff a rerun publishes nothing, so `recover_pending` (run by the publishing
+    commands) finishes the killed run's records exactly as they were written."""
+    from footy.publish import recover_pending
+
+    setup(migrated_engine)
+    records = tmp_path / "records"
+    _kill_during_publish(db_url, records, "commit")
+    written = (records / "2026-10-22.jsonl").read_text()
+    assert recover_pending(migrated_engine, records) == 1
+    assert recover_pending(migrated_engine, records) == 0
+    in_file, in_db = _file_and_db(migrated_engine, records)
+    assert in_file == in_db and len(in_db) == 2
+    assert (records / "2026-10-22.jsonl").read_text() == written
+    with migrated_engine.connect() as conn:
+        row = conn.execute(text("SELECT created_at_utc, probabilities FROM predictions")).first()
+    first = json.loads(written.splitlines()[0])
+    assert json.loads(row.probabilities) == first["probabilities"]
+    assert str(row.created_at_utc).startswith("2026-10-22 09:00:00")
+
+
+def test_a_publish_that_fails_part_way_leaves_no_line_behind(migrated_engine, tmp_path):
+    """A later fixture failing to save (here an unknown team) must not leave the earlier
+    fixtures' lines in the records file without their rows."""
+    setup(migrated_engine)
+    records = tmp_path / "records"
+    bad = _two(home=("eng-testtown", "eng-nobody"), away=("eng-sampleton", "eng-testtown"))
+    with pytest.raises(DatabaseError):
+        _publish_two(migrated_engine, records, fixtures=bad)
+    in_file, in_db = _file_and_db(migrated_engine, records)
+    assert in_file == in_db == []
+
+
+def test_two_publishers_racing_for_one_fixture_make_one_record(migrated_engine, db_url, tmp_path):
+    """Two runs of the same model at once (an overlapping check-in) record a fixture once."""
+    import threading
+
+    import footy.publish as pub
+    from footy.db import make_engine
+
+    setup(migrated_engine)
+    records = tmp_path / "records"
+    checked, done = threading.Event(), threading.Event()
+    real = pub.market_dict
+
+    def slow_market_dict(mp, j):  # runs after the first publisher found no record
+        if threading.current_thread().name == "first":
+            checked.set()
+            done.wait(2)
+        return real(mp, j)
+
+    pub.market_dict = slow_market_dict
+    errors = []
+
+    def run(name):
+        try:
+            if name == "second":
+                checked.wait(5)
+            _publish_two(make_engine(db_url), records, fixtures=_two()[:1])
+        except Exception as exc:  # pragma: no cover - reported below
+            errors.append(exc)
+        finally:
+            if name == "second":
+                done.set()
+
+    try:
+        threads = [threading.Thread(target=run, args=(n,), name=n) for n in ("first", "second")]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join(60)
+    finally:
+        pub.market_dict = real
+    assert not errors
+    in_file, in_db = _file_and_db(migrated_engine, records)
+    assert in_file == in_db and len(in_db) == 1
+
+
+def test_a_live_publish_is_stamped_and_checked_once_it_holds_the_lock(
+    migrated_engine, db_url, tmp_path
+):
+    """Without a fixed time, the record's time is taken once `publish` holds the write lock,
+    so a fixture that kicks off while another writer holds it is refused rather than saved
+    after kickoff with an earlier time."""
+    import sqlite3
+    import threading
+    import time
+
+    setup(migrated_engine)
+    kickoff = datetime.now(UTC).replace(microsecond=0) + timedelta(seconds=2)
+    fx = FixtureIn(
+        "E0", "2627", kickoff.date(), kickoff, "eng-testtown", "eng-sampleton", features={}
+    )
+    blocker = sqlite3.connect(
+        db_url.removeprefix("sqlite:///"), timeout=30, check_same_thread=False
+    )
+    blocker.execute("BEGIN IMMEDIATE")  # another job writing
+    threading.Timer(3.0, blocker.rollback).start()
+    started = time.monotonic()
+    mp = markets_from_grid(poisson_grid([1.6], [1.1], -0.05), [1.6], [1.1])
+    with pytest.raises(PublishError, match="kickoff has passed"):
+        publish(
+            migrated_engine,
+            [fx],
+            mp,
+            model_name="m",
+            model_version="v1",
+            training_cutoff_utc=datetime(2026, 10, 21, tzinfo=UTC),
+            data_freshness={},
+            records_dir=tmp_path / "records",
+        )
+    assert time.monotonic() - started >= 2.5  # it waited for the lock
+    blocker.close()
+    in_file, in_db = _file_and_db(migrated_engine, tmp_path / "records")
+    assert in_file == in_db == []

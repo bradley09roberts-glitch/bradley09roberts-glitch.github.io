@@ -8,8 +8,18 @@ European: the pan-European model is fitted on all domestic and UEFA results befo
 and predicts scheduled UEFA matches.
 Early edition = no lineup or injury information. Lineup editions are not produced (no
 lineup source on the current provider plan), so they are recorded as unavailable.
+
+Both leave out a fixture past its pre-match deadline (`publish.pre_match_deadline`: the
+kickoff, or 00:00 UK on its day when the kickoff isn't known) and any fixture in `exclude`
+(e.g. the ones the model has already recorded, `publish.recorded_refs`) before fitting, and
+can report every fixture they leave out and why (`skipped`). Given `undated_ok`, they also
+leave out a fixture whose kick-off time isn't known yet unless its reference is in it. A live
+run (no `now` given) checks the clock again once the forecasts are made, leaves out a fixture
+that kicked off in the meantime, and `publish` stamps its records with the time they are
+written (once it holds the write lock), refusing any fixture that has kicked off by then.
 """
 
+from collections.abc import Collection
 from datetime import UTC, date, datetime, timedelta
 from zoneinfo import ZoneInfo
 
@@ -21,10 +31,55 @@ from footy.modeling.data import SECOND_TIER, load_matches
 from footy.modeling.grid import MarketProbs
 from footy.modeling.ledger import data_revision, git_commit
 from footy.modeling.walkforward import training_history
-from footy.publish import FixtureIn, publish
+from footy.publish import FixtureIn, pre_match_deadline, publish
 
 UK = ZoneInfo("Europe/London")
 LEAGUE_OF = {**{k: k for k in SECOND_TIER}, **{v: k for k, v in SECOND_TIER.items()}}
+
+
+# Why a fixture in the window is not (or in a dry run would not be) published.
+KICKED_OFF = "kicked off"
+DAY_STARTED = "match day started and no kick-off time is known"
+RECORDED = "already recorded for this model"
+NO_PRICES = "no usable prices (a model + market forecast publishes only with prices)"
+LATE = "kicked off before the forecast was ready"
+NO_KICKOFF = "kick-off time not known yet"
+
+
+def _skip(skipped: list[dict] | None, ref: str, reason: str) -> None:
+    if skipped is not None:
+        skipped.append({"fixture": ref, "reason": reason})
+
+
+def _not_due(
+    fx: FixtureIn,
+    now: datetime,
+    exclude: Collection[str],
+    undated_ok: Collection[str] | None = None,
+) -> str | None:
+    """Why a fixture is left out before fitting (None: it is due a forecast)."""
+    if now >= pre_match_deadline(fx):
+        return KICKED_OFF if fx.kickoff_utc is not None else DAY_STARTED
+    if fx.ref in exclude:
+        return RECORDED
+    if undated_ok is not None and fx.kickoff_utc is None and fx.ref not in undated_ok:
+        return NO_KICKOFF
+    return None
+
+
+def _still_before_kickoff(
+    fixtures: list[FixtureIn], live_clock: bool, now: datetime, skipped: list[dict] | None
+) -> tuple[list[int], datetime]:
+    """The fixtures still before their deadline once the forecasts are ready, and the time to
+    stamp the records with: the clock now in a live run, `now` when the caller fixed it."""
+    stamp = datetime.now(UTC) if live_clock else now
+    keep = []
+    for j, f in enumerate(fixtures):
+        if stamp < pre_match_deadline(f):
+            keep.append(j)
+        else:
+            _skip(skipped, f.ref, LATE)
+    return keep, stamp
 
 
 def model_version(engine: Engine, extra: str = "") -> str:
@@ -42,6 +97,9 @@ def predict_domestic(
     dry_run: bool = False,
     notes: str | None = None,
     only_with_market: bool = False,
+    exclude: Collection[str] = (),
+    skipped: list[dict] | None = None,
+    undated_ok: Collection[str] | None = None,
 ) -> list[dict]:
     """`only_with_market`: publish only the fixtures for which a model + market candidate
     found usable prices, so a later run with fresher prices can still publish the rest.
@@ -53,21 +111,33 @@ def predict_domestic(
 
     A record that used prices keeps, in `features.market_prices_used`, the consensus
     probabilities, how many books each consensus averaged (`n_books_1x2`, `n_books_ou`), the
-    quote time and the price file's provenance. Never the prices (D-013, D-024)."""
+    quote time and the price file's provenance. Never the prices (D-013, D-024).
+
+    `exclude`, `skipped` and `undated_ok`: see the module docstring. A division with no
+    fixture left to forecast is not fitted."""
+    live_clock = now is None
     now = now or datetime.now(UTC)
     today = now.astimezone(UK).date()
     out = []
     for div in divisions:
         top = LEAGUE_OF[div]
+        fx_list, check = upcoming(engine, div, "2627", today, days=days)
+        due = []
+        for x, h, a in fx_list:
+            stub = FixtureIn(div, "2627", x.match_date, x.kickoff_utc, h, a)
+            why = _not_due(stub, now, exclude, undated_ok)
+            if why is None:
+                due.append((x, h, a))
+            else:
+                _skip(skipped, stub.ref, why)
+        fx_list = due
+        if not fx_list:
+            continue
         df = load_matches(engine, [top, SECOND_TIER[top]])
         # the history the walk-forward backtest passes at the same cutoff (results final
         # before today, not excluded, from the last three years), so the model in use is the
         # one that was validated and tested
         hist = training_history(df, pd.Timestamp(today))
-        fx_list, check = upcoming(engine, div, "2627", today, days=days)
-        fx_list = [x for x in fx_list if x[0].kickoff_utc is None or x[0].kickoff_utc > now]
-        if not fx_list:
-            continue
         model = factory()
         market_model = hasattr(model, "decision_time")
         if market_model:  # model + market: prices quoted up to now
@@ -135,8 +205,20 @@ def predict_domestic(
             if used is not None and "refused" in used
             else [None] * len(fixtures)
         )
+        if only_with_market or market_model:
+            for f, why in zip(fixtures, refused, strict=True):
+                if "market_prices_used" not in f.features:
+                    reason = f"{NO_PRICES}: {why}" if isinstance(why, str) else NO_PRICES
+                    _skip(skipped, f.ref, reason)
         if only_with_market or (market_model and not dry_run):
             keep = [j for j, f in enumerate(fixtures) if "market_prices_used" in f.features]
+            fixtures = [fixtures[j] for j in keep]
+            refused = [refused[j] for j in keep]
+            mp = _subset(mp, keep)
+            if not fixtures:
+                continue
+        keep, stamp = _still_before_kickoff(fixtures, live_clock, now, skipped)
+        if len(keep) < len(fixtures):
             fixtures = [fixtures[j] for j in keep]
             refused = [refused[j] for j in keep]
             mp = _subset(mp, keep)
@@ -162,7 +244,7 @@ def predict_domestic(
             training_cutoff_utc=cutoff.to_pydatetime(),
             data_freshness={"latest_result_by_division": fresh},
             notes=notes,
-            now=now,
+            now=None if live_clock else stamp,  # live: stamped as it is written
         )
         out.extend({"id": i, "fixture": f.ref} for i, f in zip(ids, fixtures, strict=True))
     return out
@@ -197,10 +279,17 @@ def predict_euro(
     days: int = 3,
     dry_run: bool = False,
     notes: str | None = None,
+    exclude: Collection[str] = (),
+    skipped: list[dict] | None = None,
+    undated_ok: Collection[str] | None = None,
 ) -> list[dict]:
+    """A model without team ratings (the frequency baseline) records none: its records'
+    rating features are empty. `exclude`, `skipped` and `undated_ok`: see the module
+    docstring."""
     from footy.modeling.euro import load_combined
     from footy.modeling.euro_eval import team_countries
 
+    live_clock = now is None
     now = now or datetime.now(UTC)
     today = now.astimezone(UK).date()
     df = load_combined(engine, include_scheduled=True)
@@ -212,7 +301,14 @@ def predict_euro(
         & (df.date >= pd.Timestamp(today))
         & (df.date <= pd.Timestamp(today + timedelta(days=days)))
     ]
-    fx = fx[fx.kickoff_utc.isna() | (fx.kickoff_utc > now)]
+    due = []
+    for r in fx.itertuples():
+        stub = _euro_stub(r)
+        why = _not_due(stub, now, exclude, undated_ok)
+        due.append(why is None)
+        if why is not None:
+            _skip(skipped, stub.ref, why)
+    fx = fx[pd.Series(due, index=fx.index, dtype=bool)]
     if fx.empty:
         return []
     model = factory()
@@ -225,9 +321,11 @@ def predict_euro(
             text("SELECT max(match_date) FROM euro_matches WHERE status='played'")
         ).scalar()
         latest_dom = conn.execute(text("SELECT max(match_date) FROM matches")).scalar()
+    strength = getattr(model, "strength", lambda team: None)
+    league_of = getattr(model, "league_of", {})
     fixtures = []
     for r in fx.itertuples():
-        hs, as_ = model.strength(r.home_team), model.strength(r.away_team)
+        hs, as_ = strength(r.home_team), strength(r.away_team)
         fixtures.append(
             FixtureIn(
                 competition=r.comp,
@@ -239,8 +337,8 @@ def predict_euro(
                 features={
                     "home_matches_in_window": int(counts.get(r.home_team, 0)),
                     "away_matches_in_window": int(counts.get(r.away_team, 0)),
-                    "home_league_for_rating": model.league_of.get(r.home_team),
-                    "away_league_for_rating": model.league_of.get(r.away_team),
+                    "home_league_for_rating": league_of.get(r.home_team),
+                    "away_league_for_rating": league_of.get(r.away_team),
                     "home_attack_defence": hs,
                     "away_attack_defence": as_,
                     "stage": getattr(r, "stage", None),
@@ -250,13 +348,23 @@ def predict_euro(
                 missing_fields=["lineups", "injuries", "odds"],
             )
         )
+    keep, stamp = _still_before_kickoff(fixtures, live_clock, now, skipped)
+    if len(keep) < len(fixtures):
+        fixtures = [fixtures[j] for j in keep]
+        mp = _subset(mp, keep)
+        if not fixtures:
+            return []
     if dry_run:
         return [
             {
                 "fixture": f.ref,
                 "p1x2": mp.p1x2[j].round(3).tolist(),
-                "xg": [round(float(mp.lam_h[j]), 2), round(float(mp.lam_a[j]), 2)],
             }
+            | (
+                {"xg": [round(float(mp.lam_h[j]), 2), round(float(mp.lam_a[j]), 2)]}
+                if mp.lam_h is not None
+                else {}
+            )
             for j, f in enumerate(fixtures)
         ]
     ids = publish(
@@ -271,9 +379,21 @@ def predict_euro(
             "latest_domestic_result": str(latest_dom),
         },
         notes=notes,
-        now=now,
+        now=None if live_clock else stamp,  # live: stamped as it is written
     )
     return [{"id": i, "fixture": f.ref} for i, f in zip(ids, fixtures, strict=True)]
+
+
+def _euro_stub(r) -> FixtureIn:
+    """A UEFA fixture row as a FixtureIn (its reference and pre-match deadline)."""
+    return FixtureIn(
+        competition=r.comp,
+        season=r.season,
+        match_date=r.date.date(),
+        kickoff_utc=None if pd.isna(r.kickoff_utc) else r.kickoff_utc.to_pydatetime(),
+        home_team=r.home_team,
+        away_team=r.away_team,
+    )
 
 
 def today_uk() -> date:

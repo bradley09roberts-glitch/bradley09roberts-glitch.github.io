@@ -50,6 +50,8 @@ uv run footy capture-odds       # forward odds snapshots (needs a provider key; 
 uv run footy fd-fixtures        # this week's football-data prices (Tue/Fri) for model + market
 uv run footy predict-domestic --model market_tilt_shots --dry-run   # league predictions
 uv run footy predict-euro --model pan_euro_mix_mxg --dry-run        # UEFA predictions
+uv run footy publish-shadows --group all --dry-run   # every other listed model's own records
+                                #   (docs/shadow-records.md; --days, --models a,b)
 uv run footy settle             # settle published predictions whose results are in
 
 cd frontend
