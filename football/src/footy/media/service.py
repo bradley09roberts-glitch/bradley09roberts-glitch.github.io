@@ -5,6 +5,7 @@ asks to be shown (licence and its link, author, source, attribution text), and o
 is of the file reference/team_media.json names now. Nothing here makes a network request.
 """
 
+import csv
 import json
 import re
 from collections.abc import Mapping
@@ -12,12 +13,19 @@ from functools import lru_cache
 from pathlib import Path
 
 from footy.config import Settings
-from footy.media.badge import contrast, pick_colours, short_name, valid_hex
+from footy.media.badge import contrast, kit_shade, pick_colours, short_name, valid_hex
 from footy.media.commons import licence_is_free, read_manifest
 from footy.media.facts import MEDIA_JSON, WIKIDATA_ITEM_URL
+from footy.media.mapping import ALIASES_JSON
+from footy.reference import REFERENCE_DIR
 
 MEDIA_URL = "/media/teams"
 FACTS_PATH = MEDIA_JSON  # tests point this elsewhere
+ALIASES_PATH = ALIASES_JSON  # likewise
+# Reviewed by hand: a club's badge letters where the made-up ones read wrong ("MCT" for Man
+# City), and the order to draw its Wikidata colours in where the most saturated one isn't the
+# club's main colour (Real Madrid's purple, Tottenham's blue: both clubs play in white).
+BADGES_PATH = REFERENCE_DIR / "team_badges.csv"
 TEAM_KEY = re.compile(r"[a-z0-9][a-z0-9-]{0,63}")
 # The only picture files ever served (footy.api.media_routes) or linked to.
 PICTURE_FILE = re.compile(r"(crest|venue)\.(png|jpg|gif|webp)")
@@ -41,23 +49,66 @@ def load_facts(path: Path | None = None) -> dict[str, dict]:
     return _facts_cached(str(path), path.stat().st_mtime_ns)
 
 
+def load_wikidata_aliases(path: Path | None = None) -> dict[str, list[str]]:
+    """reference/team_wikidata_aliases.json's teams (team key -> the mapped item's English
+    aliases on Wikidata), re-read whenever the file changes; {} without the file."""
+    path = path or ALIASES_PATH
+    if not path.exists():
+        return {}
+    return _facts_cached(str(path), path.stat().st_mtime_ns)
+
+
+@lru_cache(maxsize=4)
+def _badges_cached(path: str, mtime_ns: int) -> dict[str, dict]:
+    with Path(path).open(encoding="utf-8", newline="") as f:
+        return {
+            r["team_key"]: {
+                "short": (r.get("short") or "").strip().upper() or None,
+                "colours": [c.strip() for c in (r.get("colours") or "").split(";") if c.strip()],
+            }
+            for r in csv.DictReader(f)
+        }
+
+
+def load_badge_overrides(path: Path | None = None) -> dict[str, dict]:
+    """reference/team_badges.csv: team key -> {short, colours (Wikidata colour names, in the
+    order to draw them)}, re-read whenever the file changes; {} without the file."""
+    path = path or BADGES_PATH
+    if not path.exists():
+        return {}
+    return _badges_cached(str(path), path.stat().st_mtime_ns)
+
+
 def ordered_colours(team_key: str, colours: list[dict]) -> list[dict]:
-    """{name, hex} per official colour, the badge's background first, then its band, then
-    the rest by name; colours without a hex value last."""
-    with_hex = [c for c in colours if valid_hex(c.get("hex"))]
-    if not with_hex:
-        return [{"name": c.get("name"), "hex": None} for c in colours]
-    background, band = pick_colours([c["hex"] for c in with_hex], team_key)
-
-    def rank(c: dict) -> tuple:
-        h = valid_hex(c.get("hex"))
-        if h is None:
-            return (3, c.get("name") or "")
-        return ({background: 0, band: 1}.get(h, 2), -contrast(background, h), c.get("name") or "")
-
-    return [
-        {"name": c.get("name"), "hex": valid_hex(c.get("hex"))} for c in sorted(colours, key=rank)
+    """{name, hex, shade} per official colour: `hex` as Wikidata gives it, `shade` the one the
+    site draws (badge.kit_shade: a kit shade for Wikidata's pure named colours). The badge's
+    background first, then its band, then the rest by name; colours without a hex value last.
+    The background and band are the reviewed order in reference/team_badges.csv where a club
+    has one, otherwise picked from the shades (badge.pick_colours)."""
+    rows = [
+        {"name": c.get("name"), "hex": valid_hex(c.get("hex")), "shade": kit_shade(c)}
+        for c in colours
     ]
+    drawn = [r for r in rows if r["shade"]]
+    if not drawn:
+        return [{**r, "shade": None} for r in rows]
+    order = [n.casefold() for n in load_badge_overrides().get(team_key, {}).get("colours", [])]
+    named = [r for r in drawn if (r["name"] or "").casefold() in order]
+    if len(named) >= min(2, len(drawn)):
+        named.sort(key=lambda r: order.index((r["name"] or "").casefold()))
+        background = named[0]["shade"]
+        band = named[1]["shade"] if len(named) > 1 else None
+    else:
+        background, band = pick_colours([r["shade"] for r in drawn], team_key)
+
+    def rank(r: dict) -> tuple:
+        h = r["shade"]
+        if h is None:
+            return (3, 0.0, r["name"] or "")
+        place = 0 if h == background else 1 if h == band else 2
+        return (place, -contrast(background, h), r["name"] or "")
+
+    return sorted(rows, key=rank)
 
 
 def _picture(team_dir: Path, entry: dict | None, commons_file: str | None) -> dict | None:
@@ -172,19 +223,33 @@ def crest_url(team_key: str, settings: Settings, facts: dict | None = None) -> s
     return f"{MEDIA_URL}/{team_key}/{entry['file']}"
 
 
-def media_summary(team_key: str, name: str, settings: Settings) -> dict:
+def badge_short(team_key: str, name: str) -> str:
+    """The team's badge letters before collisions are resolved: the reviewed ones in
+    reference/team_badges.csv, else `short_name`'s."""
+    return load_badge_overrides().get(team_key, {}).get("short") or short_name(name)
+
+
+def media_summary(team_key: str, name: str, settings: Settings, short: str | None = None) -> dict:
     """What every endpoint naming a team sends with it: the downloaded crest's URL (or None)
-    and what the website's own badge needs, the club's official colours as hex (the badge's
-    background first, then its band) and the three-letter short name the generated badge uses.
-    Colours are Wikidata's (CC0); none are made up, so a club without them has `[]`."""
+    and what the website's own badge needs, the club's official colours as the shades drawn
+    (the badge's background first, then its band) and the three-letter short name the
+    generated badge uses (`short`: the team's letters with collisions resolved,
+    footy.teams.TeamsIndex.shorts; else `badge_short`). Colours are Wikidata's (CC0); none are
+    made up, so a club without them has `[]`."""
     facts = load_facts().get(team_key) or {}
     colours = ordered_colours(team_key, facts.get("colours") or [])
     return {
         "crest_url": crest_url(team_key, settings, facts),
-        "badge": {"colours": [c["hex"] for c in colours if c["hex"]], "short": short_name(name)},
+        "badge": {
+            "colours": [c["shade"] for c in colours if c["shade"]],
+            "short": short or badge_short(team_key, name),
+        },
     }
 
 
-def media_summaries(names: Mapping[str, str], settings: Settings) -> dict[str, dict]:
-    """media_summary for each team key -> name."""
-    return {key: media_summary(key, name, settings) for key, name in names.items()}
+def media_summaries(
+    names: Mapping[str, str], settings: Settings, shorts: Mapping[str, str] | None = None
+) -> dict[str, dict]:
+    """media_summary for each team key -> name (`shorts`: resolved letters by team key)."""
+    shorts = shorts or {}
+    return {key: media_summary(key, name, settings, shorts.get(key)) for key, name in names.items()}

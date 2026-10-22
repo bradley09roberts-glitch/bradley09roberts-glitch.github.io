@@ -320,10 +320,12 @@
   transition: border-color var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease-out);
 }
 
-a.lab-export:hover {
-  border-color: var(--accent);
-  background: var(--accent-soft);
-  color: var(--text);
+@media (hover: hover) {
+  a.lab-export:hover {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    color: var(--text);
+  }
 }
 
 .lab-export-label {
@@ -364,6 +366,12 @@ a.lab-export:hover {
 .mlx-cands {
   display: grid;
   gap: var(--sp-3);
+}
+
+/* Grid items default to their content's width: the month table (opened) and the controls
+   would otherwise widen the card, and the page, on a phone. They scroll inside instead. */
+.mlx-curve > * {
+  min-width: 0;
 }
 
 .card.mlx-intro p + p {
@@ -411,8 +419,11 @@ a.lab-export:hover {
   flex: 0 1 300px;
 }
 
+/* The view buttons narrow (each label wraps to its longest word) before the group scrolls
+   inside its own box; the group never runs past the card's edge. */
 .mlx-controls .ctl-seg {
-  flex: none;
+  flex: 0 1 auto;
+  max-width: 100%;
 }
 
 .mlx-list {

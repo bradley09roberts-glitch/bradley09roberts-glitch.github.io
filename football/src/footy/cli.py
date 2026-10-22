@@ -558,6 +558,8 @@ def _team_media(args) -> int:
                 teams = mapping.teams_in_scope(get_engine())
                 rows = mapping.build_mapping(teams, wdqs, mapping.read_mapping())
                 mapping.write_mapping(rows)
+                countries = {k: t.country for k, t in teams.items()}
+                mapping.write_aliases(mapping.club_aliases(wdqs, rows, countries))
                 report["mapping"] = {
                     "file": str(mapping.MAPPING_CSV),
                     "coverage": mapping.coverage(rows, teams),

@@ -30,9 +30,14 @@ facts used to reject the wrong kind of team.
   None: unmapped (`unresolved`).
 
 Rows with method `manual` are hand-checked and kept as they are on every rebuild.
+
+The mapped items' English aliases ("Spurs", "Man City") from the same per-country queries are
+saved beside the mapping (reference/team_wikidata_aliases.json), for the website's team search
+only; nothing is matched or shown from them.
 """
 
 import csv
+import json
 import re
 import unicodedata
 from collections import defaultdict
@@ -47,6 +52,7 @@ from footy.models import EuroMatch, Match, Team, TeamAlias
 from footy.reference import REFERENCE_DIR
 
 MAPPING_CSV = REFERENCE_DIR / "team_wikidata.csv"
+ALIASES_JSON = REFERENCE_DIR / "team_wikidata_aliases.json"
 FIELDS = ["team_key", "qid", "wikidata_label", "method", "note"]
 METHODS = {"exact_label", "alias", "manual"}
 # 2024/25 onwards: league season keys from "2424" (the calendar-year 2024 seasons) sort after
@@ -594,6 +600,40 @@ def write_mapping(rows: dict[str, MappingRow], path: Path = MAPPING_CSV) -> None
         for key in sorted(rows):
             r = rows[key]
             w.writerow({k: getattr(r, k) for k in FIELDS})
+
+
+def club_aliases(
+    client: WdqsClient, rows: dict[str, MappingRow], countries: dict[str, str]
+) -> dict[str, list[str]]:
+    """team_key -> its mapped item's English aliases on Wikidata, from the per-country name
+    queries `build_mapping` runs (so a mapping run fetches nothing more for them). An item
+    outside its team's country queries (a manual row) has none here."""
+    by_country: dict[str, dict[str, Club]] = {}
+    out: dict[str, list[str]] = {}
+    for key in sorted(rows):
+        r = rows[key]
+        if not r.qid:
+            continue
+        found: list[str] = []
+        for country_qid in COUNTRY_QIDS.get(countries.get(key, ""), []):
+            if country_qid not in by_country:
+                by_country[country_qid] = fetch_country_names(client, country_qid)
+            club = by_country[country_qid].get(r.qid)
+            if club is not None:
+                found += [a for a in club.aliases if a not in found]
+        if found:
+            out[key] = sorted(found, key=str.casefold)
+    return out
+
+
+def write_aliases(aliases: dict[str, list[str]], path: Path = ALIASES_JSON) -> None:
+    doc = {
+        "source": "Wikidata Query Service (https://query.wikidata.org/); Wikidata is CC0",
+        "what": "English aliases (skos:altLabel) of each team's mapped Wikidata item "
+        "(team_wikidata.csv), for the website's team search only",
+        "teams": {key: aliases[key] for key in sorted(aliases)},
+    }
+    path.write_text(json.dumps(doc, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
 def word_index(pool: dict[str, Club]) -> dict[str, set[str]]:

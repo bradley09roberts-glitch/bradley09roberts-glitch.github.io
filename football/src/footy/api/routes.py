@@ -333,10 +333,17 @@ def make_router(engine_fn: Callable[[], Engine], settings: Settings) -> APIRoute
     def settlements(s: Session) -> dict[int, PredictionSettlement]:
         return {x.prediction_id: x for x in s.scalars(select(PredictionSettlement))}
 
-    def team_media(rows: Iterable[Prediction], names: dict) -> dict[str, dict]:
+    def badge_letters(s: Session) -> dict[str, str]:
+        """Every team's badge letters, different for teams that meet (TeamsIndex.shorts)."""
+        from footy.teams import teams_index  # here: footy.teams imports this module
+
+        return teams_index(s).shorts
+
+    def team_media(s: Session, rows: Iterable[Prediction], names: dict) -> dict[str, dict]:
         """The media summary (footy.media.service.media_summary) of every team in `rows`."""
         keys = {k for p in rows for k in (p.home_team, p.away_team)}
-        return media_summaries({k: names.get(k, k) for k in sorted(keys)}, settings)
+        named = {k: names.get(k, k) for k in sorted(keys)}
+        return media_summaries(named, settings, badge_letters(s))
 
     def card(
         p: Prediction,
@@ -416,7 +423,7 @@ def make_router(engine_fn: Callable[[], Engine], settings: Settings) -> APIRoute
             latest: dict[tuple, Prediction] = {}
             for p in rows:
                 latest[(p.fixture_ref, p.model_name)] = p
-            media = team_media(latest.values(), names)
+            media = team_media(s, latest.values(), names)
             cards = [card(p, names, st.get(p.id), ror, media) for p in latest.values()]
         groups: dict[str, list] = {}
         for c in sorted(cards, key=lambda c: (c["kickoff_utc"] or c["match_date"], c["id"])):
@@ -481,6 +488,7 @@ def make_router(engine_fn: Callable[[], Engine], settings: Settings) -> APIRoute
                     )
                 },
                 settings,
+                badge_letters(s),
             )
             for r in recent:
                 r["opponent_media"] = media[r["opponent_team"]]
@@ -511,7 +519,7 @@ def make_router(engine_fn: Callable[[], Engine], settings: Settings) -> APIRoute
                 q = q.where(Prediction.competition == competition)
             rows = s.scalars(q.order_by(Prediction.match_date.desc(), Prediction.id.desc())).all()
             shown = [p for p in rows if p.id in st][:limit]
-            media = team_media(shown, names)
+            media = team_media(s, shown, names)
             cards = [card(p, names, st.get(p.id), ror, media) for p in shown]
         return {"record_type": record_type, "matches": cards}
 

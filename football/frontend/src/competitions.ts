@@ -1,10 +1,13 @@
-// Display order for competitions: European cups, then the big five, then second tiers, then
-// everything else in the order the API sent it.
+// Display order for competitions: European cups, each followed by its qualifying rounds, then
+// the big five, then second tiers, then everything else in the order the API sent it.
 
 export const COMPETITION_PRIORITY = [
   "UCL",
+  "UCLQ",
   "UEL",
+  "UELQ",
   "UECL",
+  "UECLQ",
   "E0",
   "SP1",
   "I1",
@@ -32,6 +35,30 @@ export function sortByCompetition<T>(items: readonly T[], code: (item: T) => str
 
 export const EUROPEAN_CUPS = new Set(["UCL", "UEL", "UECL"]);
 
+/**
+ * A club's competitions this season as its chips show them: its league first, then Europe in
+ * the usual order. A UEFA qualifying round is left out once the club is in a UEFA competition
+ * proper, as its qualifying is then over (Craiova: Liga I and the Conference League, not the
+ * two qualifying rounds it went out of on the way).
+ */
+export function seasonCompetitions<T extends { code: string; type: string }>(comps: readonly T[]): T[] {
+  const proper = comps.some((c) => EUROPEAN_CUPS.has(c.code));
+  return sortByCompetition(
+    comps.filter((c) => !(proper && c.type === "europe" && !EUROPEAN_CUPS.has(c.code))),
+    (c) => c.code,
+  ).sort((a, b) => Number(a.type !== "league") - Number(b.type !== "league"));
+}
+
+/** Which UEFA seasons the data holds (euro_matches on 22 October 2026: openfootball and
+ * Wikipedia, D-023), so a club's missing European seasons or meetings aren't read as absences.
+ * Update it when older UEFA seasons are added. */
+export const UEFA_HELD =
+  "The data holds the Champions League from 2018/19, the Europa League from 2020/21, the Conference League from its first season (2021/22) and qualifying rounds from 2024/25; earlier European matches are not in it.";
+
+/** The league seasons the data holds, for the same purpose. */
+export const LEAGUES_HELD =
+  "The data holds league matches from 2018/19 (2018 in the leagues that play in a calendar year) in the leagues it covers.";
+
 // ---------------------------------------------------------------------------------------------
 // Competition marks: a small tile with a region code and tier (e.g. "ENG 1"), or the cup's
 // initials for UEFA competitions. Plain text on a coloured tile; no competition's logo.
@@ -41,6 +68,9 @@ export type CompetitionMarkInfo = {
   code: string;
   /** League tier (1 for top flights), or null for a cup. */
   tier: number | null;
+  /** A UEFA competition's qualifying rounds: drawn "UCL | Q", so they never pass for the
+   * competition proper. */
+  qualifying: boolean;
   /** Region key for the tile colour. */
   region: string;
 };
@@ -72,17 +102,17 @@ const OTHER_REGIONS: Record<string, string> = { SWZ: "SUI", DNK: "DEN" };
 
 export function competitionMark(code: string): CompetitionMarkInfo {
   const cup = CUP_MARKS[code];
-  if (cup) return { code: cup, tier: null, region: "EUR" };
+  if (cup) return { code: cup, tier: null, region: "EUR", qualifying: code.endsWith("Q") };
   for (const [re, region] of REGIONS) {
     if (re.test(code)) {
       // football-data numbers England's top flight 0 and every other country's 1.
       const n = Number.parseInt(code.replace(/^\D+/, ""), 10);
       const tier = region === "ENG" ? n + 1 : region === "SCO" ? n + 1 : n;
-      return { code: region, tier: Number.isFinite(tier) ? tier : 1, region };
+      return { code: region, tier: Number.isFinite(tier) ? tier : 1, region, qualifying: false };
     }
   }
   const region = OTHER_REGIONS[code] ?? code.slice(0, 3).toUpperCase();
-  return { code: region, tier: 1, region };
+  return { code: region, tier: 1, region, qualifying: false };
 }
 
 // ---------------------------------------------------------------------------------------------

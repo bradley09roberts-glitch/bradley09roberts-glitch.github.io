@@ -189,3 +189,27 @@ def test_short_names_come_from_one_place():
     assert short_name("Schalke 04") == "S04"
     assert short_name("AC Milan") == "MIL"
     assert short_name("Inter Club d'Escaldes") == "IES"
+
+
+def test_reviewed_colour_order_and_letters(settings, world, tmp_path, monkeypatch):
+    # Testtown's facts give claret and white; the reviewed order puts white first (as a club
+    # that plays in white), and its letters are the reviewed ones everywhere.
+    path = tmp_path / "team_badges.csv"
+    path.write_text("team_key,short,colours,note\neng-testtown,TTN,white;claret,plays in white\n")
+    monkeypatch.setattr(service, "BADGES_PATH", path)
+    out = service.media_summary("eng-testtown", "Testtown", settings)
+    assert out["badge"]["colours"] == ["#FFFFFF", "#7A263A"]
+    assert out["badge"]["short"] == "TTN"
+
+
+def test_committed_badge_overrides_name_the_clubs_own_colours():
+    from footy.media.service import BADGES_PATH, load_badge_overrides, load_facts
+
+    overrides = load_badge_overrides(BADGES_PATH)
+    facts = load_facts(service.MEDIA_JSON)
+    assert overrides
+    for key, o in overrides.items():
+        assert o["short"] is None or (len(o["short"]) == 3 and o["short"].isalnum()), key
+        held = {(c.get("name") or "").casefold() for c in facts.get(key, {}).get("colours", [])}
+        for name in o["colours"]:  # only ever a colour Wikidata gives the club
+            assert name.casefold() in held, (key, name)

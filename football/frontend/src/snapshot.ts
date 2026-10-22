@@ -10,7 +10,8 @@
 // keys). snapshot.json holds what the first screen needs and lists the shard files
 // (snapshot-matches-1.json, snapshot-lab-1.json, snapshot-teams-1.json, ...) with the keys each
 // one answers; a shard is fetched only when a page asks for one of its keys, then kept. A
-// request that is in no file fails the way an unreachable API does, with the message
+// few requests are answered by filtering another stored response (see `derived`). A request
+// that is in no file fails the way an unreachable API does, with the message
 // "Not in this snapshot".
 
 export const SNAPSHOT: boolean = import.meta.env.VITE_SNAPSHOT === "1";
@@ -176,26 +177,75 @@ function loadShard(name: string): Promise<SnapshotFile> {
   return pending;
 }
 
-/** Answer an API request from the snapshot, as the Response the API sent when it was taken:
- * from snapshot.json, or from the shard file that holds it (fetched the first time a page
- * needs it). Rejects with SnapshotError when it isn't there, or an AbortError when `signal`
- * aborts. */
-export async function snapshotFetch(url: string, signal: AbortSignal): Promise<Response> {
-  const snap = await loadSnapshot();
-  if (signal.aborted) throw new DOMException("Aborted", "AbortError");
-  const key = canonicalKey(url);
+/** The fixtures window the snapshot stores (footy/snapshot.py, SNAPSHOT_FIXTURE_DAYS). */
+const FIXTURE_DAYS_HELD = 30;
+/** The API's window when none is asked for. */
+const FIXTURE_DAYS_DEFAULT = 8;
+
+type FixturesBody = { generated_at_utc?: string; competitions?: { fixtures?: { match_date?: string }[] }[] };
+
+/** The fixtures for the next `days` days from the stored 30-day response, as the API answers
+ * them: the cards dated up to today + `days` (from yesterday on, which the stored response
+ * already starts at), `today` being the UTC date it answered on; a competition left without
+ * cards is dropped, as the API never lists an empty one. */
+function fixturesWithin(body: unknown, days: number): unknown {
+  const b = body as FixturesBody | null;
+  const day = b?.generated_at_utc?.slice(0, 10);
+  if (!b || !day || !Array.isArray(b.competitions)) return body;
+  const last = new Date(`${day}T00:00:00Z`);
+  last.setUTCDate(last.getUTCDate() + days);
+  const until = last.toISOString().slice(0, 10);
+  return {
+    ...b,
+    competitions: b.competitions
+      .map((c) => ({ ...c, fixtures: (c.fixtures ?? []).filter((f) => (f.match_date ?? "") <= until) }))
+      .filter((c) => c.fixtures.length > 0),
+  };
+}
+
+/** A request answered by filtering another stored response: which key, and how. Only the
+ * fixtures windows (every N from 1 to 30 comes from the 30-day one). */
+function derived(key: string): { from: string; make: (body: unknown) => unknown } | null {
+  const m = /^\/api\/fixtures(?:\?days=(\d+))?$/.exec(key);
+  if (!m) return null;
+  const days = m[1] === undefined ? FIXTURE_DAYS_DEFAULT : Number(m[1]);
+  if (!Number.isInteger(days) || days < 1 || days > FIXTURE_DAYS_HELD) return null;
+  return { from: canonicalKey(`/api/fixtures?days=${FIXTURE_DAYS_HELD}`), make: (body) => fixturesWithin(body, days) };
+}
+
+/** The stored [status, body] for a key, from snapshot.json or its shard; null if neither has it. */
+async function lookup(snap: SnapshotFile, key: string, signal: AbortSignal): Promise<[number, unknown] | null> {
   let source = snap;
   let hit = snap.entries[key];
   if (!hit) {
     const shard = shardFor(snap, key);
-    if (!shard) throw new SnapshotError(NOT_IN_SNAPSHOT);
+    if (!shard) return null;
     source = await loadShard(shard);
     if (signal.aborted) throw new DOMException("Aborted", "AbortError");
     hit = source.entries[key];
-    if (!hit) throw new SnapshotError(NOT_IN_SNAPSHOT);
+    if (!hit) return null;
   }
   const [status, index] = hit;
-  return new Response(JSON.stringify(source.bodies[index] ?? null), {
+  return [status, source.bodies[index] ?? null];
+}
+
+/** Answer an API request from the snapshot, as the Response the API sent when it was taken:
+ * from snapshot.json, or from the shard file that holds it (fetched the first time a page
+ * needs it), or derived from another stored response. Rejects with SnapshotError when it
+ * isn't there, or an AbortError when `signal` aborts. */
+export async function snapshotFetch(url: string, signal: AbortSignal): Promise<Response> {
+  const snap = await loadSnapshot();
+  if (signal.aborted) throw new DOMException("Aborted", "AbortError");
+  const key = canonicalKey(url);
+  let found = await lookup(snap, key, signal);
+  if (!found) {
+    const rule = derived(key);
+    const from = rule ? await lookup(snap, rule.from, signal) : null;
+    if (rule && from) found = [from[0], from[0] === 200 ? rule.make(from[1]) : from[1]];
+  }
+  if (!found) throw new SnapshotError(NOT_IN_SNAPSHOT);
+  const [status, body] = found;
+  return new Response(JSON.stringify(body), {
     status,
     headers: { "content-type": "application/json" },
   });
@@ -215,6 +265,9 @@ export function startSnapshotLoad(): void {
  * doesn't hold, such as a team without a page. Re-check after snapshotStatus() changes. */
 export function snapshotHolds(url: string): boolean | null {
   if (!loadedFile) return null;
+  const file = loadedFile;
+  const held = (key: string) => key in file.entries || shardFor(file, key) !== undefined;
   const key = canonicalKey(url);
-  return key in loadedFile.entries || shardFor(loadedFile, key) !== undefined;
+  const rule = derived(key);
+  return held(key) || (rule !== null && held(rule.from));
 }

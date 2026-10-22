@@ -51,11 +51,17 @@ def make_media_router(engine_fn: Callable[[], Engine], settings: Settings) -> AP
 
     @r.get("/media/teams/{team_key}/badge.svg")
     def badge(team_key: str) -> Response:
+        """The same colours, in the same order, and the same letters as the site's badges."""
+        from footy.teams import teams_index  # here: footy.teams loads the API's routes
+
         name = team_name(team_key)
         facts = service.load_facts().get(team_key) or {}
-        hexes = [c["hex"] for c in facts.get("colours") or [] if c.get("hex")]
+        colours = service.ordered_colours(team_key, facts.get("colours") or [])
+        hexes = [c["shade"] for c in colours if c["shade"]]
+        with Session(engine_fn()) as s:
+            letters = teams_index(s).shorts.get(team_key)
         return Response(
-            badge_svg(team_key, name, hexes),
+            badge_svg(team_key, name, hexes, letters, in_order=True),
             media_type="image/svg+xml",
             headers={"Cache-Control": CACHE, "Content-Security-Policy": SVG_CSP, **NOSNIFF},
         )

@@ -27,9 +27,10 @@ def make_teams_router(engine_fn: Callable[[], Engine], settings: Settings) -> AP
     """Mounted under /api by footy.api.routes.make_router."""
     r = APIRouter()
 
-    def media(names: dict[str, str]) -> dict[str, dict]:
-        """Team key -> media summary (crest URL and the website badge's colours and letters)."""
-        return media_summaries(dict(sorted(names.items())), settings)
+    def media(names: dict[str, str], shorts: dict[str, str]) -> dict[str, dict]:
+        """Team key -> media summary (crest URL and the website badge's colours and letters,
+        `shorts` being every team's letters: TeamsIndex.shorts)."""
+        return media_summaries(dict(sorted(names.items())), settings, shorts)
 
     @r.get("/teams")
     def teams(
@@ -52,7 +53,7 @@ def make_teams_router(engine_fn: Callable[[], Engine], settings: Settings) -> AP
             "filters": {"competition": codes, "q": q},
             "count": len(rows),
             "teams": rows,
-            "media": media({t["key"]: t["name"] for t in rows}),
+            "media": media({t["key"]: t["name"] for t in rows}, idx.shorts),
         }
 
     @r.get("/teams/{team_key}")
@@ -69,6 +70,7 @@ def make_teams_router(engine_fn: Callable[[], Engine], settings: Settings) -> AP
             out = team_stats.team_profile(
                 s, team_key, periods=model_periods(), full_series=series == "full"
             )
+            shorts = team_stats.teams_index(s).shorts
         if out is None:
             raise HTTPException(404, "no such team")
         t = out["team"]
@@ -76,7 +78,7 @@ def make_teams_router(engine_fn: Callable[[], Engine], settings: Settings) -> AP
             t["key"]: t["name"],
             **{f["opponent"]: f["opponent_name"] for f in out["upcoming"]},
         }
-        summaries = media(named)
+        summaries = media(named, shorts)
         out["team"] = {"key": t["key"], "name": t["name"], "media": summaries[t["key"]], **t}
         out["upcoming"] = [
             {**f, "opponent_media": summaries[f["opponent"]]} for f in out["upcoming"]
@@ -105,6 +107,7 @@ def make_teams_router(engine_fn: Callable[[], Engine], settings: Settings) -> AP
                 season=season,
             )
             team = s.get(Team, team_key)
+            shorts = team_stats.teams_index(s).shorts
         if rows is None:
             raise HTTPException(404, "no such team")
         page = rows[offset : offset + limit]
@@ -118,7 +121,9 @@ def make_teams_router(engine_fn: Callable[[], Engine], settings: Settings) -> AP
             "notes": team_stats.NOTES,
             "matches": page,
             # The team's and each opponent's on this page, once each (keyed by team key).
-            "media": media({team_key: name, **{m["opponent"]: m["opponent_name"] for m in page}}),
+            "media": media(
+                {team_key: name, **{m["opponent"]: m["opponent_name"] for m in page}}, shorts
+            ),
         }
 
     return r

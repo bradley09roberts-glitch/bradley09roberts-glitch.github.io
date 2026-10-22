@@ -89,9 +89,10 @@ def test_generated_badge_until_a_free_crest_is_downloaded(client, media):
     assert "not the club's crest" in body["crest"]["attribution"]
     assert body["crest"]["source_url"] == "https://www.wikidata.org/wiki/Q9617"
     # Red is the badge's background, so it comes first.
+    # `shade` is the hex drawn: Wikidata's own here (a generic red, #FF0000, gets a kit shade).
     assert body["colours"] == [
-        {"name": "red", "hex": "#EF0107"},
-        {"name": "white", "hex": "#FFFFFF"},
+        {"name": "red", "hex": "#EF0107", "shade": "#EF0107"},
+        {"name": "white", "hex": "#FFFFFF", "shade": "#FFFFFF"},
     ]
     assert body["venue"] == {
         "name": "Emirates Stadium",

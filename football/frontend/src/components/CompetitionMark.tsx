@@ -1,6 +1,6 @@
-// A competition's small mark (region code and tier, or a UEFA cup's initials) and the chip
-// that pairs it with the competition's name. The name is always printed, so the mark is
-// decorative.
+// A competition's small mark (region code and tier, or a UEFA cup's initials, with "Q" for its
+// qualifying rounds) and the chip that pairs it with the competition's name. The name is always
+// printed, so the mark is decorative.
 
 import { competitionMark } from "../competitions";
 
@@ -9,7 +9,11 @@ export function CompetitionMark({ code }: { code: string }) {
   return (
     <span className={`comp-mark comp-mark-${m.region.toLowerCase()}`} aria-hidden="true">
       <span className="comp-mark-code">{m.code}</span>
-      {m.tier !== null && <span className="comp-mark-tier">{m.tier}</span>}
+      {m.tier !== null ? (
+        <span className="comp-mark-tier">{m.tier}</span>
+      ) : (
+        m.qualifying && <span className="comp-mark-tier comp-mark-q">Q</span>
+      )}
     </span>
   );
 }

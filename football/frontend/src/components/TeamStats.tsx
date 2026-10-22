@@ -7,9 +7,9 @@
 // marks is also printed as text.
 
 import type { ReactNode } from "react";
-import type { MediaSummary, Rate, Result, ShortSummary, StatAverage } from "../api";
+import type { CompetitionType, MediaSummary, Rate, Result, ShortSummary, StatAverage } from "../api";
 import { formatDate, formatNumber, formatPct, formatShortDay } from "../format";
-import { TeamBadge } from "./TeamBadge";
+import { TeamBadge, teamAbbr } from "./TeamBadge";
 import { TeamLink } from "./TeamLink";
 import "./teamstats.css";
 
@@ -38,6 +38,17 @@ export const RATES: readonly { key: string; label: string; hint: string }[] = [
 ];
 
 export const RESULT_WORD: Record<Result, string> = { W: "Win", D: "Draw", L: "Loss" };
+
+/** The match sources as their publishers write them; an unknown one is shown as sent. */
+const SOURCE_NAME: Record<string, string> = {
+  "football-data": "football-data.co.uk",
+  openfootball: "openfootball",
+  wikipedia: "Wikipedia",
+};
+
+export function sourceName(source: string): string {
+  return SOURCE_NAME[source] ?? source;
+}
 
 /** "1st", "2nd", "23rd". */
 export function ordinal(n: number): string {
@@ -72,7 +83,8 @@ export type CompareRow = {
 /**
  * Two figures per row as bars growing out from a centre line: the left side's to the left,
  * the right side's to the right, each scaled to the larger of the two, so a row shows which
- * is bigger and by how much. Both figures are printed at the ends.
+ * is bigger and by how much. Both figures are printed at the ends. A row where either side
+ * has no figure draws no bars (one bar against "—" would read as one side dominating).
  */
 export function CompareBars({
   rows,
@@ -103,12 +115,13 @@ export function CompareBars({
       </div>
       <ul className="cmp-rows" aria-label={caption}>
         {rows.map((r) => {
-          const scale = Math.max(r.left ?? 0, r.right ?? 0);
+          const both = r.left !== null && r.right !== null;
+          const scale = both ? Math.max(r.left ?? 0, r.right ?? 0) : 0;
           const w = (v: number | null) => (v === null || scale <= 0 ? 0 : (v / scale) * 100);
           const lv = r.left === null ? "—" : formatNumber(r.left, r.digits ?? 2);
           const rv = r.right === null ? "—" : formatNumber(r.right, r.digits ?? 2);
           return (
-            <li key={r.key} className="cmp-row">
+            <li key={r.key} className={`cmp-row${both ? "" : " cmp-row-partial"}`}>
               <span className="cmp-label">
                 <span className="cmp-name">{r.label}</span>
                 {r.note && <span className="cmp-note">{r.note}</span>}
@@ -152,6 +165,31 @@ export function averageRows(
     });
   }
   return rows;
+}
+
+/**
+ * Why some averages cover fewer matches than goals do, or are missing: UEFA matches carry
+ * scores only, and so do football-data's files for some leagues (D-022). `goals` and `stats`
+ * are the matches behind the goals and the shots averages; `europe`, whether the club has UEFA
+ * matches. `team` names the club where the note isn't on its own page (the match page).
+ */
+export function statsNote(
+  scope: "all" | CompetitionType,
+  goals: number,
+  stats: number,
+  europe: boolean,
+  team?: string,
+): string | null {
+  const only = team ? `Only goals for ${team}` : "Only goals";
+  if (scope === "europe") return `${only}: the UEFA sources give scores, not shots, corners, fouls or cards.`;
+  if (stats >= goals) return null;
+  if (stats === 0) {
+    return `${only}: football-data's files for ${team ? "its" : "this club's"} league give scores only, with no shots, corners, fouls or cards${scope === "all" && europe ? ", and so do the UEFA sources" : ""}.`;
+  }
+  const whose = team ? `${team}'s goals` : "Goals";
+  return scope === "all"
+    ? `${whose} cover all ${formatNumber(goals, 0)} counted matches; shots, corners, fouls and cards only the ${formatNumber(stats, 0)} with statistics. ${europe ? "European matches carry scores only (the permitted sources have no match statistics)" : "Some leagues' files give scores only"}.`
+    : `${whose} cover all ${formatNumber(goals, 0)} league matches; shots, corners, fouls and cards only the ${formatNumber(stats, 0)} in leagues whose files have statistics.`;
 }
 
 /** The statistics a set of averages has no figures for (e.g. every one but goals in Europe). */
@@ -325,7 +363,9 @@ function formTitle(f: FormItem): string {
 }
 
 /** Form, oldest on the left. With opponents (from the match log) each pip carries the
- * opponent's badge, the score and the venue under it; otherwise lettered pips alone. */
+ * opponent's badge with its three letters printed under it (a badge this small has none of
+ * its own, and its colours alone don't name the club), the score and the venue; otherwise
+ * lettered pips alone. */
 export function FormStrip({ items, label }: { items: FormItem[]; label: string }) {
   if (items.length === 0) return <p className="muted small">No counted matches yet.</p>;
   const rich = items.some((f) => f.opponent);
@@ -352,7 +392,12 @@ export function FormStrip({ items, label }: { items: FormItem[]; label: string }
             {f.result}
           </span>
           {f.opponent && (
-            <TeamBadge teamKey={f.opponent.key} name={f.opponent.name} media={f.opponent.media} size={22} className="fs-badge" />
+            <>
+              <TeamBadge teamKey={f.opponent.key} name={f.opponent.name} media={f.opponent.media} size={22} className="fs-badge" />
+              <span className="fs-opp" aria-hidden="true">
+                {f.opponent.media?.badge.short?.trim().slice(0, 3).toUpperCase() || teamAbbr(f.opponent.name)}
+              </span>
+            </>
           )}
           <span className="fs-score" aria-hidden="true">
             {f.score ?? ""}

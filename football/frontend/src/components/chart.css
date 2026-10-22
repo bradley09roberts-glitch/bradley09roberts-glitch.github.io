@@ -244,6 +244,11 @@
   gap: 10px;
 }
 
+/* A grid item is as wide as its content by default: the table scrolls inside instead. */
+.cal-table[open] > * {
+  min-width: 0;
+}
+
 /* Interval strip: one estimate with its 95% interval around zero. */
 .ci-strip {
   display: block;
@@ -350,6 +355,11 @@
   letter-spacing: 0.06em;
   text-transform: uppercase;
   fill: var(--muted);
+}
+
+.lc-zero {
+  stroke: var(--text-2);
+  stroke-width: 1.25;
 }
 
 .lc-hover {

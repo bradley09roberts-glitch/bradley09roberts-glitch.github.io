@@ -4,7 +4,10 @@ from footy.media.badge import (
     NEUTRAL_PALETTES,
     badge_svg,
     contrast,
+    kit_shade,
     pick_colours,
+    resolve_shorts,
+    short_candidates,
     short_name,
     valid_hex,
 )
@@ -71,3 +74,55 @@ def test_valid_hex():
     assert valid_hex("#EF0107") == "#EF0107"
     assert valid_hex("red") is None
     assert valid_hex(None) is None
+
+
+def test_generic_named_colours_are_drawn_in_kit_shades():
+    # Wikidata's own hex for "red" is the pure screen red; a club's red reads as a shirt.
+    assert kit_shade({"qid": "Q3142", "name": "red", "hex": "#FF0000"}) == "#C8102E"
+    assert kit_shade({"qid": "Q3133", "name": "green", "hex": "00FF00"}) == "#00843D"
+    # A hex of the colour's own (not the generic one) is drawn as given; unknown colours too.
+    assert kit_shade({"qid": "Q3142", "name": "red", "hex": "#EF0107"}) == "#EF0107"
+    assert kit_shade({"qid": "Q10859033", "name": "bordeaux", "hex": "#800032"}) == "#800032"
+    assert kit_shade({"qid": "Q219660", "name": "ultramarine", "hex": None}) is None
+    # Each shade carries white or near-black letters at 4.5:1 or better.
+    from footy.media.badge import KIT_SHADES
+
+    for _, shade in KIT_SHADES.values():
+        assert max(contrast(shade, "#FFFFFF"), contrast(shade, "#161616")) >= 4.5, shade
+
+
+def test_short_candidates_start_with_the_short_name():
+    assert short_candidates("Celta") == ["CEL", "CET", "CEA", "CLT", "CLA", "CTA"]
+    assert short_candidates("Sheffield United")[0] == "SUN"
+    assert len(set(short_candidates("Dundee United"))) == len(short_candidates("Dundee United"))
+
+
+def test_teams_that_meet_never_share_letters():
+    names = {
+        "sco-celtic": "Celtic",
+        "esp-celta": "Celta",
+        "svn-celje": "Celje",
+        "eng-sheffield-united": "Sheffield United",
+        "eng-sunderland": "Sunderland",
+        "eng-arsenal": "Arsenal",
+    }
+    groups = [
+        {"sco-celtic", "esp-celta", "svn-celje"},  # one competition's season
+        {"eng-sheffield-united", "eng-sunderland", "eng-arsenal"},
+    ]
+    played = {"sco-celtic": 400, "esp-celta": 300, "svn-celje": 50, "eng-sunderland": 200}
+    out = resolve_shorts(names, groups, priority=played)
+    assert out["sco-celtic"] == "CEL"  # the most matches keeps its letters
+    assert len({out[k] for k in groups[0]}) == 3 and len({out[k] for k in groups[1]}) == 3
+    assert out["eng-sunderland"] == "SUN" and out["eng-arsenal"] == "ARS"
+    # Letters reviewed by hand are kept, and the others work round them.
+    fixed = resolve_shorts(names, groups, fixed={"eng-sheffield-united": "SHU"}, priority=played)
+    assert fixed["eng-sheffield-united"] == "SHU" and fixed["eng-sunderland"] == "SUN"
+    # Teams that never meet may share letters.
+    apart = resolve_shorts(names, [{"sco-celtic"}, {"esp-celta"}])
+    assert apart["sco-celtic"] == apart["esp-celta"] == "CEL"
+
+
+def test_badge_draws_colours_in_the_order_given():
+    svg = badge_svg("x-y", "Real Madrid", ["#FFFFFF", "#4F2D7F"], "RMA", in_order=True)
+    assert 'r="58" fill="#FFFFFF"' in svg and 'fill="#4F2D7F"' in svg and ">RMA<" in svg

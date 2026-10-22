@@ -1,8 +1,8 @@
 // A line chart in inline SVG, no library: one or more series over a numeric x axis (days or
 // month indexes), with "nice" y ticks, labelled x ticks, optional shaded bands (e.g. the
-// validation and test seasons) and markers (e.g. a peak). Hovering or touching the plot shows
-// every series' value at the nearest x in a tooltip; the caller prints the same numbers as
-// text, so nothing is shown by the chart alone.
+// validation and test seasons), markers (e.g. a peak) and a zero line. Hovering or touching
+// the plot shows every series' value at the nearest x in a tooltip; the caller prints the same
+// numbers as text, so nothing is shown by the chart alone.
 
 import { useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent, type RefObject } from "react";
 import "./chart.css";
@@ -64,6 +64,7 @@ export function LineChart({
   markers = [],
   bands = [],
   yPad = 0.08,
+  zero = false,
 }: {
   series: LineSeries[];
   /** Tick positions and their labels along the x axis. */
@@ -78,6 +79,8 @@ export function LineChart({
   bands?: LineBand[];
   /** Headroom above and below the data, as a share of its range. */
   yPad?: number;
+  /** Draw a firm line at y = 0 (and keep 0 in range), for a series of differences. */
+  zero?: boolean;
 }) {
   const [ref, measured] = useWidth();
   const [hoverX, setHoverX] = useState<number | null>(null);
@@ -88,7 +91,7 @@ export function LineChart({
   if (all.length === 0 || xs.length === 0) return null;
   const xMin = Math.min(...xs, ...bands.map((b) => b.x0));
   const xMax = Math.max(...xs, ...bands.map((b) => b.x1));
-  const ys = [...all.map((p) => p.y as number), ...markers.map((m) => m.y)];
+  const ys = [...all.map((p) => p.y as number), ...markers.map((m) => m.y), ...(zero ? [0] : [])];
   let lo = Math.min(...ys);
   let hi = Math.max(...ys);
   const pad = (hi - lo || Math.abs(hi) || 1) * yPad;
@@ -183,6 +186,7 @@ export function LineChart({
             </g>
           ))}
           <line className="cal-axis" x1={left} x2={left + plotW} y1={M.top + plotH} y2={M.top + plotH} />
+          {zero && <line className="lc-zero" x1={left} x2={left + plotW} y1={y(0)} y2={y(0)} />}
         </g>
         {shownTicks.map((t) => (
           <text key={t.x} x={x(t.x)} y={height - 9} textAnchor="middle" className="cal-tick">

@@ -263,9 +263,11 @@ a {
   text-underline-offset: 0.18em;
 }
 
-a:hover {
-  color: var(--accent-hover);
-  text-decoration-thickness: 2px;
+@media (hover: hover) {
+  a:hover {
+    color: var(--accent-hover);
+    text-decoration-thickness: 2px;
+  }
 }
 
 :focus-visible {
@@ -427,8 +429,10 @@ code {
   text-decoration: none;
 }
 
-.brand:hover {
-  color: var(--on-pitch);
+@media (hover: hover) {
+  .brand:hover {
+    color: var(--on-pitch);
+  }
 }
 
 .brand-word {
@@ -572,9 +576,11 @@ code {
   text-decoration: none;
 }
 
-.appbar-links a:hover {
-  color: var(--on-pitch);
-  background: rgb(255 255 255 / 0.08);
+@media (hover: hover) {
+  .appbar-links a:hover {
+    color: var(--on-pitch);
+    background: rgb(255 255 255 / 0.08);
+  }
 }
 
 .appbar-links a[aria-current="page"] {
@@ -618,8 +624,10 @@ code {
     font-weight: 500;
   }
 
-  .nav a:hover {
-    color: var(--on-pitch);
+  @media (hover: hover) {
+    .nav a:hover {
+      color: var(--on-pitch);
+    }
   }
 
   .nav a[aria-current="page"] {
@@ -996,9 +1004,11 @@ button {
     transform var(--dur-fast) var(--ease-out);
 }
 
-button:hover:not(:disabled) {
-  border-color: var(--muted);
-  background: var(--surface-2);
+@media (hover: hover) {
+  button:hover:not(:disabled) {
+    border-color: var(--muted);
+    background: var(--surface-2);
+  }
 }
 
 button:disabled {
@@ -1023,10 +1033,12 @@ a.button {
   transition: background-color var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
 }
 
-a.button:hover {
-  border-color: var(--muted);
-  background: var(--surface-2);
-  color: var(--text);
+@media (hover: hover) {
+  a.button:hover {
+    border-color: var(--muted);
+    background: var(--surface-2);
+    color: var(--text);
+  }
 }
 
 .button-primary,
@@ -1036,15 +1048,19 @@ a.button-primary {
   color: var(--on-accent);
 }
 
-a.button-primary:hover {
-  background: var(--accent-hover);
-  border-color: var(--accent-hover);
-  color: var(--on-accent);
+@media (hover: hover) {
+  a.button-primary:hover {
+    background: var(--accent-hover);
+    border-color: var(--accent-hover);
+    color: var(--on-accent);
+  }
 }
 
-.button-primary:hover:not(:disabled) {
-  background: var(--accent-hover);
-  border-color: var(--accent-hover);
+@media (hover: hover) {
+  .button-primary:hover:not(:disabled) {
+    background: var(--accent-hover);
+    border-color: var(--accent-hover);
+  }
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -1073,8 +1089,10 @@ select {
   text-overflow: ellipsis;
 }
 
-select:hover:not(:disabled) {
-  border-color: var(--muted);
+@media (hover: hover) {
+  select:hover:not(:disabled) {
+    border-color: var(--muted);
+  }
 }
 
 /* Older dl of key facts (record details, system status). */
@@ -1274,6 +1292,13 @@ select:hover:not(:disabled) {
   font-size: var(--fs-2xs);
   line-height: 1;
   letter-spacing: 0;
+}
+
+/* Qualifying rounds: "Q" in the text face, whose tail tells it from a zero at this size. */
+.comp-mark-q {
+  font-family: var(--font-text);
+  font-size: 0.625rem;
+  font-weight: 700;
 }
 
 .comp-mark-eur {
@@ -1621,8 +1646,10 @@ select:hover:not(:disabled) {
   font-weight: 500;
 }
 
-.segmented button:hover:not(:disabled) {
-  background: var(--surface-3);
+@media (hover: hover) {
+  .segmented button:hover:not(:disabled) {
+    background: var(--surface-3);
+  }
 }
 
 .segmented button[aria-pressed="true"],
@@ -1631,6 +1658,18 @@ select:hover:not(:disabled) {
   border-color: var(--accent);
   color: var(--on-accent);
   font-weight: 600;
+}
+
+/* The chosen option keeps its colours under the pointer (the plain button and segment hover
+   rules above are more specific than the pressed rule). Hover styles apply only where a
+   pointer can hover, so on a touch screen a tapped button never keeps them. */
+@media (hover: hover) {
+  .segmented button[aria-pressed="true"]:hover:not(:disabled),
+  .chip[aria-pressed="true"]:hover:not(:disabled) {
+    background: var(--accent-hover);
+    border-color: var(--accent-hover);
+    color: var(--on-accent);
+  }
 }
 
 .chips {
@@ -1861,8 +1900,8 @@ select:hover:not(:disabled) {
   letter-spacing: 0.01em;
 }
 
-/* Team names open the team's page: above the card's stretched match link, and underlined
-   only on hover, so the cards stay as clean as the names alone. */
+/* Team names open the team's page: above the card's stretched match link, with an underline
+   faint enough to keep the cards clean but there on a touch screen, firm on hover. */
 .fx-teams .team-link,
 .past-teams .team-link {
   position: relative;
@@ -1873,12 +1912,14 @@ select:hover:not(:disabled) {
 .fx-teams a.team-link,
 .past-teams a.team-link,
 .match-hero a.team-link {
-  text-decoration-color: transparent;
+  text-decoration-color: color-mix(in srgb, currentColor 22%, transparent);
 }
 
-.fx-teams a.team-link:hover,
-.past-teams a.team-link:hover {
-  text-decoration-color: var(--accent);
+@media (hover: hover) {
+  .fx-teams a.team-link:hover,
+  .past-teams a.team-link:hover {
+    text-decoration-color: var(--accent);
+  }
 }
 
 .fx-team {
@@ -2000,8 +2041,10 @@ select:hover:not(:disabled) {
   text-decoration: none;
 }
 
-a.more:hover {
-  text-decoration: underline;
+@media (hover: hover) {
+  a.more:hover {
+    text-decoration: underline;
+  }
 }
 
 .more-arrow {
@@ -2755,9 +2798,11 @@ a.more:hover {
   text-decoration: none;
 }
 
-.back-link:hover {
-  color: var(--text);
-  border-color: var(--muted);
+@media (hover: hover) {
+  .back-link:hover {
+    color: var(--text);
+    border-color: var(--muted);
+  }
 }
 
 /* The hero: both teams facing each other across the halfway line, the kick-off in the centre
@@ -3026,8 +3071,10 @@ a.more:hover {
   background: var(--volt);
 }
 
-.match-hero a.team-link:hover {
-  text-decoration-color: var(--volt);
+@media (hover: hover) {
+  .match-hero a.team-link:hover {
+    text-decoration-color: var(--volt);
+  }
 }
 
 .match-hero .result-tag {
@@ -3654,12 +3701,16 @@ a.past-score {
   text-decoration: none;
 }
 
-a.past-score:hover {
-  color: var(--on-pitch);
+@media (hover: hover) {
+  a.past-score:hover {
+    color: var(--on-pitch);
+  }
 }
 
-a.past-score.is-status:hover {
-  color: var(--text);
+@media (hover: hover) {
+  a.past-score.is-status:hover {
+    color: var(--text);
+  }
 }
 
 .past-home,

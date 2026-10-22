@@ -553,7 +553,13 @@ export type TeamDivision = {
 
 export type TeamListEntry = {
   key: string;
+  /** football-data's short name ("Ath Madrid"): the name on cards and tables. */
   name: string;
+  /** The club's name for headings ("Atlético Madrid"), from Wikipedia or Wikidata; the
+   * short name when neither has one. Absent in a snapshot taken before it was added. */
+  display_name?: string;
+  /** Every other name held for the club (openfootball, Wikipedia, Wikidata), for search. */
+  aliases?: string[];
   country: string | null;
   division: TeamDivision | null;
   competitions_this_season: TeamCompetition[];
@@ -677,6 +683,8 @@ export type TeamProfile = {
   team: {
     key: string;
     name: string;
+    /** See TeamListEntry. */
+    display_name?: string;
     media?: MediaSummary;
     country: string | null;
     division: TeamDivision | null;

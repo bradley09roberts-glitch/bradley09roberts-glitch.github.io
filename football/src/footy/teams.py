@@ -34,6 +34,7 @@ codes to CUP_COMPETITIONS (docs/teams.md).
 
 import csv
 import json
+import re
 import threading
 import time
 import unicodedata
@@ -736,6 +737,9 @@ class TeamsIndex:
     series: dict[str, list[tuple]]
     rank: dict[str, int]  # among teams active in the last ELO_ACTIVE_DAYS
     entries: dict[str, dict]  # team -> its /api/teams entry, without name and country
+    # team -> its badge letters, different from every team it shares a competition's season
+    # with (footy.media.badge.resolve_shorts); every team in the teams table
+    shorts: dict[str, str]
 
 
 _CACHE: "weakref.WeakKeyDictionary[object, TeamsIndex]" = weakref.WeakKeyDictionary()
@@ -827,6 +831,7 @@ def build_index(s: Session, fingerprint: tuple = ()) -> TeamsIndex:
         for t in {r[4] for r in rows} | {r[5] for r in rows}
     }
     return TeamsIndex(
+        shorts=badge_letters(s, rows),
         fingerprint=fingerprint,
         built_at_utc=datetime.now(UTC),
         build_ms=round((time.perf_counter() - t0) * 1000, 1),
@@ -838,6 +843,25 @@ def build_index(s: Session, fingerprint: tuple = ()) -> TeamsIndex:
         rank=rank,
         entries=entries,
     )
+
+
+def badge_letters(s: Session, rows: list[tuple]) -> dict[str, str]:
+    """Every team's badge letters (footy.media.service.badge_short), made different for teams
+    that meet: two teams in the same competition's season never share them (Celtic and Celta
+    in the 2026/27 Europa League, Sheffield United and Sunderland in the 2024/25
+    Championship). The reviewed letters are kept; otherwise the team with more matches keeps
+    its own and the other takes its next choice (footy.media.badge.resolve_shorts)."""
+    from footy.media.badge import resolve_shorts
+    from footy.media.service import load_badge_overrides
+
+    names = dict(s.execute(select(Team.team_key, Team.name)).all())
+    groups: dict[tuple[str, str], set[str]] = {}
+    played: Counter[str] = Counter()
+    for r in rows:
+        groups.setdefault((r[1], r[2]), set()).update((r[4], r[5]))
+        played.update((r[4], r[5]))
+    fixed = {k: o["short"] for k, o in load_badge_overrides().items() if o["short"] and k in names}
+    return resolve_shorts(names, groups.values(), fixed=fixed, priority=played)
 
 
 def _division(results: list[tuple], current_season: dict[str, str]) -> dict | None:
@@ -971,6 +995,109 @@ def _fold(s: str) -> str:
     )
 
 
+# ---------------------------------------------------------------------------------------------
+# Names. A team's `name` is football-data's short name ("Ath Madrid", "Nott'm Forest"): it
+# stays the name on cards, tables and logs. Headings use `display_name`: the club's name on
+# Wikipedia's UEFA season pages ("Atlético Madrid"), else its Wikidata label without a
+# club-type word ("Leeds United F.C." -> "Leeds United"), else the name. Search matches every
+# name held for a club: these, the openfootball and Wikipedia names (team_aliases) and the
+# mapped Wikidata item's English aliases ("Spurs"). Nothing is made up; every name is a
+# source's own.
+
+COUNTRY_SUFFIX = re.compile(r"\s*\([A-Z]{3}\)$")
+# A club-type word at either end of a Wikidata label: "F.C. Lorient", "Hull City A.F.C.",
+# "Elche CF". Kept when football-data's name has it too ("Paris FC").
+CLUB_AFFIX = re.compile(
+    r"^(?:A\.?F\.?C\.?|F\.?C\.?)\s+|\s+(?:A\.?F\.?C\.?|F\.?C\.?|C\.?F\.?)$", re.IGNORECASE
+)
+
+
+def _name_words(text: str) -> set[str]:
+    return {w for w in re.findall(r"[a-z0-9]+", _fold(text)) if len(w) >= 3}
+
+
+def _related(a: str, b: str) -> bool:
+    """Two names share a word, allowing for football-data's spellings: one word inside the
+    other ("gladbach", "monchengladbach") or the same first four letters ("espanol",
+    "espanyol")."""
+    return any(
+        x in y or y in x or (len(x) >= 4 and x[:4] == y[:4])
+        for x in _name_words(a)
+        for y in _name_words(b)
+    )
+
+
+def clean_label(label: str, name: str) -> str | None:
+    """A Wikidata label as a heading: its club-type word dropped unless football-data's name
+    has it; None when it has no word in common with the name (a label the mapping notes as
+    out of date, such as a club's former name)."""
+    label = label.strip()
+    affix = CLUB_AFFIX.search(label)
+    if affix and re.sub(r"\W", "", affix.group(0)).lower() not in re.findall(
+        r"[a-z]+", _fold(name)
+    ):
+        label = CLUB_AFFIX.sub("", label).strip()
+    return label if label and _related(label, name) else None
+
+
+def name_sources(s: Session) -> dict[str, dict[str, list[str]]]:
+    """team key -> {source: names} for every alias held: football-data, openfootball and
+    wikipedia (team_aliases, country suffix removed) and wikidata (the mapped item's label
+    and English aliases)."""
+    from footy.media.service import load_facts, load_wikidata_aliases
+
+    out: dict[str, dict[str, list[str]]] = {}
+    for source, alias, key in s.execute(
+        select(TeamAlias.source, TeamAlias.alias, TeamAlias.team_key).order_by(
+            TeamAlias.source, TeamAlias.alias
+        )
+    ):
+        out.setdefault(key, {}).setdefault(source, []).append(COUNTRY_SUFFIX.sub("", alias))
+    for key, facts in load_facts().items():
+        if facts.get("wikidata_label"):
+            out.setdefault(key, {}).setdefault("wikidata_label", []).append(facts["wikidata_label"])
+    for key, aliases in load_wikidata_aliases().items():
+        out.setdefault(key, {}).setdefault("wikidata", []).extend(aliases)
+    return out
+
+
+def display_name(name: str, sources: dict[str, list[str]]) -> str:
+    """See "Names" above."""
+    wikipedia = sorted(set(sources.get("wikipedia", [])))
+    if len(wikipedia) == 1:
+        return wikipedia[0]
+    for label in sources.get("wikidata_label", []):
+        cleaned = clean_label(label, name)
+        if cleaned:
+            return cleaned
+    return name
+
+
+def search_names(name: str, display: str, sources: dict[str, list[str]]) -> list[str]:
+    """The other names held for the club, for search: each once (ignoring case and accents),
+    and only those not already inside a longer one or the club's name or display name, since
+    search matches parts of names ("Tottenham Hotspur" is inside "Tottenham Hotspur Football
+    Club"). In a stable order."""
+    candidates = [*sources.get("wikidata_label", [])]
+    for source in ("football-data", "openfootball", "wikipedia", "wikidata"):
+        candidates += sources.get(source, [])
+    kept = [_fold(name), _fold(display)]
+    out = []
+    for alias in sorted({a.strip() for a in candidates if a.strip()}, key=lambda a: (-len(a), a)):
+        folded = _fold(alias)
+        if not any(folded in k for k in kept):
+            kept.append(folded)
+            out.append(alias)
+    return sorted(out, key=lambda a: (_fold(a), a))
+
+
+def matches_query(needle: str, key: str, names: Iterable[str]) -> bool:
+    """Every word of `needle` (already folded) is in the key or one of the names; the words may
+    be found in different names ("athletic bilbao": "Athletic Club" and "Ath Bilbao")."""
+    hay = " | ".join([key.replace("-", " "), *(_fold(n) for n in names)])
+    return all(w in hay for w in needle.split())
+
+
 def find_teams(s: Session, query: str) -> list[str]:
     """Team keys for a key or a name: an exact key, else an exact name or alias (ignoring case
     and accents), else every team whose name or key contains the query."""
@@ -1030,6 +1157,7 @@ def team_profile(
     played = counted(rows)
     typed = {ct: [r for r in rows if r["competition_type"] == ct] for ct in types}
     entry = idx.entries.get(team, {})
+    sources = name_sources(s).get(team, {})
     order = {c: i for i, c in enumerate(COMPETITION_TYPES)}
     comps = _group(rows, "competition")
     seasons = _group(rows, "season")
@@ -1038,6 +1166,7 @@ def team_profile(
         "team": {
             "key": t.team_key,
             "name": t.name,
+            "display_name": display_name(t.name, sources),
             "country": t.country,
             "division": entry.get("division"),
             "competitions_this_season": entry.get("competitions_this_season", []),
@@ -1134,12 +1263,14 @@ def teams_list(
     q: str | None = None,
     idx: TeamsIndex | None = None,
 ) -> list[dict]:
-    """Every team with a stored match or fixture, by name. `competitions` keeps teams with a
-    match or fixture in the current season of any of them (TeamsIndex.current_season); `q`
-    matches the name or key (ignoring case and accents). `idx` is the index to use (default:
-    the cached one)."""
+    """Every team with a stored match or fixture, by name, with its display name and every
+    other name held for it (`aliases`, for search). `competitions` keeps teams with a match or
+    fixture in the current season of any of them (TeamsIndex.current_season); `q` matches
+    names, aliases and the key (ignoring case and accents; every word must match). `idx` is
+    the index to use (default: the cached one)."""
     idx = idx or teams_index(s)
     meta = {k: (n, c) for k, n, c in s.execute(select(Team.team_key, Team.name, Team.country))}
+    sources = name_sources(s)
     wanted = {c for c in competitions or () if c}
     needle = _fold(q.strip()) if q and q.strip() else None
     out = []
@@ -1147,9 +1278,21 @@ def teams_list(
         name, country = meta.get(key, (key, None))
         if wanted and not wanted & {c["code"] for c in e["competitions_this_season"]}:
             continue
-        if needle and needle not in _fold(name) and needle not in key:
+        held = sources.get(key, {})
+        display = display_name(name, held)
+        aliases = search_names(name, display, held)
+        if needle and not matches_query(needle, key, [name, display, *aliases]):
             continue
-        out.append({"key": key, "name": name, "country": country, **e})
+        out.append(
+            {
+                "key": key,
+                "name": name,
+                "display_name": display,
+                "aliases": aliases,
+                "country": country,
+                **e,
+            }
+        )
     return sorted(out, key=lambda x: (_fold(x["name"]), x["key"]))
 
 

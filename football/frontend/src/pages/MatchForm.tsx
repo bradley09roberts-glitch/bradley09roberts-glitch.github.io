@@ -17,8 +17,11 @@ import {
   STATS,
   formItems,
   plural,
+  sourceName,
+  statsNote,
   type CompareRow,
 } from "../components/TeamStats";
+import { LEAGUES_HELD, UEFA_HELD } from "../competitions";
 import { formatDate } from "../format";
 import "./MatchForm.css";
 
@@ -72,7 +75,7 @@ function ThisMatch({ t }: { t: MatchTeams }) {
         caption={`Match statistics, ${t.home.name} against ${t.away.name}`}
       />
       <p className="muted small">
-        Referee: {m.referee ?? "not recorded"} · source: {m.source}
+        Referee: {m.referee ?? "not recorded"} · source: {sourceName(m.source)}
         {rows.some((r) => r.key === "fd_xg") ? " · xG is football-data's own figure, not this site's" : ""}
         {m.excluded ? ` · flagged: ${m.excluded}` : ""}
       </p>
@@ -141,7 +144,21 @@ function AverageBlock({ t }: { t: MatchTeams }) {
       note: hs?.matches === as?.matches ? plural(hs?.matches ?? 0, "match", "matches") + " each" : `${hs?.matches ?? 0} and ${as?.matches ?? 0} matches`,
     });
   }
-  const statsMissing = rows.length <= 1;
+  // Why a side's statistics cover fewer matches than its goals, or are missing, in the team
+  // page's words; for European matches one note covers both sides.
+  const notes =
+    scope === "europe"
+      ? [statsNote("europe", 0, 0, true)]
+      : [t.home, t.away].map((sd) => {
+          const pm = sd.per_match[scope]?.averages;
+          return statsNote(
+            scope,
+            pm?.goals?.matches ?? 0,
+            pm?.shots?.matches ?? 0,
+            (sd.per_match.europe?.matches ?? 0) > 0,
+            sd.name,
+          );
+        });
   return (
     <div className="mf-block">
       <h3>Per match, last 10</h3>
@@ -175,11 +192,14 @@ function AverageBlock({ t }: { t: MatchTeams }) {
         {side === "for"
           ? "Each side's own goals, shots, corners, fouls and cards"
           : "What each side's opponents managed against it"}
-        , per match, over its last 10 {scope === "all" ? "" : `${SCOPE_LABEL[scope].toLowerCase()} `}matches.
-        {statsMissing || scope === "europe"
-          ? " European matches carry scores only: the permitted sources have no shots, corners, fouls or cards."
-          : " Statistics come from league matches; European matches carry scores only."}
+        , per match, over its last 10 {scope === "all" ? "" : `${SCOPE_LABEL[scope].toLowerCase()} `}matches. A
+        row with a figure for one side only has no bars.
       </p>
+      {notes.map((n) => n && (
+        <p key={n} className="note-line">
+          {n}
+        </p>
+      ))}
     </div>
   );
 }
@@ -190,7 +210,9 @@ function HeadToHead({ t }: { t: MatchTeams }) {
     <div className="mf-block">
       <h3>Head to head</h3>
       {h.meetings.length === 0 ? (
-        <p className="muted small">No earlier meeting in the data (league and UEFA matches since 2018/19).</p>
+        <p className="muted small">
+          No earlier meeting in the data. {LEAGUES_HELD} {UEFA_HELD}
+        </p>
       ) : (
         <>
           <p className="mf-tally">

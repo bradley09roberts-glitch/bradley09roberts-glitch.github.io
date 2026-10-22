@@ -65,6 +65,8 @@ def test_teams_list(client, world):
     assert set(tt) == {
         "key",
         "name",
+        "display_name",
+        "aliases",
         "country",
         "division",
         "competitions_this_season",
@@ -89,6 +91,72 @@ def test_teams_list(client, world):
     assert keys(client.get("/api/teams?q=MÖCKHILL").json()) == ["sco-mockhill"]
     assert keys(client.get("/api/teams?competition=UCL&q=voor").json()) == ["nld-voorbeeld"]
     assert client.get("/api/teams?competition=XYZ").json()["count"] == 0
+
+
+@pytest.fixture
+def named(world, tmp_path, monkeypatch, migrated_engine):
+    """Names held for the synthetic clubs: a Wikidata label and English aliases (reference
+    files pointed at tmp_path) and a Wikipedia alias."""
+    from sqlalchemy.orm import Session
+
+    from footy.media import service
+    from footy.models import TeamAlias
+
+    facts = {
+        "teams": {
+            "eng-testtown": {"qid": "Q1", "wikidata_label": "Testtown United A.F.C."},
+            "eng-mockford": {"qid": "Q2", "wikidata_label": "Mockford F.C."},
+            # A label sharing no word with the name (a former name): not used as a heading.
+            "sco-fakeburgh": {"qid": "Q3", "wikidata_label": "Old Name Club"},
+        }
+    }
+    aliases = {"teams": {"eng-testtown": ["The Testers", "Testtown", "TUFC"]}}
+    (tmp_path / "facts.json").write_text(json.dumps(facts))
+    (tmp_path / "aliases.json").write_text(json.dumps(aliases))
+    monkeypatch.setattr(service, "FACTS_PATH", tmp_path / "facts.json")
+    monkeypatch.setattr(service, "ALIASES_PATH", tmp_path / "aliases.json")
+    with Session(migrated_engine) as s:
+        s.add(TeamAlias(source="wikipedia", alias="Mockford Rovers (ENG)", team_key="eng-mockford"))
+        s.commit()
+    return world
+
+
+def test_team_names_and_search(client, named):
+    body = client.get("/api/teams").json()
+    by = {t["key"]: t for t in body["teams"]}
+    # Headings: Wikipedia's name first, else the Wikidata label without its club-type word.
+    assert by["eng-mockford"]["display_name"] == "Mockford Rovers"
+    assert by["eng-testtown"]["display_name"] == "Testtown United"
+    assert by["sco-fakeburgh"]["display_name"] == "Fakeburgh"
+    assert by["nld-voorbeeld"]["display_name"] == "Voorbeeld"
+    # Every other name, once; none already inside a longer one or the name ("Testtown").
+    assert by["eng-testtown"]["aliases"] == [
+        "Test Town FC",
+        "Testtown United A.F.C.",
+        "The Testers",
+        "TUFC",
+    ]
+    assert "Mockford F.C." in by["eng-mockford"]["aliases"]
+    # Search finds a club by any name it is known by, each word anywhere in its names.
+    assert keys(client.get("/api/teams?q=testers").json()) == ["eng-testtown"]
+    assert keys(client.get("/api/teams?q=rovers%20mock").json()) == ["eng-mockford"]
+    assert keys(client.get("/api/teams?q=old%20name").json()) == ["sco-fakeburgh"]
+    assert client.get("/api/teams/eng-mockford").json()["team"]["display_name"] == (
+        "Mockford Rovers"
+    )
+
+
+def test_clean_label():
+    from footy.teams import clean_label
+
+    assert clean_label("Leeds United F.C.", "Leeds") == "Leeds United"
+    assert clean_label("F.C. Lorient", "Lorient") == "Lorient"
+    assert clean_label("Elche CF", "Elche") == "Elche"
+    assert clean_label("Hull City A.F.C.", "Hull") == "Hull City"
+    assert clean_label("Paris FC", "Paris FC") == "Paris FC"  # football-data's name has it
+    assert clean_label("Borussia Mönchengladbach", "M'gladbach") == "Borussia Mönchengladbach"
+    assert clean_label("RCD Espanyol de Barcelona", "Espanol") == "RCD Espanyol de Barcelona"
+    assert clean_label("KS Dinamo Tirana", "Partizani") is None
 
 
 def test_team_profile(client, world):

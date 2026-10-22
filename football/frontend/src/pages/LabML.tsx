@@ -48,6 +48,11 @@ function diff(v: number, digits = 5): string {
   return v > 0 ? `+${s}` : v < 0 ? `−${s}` : s;
 }
 
+/** A month with fewer fixtures than this is too small for a month's score of its own (June
+ * 2024 holds one): it is left out of the month-by-month views, with a note, and stays in the
+ * table. The running average keeps it, as one more fixture barely moves it. */
+const MIN_MONTH_FIXTURES = 30;
+
 const monthFmt = new Intl.DateTimeFormat("en-GB", { month: "short", year: "2-digit", timeZone: "UTC" });
 const monthLong = new Intl.DateTimeFormat("en-GB", { month: "long", year: "numeric", timeZone: "UTC" });
 const monthOf = (ym: string, long = false) => {
@@ -142,7 +147,9 @@ function Verdict({ s }: { s: MlSummary }) {
 // ---------------------------------------------------------------------------------------------
 // Learning curve
 
-type View = "monthly" | "cumulative";
+/** Each month's score, the running average, or each month's learner minus the model in use
+ * (the two lines are close enough to overlap, so the difference shows which was better when). */
+type View = "monthly" | "cumulative" | "difference";
 
 function Curve({ s }: { s: MlSummary }) {
   const curve = useApi(endpoints.report<MlLearningCurve>("ml_learning_curve"), { freshMs: 600_000 });
@@ -185,7 +192,8 @@ function Curve({ s }: { s: MlSummary }) {
               value={view}
               options={[
                 { value: "monthly", label: "Each month" },
-                { value: "cumulative", label: "Running total" },
+                { value: "cumulative", label: "Running average" },
+                { value: "difference", label: "Difference" },
               ]}
               onChange={setView}
             />
@@ -216,52 +224,93 @@ function CurveChart({
   const inUse: LinePoint[] = [];
   const bands: LineBand[] = [];
   const ticks: { x: number; label: string }[] = [];
-  const rows: { split: string; month: string; fixtures: number; a: number | null; b: number | null }[] = [];
+  const rows: { split: string; month: string; fixtures: number; a: number | null; b: number | null; thin: boolean }[] = [];
   const labels = new Map<number, string>();
   let x = 0;
+  const gap: LinePoint[] = [];
+  const scores = view === "difference" ? "monthly" : view;
   for (const key of order) {
     const sp = splits[key];
     if (!sp) continue;
-    const a = sp.models[candidate]?.[view] ?? [];
-    const b = sp.models[target]?.[view] ?? [];
+    const a = sp.models[candidate]?.[scores] ?? [];
+    const b = sp.models[target]?.[scores] ?? [];
     const x0 = x;
     sp.months.forEach((m, i) => {
       const n = sp.fixtures[i] ?? 0;
-      learner.push({ x, y: a[i] ?? null, label: `${n} fixtures` });
-      inUse.push({ x, y: b[i] ?? null });
+      const ai = a[i] ?? null;
+      const bi = b[i] ?? null;
+      const thin = n < MIN_MONTH_FIXTURES;
+      rows.push({ split: key, month: m, fixtures: n, a: ai, b: bi, thin });
+      if (thin && scores === "monthly") return;
+      learner.push({ x, y: ai, label: `${n} fixtures` });
+      inUse.push({ x, y: bi });
+      gap.push({ x, y: ai !== null && bi !== null ? ai - bi : null, label: `${n} fixtures` });
       labels.set(x, monthOf(m, true));
       if (i % 3 === 0) ticks.push({ x, label: monthOf(m) });
-      rows.push({ split: key, month: m, fixtures: n, a: a[i] ?? null, b: b[i] ?? null });
       x += 1;
     });
     bands.push({ x0: x0 - 0.5, x1: x - 0.5, label: SPLITS[key] ?? key, short: SPLITS_SHORT[key] });
+    // The gap between the seasons breaks each line: nothing was scored there.
+    if (key !== order.at(-1)) for (const line of [learner, inUse, gap]) line.push({ x, y: null });
     x += 1;
   }
   const untested = !splits.test?.models[candidate];
+  const left = scores === "monthly" ? rows.filter((r) => r.thin) : [];
+  const leftNote =
+    left.length > 0 ? (
+      <p className="note-line">
+        Left out of this view, too few fixtures for a month's score:{" "}
+        {left.map((r) => `${monthOf(r.month, true)} (${r.fixtures === 1 ? "1 fixture" : `${r.fixtures} fixtures`})`).join(", ")}.
+        The table below has {left.length === 1 ? "it" : "them"}.
+      </p>
+    ) : null;
   return (
     <>
-      <LineChart
-        series={[
-          { key: "learner", label: learnerName(candidate), tone: "accent", points: learner, dots: true },
-          { key: "target", label: `${target} (in use)`, tone: "target", points: inUse },
-        ]}
-        xTicks={ticks}
-        xLabel={(v) => labels.get(v) ?? ""}
-        yFormat={(v) => formatNumber(v, 3)}
-        bands={bands}
-        height={250}
-        label={`${view === "monthly" ? "Monthly" : "Running"} composite score of ${learnerName(candidate)} and ${target}, ${order.map((k) => SPLITS[k]).join(" and ")}. The numbers are in the table below.`}
-      />
-      <ul className="lc-legend">
-        <li className="lc-s-accent">
-          <span className="lc-legend-key lc-s-accent" aria-hidden="true" />
-          {learnerName(candidate)} <code>{candidate}</code>
-        </li>
-        <li className="lc-s-target">
-          <span className="lc-legend-key lc-s-target" aria-hidden="true" />
-          In use: <code>{target}</code>
-        </li>
-      </ul>
+      {view === "difference" ? (
+        <>
+          <LineChart
+            series={[{ key: "gap", label: "Learner minus in use", tone: "accent", points: gap, dots: true }]}
+            xTicks={ticks}
+            xLabel={(v) => labels.get(v) ?? ""}
+            yFormat={(v) => diff(v, 3)}
+            bands={bands}
+            height={250}
+            zero
+            label={`Each month's composite score of ${learnerName(candidate)} minus ${target}'s, ${order.map((k) => SPLITS[k]).join(" and ")}: below zero, the learner did better. The numbers are in the table below.`}
+          />
+          <p className="muted small">
+            Each month, the learner's score minus the model in use's. Below the line the learner
+            did better that month, above it worse.
+          </p>
+          {leftNote}
+        </>
+      ) : (
+        <>
+          <LineChart
+            series={[
+              { key: "learner", label: learnerName(candidate), tone: "accent", points: learner, dots: true },
+              { key: "target", label: `${target} (in use)`, tone: "target", points: inUse },
+            ]}
+            xTicks={ticks}
+            xLabel={(v) => labels.get(v) ?? ""}
+            yFormat={(v) => formatNumber(v, 3)}
+            bands={bands}
+            height={250}
+            label={`${view === "monthly" ? "Monthly" : "Running"} composite score of ${learnerName(candidate)} and ${target}, ${order.map((k) => SPLITS[k]).join(" and ")}. The numbers are in the table below.`}
+          />
+          <ul className="lc-legend">
+            <li className="lc-s-accent">
+              <span className="lc-legend-key lc-s-accent" aria-hidden="true" />
+              {learnerName(candidate)} <code>{candidate}</code>
+            </li>
+            <li className="lc-s-target">
+              <span className="lc-legend-key lc-s-target" aria-hidden="true" />
+              In use: <code>{target}</code>
+            </li>
+          </ul>
+          {leftNote}
+        </>
+      )}
       {untested && (
         <p className="note-line">
           No test months: only the learner with the lowest validation score that also beat its
@@ -295,6 +344,7 @@ function CurveChart({
                   <th scope="row">
                     {monthOf(r.month, true)}
                     {(i === 0 || rows[i - 1]?.split !== r.split) && <span className="cell-sub">{SPLITS[r.split]}</span>}
+                    {r.thin && <span className="cell-sub">Too few fixtures to chart</span>}
                   </th>
                   <td className="num">{r.fixtures}</td>
                   <td className="num">{fmt(r.a, 4)}</td>
@@ -331,7 +381,33 @@ function Candidates({ s }: { s: MlSummary }) {
   );
 }
 
+/** What a split's comparison says, in words that don't claim more than its interval does: a
+ * difference whose 95% interval includes zero is "within noise", whichever side it fell on. */
+function outcome(split: "validation" | "test", good: boolean, ci: [number, number]) {
+  const noise = ci[0] <= 0 && ci[1] >= 0;
+  if (!noise) {
+    return good
+      ? { tone: "good", mark: "✓", text: "Better than the model in use" }
+      : { tone: "bad", mark: "✗", text: "Worse than the model in use" };
+  }
+  if (split === "validation") {
+    return {
+      tone: "neutral",
+      mark: "≈",
+      text: good ? "Lower on validation, within noise" : "Higher on validation, within noise",
+    };
+  }
+  return {
+    tone: "neutral",
+    mark: "≈",
+    text: good
+      ? "Lower or level on test, within noise: meets the rule (at least as good)"
+      : "Higher on test, within noise: the rule asks for at least as good",
+  };
+}
+
 function Split({
+  split,
   title,
   learner,
   target,
@@ -339,19 +415,18 @@ function Split({
   difference,
   ci,
   good,
-  goodText,
-  badText,
 }: {
+  split: "validation" | "test";
   title: string;
   learner: number;
   target: number;
   fixtures: number;
   difference: number;
   ci: [number, number];
+  /** Validation: lower than the model in use; test: at least as good (D-027). */
   good: boolean;
-  goodText: string;
-  badText: string;
 }) {
+  const o = outcome(split, good, ci);
   return (
     <div className="mlx-split">
       <p className="mlx-split-head">
@@ -378,8 +453,8 @@ function Split({
         </div>
       </dl>
       <CiStrip value={difference} lo={ci[0]} hi={ci[1]} digits={5} label={`${title}: learner minus model in use`} better={["learner better", "in use better"]} />
-      <p className={`mlx-outcome ${good ? "good" : "bad"}`}>
-        <span aria-hidden="true">{good ? "✓" : "✗"}</span> {good ? goodText : badText}
+      <p className={`mlx-outcome${o.tone === "neutral" ? "" : ` ${o.tone}`}`}>
+        <span aria-hidden="true">{o.mark}</span> {o.text}
       </p>
     </div>
   );
@@ -393,8 +468,10 @@ function CandidateRow({ c }: { c: MlCandidate }) {
       <div className="mlx-cand-head">
         <h3>{learnerName(c.model)}</h3>
         <span className="badges">
+          {/* Every learner was scored on the same fixtures (all with prices); the pure ones
+              just don't read them. */}
           <Badge tone={c.fixtures_with_prices ? "market" : "neutral"}>
-            {c.fixtures_with_prices ? "Fixtures with prices" : "Fixtures without prices"}
+            {c.fixtures_with_prices ? "Uses prices" : "Doesn't use prices"}
           </Badge>
         </span>
         <p className="muted small">
@@ -403,6 +480,7 @@ function CandidateRow({ c }: { c: MlCandidate }) {
       </div>
       <div className="mlx-splits">
         <Split
+          split="validation"
           title={SPLITS.validation ?? "Validation"}
           learner={v.composite}
           target={v.target_composite}
@@ -410,11 +488,10 @@ function CandidateRow({ c }: { c: MlCandidate }) {
           difference={v.difference}
           ci={v.difference_ci95}
           good={v.beat_target}
-          goodText="Better than the model in use"
-          badText="Worse than the model in use"
         />
         {t.run ? (
           <Split
+            split="test"
             title={SPLITS.test ?? "Test"}
             learner={t.composite}
             target={t.target_composite}
@@ -422,8 +499,6 @@ function CandidateRow({ c }: { c: MlCandidate }) {
             difference={t.difference}
             ci={t.difference_ci95}
             good={t.at_least_as_good}
-            goodText="At least as good as the model in use"
-            badText="Not as good as the model in use"
           />
         ) : (
           <div className="mlx-split mlx-split-none">

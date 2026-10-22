@@ -92,14 +92,22 @@ function luminance(hex: string): number {
   return 0.2126 * (r ?? 0) + 0.7152 * (g ?? 0) + 0.0722 * (b ?? 0);
 }
 
+const WHITE_INK = "#ffffff";
+const DARK_INK = "#161616";
+
+/** WCAG 2 contrast of two luminances. */
+const ratio = (a: number, b: number) => (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+
 /** The club's own colours, when the API gives them: field, band and an ink that reads on the
- * field. Null means the neutral monogram (its colours come from the stylesheet). */
+ * field (white or near-black, whichever has the higher contrast with it). Null means the
+ * neutral monogram (its colours come from the stylesheet). */
 function clubColours(colours?: string[]): { field: string; band: string; ink: string } | null {
   const given = (colours ?? []).filter(isHex);
   const field = given[0];
   if (!field) return null;
-  const light = luminance(field) > 0.4;
-  return { field, band: given[1] ?? (light ? "#161616" : "#ffffff"), ink: light ? "#161616" : "#ffffff" };
+  const l = luminance(field);
+  const ink = ratio(l, luminance(WHITE_INK)) >= ratio(l, luminance(DARK_INK)) ? WHITE_INK : DARK_INK;
+  return { field, band: given[1] ?? (ink === WHITE_INK ? WHITE_INK : DARK_INK), ink };
 }
 
 /** A heater shield in a 48 x 48 box, and the same shape inset for its inner line. */

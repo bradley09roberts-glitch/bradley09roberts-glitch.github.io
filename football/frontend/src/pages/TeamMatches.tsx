@@ -29,6 +29,7 @@ import {
   RESULT_WORD,
   STATS,
   signed,
+  sourceName,
   type CompareRow,
 } from "../components/TeamStats";
 import { formatDate, formatNumber, formatPct, formatTime, marketLabel, seasonLabel } from "../format";
@@ -100,6 +101,8 @@ function LogView({ p, data, query }: { p: TeamProfile; data: TeamMatchesResponse
   }, [all]);
   const rows = all.filter((r) => (type === "all" || r.competition_type === type) && (!season || r.season === season));
   const remaining = data.total - all.length;
+  // The "Our pick" column only when some loaded match has one (most clubs' logs have none).
+  const picks = all.some((r) => r.prediction?.pick_for_team);
 
   return (
     <section className="card team-card ml" aria-labelledby="log-title">
@@ -150,7 +153,7 @@ function LogView({ p, data, query }: { p: TeamProfile; data: TeamMatchesResponse
           <p>{remaining > 0 ? "Older matches may have some: load them below, or clear the filters." : "Clear the filters to see every match."}</p>
         </Empty>
       ) : (
-        <ol className="ml-list" aria-label="Matches, newest first">
+        <ol className={`ml-list${picks ? "" : " no-picks"}`} aria-label="Matches, newest first">
           <li className="ml-head" aria-hidden="true">
             <span>Date</span>
             <span>Competition</span>
@@ -158,7 +161,7 @@ function LogView({ p, data, query }: { p: TeamProfile; data: TeamMatchesResponse
             <span>Opponent</span>
             <span className="ml-head-score">Score</span>
             <span />
-            <span>Our pick</span>
+            {picks && <span>Our pick</span>}
             <span />
           </li>
           {rows.slice(0, shown).map((r) => (
@@ -196,6 +199,7 @@ function LogView({ p, data, query }: { p: TeamProfile; data: TeamMatchesResponse
       <p className="muted small">
         Scores are after 90 minutes; extra time and penalties are marked. Flagged matches (awarded,
         cancelled, play-offs against outside clubs) are listed but left out of every summary.
+        {picks ? "" : " We published no prediction for any of these matches."}
       </p>
     </section>
   );
@@ -364,7 +368,7 @@ function LogDetail({ id, r, team }: { id: string; r: TeamMatch; team: string }) 
         )}
         <div>
           <dt>Source</dt>
-          <dd>{r.source}</dd>
+          <dd>{sourceName(r.source)}</dd>
         </div>
       </dl>
       {pr && (

@@ -9,15 +9,20 @@ database connection, for every request the frontend can make. Re-running both re
 Nothing is computed here: every body is the API's own response, stored as it was sent, with
 one exception: a picture's URL (/media/teams/...) is made relative to the page, or null when the
 snapshot doesn't carry that file (the generated badge.svg; the site draws its own badge).
-Identical bodies are stored once per file (most `/api/fixtures?days=N` windows are the same).
+Identical bodies are stored once per file, ignoring the second they were made at
+(`generated_at_utc`). The fixtures are stored once, for the next 30 days: the page takes every
+shorter window from that response (frontend/src/snapshot.ts, `derived`), as the API would.
 
 Files (docs/snapshot.md):
 
-- `snapshot.json`: what the first screen needs (fixtures, past results, performance, status
-  pages), and the list of shard files with the request keys each one answers;
+- `snapshot.json`: what every page needs first (the status, performance, past results, reports
+  and the list of backtest runs), and the list of shard files with the request keys each one
+  answers;
 - shard files `snapshot-<family>-<n>.json`, fetched only when a page asks for one of their
-  keys: `matches` (match pages), `lab` (backtest summaries), `teams` (the teams list alone in
-  the first, then each team's profile, match log and media, a team never split across files);
+  keys: `fixtures` (the fixtures page), `data` (the Data page's coverage, import issues and
+  refresh history), `matches` (match pages), `lab` (backtest summaries), `teams` (the teams
+  list alone in the first, then each team's profile, match log and media, a team never split
+  across files);
 - `media/teams/<team_key>/crest.png` and `venue.jpg`: downloaded, freely licensed pictures the
   carried teams' media responses link to (their attribution is in those responses).
 
@@ -71,11 +76,13 @@ HOST_LIMITS = {
 }
 TEXT_SUFFIXES = (".html", ".json", ".js", ".css", ".svg", ".txt", ".map")
 # A shard is closed once it holds this much. A team page or a match page loads one shard, so
-# they are kept small for a phone (about 16 teams' pages each, at about 120 KB a team); 12 MB
-# is the most any shard may hold (a single group bigger than the target gets a file of its own).
+# they are kept small for a phone: team shards hold about 8 teams' pages each (about 120 KB a
+# team), as a team page is often the first page opened from a shared link. 12 MB is the most
+# any shard may hold (a single group bigger than the target gets a file of its own).
 SHARD_TARGET_BYTES = 2 * MB
+TEAM_SHARD_TARGET_BYTES = 1 * MB
 SHARD_MAX_BYTES = 12 * MB
-SHARD_FAMILIES = ("matches", "lab", "teams")  # in file order
+SHARD_FAMILIES = ("fixtures", "data", "matches", "lab", "teams")  # in file order
 
 # ---------------------------------------------------------------------------------------------
 # What the frontend requests (frontend/src/pages and src/api.ts)
@@ -83,8 +90,10 @@ SHARD_FAMILIES = ("matches", "lab", "teams")  # in file order
 # Data.tsx: refreshHistory(HISTORY_LIMIT).
 FRONTEND_REFRESH_HISTORY_LIMITS = (200,)
 # Fixtures.tsx: parseDays() accepts any whole number 1-30 from the address (the buttons give
-# 3, 8 and 14; anything else falls back to 8). Data.tsx asks for 14.
+# 3, 8 and 14; anything else falls back to 8). Data.tsx asks for 14. Only the 30-day window is
+# stored: snapshot.ts answers every other from it (the same cards, up to today + N days).
 FRONTEND_FIXTURE_DAYS = tuple(range(1, 31))
+SNAPSHOT_FIXTURE_DAYS = 30
 # Past.tsx: two record types (KINDS), LIMIT = 500, with and without a competition.
 FRONTEND_PAST_RECORD_TYPES = ("genuine_prematch", "retrospective_backtest")
 FRONTEND_PAST_LIMIT = 500
@@ -201,12 +210,17 @@ class Snapshot:
     _sizes: list[int] = field(default_factory=list, repr=False)
 
     def add(self, key: str, status: int, body: Any) -> None:
-        text = json.dumps(body, ensure_ascii=False, separators=(",", ":"))
+        # Two answers that differ only in the second they were made at are the same answer.
+        same = body
+        if isinstance(body, dict) and "generated_at_utc" in body:
+            same = {k: v for k, v in body.items() if k != "generated_at_utc"}
+        text = json.dumps(same, ensure_ascii=False, separators=(",", ":"))
         i = self._index.get(text)
         if i is None:
             i = self._index[text] = len(self.bodies)
             self.bodies.append(body)
-            self._sizes.append(len(text.encode("utf-8")))
+            sent = json.dumps(body, ensure_ascii=False, separators=(",", ":"))
+            self._sizes.append(len(sent.encode("utf-8")))
         self.entries[key] = (status, i)
 
     def body(self, key: str) -> Any:
@@ -248,12 +262,15 @@ class Snapshot:
         it holds SHARD_TARGET_BYTES (by its bodies' size, counted once each)."""
         out: list[tuple[str, list[str]]] = []
         for family in SHARD_FAMILIES:
+            target = SHARD_TARGET_BYTES
+            if family == "teams":
+                target = min(target, TEAM_SHARD_TARGET_BYTES)
             files: list[list[str]] = []
             size, seen, closed = 0, set(), True
             for keys, alone in self.groups.get(family, []):
                 bodies = {self.entries[k][1] for k in keys}
                 extra = self._bytes(bodies - seen, keys)
-                if closed or alone or size + extra > SHARD_TARGET_BYTES:
+                if closed or alone or size + extra > target:
                     files.append([])
                     size, seen = 0, set()
                     extra = self._bytes(bodies, keys)
@@ -409,12 +426,17 @@ def export_snapshot(
         return body if res.status_code == 200 else None
 
     get("/api/health")
+    # The Data page's own tables, in a file of their own.
+    data_keys = [canonical_key("/api/coverage"), canonical_key("/api/import-issues")]
     get("/api/coverage")
     for limit in FRONTEND_REFRESH_HISTORY_LIMITS:
         get("/api/refresh-history", {"limit": limit})
+        data_keys.append(canonical_key("/api/refresh-history", {"limit": limit}))
     get("/api/import-issues")
-    for days in FRONTEND_FIXTURE_DAYS:
-        get("/api/fixtures", {"days": days})
+    snap.group("data", data_keys)
+    # One fixtures window; the page takes the shorter ones from it.
+    get("/api/fixtures", {"days": SNAPSHOT_FIXTURE_DAYS})
+    snap.group("fixtures", [canonical_key("/api/fixtures", {"days": SNAPSHOT_FIXTURE_DAYS})])
     get("/api/performance")
     get("/api/past", FRONTEND_PAST_LATEST)
     competitions = _past_competitions(engine)

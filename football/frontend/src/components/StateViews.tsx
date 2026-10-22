@@ -71,17 +71,25 @@ export function notInSnapshot(error: ApiError | Error): boolean {
   return SNAPSHOT && error.message === NOT_IN_SNAPSHOT;
 }
 
+/** Where a page sends you when the snapshot doesn't hold what it asked for. */
+export type WayOn = { to: string; label: string };
+
+const TO_FIXTURES: WayOn = { to: "/fixtures", label: "Go to fixtures" };
+
 export function ErrorView({
   error,
   what,
   onRetry,
   retrying = false,
+  wayOn = TO_FIXTURES,
 }: {
   error: ApiError | Error;
   /** What failed to load, e.g. "fixtures". */
   what: string;
   onRetry?: () => void;
   retrying?: boolean;
+  /** The way on from "Not in this snapshot" (the fixtures by default). */
+  wayOn?: WayOn;
 }) {
   // In a snapshot, a page it doesn't hold is not a failure to retry: say so, and offer a way on.
   if (notInSnapshot(error)) {
@@ -89,9 +97,12 @@ export function ErrorView({
       <Empty
         title="Not in this snapshot"
         actions={
-          <ButtonLink to="/fixtures" primary>
-            Go to fixtures
-          </ButtonLink>
+          <>
+            <ButtonLink to={wayOn.to} primary>
+              {wayOn.label}
+            </ButtonLink>
+            {wayOn.to !== TO_FIXTURES.to && <ButtonLink to={TO_FIXTURES.to}>{TO_FIXTURES.label}</ButtonLink>}
+          </>
         }
       >
         <p>
@@ -157,6 +168,7 @@ export function ApiView<T>({
   isEmpty,
   empty,
   loadingLines,
+  wayOn,
 }: {
   result: ApiResult<T>;
   what: string;
@@ -164,10 +176,12 @@ export function ApiView<T>({
   isEmpty?: (data: T) => boolean;
   empty?: ReactNode;
   loadingLines?: number;
+  /** See ErrorView. */
+  wayOn?: WayOn;
 }) {
   const { data, error, loading, receivedAt, reload } = result;
   if (data === undefined) {
-    if (error) return <ErrorView error={error} what={what} onRetry={reload} retrying={loading} />;
+    if (error) return <ErrorView error={error} what={what} onRetry={reload} retrying={loading} wayOn={wayOn} />;
     return <Loading label={`Loading ${what}…`} lines={loadingLines} />;
   }
   return (

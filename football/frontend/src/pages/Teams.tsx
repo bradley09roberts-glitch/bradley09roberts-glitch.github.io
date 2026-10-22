@@ -14,7 +14,7 @@ import { FormPips } from "../components/Svg";
 import { TeamBadge } from "../components/TeamBadge";
 import { teamHref, useTeamPageCheck } from "../components/TeamLink";
 import { formItems, ordinal } from "../components/TeamStats";
-import { competitionRank, countryName, sortByCompetition } from "../competitions";
+import { competitionRank, countryName, seasonCompetitions, sortByCompetition } from "../competitions";
 import { formatDate, formatNumber } from "../format";
 import { useDocumentTitle } from "../hooks";
 import { setQuery } from "../router";
@@ -38,6 +38,21 @@ export function fold(s: string): string {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, " ")
     .trim();
+}
+
+/** What a team is found by: its key, every name the API sends for it (football-data's short
+ * name, the display name and the other names held: "Spurs", "Manchester City") and its badge's
+ * three letters ("PSG"), folded, one per line. */
+function searchText(t: TeamListEntry, media: MediaSummary | undefined): string {
+  return [t.key.replace(/-/g, " "), t.name, t.display_name ?? "", ...(t.aliases ?? []), media?.badge.short ?? ""]
+    .map(fold)
+    .join("\n");
+}
+
+/** Every word of the search is in one of the team's names (each word may be in a different
+ * one: "athletic bilbao" finds "Athletic Club", alias "Ath Bilbao"). */
+function matches(hay: string, needle: string): boolean {
+  return needle.split(" ").every((w) => hay.includes(w));
 }
 
 export function Teams({ query }: PageProps) {
@@ -76,6 +91,10 @@ function TeamIndex({ data, query }: { data: TeamsResponse; query: URLSearchParam
 
   // In a snapshot, only the teams it has pages for.
   const listed = useMemo(() => data.teams.filter((t) => hasPage(t.key)), [data.teams, hasPage]);
+  const haystacks = useMemo(
+    () => new Map(listed.map((t) => [t.key, searchText(t, data.media[t.key])])),
+    [listed, data.media],
+  );
 
   const competitions = useMemo(() => {
     const counts = new Map<string, { code: string; name: string; count: number }>();
@@ -88,6 +107,9 @@ function TeamIndex({ data, query }: { data: TeamsResponse; query: URLSearchParam
     }
     return sortByCompetition([...counts.values()], (c) => c.code);
   }, [listed]);
+  // "Every team" against "This season" only where it changes the list (in a snapshot every
+  // team listed plays this season, so the choice would do nothing).
+  const scopeMatters = useMemo(() => listed.some((t) => t.competitions_this_season.length === 0), [listed]);
   const chips = competitions.filter((c) => CHIP_CODES.includes(c.code));
   const others = competitions.filter((c) => !CHIP_CODES.includes(c.code));
 
@@ -99,7 +121,7 @@ function TeamIndex({ data, query }: { data: TeamsResponse; query: URLSearchParam
       } else if (scope === "season" && !needle && t.competitions_this_season.length === 0) {
         return false;
       }
-      return !needle || fold(t.name).includes(needle) || t.key.includes(needle.replace(/ /g, "-"));
+      return !needle || matches(haystacks.get(t.key) ?? "", needle);
     });
     const byName = (a: TeamListEntry, b: TeamListEntry) => a.name.localeCompare(b.name, "en-GB", { sensitivity: "base" });
     return rows.sort(
@@ -107,15 +129,16 @@ function TeamIndex({ data, query }: { data: TeamsResponse; query: URLSearchParam
         ? byName
         : (a, b) => (a.elo_rank ?? Infinity) - (b.elo_rank ?? Infinity) || byName(a, b),
     );
-  }, [listed, q, competition, scope, sort]);
+  }, [listed, haystacks, q, competition, scope, sort]);
 
   const active = competition ? competitions.find((c) => c.code === competition) : undefined;
 
-  // On a phone the competition chips scroll sideways: keep the chosen one in view.
+  // On a phone the competition chips scroll sideways: keep the chosen one in view (a chip, or
+  // the "Other competitions" list when one of those is chosen).
   const chipsRef = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
     const row = chipsRef.current;
-    const chip = row?.querySelector<HTMLElement>('[aria-pressed="true"]');
+    const chip = row?.querySelector<HTMLElement>('[aria-pressed="true"], .chip-select.is-on');
     if (!row || !chip || row.scrollWidth <= row.clientWidth) return;
     row.scrollLeft = chip.offsetLeft - (row.clientWidth - chip.offsetWidth) / 2;
   }, [competition]);
@@ -135,14 +158,14 @@ function TeamIndex({ data, query }: { data: TeamsResponse; query: URLSearchParam
     <>
       <section className="card tm-tools" aria-label="Find a team">
         <div className="tm-search">
-          <label htmlFor="team-search" className="ctl-label">
+          <label htmlFor="team-search" className="ctl-label tm-tool-label">
             Search
           </label>
           <input
             id="team-search"
             type="search"
             className="tm-input"
-            placeholder="A club's name, e.g. Villa"
+            placeholder="Club, e.g. Villa"
             autoComplete="off"
             spellCheck={false}
             value={text}
@@ -154,17 +177,18 @@ function TeamIndex({ data, query }: { data: TeamsResponse; query: URLSearchParam
         </div>
         <div className="tm-tool-row">
           <div className="filters" role="group" aria-label="Order">
-            <span className="filter-label">Order</span>
+            <span className="filter-label tm-tool-label">Order</span>
             <div className="segmented">
               <button type="button" aria-pressed={sort === "strength"} onClick={() => setQuery({ sort: null })}>
                 Strength
               </button>
               <button type="button" aria-pressed={sort === "name"} onClick={() => setQuery({ sort: "name" })}>
-                Name
+                <span aria-hidden="true">A–Z</span>
+                <span className="visually-hidden">Name</span>
               </button>
             </div>
           </div>
-          {!competition && (
+          {!competition && scopeMatters && (
             <div className="filters" role="group" aria-label="Which teams">
               <span className="filter-label">Show</span>
               <div className="segmented">
@@ -247,7 +271,7 @@ function TeamIndex({ data, query }: { data: TeamsResponse; query: URLSearchParam
         >
           <p>
             {q
-              ? "Try part of the name, without the club's initials (e.g. “Villa” rather than “AVFC”)."
+              ? "Try part of the club's name or a name it's known by (e.g. “Villa”, “Spurs”)."
               : "No team with a page here plays in this competition this season."}
           </p>
         </Empty>
@@ -271,7 +295,8 @@ function TeamIndex({ data, query }: { data: TeamsResponse; query: URLSearchParam
 
 function TeamCard({ team: t, media }: { team: TeamListEntry; media: MediaSummary | undefined }) {
   const country = countryName(t.country);
-  const comps = sortByCompetition(t.competitions_this_season, (c) => c.code);
+  // As on the team page: the league first, then Europe, without qualifying rounds left behind.
+  const comps = seasonCompetitions(t.competitions_this_season);
   const form = formItems(t.form_last_5).map((f) => f.result);
   const division = t.division;
   return (

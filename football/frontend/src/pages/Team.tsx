@@ -9,7 +9,7 @@
 // parameters so a static snapshot can answer them (docs/snapshot.md). Nothing is estimated
 // here: a figure the source doesn't have is shown as missing, never filled in.
 
-import { useState, type CSSProperties, type ReactNode } from "react";
+import { useRef, useState, type CSSProperties, type ReactNode } from "react";
 import {
   endpoints,
   useApi,
@@ -47,10 +47,11 @@ import {
   ordinal,
   plural,
   signed,
+  statsNote,
   type FormItem,
 } from "../components/TeamStats";
 import { contrast, mix, parseHex, toHex, type Rgb } from "../colour";
-import { countryName, sortByCompetition } from "../competitions";
+import { UEFA_HELD, countryName, seasonCompetitions, sortByCompetition } from "../competitions";
 import { formatDate, formatKickoff, formatNumber, formatPct, keepNumberWithName, parseUtc, seasonLabel } from "../format";
 import { useDocumentTitle, useMediaQuery } from "../hooks";
 import { canGoBack, href, setQuery } from "../router";
@@ -75,7 +76,7 @@ export function Team({ params, query }: PageProps) {
   const profile = useApi(key ? endpoints.team(key) : null, { freshMs: 120_000 });
   const log = useApi(key ? endpoints.teamMatches(key) : null, { freshMs: 120_000 });
   const media = useApi(key ? endpoints.teamMedia(key) : null, { freshMs: 600_000 });
-  useDocumentTitle(profile.data?.team.name ?? "Team");
+  useDocumentTitle(profile.data ? (profile.data.team.display_name ?? profile.data.team.name) : "Team");
   const tab = parseTab(query.get("tab"));
 
   const back = <BackLink to="/teams">{canGoBack() ? "Back" : "Teams"}</BackLink>;
@@ -99,7 +100,7 @@ export function Team({ params, query }: PageProps) {
     <>
       {back}
       {!profile.data && <h1 className="visually-hidden">Team</h1>}
-      <ApiView result={profile} what="this team" loadingLines={3}>
+      <ApiView result={profile} what="this team" loadingLines={3} wayOn={{ to: "/teams", label: "See every team" }}>
         {(p) => <TeamDetail p={p} log={log} media={media} tab={tab} query={query} />}
       </ApiView>
     </>
@@ -125,26 +126,38 @@ function TeamDetail({
     { id: "matches", label: "Matches", hint: formatNumber(p.matches.logged, 0) },
     { id: "league", label: "League", hint: formatNumber(played("league"), 0) },
     { id: "europe", label: "Europe", hint: formatNumber(played("europe"), 0) },
-    { id: "cups", label: "Cups", hint: played("cup") ? formatNumber(played("cup"), 0) : "None yet" },
   ];
+  // Cups only once a club has cup matches: no cup source is held yet (docs/teams.md).
+  if (played("cup") > 0) tabs.push({ id: "cups", label: "Cups", hint: formatNumber(played("cup"), 0) });
+  const shown = tabs.some((t) => t.id === tab) ? tab : "overview";
+  const tabsRef = useRef<HTMLDivElement>(null);
+  const choose = (id: TeamTab) => {
+    // A tab's own choices (the match log's filters) are left behind with it.
+    setQuery({ tab: id === "overview" ? null : id, type: null, season: null }, { replace: false });
+    // Bring the chosen view up under the app bar, so a tab doesn't open on the hero again.
+    requestAnimationFrame(() => {
+      const el = tabsRef.current;
+      if (!el) return;
+      const top = el.getBoundingClientRect().top;
+      if (top < 0 || top > window.innerHeight / 4) {
+        const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        el.scrollIntoView({ block: "start", behavior: reduce ? "auto" : "smooth" });
+      }
+    });
+  };
   return (
     <>
       <TeamHero p={p} media={media} />
-      <Tabs
-        tabs={tabs}
-        active={tab}
-        idBase="team"
-        label="Team view"
-        // A tab's own choices (the match log's filters) are left behind with it.
-        onChange={(id) => setQuery({ tab: id === "overview" ? null : id, type: null, season: null }, { replace: false })}
-      />
-      <div className="team-panel" id={tabPanelId("team")} role="tabpanel" aria-labelledby={tabId("team", tab)}>
-        {tab === "overview" ? (
+      <div className="team-tabs" ref={tabsRef}>
+        <Tabs tabs={tabs} active={shown} idBase="team" label="Team view" onChange={choose} />
+      </div>
+      <div className="team-panel" id={tabPanelId("team")} role="tabpanel" aria-labelledby={tabId("team", shown)}>
+        {shown === "overview" ? (
           <Overview p={p} log={log} />
-        ) : tab === "matches" ? (
+        ) : shown === "matches" ? (
           <MatchLog p={p} log={log} query={query} />
         ) : (
-          <TypeView p={p} log={log} type={TYPE_OF_TAB[tab]} />
+          <TypeView p={p} log={log} type={TYPE_OF_TAB[shown]} />
         )}
       </div>
     </>
@@ -190,10 +203,7 @@ function TeamHero({ p, media }: { p: TeamProfile; media: ApiResult<TeamMedia> })
   const t = p.team;
   const theme = clubTheme(t.media?.badge.colours);
   const country = countryName(t.country);
-  // The club's league first, then Europe.
-  const comps = sortByCompetition(t.competitions_this_season, (c) => c.code).sort(
-    (a, b) => Number(a.type !== "league") - Number(b.type !== "league"),
-  );
+  const comps = seasonCompetitions(t.competitions_this_season);
   const s = p.strength;
   const last5 = formItems(p.form.last_5).map((f) => f.result);
   return (
@@ -209,7 +219,8 @@ function TeamHero({ p, media }: { p: TeamProfile; media: ApiResult<TeamMedia> })
                 .filter(Boolean)
                 .join(" · ") || "Team"}
             </p>
-            <h1 className="th-name">{t.name}</h1>
+            {/* The club's full name; football-data's short one is on cards and tables. */}
+            <h1 className="th-name">{t.display_name ?? t.name}</h1>
           </div>
         </div>
 
@@ -264,8 +275,15 @@ function Venue({ media }: { media: ApiResult<TeamMedia> }) {
   const v = m?.venue ?? null;
   const crest = m?.crest;
   const photo = v?.url ?? null;
+  const name = v?.name ?? (m ? "Not recorded" : media.error ? "Not available" : "…");
   return (
-    <div className="th-side">
+    <div className={`th-side${photo ? " has-photo" : ""}`}>
+      {/* Without a photo, a phone shows the ground as one line; wider screens draw the pitch. */}
+      {!photo && (
+        <p className="th-venue-line">
+          <span className="th-venue-label">Home ground</span> {name}
+        </p>
+      )}
       <figure className={`th-venue${photo ? " has-photo" : ""}`}>
         {photo ? (
           <img className="th-photo" src={photo} alt={v?.name ? `${v.name}` : "The home ground"} loading="lazy" decoding="async" />
@@ -274,9 +292,7 @@ function Venue({ media }: { media: ApiResult<TeamMedia> }) {
         )}
         <figcaption className="th-venue-cap">
           <span className="th-venue-label">Home ground</span>
-          <span className="th-venue-name">
-            {v?.name ?? (m ? "Not recorded" : media.error ? "Not available" : "…")}
-          </span>
+          <span className="th-venue-name">{name}</span>
           {!photo && m && v?.name && <span className="th-venue-note">No freely licensed photo held yet</span>}
         </figcaption>
       </figure>
@@ -446,7 +462,7 @@ function Overview({ p, log }: { p: TeamProfile; log: ApiResult<TeamMatchesRespon
 
         {!twoColumns && <Upcoming p={p} />}
 
-        <Averages s={s} id="averages" scope="all" />
+        <Averages s={s} id="averages" scope="all" europe={(p.by_type.europe?.played ?? 0) > 0} />
 
         <StrengthCard p={p} />
       </div>
@@ -474,8 +490,12 @@ function TypeLines({ p }: { p: TeamProfile }) {
           <a className="type-line-name" href={teamHref(p.team.key, { tab: tabOf[t] })}>
             {name[t]}
           </a>
+          {/* Each figure stays on one line; the line breaks only between them. */}
           <span className="type-line-wdl">
-            {s.played} played · {s.won}–{s.drawn}–{s.lost} · goals {s.goals_for}–{s.goals_against}
+            <span>{s.played} played</span> · <span>{s.won}–{s.drawn}–{s.lost}</span> ·{" "}
+            <span>
+              goals {s.goals_for}–{s.goals_against}
+            </span>
           </span>
           <ResultSplit won={s.won} drawn={s.drawn} lost={s.lost} compact />
         </li>
@@ -636,44 +656,36 @@ function Averages({
   s,
   id,
   scope,
+  europe = false,
 }: {
   s: FullSummary;
   id: string;
   scope: "all" | CompetitionType;
+  /** The club has UEFA matches among those summarised. */
+  europe?: boolean;
 }) {
   const rows = averageRows(s.per_match);
-  const missing = missingStats(s.per_match);
-  const goals = s.per_match.goals;
-  const stats = s.per_match.shots;
+  const goals = s.per_match.goals?.matches ?? 0;
+  const stats = s.per_match.shots?.matches ?? 0;
+  const note = statsNote(scope, goals, stats, europe);
+  // Listed only where some statistics are held; with none, the note above says why.
+  const missing = stats > 0 ? missingStats(s.per_match) : [];
   return (
     <Card
       title="Per match"
       id={id}
-      sub="Average for and against; the figure under each says how many matches it covers"
+      sub="Average for and against, with the number of matches behind each"
     >
       {rows.length === 0 ? (
         <p className="muted small">No averages: no counted matches.</p>
       ) : (
         <CompareBars rows={rows} left="For" right="Against" tone="for-against" caption="Per-match averages, for and against" />
       )}
-      {scope === "europe" ? (
-        <p className="note-line">
-          Only goals: the UEFA sources give scores, not shots, corners, fouls or cards.
+      {note && <p className="note-line">{note}</p>}
+      {missing.length > 0 && rows.length > 0 && (
+        <p className="muted small">
+          Not in the data for these matches: {missing.map((m) => (m === "xG" ? m : m.toLowerCase())).join(", ")}.
         </p>
-      ) : (
-        scope === "all" &&
-        goals &&
-        stats &&
-        stats.matches < goals.matches && (
-          <p className="note-line">
-            Goals cover all {formatNumber(goals.matches, 0)} counted matches; shots, corners, fouls
-            and cards only the {formatNumber(stats.matches, 0)} with statistics. European matches
-            carry scores only (the permitted sources have no match statistics).
-          </p>
-        )
-      )}
-      {missing.length > 0 && scope !== "europe" && rows.length > 0 && (
-        <p className="muted small">Not in the data for these matches: {missing.join(", ").toLowerCase()}.</p>
       )}
       {s.per_match.fd_xg && s.per_match.fd_xg.matches > 0 && (
         <p className="muted small">
@@ -866,23 +878,35 @@ function TypeView({ p, log, type }: { p: TeamProfile; log: ApiResult<TeamMatches
       <Empty title={`No ${TYPE_TEXT[type].matches} for ${p.team.name}`}>
         <p>
           {type === "europe"
-            ? "There's no Champions League, Europa League or Conference League match (qualifying included) for this club in the data, from 2018/19 on."
+            ? `There's no Champions League, Europa League or Conference League match for this club in the data. ${UEFA_HELD}`
             : "There's no league match for this club in the leagues held."}
         </p>
       </Empty>
     );
   }
-  const comps = p.by_competition.filter((c) => c.type === type);
+  const comps = sortByCompetition(
+    p.by_competition.filter((c) => c.type === type),
+    (c) => c.competition,
+  );
+  const codes = new Set(comps.map((c) => c.competition));
   const seasons = p.by_season
-    .map((x) => ({ season: x.season, label: x.label, s: x.by_type[type] }))
-    .filter((x): x is { season: string; label: string; s: ShortSummary } => !!x.s && x.s.played > 0);
+    .map((x) => ({
+      season: x.season,
+      label: x.label,
+      competitions: sortByCompetition(
+        x.competitions.filter((c) => codes.has(c)),
+        (c) => c,
+      ),
+      s: x.by_type[type],
+    }))
+    .filter((x): x is SeasonRow => !!x.s && x.s.played > 0);
   return (
     <>
       {type === "europe" && (
         <div className="notice-info" role="note">
           <strong>European matches carry scores only.</strong> The sources we may use for UEFA
           competitions give results, stages and extra-time and penalty flags, but no shots, cards,
-          corners, fouls or half-time scores. Scores are after 90 minutes.
+          corners, fouls or half-time scores. Scores are after 90 minutes. {UEFA_HELD}
         </div>
       )}
       <div className="team-layout">
@@ -893,10 +917,14 @@ function TypeView({ p, log, type }: { p: TeamProfile; log: ApiResult<TeamMatches
           <FormCard p={p} log={log.data} type={type} />
           <Averages s={s} id={`averages-${type}`} scope={type} />
           <Card title="By competition" id={`comps-${type}`}>
-            <CompetitionTable rows={comps} />
+            <CompetitionLines rows={comps} />
           </Card>
           <Card title="By season" id={`seasons-${type}`} sub="Newest first">
-            <SeasonTable rows={seasons} league={type === "league"} />
+            <SeasonTable
+              rows={seasons}
+              league={type === "league"}
+              names={comps.length > 1 ? new Map(comps.map((c) => [c.competition, c.name])) : null}
+            />
           </Card>
         </div>
         <aside className="team-aside" aria-label="Rates and splits">
@@ -908,91 +936,79 @@ function TypeView({ p, log, type }: { p: TeamProfile; log: ApiResult<TeamMatches
   );
 }
 
-function CompetitionTable({ rows }: { rows: TeamProfile["by_competition"] }) {
+/** One line per competition: its mark, name and seasons, then the record and a won-drawn-lost
+ * bar (the counts are printed beside it). */
+function CompetitionLines({ rows }: { rows: TeamProfile["by_competition"] }) {
   if (rows.length === 0) return <p className="muted small">None.</p>;
   return (
-    <TableScroll label="Record by competition">
-      <table className="data-table team-table">
-        <thead>
-          <tr>
-            <th scope="col">Competition</th>
-            <th scope="col" className="num">
-              P
-            </th>
-            <th scope="col" className="num">
-              W
-            </th>
-            <th scope="col" className="num">
-              D
-            </th>
-            <th scope="col" className="num">
-              L
-            </th>
-            <th scope="col" className="num">
-              Goals
-            </th>
-            <th scope="col" className="num">
-              Pts/g
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((c) => (
-            <tr key={c.competition}>
-              <th scope="row">
-                <span className="tt-comp">
-                  <CompetitionMark code={c.competition} />
-                  <span>
-                    {c.name}
-                    <span className="cell-sub">
-                      {plural(c.seasons.length, "season")}
-                      {c.seasons.length > 0 &&
-                        ` · ${seasonLabel(c.seasons.at(-1) ?? "")}${c.seasons.length > 1 ? `–${seasonLabel(c.seasons[0] ?? "")}` : ""}`}
-                    </span>
-                  </span>
-                </span>
-              </th>
-              <td className="num">{c.summary.played}</td>
-              <td className="num">{c.summary.won}</td>
-              <td className="num">{c.summary.drawn}</td>
-              <td className="num">{c.summary.lost}</td>
-              <td className="num">
-                {c.summary.goals_for}–{c.summary.goals_against}
-              </td>
-              <td className="num">{c.summary.points_per_game === null ? "—" : formatNumber(c.summary.points_per_game, 2)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </TableScroll>
+    <ul className="comp-lines">
+      {rows.map((c) => {
+        const x = c.summary;
+        const first = c.seasons.at(-1);
+        const last = c.seasons[0];
+        return (
+          <li key={c.competition}>
+            <span className="cl-head">
+              <CompetitionMark code={c.competition} />
+              <span className="cl-name">{c.name}</span>
+              <span className="cl-seasons">
+                {plural(c.seasons.length, "season")}
+                {first && last && ` · ${seasonLabel(first)}${first !== last ? `–${seasonLabel(last)}` : ""}`}
+              </span>
+            </span>
+            <span className="cl-figs">
+              <span>{plural(x.played, "match", "matches")}</span> ·{" "}
+              <span>
+                {x.won}–{x.drawn}–{x.lost}
+              </span>{" "}
+              · <span>goals {x.goals_for}–{x.goals_against}</span>
+              {x.points_per_game !== null && (
+                <>
+                  {" "}
+                  · <span>{formatNumber(x.points_per_game, 2)} points per game</span>
+                </>
+              )}
+            </span>
+            <ResultSplit won={x.won} drawn={x.drawn} lost={x.lost} compact />
+          </li>
+        );
+      })}
+    </ul>
   );
 }
 
-function SeasonTable({ rows, league }: { rows: { season: string; label: string; s: ShortSummary }[]; league: boolean }) {
+type SeasonRow = { season: string; label: string; competitions: string[]; s: ShortSummary };
+
+/** Newest season first: played, won-drawn-lost, goals (with the difference under them) and, for
+ * leagues, points. Where the club has played more than one competition of the type (a league
+ * after promotion, two UEFA competitions), each season names its own. */
+function SeasonTable({
+  rows,
+  league,
+  names,
+}: {
+  rows: SeasonRow[];
+  league: boolean;
+  /** Competition code -> name, when each season should name its competitions. */
+  names: Map<string, string> | null;
+}) {
   if (rows.length === 0) return <p className="muted small">None.</p>;
   return (
     <TableScroll label="Record by season">
       <table className="data-table team-table">
         <thead>
           <tr>
-            <th scope="col">Season</th>
+            <th scope="col" className="sticky-col">
+              Season
+            </th>
             <th scope="col" className="num">
               P
             </th>
             <th scope="col" className="num">
-              W
-            </th>
-            <th scope="col" className="num">
-              D
-            </th>
-            <th scope="col" className="num">
-              L
+              W–D–L
             </th>
             <th scope="col" className="num">
               Goals
-            </th>
-            <th scope="col" className="num">
-              GD
             </th>
             {league && (
               <th scope="col" className="num">
@@ -1002,17 +1018,28 @@ function SeasonTable({ rows, league }: { rows: { season: string; label: string; 
           </tr>
         </thead>
         <tbody>
-          {rows.map(({ season, label, s }) => (
+          {rows.map(({ season, label, competitions, s }) => (
             <tr key={season}>
-              <th scope="row">{label}</th>
+              <th scope="row" className="sticky-col">
+                <span className="tt-season">
+                  <span className="tt-season-label">{label}</span>
+                  {names &&
+                    competitions.map((c) => (
+                      <span key={c} className="tt-season-mark" title={names.get(c) ?? c}>
+                        <CompetitionMark code={c} />
+                        <span className="visually-hidden">{names.get(c) ?? c}</span>
+                      </span>
+                    ))}
+                </span>
+              </th>
               <td className="num">{s.played}</td>
-              <td className="num">{s.won}</td>
-              <td className="num">{s.drawn}</td>
-              <td className="num">{s.lost}</td>
+              <td className="num">
+                {s.won}–{s.drawn}–{s.lost}
+              </td>
               <td className="num">
                 {s.goals_for}–{s.goals_against}
+                <span className="cell-sub">{signed(s.goal_difference)}</span>
               </td>
-              <td className="num">{signed(s.goal_difference)}</td>
               {league && <td className="num">{s.league_points ?? "—"}</td>}
             </tr>
           ))}

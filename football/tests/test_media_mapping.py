@@ -448,3 +448,32 @@ def test_committed_facts_match_the_mapping():
             assert c["hex"] is None or re.fullmatch(r"#[0-9A-F]{6}", c["hex"])
     mapped = {k for k, r in rows.items() if r["qid"]}
     assert set(facts) == mapped
+
+
+def test_club_aliases_come_from_the_country_name_queries(tmp_path):
+    fake = FakeWdqs()
+    rows = {
+        "eng-man-united": MappingRow("eng-man-united", "Q18656", "Manchester United F.C."),
+        "eng-lincoln": MappingRow("eng-lincoln", "Q30", "Lincoln City F.C."),
+        "eng-arsenal": MappingRow("eng-arsenal", "Q9617", "Arsenal F.C."),
+        "eng-nowhere": MappingRow("eng-nowhere"),  # not mapped
+    }
+    countries = {k: "ENG" for k in rows}
+    aliases = mapping.club_aliases(fake.client(tmp_path), rows, countries)
+    assert aliases == {
+        "eng-arsenal": ["Arsenal Women", "The Gunners"],  # sorted, ignoring case
+        "eng-lincoln": ["Lincoln"],
+        "eng-man-united": ["Man United"],
+    }
+    path = tmp_path / "aliases.json"
+    mapping.write_aliases(aliases, path)
+    assert json.loads(path.read_text())["teams"] == aliases
+
+
+def test_committed_aliases_match_the_mapping():
+    rows = committed_mapping()
+    doc = json.loads(mapping.ALIASES_JSON.read_text(encoding="utf-8"))
+    assert doc["teams"]
+    for key, names in doc["teams"].items():
+        assert rows[key]["qid"]
+        assert names and all(isinstance(n, str) and n.strip() for n in names)

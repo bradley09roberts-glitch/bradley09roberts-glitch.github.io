@@ -25,10 +25,10 @@ from footy.modeling.grid import markets_from_grid, poisson_grid
 from footy.publish import FixtureIn, publish, settle
 from footy.snapshot import (
     FORMAT,
-    FRONTEND_FIXTURE_DAYS,
     FRONTEND_PAST_RECORD_TYPES,
     FRONTEND_REPORTS,
     FRONTEND_UEFA_CODES,
+    SNAPSHOT_FIXTURE_DAYS,
     SnapshotRefused,
     body_only_html,
     canonical_key,
@@ -277,7 +277,9 @@ def test_export_covers_every_frontend_request(settings, migrated_engine, world, 
     expected = {"/api/health", "/api/coverage", "/api/refresh-history?limit=200"}
     expected |= {"/api/import-issues", "/api/performance", "/api/backtests", "/api/hit-rates"}
     expected |= {f"/api/reports/{name}" for name in FRONTEND_REPORTS} | {"/api/ml/summary"}
-    expected |= {f"/api/fixtures?days={d}" for d in FRONTEND_FIXTURE_DAYS}
+    # One fixtures window: the page takes every shorter one from it (snapshot.ts).
+    expected.add(f"/api/fixtures?days={SNAPSHOT_FIXTURE_DAYS}")
+    assert not any(k.startswith("/api/fixtures") and k != "/api/fixtures?days=30" for k in entries)
     expected |= {"/api/past?limit=1&record_type=genuine_prematch"}
     for rt in FRONTEND_PAST_RECORD_TYPES:
         expected |= {f"/api/past?limit=500&record_type={rt}"}
@@ -341,8 +343,12 @@ def test_first_screen_in_snapshot_json_the_rest_in_shards(settings, world, tmp_p
     export(settings, world, out)
     entries = read_site(out)
     where = {key: name for key, (_, _, name) in entries.items()}
-    for key in ("/api/health", "/api/fixtures?days=8", "/api/performance", "/api/ml/summary"):
+    for key in ("/api/health", "/api/performance", "/api/ml/summary", "/api/backtests"):
         assert where[key] == "snapshot.json", key
+    # The fixtures, and the Data page's tables, each in a file of their own.
+    assert where["/api/fixtures?days=30"] == "snapshot-fixtures-1.json"
+    data = ("/api/coverage", "/api/import-issues", "/api/refresh-history?limit=200")
+    assert {where[k] for k in data} == {"snapshot-data-1.json"}
     assert {where[f"/api/predictions/{i}"] for i in world["ids"]} == {"snapshot-matches-1.json"}
     lab = {name for key, name in where.items() if key.startswith("/api/backtests/")}
     assert lab == {"snapshot-lab-1.json"}
@@ -389,6 +395,8 @@ def test_page_is_body_content_with_relative_references(settings, world, tmp_path
     names = {f["path"] for f in result.report()["files"]}
     shards = {sh["file"] for sh in result.report()["shards"]}
     assert shards == {
+        "snapshot-fixtures-1.json",
+        "snapshot-data-1.json",
         "snapshot-matches-1.json",
         "snapshot-lab-1.json",
         "snapshot-teams-1.json",
@@ -767,3 +775,15 @@ def test_single_page_is_ascii_whatever_charset_it_is_served_with(tmp_path):
     (site / "assets" / "a.js").write_text("const d='\\é';", encoding="utf-8")
     with pytest.raises(ValueError, match="ASCII safely"):
         single_page(site)
+
+
+def test_answers_that_differ_only_in_when_they_were_made_are_stored_once():
+    from footy.snapshot import Snapshot
+
+    snap = Snapshot(taken_at_utc="2026-10-22T04:00:00+00:00")
+    snap.add("/a", 200, {"generated_at_utc": "2026-10-22T04:00:01+00:00", "x": [1]})
+    snap.add("/b", 200, {"generated_at_utc": "2026-10-22T04:00:07+00:00", "x": [1]})
+    snap.add("/c", 200, {"generated_at_utc": "2026-10-22T04:00:07+00:00", "x": [2]})
+    assert snap.entries["/a"] == snap.entries["/b"] != snap.entries["/c"]
+    assert snap.body("/b")["generated_at_utc"] == "2026-10-22T04:00:01+00:00"  # the first kept
+    assert len(snap.bodies) == 2

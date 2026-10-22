@@ -32,9 +32,11 @@
   line-height: 1.15;
 }
 
-.ctl-tabs .ctl-tab:hover:not(:disabled) {
-  background: var(--surface-3);
-  color: var(--text);
+@media (hover: hover) {
+  .ctl-tabs .ctl-tab:hover:not(:disabled) {
+    background: var(--surface-3);
+    color: var(--text);
+  }
 }
 
 .ctl-tabs .ctl-tab[aria-selected="true"] {
@@ -116,8 +118,10 @@
   text-overflow: ellipsis;
 }
 
-.ctl-select:hover:not(:disabled) {
-  border-color: var(--muted);
+@media (hover: hover) {
+  .ctl-select:hover:not(:disabled) {
+    border-color: var(--muted);
+  }
 }
 
 .ctl-select:disabled {
@@ -268,11 +272,13 @@
   cursor: pointer;
 }
 
-.link-button:hover:not(:disabled) {
-  border: 0;
-  background: none;
-  color: var(--accent-hover);
-  text-decoration-thickness: 2px;
+@media (hover: hover) {
+  .link-button:hover:not(:disabled) {
+    border: 0;
+    background: none;
+    color: var(--accent-hover);
+    text-decoration-thickness: 2px;
+  }
 }
 
 .toolbar {
