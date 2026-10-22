@@ -403,6 +403,14 @@ def find_values(files: Iterable[Path], values: dict[str, str]) -> list[tuple[str
 
 _TAG = re.compile(r"<(script|link)\b[^>]*>(?:\s*</script>)?", re.IGNORECASE)
 _BODY = re.compile(r"<body[^>]*>(.*)</body>", re.IGNORECASE | re.DOTALL)
+# The one outside stylesheet host the artifact host allows (its CSP): web fonts. Each font has
+# a system fallback in styles.css, so the page still reads if the fonts are blocked.
+FONT_STYLESHEET = "https://fonts.googleapis.com/"
+
+
+def _is_font_link(tag: str) -> bool:
+    ref = re.search(r'href="([^"]+)"', tag)
+    return ref is not None and ref.group(1).startswith(FONT_STYLESHEET)
 
 
 def body_only_html(index_html: str) -> str:
@@ -416,7 +424,7 @@ def body_only_html(index_html: str) -> str:
     scripts = [t for t in tags if t.lower().startswith("<script")]
     if not scripts:
         raise ValueError("the built page has no script tag")
-    for t in links + scripts:
+    for t in [t for t in links if not _is_font_link(t)] + scripts:
         ref = re.search(r'(?:src|href)="([^"]+)"', t)
         if ref is None or ref.group(1).startswith(("/", "http:", "https:", "//")):
             raise ValueError(f"not a relative reference: {t} (build with npm run build:snapshot)")
@@ -440,9 +448,10 @@ def single_page(site: Path, title: str = "Football Model") -> str:
     js = js.replace("<script>", "\\x3cscript>")  # only ever inside string literals
     if "</script" in js.lower() or "<!--" in js or "</style" in css.lower():
         raise ValueError("the bundle can't be inlined safely")
+    fonts = "".join(f"{m.group(0)}\n" for m in _TAG.finditer(index) if _is_font_link(m.group(0)))
     body = re.sub(r"<(link|script)\b[^>]*>(?:\s*</script>)?", "", index).strip()
     return (
-        f"<title>{title}</title>\n<style>{css}</style>\n{body}\n"
+        f"<title>{title}</title>\n{fonts}<style>{css}</style>\n{body}\n"
         f'<script type="module">{js}</script>\n'
     )
 

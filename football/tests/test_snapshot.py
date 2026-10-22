@@ -421,6 +421,33 @@ def test_single_page_inlines_the_bundle_and_keeps_snapshot_beside_it(tmp_path):
     assert snap.read_text() == '{"format":"footy-api-snapshot/1"}'
 
 
+def test_font_stylesheet_is_the_only_outside_reference_kept():
+    """The Google Fonts stylesheet (allowed by the artifact host) survives both the body-only
+    page and the single page; any other absolute reference is still refused."""
+    font = '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=X&display=swap">'
+    built = BUILT_INDEX.replace("</head>", f"{font}\n</head>")
+    page = body_only_html(built)
+    assert font in page
+    with pytest.raises(ValueError, match="relative"):
+        body_only_html(built.replace("https://fonts.googleapis.com/", "https://example.com/"))
+
+
+def test_single_page_keeps_the_font_stylesheet(tmp_path):
+    from footy.snapshot import single_page
+
+    site = tmp_path / "site"
+    (site / "assets").mkdir(parents=True)
+    font = '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=X&display=swap">'
+    (site / "index.html").write_text(
+        f'{font}\n<link rel="stylesheet" href="./assets/a.css">\n<div id="root"></div>\n'
+        '<script type="module" src="./assets/a.js"></script>\n'
+    )
+    (site / "assets" / "a.css").write_text("body{color:red}")
+    (site / "assets" / "a.js").write_text("console.log(1)")
+    html = single_page(site)
+    assert html.count(font) == 1 and "./assets/" not in html
+
+
 def test_single_page_refuses_a_bundle_that_closes_its_own_script(tmp_path):
     from footy.snapshot import single_page
 
