@@ -58,8 +58,9 @@ challenger replaces a model of record only if it is also at least as good on tes
 | `dixon_coles` | 64 | the same league games, published first (fitted on all history; see D-027) |
 | `market_tilt_dc`, `market_tilt_shots` | 1 each | Levante v Athletic Club, 21 Oct |
 
-Nothing is settled in the database yet: Wikipedia's API is rate-limiting this container
-(HTTP 429 since about 22:00 UTC on 21 Oct). The ten games the owner's ChatGPT app also
+Levante 3-1 Athletic Club is settled (football-data, 22 Oct 07:32 UTC; matches the news-sourced
+score). The nine UCL games are not: Wikipedia's API still answered this container with HTTP
+429 at 07:31 UTC on 22 Oct (rate-limited since about 22:00 UTC on 21 Oct). The ten games the owner's ChatGPT app also
 forecast are scored in `comparisons/scored_2026-10-21.json` (`comparisons/score.py`), on final
 scores each confirmed by three or more independent news publishers
 (`comparisons/results_2026-10-21.json`): ChatGPT app 7/10 results right against our 5/10, RPS
@@ -70,7 +71,7 @@ session, `send_later`):
 | --- | --- |
 | Wed 21 Oct 12:30 | Deadline check before the UCL kickoffs (already published) |
 | Wed 21 Oct 22:20 | Settle the Champions League (done provisionally; Wikipedia rate-limited) |
-| Thu 22 Oct 07:30 | Retry the Wikipedia fetch once, settle, check the database matches `results_2026-10-21.json` |
+| Thu 22 Oct 07:30 | Done: Levante settled; Wikipedia still 429, UCL and team pictures wait |
 | Thu 22 Oct 22:20 | Settle the Europa League and Conference League |
 | Fri 23 Oct 12:20 | Fetch the weekend's prices (`footy fd-fixtures`), publish `market_tilt_shots` records before the 19:00 kickoffs |
 | Mon 26 Oct 08:10 | Settle the weekend's league games |
