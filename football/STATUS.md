@@ -1,6 +1,6 @@
 # STATUS
 
-_Last updated: 2026-10-21, 23:30 UK. Every session starts from this file._
+_Last updated: 2026-10-22, 06:45 UK. Every session starts from this file._
 
 ## Where things stand
 
@@ -18,6 +18,10 @@ none of it has had the owner's review yet.
 | M5 Profit simulation | Done: `footy final-report` (one test run, market benchmark, profit) |
 | M6 Website core | Done: fixtures, match, past, performance, lab, data, status pages; QA in `docs/m6/qa.md` |
 | M7 Live operations | Running: genuine pre-match records are being published and settled; see dependencies |
+
+On 21–22 Oct the owner asked for machine learning, detailed stats for every team in the league
+and in Europe (and cups later), a less plain design and pictures for teams. All four are built
+(see "Website" and "Machine learning" below); none of it has had the owner's review yet.
 
 ## Models of record (D-025, D-026, D-027)
 
@@ -71,6 +75,47 @@ session, `send_later`):
 | Fri 23 Oct 12:20 | Fetch the weekend's prices (`footy fd-fixtures`), publish `market_tilt_shots` records before the 19:00 kickoffs |
 | Mon 26 Oct 08:10 | Settle the weekend's league games |
 | Tue 27 Oct 11:50 | Midweek prices and records (Serie A on 27 Oct) |
+
+## Machine learning (D-028, proposed: no switch)
+
+Four learners that learn from the other models' out-of-sample track record and keep learning
+after every settled match (`ml_online_*`: Hedge mixture weights over score grids; `ml_stack_*`:
+ridge logistic meta-models tilted back onto one grid). Tuned on 2021/22–2022/23 only.
+`ml_online_market` beat `market_tilt_shots` on validation (0.94455 against 0.94488) but not on
+its one test run (0.95574 against 0.95546), so nothing switched; the pure learners lost
+validation to `congestion_context_on_elo`. Audited: no leakage in any reported run. Details:
+[docs/research/machine-learning.md](docs/research/machine-learning.md); the Lab's "Machine
+learning" tab shows the learning curves.
+
+## Website (22 Oct)
+
+- **Redesign:** matchday-programme look (chalk light theme, floodlit dark theme), team badges,
+  pitch heroes, score heat map, bottom tab bar on phones.
+- **Teams:** `#/teams` (every club with a match this season) and `#/team/<key>`: record, form,
+  per-match stats for and against, half-time turnarounds, home/away, league / Europe / cups
+  splits, a descriptive all-competition Elo, upcoming fixtures with our predictions, and the
+  full match log with every stat (`src/footy/teams.py`, [docs/teams.md](docs/teams.md);
+  CLI `uv run footy team-stats <team> [--csv OUT]`). UEFA matches carry scores only (the
+  permitted sources have no shots or cards); cups appear once a cup source is added.
+- **Match page:** "Form and stats" (both sides' form, averages, head-to-head, match stats).
+- **Team pictures** ([docs/research/team-media.md](docs/research/team-media.md)): 705 of 717
+  recent clubs mapped to Wikidata; only freely licensed Commons files are used (206 clubs have
+  a free crest, 620 a venue photo). **Nothing is downloaded yet** (Wikimedia answers 429), so
+  every club shows a badge drawn from its Wikidata colours. Run
+  `uv run footy team-media --download` once Wikimedia allows it.
+- **Snapshot:** sharded (`footy-api-snapshot/2`, [docs/snapshot.md](docs/snapshot.md)): a page
+  plus about 35 JSON files, ~34 MB, team data loaded lazily.
+
+## Publishing the phone copy
+
+The owner's phone copy is the private artifact https://claude.ai/artifact/FZeCvYx9mG2fDmrhPZ2Gyf.
+With P = /tmp/claude-0/-home-user-bradley09roberts-glitch-github-io/2e2a3e27-112f-5b7b-9aa0-b88dd615f6f7/scratchpad/app_snapshot:
+
+1. `make snapshot OUT=$P/site PAGE=$P/artifact_new/football-model.html`
+2. Publish with the Artifact tool: `file_path` = `$P/artifact_new/football-model.html`, `url` = the
+   artifact, `root` = `$P/artifact_new`, `files` = every other file in that folder (`ls` it:
+   snapshot.json and every snapshot-*.json, plus media/ if pictures were downloaded). Files
+   left out keep their old contents, so always pass every shard.
 
 ## Data (21 Oct 2026)
 
@@ -147,3 +192,9 @@ container lives.
 9. **Records published before 10:52 UTC on 21 Oct**: the 64 `dixon_coles` records and the two
    Levante model + market records were fitted on all history, not the tested 3-year window
    (D-027). They stay as published; the fallback of record has correctly fitted records.
+10. **Wikimedia rate limit** (since 21 Oct, about 22:00 UTC): en.wikipedia.org, Commons and
+    upload.wikimedia.org answer this machine with HTTP 429, so UEFA results can't be settled
+    and team pictures can't be downloaded; only the Wikidata Query Service works. The fetchers
+    now send contact details in their User-Agent. Retry once per check-in, never in a loop.
+11. **Container restarts** happen every hour or two: they kill the capture loop and any
+    running workflow (work on disk survives; commit checkpoints often).
