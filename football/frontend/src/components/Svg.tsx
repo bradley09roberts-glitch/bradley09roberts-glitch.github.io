@@ -82,7 +82,7 @@ export function FormPips({ results }: { results: ("W" | "D" | "L")[] }) {
   );
 }
 
-export type IconName = "fixtures" | "past" | "performance" | "lab" | "data" | "dot";
+export type IconName = "fixtures" | "past" | "teams" | "performance" | "lab" | "data" | "dot";
 
 const ICONS: Record<IconName, ReactNode> = {
   fixtures: (
@@ -95,6 +95,11 @@ const ICONS: Record<IconName, ReactNode> = {
     <>
       <path d="M4 12a8 8 0 1 0 2.3-5.6" />
       <path d="M4 4v4h4M12 8v4.5l3 2" />
+    </>
+  ),
+  teams: (
+    <>
+      <path d="M8.5 3.5 3.5 6.2l1.9 4.6 2.6-1.1V20.5h8V9.7l2.6 1.1 1.9-4.6-5-2.7c-.6 1.5-1.9 2.4-3.5 2.4s-2.9-.9-3.5-2.4Z" />
     </>
   ),
   performance: (

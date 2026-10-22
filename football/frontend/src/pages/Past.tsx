@@ -16,6 +16,7 @@ import { BasisBadge, EditionBadge, RecordTypeBadge } from "../components/Badge";
 import { CompetitionChip } from "../components/CompetitionMark";
 import { ApiView, Empty } from "../components/StateViews";
 import { TeamBadge } from "../components/TeamBadge";
+import { TeamLink } from "../components/TeamLink";
 import { sortByCompetition } from "../competitions";
 import {
   formatDayHeading,
@@ -501,20 +502,28 @@ function PastRow({
           {card.basis === "model_and_market" && <BasisBadge basis={card.basis} />}
           {showModel && <span className="past-model">{card.model_name}</span>}
         </div>
+        {/* Each name opens its team's page; anywhere else on the row opens the saved
+            prediction (the score is the link, stretched over the row). */}
         <h3 className="past-teams">
-          <a className="stretched" href={href(`/match/${card.id}`)} aria-label={linkLabel}>
-            <span className="past-home">
-              <span className="past-name">{card.home_name}</span>
-              <TeamBadge teamKey={card.home_team} name={card.home_name} size={28} />
-            </span>
-            <span className={`past-score${scored ? "" : " is-status"}`}>
-              {scored ? `${s.home_goals}–${s.away_goals}` : s ? settlementStatusLabel(s.status) : "—"}
-            </span>
-            <span className="past-away">
-              <TeamBadge teamKey={card.away_team} name={card.away_name} size={28} />
-              <span className="past-name">{card.away_name}</span>
-            </span>
+          <span className="past-home">
+            <TeamLink teamKey={card.home_team} className="past-name">
+              {card.home_name}
+            </TeamLink>
+            <TeamBadge teamKey={card.home_team} name={card.home_name} media={card.home_media} size={28} />
+          </span>
+          <a
+            className={`stretched past-score${scored ? "" : " is-status"}`}
+            href={href(`/match/${card.id}`)}
+            aria-label={linkLabel}
+          >
+            {scored ? `${s.home_goals}–${s.away_goals}` : s ? settlementStatusLabel(s.status) : "—"}
           </a>
+          <span className="past-away">
+            <TeamBadge teamKey={card.away_team} name={card.away_name} media={card.away_media} size={28} />
+            <TeamLink teamKey={card.away_team} className="past-name">
+              {card.away_name}
+            </TeamLink>
+          </span>
         </h3>
         {settledMarkets === 0 ? (
           <p className="muted small">

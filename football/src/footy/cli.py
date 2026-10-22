@@ -155,13 +155,13 @@ def main(argv: list[str] | None = None) -> int:
     snap.add_argument(
         "--out",
         required=True,
-        help="folder for the site (index.html, assets/, snapshot.json); empty or an earlier "
-        "snapshot, whose files are replaced",
+        help="folder for the site (index.html, assets/, snapshot.json, its shard files and "
+        "media/); empty or an earlier snapshot, whose files are replaced",
     )
     snap.add_argument(
         "--single-page",
-        help="also write this one-file page (script and styles inlined) with snapshot.json "
-        "beside it, for publishing as a private Artifact",
+        help="also write this one-file page (script and styles inlined) with snapshot.json, "
+        "its shard files and media/ beside it, for publishing as a private Artifact",
     )
     snap.add_argument(
         "--dist",
@@ -422,7 +422,12 @@ def main(argv: list[str] | None = None) -> int:
         if args.single_page:
             from footy.snapshot import write_single_page
 
-            written = write_single_page(result.out, Path(args.single_page).resolve())
+            try:
+                written = write_single_page(result.out, Path(args.single_page).resolve())
+            except SnapshotRefused as e:
+                print(json.dumps(report, indent=2))
+                print(f"Single page refused, nothing written beside it: {e}")
+                return 1
             report["single_page"] = [{"path": str(p), "bytes": p.stat().st_size} for p in written]
         print(json.dumps(report, indent=2))
     elif args.command == "fd-fixtures":

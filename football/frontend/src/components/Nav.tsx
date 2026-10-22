@@ -1,23 +1,28 @@
 // Main navigation, built from the page registry (src/pages/index.ts). On a phone it is a
 // tab bar along the bottom of the screen (clear of the home indicator, via the safe-area
-// inset); from 720 px wide it sits in the top bar beside the wordmark.
+// inset) with five items at most: a page marked `tabBar: false` is linked from the app bar
+// instead (AppBarLinks). From 720 px wide every item sits in the top bar beside the wordmark.
 
 import { Component, type ErrorInfo, type MouseEvent, type ReactNode } from "react";
 import type { PageDef } from "../pages";
 import { goBack, href } from "../router";
 import { Icon } from "./Svg";
 
+type NavPage = PageDef & { nav: NonNullable<PageDef["nav"]> };
+
+function navItems(pages: readonly PageDef[]): NavPage[] {
+  return pages.filter((p): p is NavPage => p.nav !== undefined).sort((a, b) => a.nav.order - b.nav.order);
+}
+
 export function Nav({ pages, active }: { pages: readonly PageDef[]; active: string | null }) {
-  const items = pages
-    .filter((p): p is PageDef & { nav: NonNullable<PageDef["nav"]> } => p.nav !== undefined)
-    .sort((a, b) => a.nav.order - b.nav.order);
+  const items = navItems(pages);
   return (
     <nav className="nav" aria-label="Main">
       <ul>
         {items.map((p) => {
           const current = p.path === active;
           return (
-            <li key={p.path}>
+            <li key={p.path} className={p.nav.tabBar === false ? "nav-off-tabbar" : undefined}>
               <a href={href(p.path)} aria-current={current ? "page" : undefined} aria-label={p.nav.label}>
                 <span className="nav-icon">
                   <Icon name={p.nav.icon ?? "dot"} />
@@ -33,6 +38,23 @@ export function Nav({ pages, active }: { pages: readonly PageDef[]; active: stri
           );
         })}
       </ul>
+    </nav>
+  );
+}
+
+/** Phone only (hidden from 720 px by styles.css): the pages kept off the tab bar, as small
+ * links at the end of the app bar. */
+export function AppBarLinks({ pages, active }: { pages: readonly PageDef[]; active: string | null }) {
+  const items = navItems(pages).filter((p) => p.nav.tabBar === false);
+  if (items.length === 0) return null;
+  return (
+    <nav className="appbar-links" aria-label="More">
+      {items.map((p) => (
+        <a key={p.path} href={href(p.path)} aria-current={p.path === active ? "page" : undefined} aria-label={p.nav.label}>
+          <Icon name={p.nav.icon ?? "dot"} size={18} />
+          <span aria-hidden="true">{p.nav.short ?? p.nav.label}</span>
+        </a>
+      ))}
     </nav>
   );
 }

@@ -265,6 +265,31 @@ month.
 A website summary of this note is in `data/reports/ml_selection.json` (metrics only; no prices,
 D-013 / D-024).
 
+### For the website
+
+| Request | What it gives |
+| --- | --- |
+| `GET /api/reports/ml_learning_curve` | This file as saved: per candidate, monthly and cumulative composites of the candidate and its target |
+| `GET /api/reports/ml_selection` | The saved summary: validation and test tables, paired differences with 95% intervals |
+| `GET /api/ml/summary` | D-028 in short (`footy.ml_decision`): each candidate's target, validation and test composites against its target's, what happened to it, the verdict (`"no switch"`) and why |
+
+`/api/ml/summary` reads every number from `ml_selection.json`; only the candidates' roles and
+the reasons that aren't numbers are D-028's words. The static snapshot carries all three.
+
+```json
+{"decision": "D-028", "status": "proposed", "verdict": "no switch", "switch_to": [],
+ "models_of_record": {"with_prices": "market_tilt_shots", "without_prices": "congestion_context_on_elo"},
+ "candidates": [{"model": "ml_online_market", "fixtures_with_prices": true, "target": "market_tilt_shots",
+   "validation": {"fixtures": 1752, "composite": 0.944549, "target_composite": 0.944876,
+                  "difference": -0.000327, "difference_ci95": [-0.001157, 0.000546], "beat_target": true},
+   "test": {"run": true, "fixtures": 3503, "composite": 0.955744, "target_composite": 0.955464,
+            "difference": 0.00028, "difference_ci95": [-0.000241, 0.00079], "at_least_as_good": false},
+   "outcome": "not adopted: worse than its target on test (D-027)"}, "..."],
+ "why": ["ml_online_market beat market_tilt_shots on validation (0.94455 against 0.94488) and was the one candidate tested; on test it scored 0.95574 against 0.95546, so under D-027 it does not replace it.", "..."],
+ "sources": {"selection": "/api/reports/ml_selection", "learning_curve": "/api/reports/ml_learning_curve",
+             "write_up": "docs/research/machine-learning.md"}}
+```
+
 ## Leakage
 
 - **Shared test.** Every registered candidate, the four new ones included, passes the

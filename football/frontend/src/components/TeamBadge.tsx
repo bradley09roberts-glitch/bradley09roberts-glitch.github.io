@@ -1,10 +1,12 @@
 // A team's badge, shown beside its name wherever a team is named.
 //
-// With a crest URL (the teams media API will supply one per team) it shows that image. With the
-// club's colours (from the same API) it draws a shield in those colours. Without either it
-// draws a neutral monogram: one shield in the site's own colours with the team's two- or
-// three-letter abbreviation, the same for every club, so no club is ever shown in another
-// club's colours. No club's real crest is imitated.
+// The API sends a media summary wherever it names a team (docs/teams.md, "Pictures and
+// colours"). With a crest URL (only a downloaded, freely licensed crest) the badge shows that
+// image. With the club's official colours it draws a shield in those colours, lettered with
+// the server's three-letter short name (the same letters as the API's generated badge.svg).
+// Without either it draws a neutral monogram: one shield in the site's own colours, the same
+// for every club, so no club is ever shown in another club's colours. No club's real crest is
+// imitated.
 //
 // Letters sit on a solid field (never over a pattern) and are drawn only from 30 px up; a
 // smaller badge shows a centre-circle mark instead, as letters would be too small to read.
@@ -13,12 +15,15 @@
 // screen readers and carries no meaning of its own.
 
 import { useState } from "react";
+import type { MediaSummary } from "../api";
 
 export type TeamBadgeProps = {
-  /** The API's team key, e.g. "eng-arsenal" (for the crest, once the API supplies one). */
+  /** The API's team key, e.g. "eng-arsenal". */
   teamKey: string;
-  /** The display name; the abbreviation is made from it. */
+  /** The display name; the abbreviation is made from it when the API sends no short name. */
   name: string;
+  /** The API's media summary for the team: crest URL, badge colours and short name. */
+  media?: MediaSummary | null;
   crestUrl?: string | null;
   /** Club colours, primary first, as CSS hex colours. */
   colours?: string[];
@@ -103,9 +108,12 @@ const INSET = "translate(24 24) scale(0.82) translate(-24 -24.6)";
 /** The top band (the chief): above the letters, so nothing crosses them. */
 const CHIEF = "M6 6.4C12.4 6.4 18.5 5.4 24 2.5C29.5 5.4 35.6 6.4 42 6.4V12.5H6Z";
 
-export function TeamBadge({ name, crestUrl, colours, size = 32, className }: TeamBadgeProps) {
+export function TeamBadge({ name, media, crestUrl: crestProp, colours: coloursProp, size = 32, className }: TeamBadgeProps) {
   const [failedUrl, setFailedUrl] = useState<string | null>(null);
   const cls = `team-badge${className ? ` ${className}` : ""}`;
+  const crestUrl = media?.crest_url ?? crestProp;
+  const colours = media?.badge.colours ?? coloursProp;
+  const short = media?.badge.short?.trim();
 
   if (crestUrl && failedUrl !== crestUrl) {
     return (
@@ -124,7 +132,7 @@ export function TeamBadge({ name, crestUrl, colours, size = 32, className }: Tea
   }
 
   const club = clubColours(colours);
-  const letters = size >= MIN_LETTERS ? teamAbbr(name) : "";
+  const letters = size >= MIN_LETTERS ? (short ? short.slice(0, 3).toUpperCase() : teamAbbr(name)) : "";
   const fontSize = letters.length >= 3 ? 16.5 : letters.length === 2 ? 19 : 22;
   // Wide combinations ("WWA", "MUN") are drawn a little narrower so they never touch the line.
   const squeeze = emWidth(letters) * fontSize > MAX_TEXT;

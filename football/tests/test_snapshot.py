@@ -1,8 +1,8 @@
 """The static snapshot exporter (footy.snapshot, `footy export-snapshot`).
 
 SYNTHETIC TEST DATA: fictional teams (fdfixtures), made-up probabilities, a made-up backtest
-ledger and report, a made-up "secret" and a planted price-like field. Nothing here is a real
-price, prediction, result or credential.
+ledger and report, a made-up "secret", a planted price-like field and a made-up crest (a few
+bytes of PNG header). Nothing here is a real price, prediction, result, picture or credential.
 """
 
 import itertools
@@ -27,6 +27,7 @@ from footy.snapshot import (
     FORMAT,
     FRONTEND_FIXTURE_DAYS,
     FRONTEND_PAST_RECORD_TYPES,
+    FRONTEND_REPORTS,
     FRONTEND_UEFA_CODES,
     SnapshotRefused,
     body_only_html,
@@ -211,6 +212,24 @@ def export(settings, world, out):
     return run_export(settings, out, dist=world["dist"], env_file=world["env_file"])
 
 
+def read_site(out):
+    """Every entry the site holds, from snapshot.json and each shard it lists:
+    key -> (status, body, file). A key is in exactly one file."""
+    main = json.loads((out / "snapshot.json").read_text())
+    docs = {"snapshot.json": main}
+    for sh in main["shards"]:
+        docs[sh["file"]] = json.loads((out / sh["file"]).read_text())
+        assert sh["bytes"] == (out / sh["file"]).stat().st_size
+        assert sorted(docs[sh["file"]]["entries"]) == sh["keys"]
+    found = {}
+    for name, doc in docs.items():
+        assert doc["format"] == FORMAT and doc["taken_at_utc"] == main["taken_at_utc"]
+        for key, (status, i) in doc["entries"].items():
+            assert key not in found, key
+            found[key] = (status, doc["bodies"][i], name)
+    return found
+
+
 def test_canonical_key_matches_the_frontend():
     # The same strings frontend/src/snapshot.ts canonicalKey() gives for these requests.
     assert canonical_key("/api/health") == "/api/health"
@@ -251,13 +270,13 @@ def test_export_covers_every_frontend_request(settings, migrated_engine, world, 
     out = tmp_path / "site"
     result = export(settings, world, out)
     snap = json.loads((out / "snapshot.json").read_text())
-    entries = snap["entries"]
+    entries = read_site(out)
     assert snap["format"] == FORMAT
     assert datetime.fromisoformat(snap["taken_at_utc"]).utcoffset() == timedelta(0)
 
     expected = {"/api/health", "/api/coverage", "/api/refresh-history?limit=200"}
-    expected |= {"/api/import-issues", "/api/performance", "/api/backtests"}
-    expected |= {"/api/reports/model_selection", "/api/reports/benchmark", "/api/hit-rates"}
+    expected |= {"/api/import-issues", "/api/performance", "/api/backtests", "/api/hit-rates"}
+    expected |= {f"/api/reports/{name}" for name in FRONTEND_REPORTS} | {"/api/ml/summary"}
     expected |= {f"/api/fixtures?days={d}" for d in FRONTEND_FIXTURE_DAYS}
     expected |= {"/api/past?limit=1&record_type=genuine_prematch"}
     for rt in FRONTEND_PAST_RECORD_TYPES:
@@ -272,15 +291,20 @@ def test_export_covers_every_frontend_request(settings, migrated_engine, world, 
     for lg in (None, *FRONTEND_UEFA_CODES):
         for ss in (None, "2425"):
             expected.add(canonical_key(euro, {"league": lg, "season": ss}))
+    # Team pages: the list, and every team on a card (here all three) with its three pages.
+    teams = ("eng-mockford", "eng-sampleton", "eng-testtown")
+    expected.add("/api/teams")
+    for t in teams:
+        expected |= {f"/api/teams/{t}", f"/api/teams/{t}/matches", f"/api/teams/{t}/media"}
     assert expected <= set(entries)
     assert result.report()["entries"] == len(entries)
+    assert result.report()["team_pages"] == len(teams)
 
-    # Bodies are the API's own responses, stored once each.
+    # Bodies are the API's own responses, stored once each per file.
     client = TestClient(create_app(settings=settings, engine=migrated_engine))
 
     def body(key):
-        status, i = entries[key]
-        return status, snap["bodies"][i]
+        return entries[key][:2]
 
     for pid in world["ids"]:
         assert body(f"/api/predictions/{pid}") == (
@@ -291,9 +315,12 @@ def test_export_covers_every_frontend_request(settings, migrated_engine, world, 
         200,
         client.get(dom, params={"league": "E1", "season": "2425"}).json(),
     )
+    profile = client.get("/api/teams/eng-testtown").json() | {"generated_at_utc": ANY}
+    assert body("/api/teams/eng-testtown") == (200, profile)
     past = body("/api/past?limit=500&record_type=genuine_prematch")[1]
     assert world["settled"] in {m["id"] for m in past["matches"]}
     assert body("/api/reports/benchmark") == (404, {"detail": "no such report"})
+    assert body("/api/ml/summary") == (404, {"detail": "no such report"})
     hits = body("/api/hit-rates")
     assert hits == (200, client.get("/api/hit-rates").json() | {"generated_at_utc": ANY})
     assert {m["model"] for m in hits[1]["backtest"]["missing"]} >= {"market_tilt_shots"}
@@ -301,12 +328,51 @@ def test_export_covers_every_frontend_request(settings, migrated_engine, world, 
     broken = "/api/backtests/synthetic_broken__validation__2324/summary"
     assert body(broken + "?league=E0") == (500, None)
     assert broken in result.report()["not_ok"]
-    assert len(snap["bodies"]) < len(entries)  # the empty past lists, for one, are shared
+    assert len(snap["bodies"]) < len(snap["entries"])  # the empty past lists, for one, are shared
 
-    # No price-like field, though the record was built from one (the API withholds it).
-    assert find_prices(snap) == []
-    text_ = (out / "snapshot.json").read_text()
-    assert "planted_price" not in text_ and "B365H" not in text_
+    # No price-like field in any file, though a record was built from one (the API withholds it).
+    for f in [out / "snapshot.json", *(out / sh["file"] for sh in snap["shards"])]:
+        assert find_prices(json.loads(f.read_text())) == []
+        assert "planted_price" not in f.read_text() and "B365H" not in f.read_text()
+
+
+def test_first_screen_in_snapshot_json_the_rest_in_shards(settings, world, tmp_path):
+    out = tmp_path / "site"
+    export(settings, world, out)
+    entries = read_site(out)
+    where = {key: name for key, (_, _, name) in entries.items()}
+    for key in ("/api/health", "/api/fixtures?days=8", "/api/performance", "/api/ml/summary"):
+        assert where[key] == "snapshot.json", key
+    assert {where[f"/api/predictions/{i}"] for i in world["ids"]} == {"snapshot-matches-1.json"}
+    lab = {name for key, name in where.items() if key.startswith("/api/backtests/")}
+    assert lab == {"snapshot-lab-1.json"}
+    # The teams list has a file to itself; each team's pages are never split.
+    assert where["/api/teams"] == "snapshot-teams-1.json"
+    assert [k for k, n in where.items() if n == "snapshot-teams-1.json"] == ["/api/teams"]
+    for t in ("eng-mockford", "eng-sampleton", "eng-testtown"):
+        files = {where[k] for k in (f"/api/teams/{t}", f"/api/teams/{t}/matches")}
+        assert files == {where[f"/api/teams/{t}/media"]} != {"snapshot-teams-1.json"}
+
+
+def test_shards_close_at_the_target_size_and_keep_each_team_together(
+    settings, world, tmp_path, monkeypatch
+):
+    from footy import snapshot
+
+    monkeypatch.setattr(snapshot, "SHARD_TARGET_BYTES", 1)  # every group in its own file
+    out = tmp_path / "site"
+    report = export(settings, world, out).report()
+    entries = read_site(out)
+    team_files = {
+        t: {n for k, (_, _, n) in entries.items() if k.startswith(f"/api/teams/{t}")}
+        for t in ("eng-mockford", "eng-sampleton", "eng-testtown")
+    }
+    assert all(len(files) == 1 for files in team_files.values())
+    assert len({f for files in team_files.values() for f in files}) == 3
+    shards = {sh["file"] for sh in report["shards"]}
+    assert {f"snapshot-teams-{n}.json" for n in range(1, 5)} <= shards
+    assert {f"snapshot-matches-{n}.json" for n in range(1, len(world["ids"]) + 1)} <= shards
+    assert report["checks"]["within_limits"] and report["file_count"] == len(report["files"])
 
 
 def test_page_is_body_content_with_relative_references(settings, world, tmp_path):
@@ -321,12 +387,23 @@ def test_page_is_body_content_with_relative_references(settings, world, tmp_path
         '<script type="module" crossorigin src="./assets/index-AbCd1234.js"></script>',
     ]
     names = {f["path"] for f in result.report()["files"]}
-    assert names == {
-        "index.html",
-        "snapshot.json",
-        "assets/index-AbCd1234.js",
-        "assets/index-EfGh5678.css",
+    shards = {sh["file"] for sh in result.report()["shards"]}
+    assert shards == {
+        "snapshot-matches-1.json",
+        "snapshot-lab-1.json",
+        "snapshot-teams-1.json",
+        "snapshot-teams-2.json",
     }
+    assert (
+        names
+        == {
+            "index.html",
+            "snapshot.json",
+            "assets/index-AbCd1234.js",
+            "assets/index-EfGh5678.css",
+        }
+        | shards
+    )
     with pytest.raises(ValueError, match="relative"):
         body_only_html(BUILT_INDEX.replace("./assets/index-AbCd1234.js", "/assets/x.js"))
 
@@ -456,4 +533,237 @@ def test_single_page_refuses_a_bundle_that_closes_its_own_script(tmp_path):
     (site / "index.html").write_text('<script type="module" src="./assets/a.js"></script>')
     (site / "assets" / "a.js").write_text("document.write('</script>')")
     with pytest.raises(ValueError, match="inlined safely"):
+        single_page(site)
+
+
+# --- Pictures, limits and the checks over every file -------------------------------------------
+
+PNG = b"\x89PNG\r\n\x1a\n" + b"\0" * 16  # SYNTHETIC: a PNG header, not a picture
+
+
+def add_picture(settings, monkeypatch, tmp_path, team="eng-testtown", kind="crest"):
+    """A SYNTHETIC downloaded picture for `team`, with the facts naming its Commons file."""
+    from footy.media import service
+
+    name = "crest.png" if kind == "crest" else "venue.jpg"
+    facts = {
+        "teams": {
+            team: {
+                "qid": "Q1",
+                "crest_file": "Synthetic crest.svg",
+                "venue": {"name": "Synthetic Ground", "image_file": "Synthetic ground.jpg"},
+                "colours": [{"name": "red", "hex": "#CC0000"}],
+            }
+        }
+    }
+    path = tmp_path / "team_media.json"
+    path.write_text(json.dumps(facts))
+    monkeypatch.setattr(service, "FACTS_PATH", path)
+    folder = service.media_dir(settings) / team
+    folder.mkdir(parents=True, exist_ok=True)
+    (folder / name).write_bytes(PNG)
+    manifest = folder / "manifest.json"
+    files = json.loads(manifest.read_text())["files"] if manifest.exists() else {}
+    files[kind] = {
+        "file": name,
+        "commons_file": "Synthetic crest.svg" if kind == "crest" else "Synthetic ground.jpg",
+        "source_url": f"https://commons.wikimedia.org/wiki/File:Synthetic_{kind}",
+        "licence": "CC BY-SA 4.0",
+        "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+        "author": "A. Synthetic",
+        "attribution": f"Synthetic {kind} by A. Synthetic, CC BY-SA 4.0, via Wikimedia Commons",
+    }
+    manifest.write_text(json.dumps({"team_key": team, "files": files}))
+
+
+def test_downloaded_pictures_are_carried_beside_the_page(settings, world, tmp_path, monkeypatch):
+    add_picture(settings, monkeypatch, tmp_path, kind="crest")
+    add_picture(settings, monkeypatch, tmp_path, kind="venue")
+    out = tmp_path / "site"
+    report = export(settings, world, out).report()
+    assert report["pictures"] == {
+        "carried": ["media/teams/eng-testtown/crest.png", "media/teams/eng-testtown/venue.jpg"],
+        "left_out": [],
+    }
+    assert (out / "media/teams/eng-testtown/crest.png").read_bytes() == PNG
+    assert {"media/teams/eng-testtown/crest.png", "media/teams/eng-testtown/venue.jpg"} <= {
+        f["path"] for f in report["files"]
+    }
+    entries = read_site(out)
+    media = entries["/api/teams/eng-testtown/media"][1]
+    # The URLs point at the copies beside the page; the attribution is kept with them.
+    assert media["crest"]["url"] == "media/teams/eng-testtown/crest.png"
+    assert media["crest"]["attribution"].startswith("Synthetic crest by A. Synthetic")
+    assert media["crest"]["licence_url"] == "https://creativecommons.org/licenses/by-sa/4.0"
+    assert media["venue"]["url"] == "media/teams/eng-testtown/venue.jpg"
+    assert media["venue"]["author"] == "A. Synthetic"
+    # A generated badge is drawn on request, so the snapshot has no file for it: null.
+    other = entries["/api/teams/eng-sampleton/media"][1]
+    assert other["crest"]["kind"] == "generated" and other["crest"]["url"] is None
+    # Cards carry the relative crest URL too, in every file.
+    card = entries["/api/past?limit=500&record_type=genuine_prematch"][1]["matches"][0]
+    side = "home_media" if card["home_team"] == "eng-testtown" else "away_media"
+    assert card[side]["crest_url"] == "media/teams/eng-testtown/crest.png"
+    profile = entries["/api/teams/eng-testtown"][1]
+    assert profile["team"]["media"]["crest_url"] == "media/teams/eng-testtown/crest.png"
+    for _, body, _ in entries.values():
+        assert "/media/teams/" not in json.dumps(body)
+
+
+def test_pictures_beyond_the_file_limit_are_left_out(settings, world, tmp_path, monkeypatch):
+    from footy import snapshot
+
+    add_picture(settings, monkeypatch, tmp_path, kind="crest")
+    add_picture(settings, monkeypatch, tmp_path, kind="venue")
+    out = tmp_path / "site"
+    first = export(settings, world, out).report()
+    # Room for exactly one picture beside the other files: the crest goes first.
+    monkeypatch.setitem(snapshot.HOST_LIMITS, "files", first["file_count"] - 1)
+    report = export(settings, world, out).report()
+    assert report["pictures"] == {
+        "carried": ["media/teams/eng-testtown/crest.png"],
+        "left_out": ["media/teams/eng-testtown/venue.jpg"],
+    }
+    assert not (out / "media/teams/eng-testtown/venue.jpg").exists()  # the earlier copy went
+    media = read_site(out)["/api/teams/eng-testtown/media"][1]
+    assert media["crest"]["url"] == "media/teams/eng-testtown/crest.png"
+    assert media["venue"]["url"] is None and media["venue"]["name"] == "Synthetic Ground"
+
+
+def test_a_file_over_the_hosts_limits_refuses_the_export(settings, world, tmp_path, monkeypatch):
+    from footy import snapshot
+
+    out = tmp_path / "site"
+    export(settings, world, out)
+    before = (out / "snapshot.json").read_bytes()
+    monkeypatch.setitem(snapshot.HOST_LIMITS, "text_file_bytes", 20_000)
+    with pytest.raises(SnapshotRefused, match="text file limit"):
+        export(settings, world, out)
+    monkeypatch.setitem(snapshot.HOST_LIMITS, "text_file_bytes", 16_000_000)
+    monkeypatch.setitem(snapshot.HOST_LIMITS, "total_bytes", 1_000)
+    with pytest.raises(SnapshotRefused, match="in all"):
+        export(settings, world, out)
+    assert (out / "snapshot.json").read_bytes() == before
+    assert not [p for p in tmp_path.iterdir() if p.name.startswith(".site-")]
+
+
+def test_a_price_in_a_shard_refuses_the_export(settings, world, tmp_path, monkeypatch):
+    """SYNTHETIC: a team profile that (wrongly) carried a price-like field."""
+    from footy import teams
+
+    real = teams.team_profile
+    monkeypatch.setattr(
+        teams, "team_profile", lambda *a, **k: {**real(*a, **k), "odds": {"B365H": 2.5}}
+    )
+    with pytest.raises(SnapshotRefused, match=r"snapshot-teams-\d+\.json"):
+        export(settings, world, tmp_path / "site")
+    assert not (tmp_path / "site").exists()
+
+
+def test_a_secret_in_a_shard_refuses_the_export(settings, world, migrated_engine, tmp_path):
+    with migrated_engine.begin() as conn:  # SYNTHETIC: a team name quoting the token
+        conn.execute(
+            text("UPDATE teams SET name = :n WHERE team_key = 'eng-mockford'"),
+            {"n": f"Mockford {SYNTHETIC_SECRET}"},
+        )
+    with_token = Settings(
+        _env_file=None,
+        FOOTY_DATABASE_URL=settings.database_url,
+        FOOTY_DATA_DIR=settings.data_dir,
+        SPORTMONKS_API_TOKEN=SYNTHETIC_SECRET,
+    )
+    with pytest.raises(SnapshotRefused, match=r"snapshot-teams-\d+\.json") as err:
+        export(with_token, world, tmp_path / "site")
+    assert SYNTHETIC_SECRET not in str(err.value)
+
+
+def test_re_export_drops_shards_the_new_snapshot_doesnt_have(settings, world, tmp_path):
+    out = tmp_path / "site"
+    export(settings, world, out)
+    (out / "snapshot-teams-9.json").write_text("{}")  # from an earlier, bigger snapshot
+    (out / "media" / "teams" / "eng-gone").mkdir(parents=True)
+    (out / "media" / "teams" / "eng-gone" / "crest.png").write_bytes(PNG)
+    export(settings, world, out)
+    assert not (out / "snapshot-teams-9.json").exists() and not (out / "media").exists()
+
+
+def test_an_earlier_format_snapshot_folder_is_replaced(settings, world, tmp_path):
+    out = tmp_path / "site"
+    out.mkdir()
+    (out / "snapshot.json").write_text('{"format":"footy-api-snapshot/1","bodies":[]}')
+    (out / "index.html").write_text("old")
+    export(settings, world, out)
+    assert json.loads((out / "snapshot.json").read_text())["format"] == FORMAT
+
+
+def test_single_page_carries_every_shard_and_picture(settings, world, tmp_path, monkeypatch):
+    from footy.snapshot import write_single_page
+
+    add_picture(settings, monkeypatch, tmp_path)
+    out = tmp_path / "site"
+    result = export(settings, world, out)
+    (out / "assets" / "index-AbCd1234.js").write_text("console.log('SYNTHETIC bundle');\n")
+    folder = tmp_path / "artifact"
+    folder.mkdir()
+    (folder / "snapshot.json").write_text('{"format":"footy-api-snapshot/2","bodies":[]}')
+    (folder / "snapshot-teams-7.json").write_text("{}")  # left from an earlier single page
+    (folder / "owner-notes.txt").write_text("kept")
+    written = write_single_page(out, folder / "football-model.html")
+    names = sorted(str(p.relative_to(folder)) for p in written)
+    shards = sorted(sh["file"] for sh in result.report()["shards"])
+    assert names == sorted(
+        ["football-model.html", "snapshot.json", "media/teams/eng-testtown/crest.png", *shards]
+    )
+    for name in names[1:]:
+        assert (folder / name).read_bytes() == (out / name).read_bytes()
+    assert not (folder / "snapshot-teams-7.json").exists()
+    assert (folder / "owner-notes.txt").read_text() == "kept"
+
+
+def test_single_page_over_the_limits_writes_nothing(settings, world, tmp_path, monkeypatch):
+    from footy import snapshot
+
+    out = tmp_path / "site"
+    export(settings, world, out)
+    monkeypatch.setitem(snapshot.HOST_LIMITS, "files", 2)
+    with pytest.raises(SnapshotRefused, match="over the limit of 2"):
+        snapshot.write_single_page(out, tmp_path / "artifact" / "page.html")
+    assert not (tmp_path / "artifact").exists()
+
+
+def test_a_shard_over_its_cap_refuses_the_export(settings, world, tmp_path, monkeypatch):
+    from footy import snapshot
+
+    monkeypatch.setattr(snapshot, "SHARD_MAX_BYTES", 100)
+    with pytest.raises(SnapshotRefused, match=r"snapshot-\w+-\d+\.json is .* shard limit"):
+        export(settings, world, tmp_path / "site")
+
+
+def test_single_page_is_ascii_whatever_charset_it_is_served_with(tmp_path):
+    """SYNTHETIC bundle with the kinds of non-ASCII text the real one has: an arrow in a
+    template literal, an accent-stripping regular expression, a CSS content string and an
+    astral character. Served as Latin-1 they would break the page; escaped they mean the same."""
+    from footy.snapshot import single_page
+
+    site = tmp_path / "site"
+    (site / "assets").mkdir(parents=True)
+    (site / "index.html").write_text(
+        '<link rel="stylesheet" href="./assets/a.css">\n<div id="root">Café</div>\n'
+        '<script type="module" src="./assets/a.js"></script>\n'
+    )
+    (site / "assets" / "a.css").write_text('a:before{content:"↓ ";color:red}', encoding="utf-8")
+    (site / "assets" / "a.js").write_text(
+        "const a=`← back`,b=s=>s.normalize(`NFD`).replace(/[̀-ͯ]/g,``),c='⚽😀';",
+        encoding="utf-8",
+    )
+    html = single_page(site)
+    assert html.isascii()
+    assert "const a=`\\u2190 back`" in html
+    assert ".replace(/[\\u0300-\\u036f]/g,``)" in html
+    assert "c='\\u26bd\\ud83d\\ude00'" in html
+    assert 'content:"\\2193  "' in html  # the escape eats one space; the text's space stays
+    assert '<div id="root">Caf&#xe9;</div>' in html
+
+    (site / "assets" / "a.js").write_text("const d='\\é';", encoding="utf-8")
+    with pytest.raises(ValueError, match="ASCII safely"):
         single_page(site)

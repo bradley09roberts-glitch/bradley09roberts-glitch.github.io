@@ -11,6 +11,7 @@ import {
   type Counterpart,
   type JsonValue,
   type MarketUsed,
+  type MediaSummary,
   type PredictionDetail,
   type RecentMatch,
 } from "../api";
@@ -32,6 +33,7 @@ import { Signals, fieldName, missingInputs } from "../components/Signals";
 import { ApiView, Empty } from "../components/StateViews";
 import { FormPips, Sparkline } from "../components/Svg";
 import { TeamBadge, teamKeyFromName } from "../components/TeamBadge";
+import { TeamLink } from "../components/TeamLink";
 import { EUROPEAN_CUPS } from "../competitions";
 import {
   formatDate,
@@ -52,6 +54,7 @@ import {
 import { useDocumentTitle, useMediaQuery } from "../hooks";
 import { canGoBack, href } from "../router";
 import type { PageProps } from ".";
+import { FormAndStats } from "./MatchForm";
 
 export function Match({ params }: PageProps) {
   const id = params.id ?? "";
@@ -182,10 +185,12 @@ function MatchDetail({ d }: { d: PredictionDetail }) {
               {formatLondon(d.training_cutoff_utc)}), so nothing that happened later is used.
             </p>
             <div className="recent-grid">
-              <RecentForm team={d.home_name} teamKey={d.home_team} matches={d.recent.home} />
-              <RecentForm team={d.away_name} teamKey={d.away_team} matches={d.recent.away} />
+              <RecentForm team={d.home_name} teamKey={d.home_team} media={d.teams?.home.media} matches={d.recent.home} />
+              <RecentForm team={d.away_name} teamKey={d.away_team} media={d.teams?.away.media} matches={d.recent.away} />
             </div>
           </Section>
+
+          {d.teams && <FormAndStats t={d.teams} />}
         </div>
 
         <aside className="match-aside" aria-label="Evidence and record">
@@ -240,20 +245,20 @@ function MatchHero({ d }: { d: PredictionDetail }) {
         <div className="mh-face">
           <h1 className="mh-teams">
             <span className="mh-team mh-home">
-              <TeamBadge teamKey={d.home_team} name={d.home_name} size={72} className="mh-badge" />
-              <span className="mh-name" style={nameFit(d.home_name)}>
+              <TeamBadge teamKey={d.home_team} name={d.home_name} media={d.teams?.home.media} size={72} className="mh-badge" />
+              <TeamLink teamKey={d.home_team} className="mh-name" style={nameFit(d.home_name)}>
                 {d.home_name}
-              </span>
+              </TeamLink>
               <span className="mh-side" aria-hidden="true">
                 Home
               </span>
             </span>
             <span className="visually-hidden"> v </span>
             <span className="mh-team mh-away">
-              <TeamBadge teamKey={d.away_team} name={d.away_name} size={72} className="mh-badge" />
-              <span className="mh-name" style={nameFit(d.away_name)}>
+              <TeamBadge teamKey={d.away_team} name={d.away_name} media={d.teams?.away.media} size={72} className="mh-badge" />
+              <TeamLink teamKey={d.away_team} className="mh-name" style={nameFit(d.away_name)}>
                 {d.away_name}
-              </span>
+              </TeamLink>
               <span className="mh-side" aria-hidden="true">
                 Away
               </span>
@@ -693,11 +698,21 @@ function teamGoals(m: RecentMatch): { gf: number; ga: number } | null {
   return m.venue === "H" ? { gf: hg, ga: ag } : { gf: ag, ga: hg };
 }
 
-function RecentForm({ team, teamKey, matches }: { team: string; teamKey: string; matches: RecentMatch[] }) {
+function RecentForm({
+  team,
+  teamKey,
+  media,
+  matches,
+}: {
+  team: string;
+  teamKey: string;
+  media?: MediaSummary;
+  matches: RecentMatch[];
+}) {
   const heading = (
     <h3 className="recent-head">
-      <TeamBadge teamKey={teamKey} name={team} size={28} />
-      {team}
+      <TeamBadge teamKey={teamKey} name={team} media={media} size={28} />
+      <TeamLink teamKey={teamKey}>{team}</TeamLink>
     </h3>
   );
   if (matches.length === 0) {
@@ -738,9 +753,15 @@ function RecentForm({ team, teamKey, matches }: { team: string; teamKey: string;
             <li key={`${m.date}-${i}`}>
               <span className="recent-date">{formatShortDay(m.date)}</span>
               <span className="recent-opp">
-                <TeamBadge teamKey={teamKeyFromName(m.opponent)} name={m.opponent} size={18} />
+                <TeamBadge
+                  teamKey={m.opponent_team ?? teamKeyFromName(m.opponent)}
+                  name={m.opponent}
+                  media={m.opponent_media}
+                  size={18}
+                />
                 <span className="recent-opp-text">
-                  <span className="muted">{m.venue === "H" ? "v" : "at"}</span> {m.opponent}
+                  <span className="muted">{m.venue === "H" ? "v" : "at"}</span>{" "}
+                  <TeamLink teamKey={m.opponent_team}>{m.opponent}</TeamLink>
                   <span className="muted small"> · {m.competition}</span>
                 </span>
               </span>

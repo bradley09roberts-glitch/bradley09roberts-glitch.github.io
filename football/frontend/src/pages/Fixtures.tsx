@@ -13,6 +13,7 @@ import { ProbBar } from "../components/ProbBar";
 import { Signals, hasOdds } from "../components/Signals";
 import { ApiView, Empty, StaleNotice } from "../components/StateViews";
 import { TeamBadge } from "../components/TeamBadge";
+import { TeamLink } from "../components/TeamLink";
 import { competitionRank, sortByCompetition } from "../competitions";
 import {
   daysBetween,
@@ -296,18 +297,22 @@ function FixtureCard({ cards }: { cards: PredictionCard[] }) {
         </span>
       </div>
       <div className="fx-body">
+        {/* Each name opens its team's page; anywhere else on the card opens the match (the
+            "Details" link below is stretched over the card). */}
         <h3 className="fx-teams">
-          <a className="stretched" href={href(`/match/${card.id}`)}>
-            <span className="fx-team">
-              <TeamBadge teamKey={card.home_team} name={card.home_name} size={32} />
-              <span className="fx-name">{card.home_name}</span>
-            </span>
-            <span className="visually-hidden"> versus </span>
-            <span className="fx-team">
-              <TeamBadge teamKey={card.away_team} name={card.away_name} size={32} />
-              <span className="fx-name">{card.away_name}</span>
-            </span>
-          </a>
+          <span className="fx-team">
+            <TeamBadge teamKey={card.home_team} name={card.home_name} media={card.home_media} size={32} />
+            <TeamLink teamKey={card.home_team} className="fx-name">
+              {card.home_name}
+            </TeamLink>
+          </span>
+          <span className="visually-hidden"> versus </span>
+          <span className="fx-team">
+            <TeamBadge teamKey={card.away_team} name={card.away_name} media={card.away_media} size={32} />
+            <TeamLink teamKey={card.away_team} className="fx-name">
+              {card.away_name}
+            </TeamLink>
+          </span>
         </h3>
         <p className="fx-when">
           <span className="fx-time">{card.kickoff_utc ? formatTime(card.kickoff_utc) : "TBC"}</span>
@@ -332,9 +337,13 @@ function FixtureCard({ cards }: { cards: PredictionCard[] }) {
           {card.record_type !== "genuine_prematch" && <RecordTypeBadge type={card.record_type} />}
           <FreshnessBadge freshness={card.data_freshness} createdAt={card.created_at_utc} competition={card.competition} />
         </span>
-        <span className="more" aria-hidden="true">
+        <a
+          className="more stretched"
+          href={href(`/match/${card.id}`)}
+          aria-label={`${card.home_name} versus ${card.away_name}: the prediction in full`}
+        >
           Details <span className="more-arrow">→</span>
-        </span>
+        </a>
         {others.length > 0 && (
           <p className="above-stretch also">
             Also predicted by{" "}

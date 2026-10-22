@@ -613,6 +613,30 @@ def summarise(rows: list[dict]) -> dict:
     }
 
 
+# A short summary: the counts only, without per-match averages, rates or half-time turnarounds.
+# Used for the profile's season splits and each type's venue splits, which would otherwise make
+# a club's profile about twice the size; their full figures are one filter away in the match
+# log (`season`, `type`).
+SHORT_SUMMARY = (
+    "played",
+    "won",
+    "drawn",
+    "lost",
+    "goals_for",
+    "goals_against",
+    "goal_difference",
+    "left_out",
+    "league_matches",
+    "league_points",
+    "points_per_game",
+)
+
+
+def short_summary(rows: list[dict]) -> dict:
+    full = summarise(rows)
+    return {k: full[k] for k in SHORT_SUMMARY}
+
+
 def form_string(rows: list[dict], n: int) -> str:
     """The last `n` counted results, oldest first (the latest is on the right)."""
     return "".join(r["result"] for r in counted(rows)[-n:])
@@ -888,11 +912,30 @@ def attach_elo(log: TeamLog, idx: TeamsIndex) -> None:
             }
 
 
-def strength(idx: TeamsIndex, team: str, only_type: str | None = None) -> dict:
+# A profile's strength series: the latest SERIES_FULL_MATCHES counted matches in full and, before
+# them, one point a month (the rating after the month's last counted match). A club with nine
+# seasons held keeps about 130 of its 370 points, which is more than a chart can show (Arsenal's
+# series: 22 KB to 8 KB). The peak is taken from every point; every match's rating before and
+# after is in the match log; `full=True` (the API's `series=full`) sends every point.
+SERIES_FULL_MATCHES = 60
+
+
+def thin_series(series: list[tuple]) -> list[tuple]:
+    if len(series) <= SERIES_FULL_MATCHES:
+        return series
+    monthly: dict[str, tuple] = {}
+    for x in series[:-SERIES_FULL_MATCHES]:
+        monthly[x[0][:7]] = x  # the month's last counted match
+    return [*monthly.values(), *series[-SERIES_FULL_MATCHES:]]
+
+
+def strength(idx: TeamsIndex, team: str, only_type: str | None = None, full: bool = False) -> dict:
     series = idx.series.get(team, [])
     if only_type:
         series = [x for x in series if competition_type(x[1]) == only_type]
     peak = max(series, key=itemgetter(2), default=None)
+    shown = series if full else thin_series(series)
+    thinned = len(shown) < len(series)
     return {
         "description": "Descriptive only, not a model of record: a goal-based Elo over every "
         "league and UEFA match held, in date order, with the pan-European Elo's update rule "
@@ -905,7 +948,15 @@ def strength(idx: TeamsIndex, team: str, only_type: str | None = None) -> dict:
         "rank_basis": f"teams with a counted match in the {ELO_ACTIVE_DAYS} days before the "
         f"latest match held ({idx.latest_date})",
         "peak": None if peak is None else {"rating": round(peak[2], 1), "date": peak[0]},
-        "series": [{"date": x[0], "competition": x[1], "rating": round(x[2], 1)} for x in series],
+        "series": [{"date": x[0], "competition": x[1], "rating": round(x[2], 1)} for x in shown],
+        "series_points": {
+            "counted_matches": len(series),
+            "shown": len(shown),
+            # Every point from this date on; before it, one a month (None: every point shown).
+            "every_match_from": series[-SERIES_FULL_MATCHES][0] if thinned else None,
+            "rule": f"the latest {SERIES_FULL_MATCHES} counted matches in full; before them, "
+            "the rating after each month's last counted match. series=full gives every match.",
+        },
     }
 
 
@@ -943,8 +994,9 @@ def _group(rows: list[dict], key: str) -> dict[str, list[dict]]:
     return out
 
 
-def _by_venue(rows: list[dict]) -> dict:
-    return {v: summarise([r for r in rows if r["venue"] == v]) for v in ("H", "A", "N")}
+def _by_venue(rows: list[dict], short: bool = False) -> dict:
+    fn = short_summary if short else summarise
+    return {v: fn([r for r in rows if r["venue"] == v]) for v in ("H", "A", "N")}
 
 
 def team_profile(
@@ -954,9 +1006,11 @@ def team_profile(
     periods: dict[str, list[Period]],
     now: datetime | None = None,
     only_type: str | None = None,
+    full_series: bool = False,
 ) -> dict | None:
     """Everything a team page shows (None for an unknown team). `only_type` restricts it to
-    one competition type, as `footy team-stats --type` does."""
+    one competition type, as `footy team-stats --type` does. The strength series is thinned
+    (thin_series) unless `full_series`."""
     now = now or datetime.now(UTC)
     t = s.get(Team, team)
     if t is None:
@@ -999,7 +1053,9 @@ def team_profile(
             "last_date": rows[-1]["date"] if rows else None,
         },
         "summary": summarise(rows),
-        "by_type": {ct: {**summarise(rs), "by_venue": _by_venue(rs)} for ct, rs in typed.items()},
+        "by_type": {
+            ct: {**summarise(rs), "by_venue": _by_venue(rs, short=True)} for ct, rs in typed.items()
+        },
         "by_competition": [
             {
                 "competition": c,
@@ -1018,9 +1074,9 @@ def team_profile(
                 "season": k,
                 "label": _label(k),
                 "competitions": sorted({r["competition"] for r in rs}),
-                "summary": summarise(rs),
+                "summary": short_summary(rs),
                 "by_type": {
-                    ct: summarise([r for r in rs if r["competition_type"] == ct])
+                    ct: short_summary([r for r in rs if r["competition_type"] == ct])
                     for ct in types
                     if any(r["competition_type"] == ct for r in rs)
                 },
@@ -1042,7 +1098,7 @@ def team_profile(
             "by_type": {ct: streaks(rs) for ct, rs in typed.items()},
         },
         "upcoming": fixtures,
-        "strength": strength(idx, team, only_type),
+        "strength": strength(idx, team, only_type, full=full_series),
     }
 
 

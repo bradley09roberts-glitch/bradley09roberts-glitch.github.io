@@ -355,3 +355,185 @@ a.lab-export:hover {
   justify-self: start;
   margin-top: var(--sp-3);
 }
+
+/* ---- Machine learning tab (LabML.tsx) --------------------------------------------------- */
+
+.mlx-intro,
+.mlx-verdict,
+.mlx-curve,
+.mlx-cands {
+  display: grid;
+  gap: var(--sp-3);
+}
+
+.card.mlx-intro p + p {
+  margin-top: 0;
+}
+
+.mlx-kinds {
+  margin: 0;
+}
+
+.mlx-verdict {
+  border-left: 4px solid var(--warn);
+}
+
+.card .mlx-verdict-title {
+  margin: 0;
+  font-size: var(--fs-3xl);
+  line-height: 1;
+}
+
+.card > .mlx-verdict-title::before {
+  display: none;
+}
+
+.mlx-verdict-lede {
+  font-size: var(--fs-md);
+}
+
+.card.mlx-verdict h3 {
+  margin: var(--sp-2) 0 0;
+}
+
+.mlx-verdict .facts {
+  margin: 0;
+}
+
+.mlx-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--sp-3) var(--sp-5);
+}
+
+.mlx-controls .ctl-field {
+  flex: 0 1 300px;
+}
+
+.mlx-controls .ctl-seg {
+  flex: none;
+}
+
+.mlx-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: var(--sp-4);
+}
+
+.mlx-cand {
+  display: grid;
+  gap: var(--sp-3);
+  padding-top: var(--sp-4);
+  border-top: 1px solid var(--border);
+}
+
+.mlx-cand:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.mlx-cand-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+}
+
+.card .mlx-cand-head h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.mlx-cand-head p {
+  flex-basis: 100%;
+}
+
+.mlx-splits {
+  display: grid;
+  gap: var(--sp-3);
+}
+
+@media (min-width: 900px) {
+  .mlx-splits {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.mlx-split {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+  padding: 12px 14px;
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+}
+
+.mlx-split-none {
+  align-content: start;
+}
+
+.card .mlx-split-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 10px;
+}
+
+.mlx-nums {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.mlx-nums dt {
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.mlx-nums dd {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.mlx-nums .cell-sub {
+  display: block;
+  font-family: var(--font-text);
+  font-weight: 400;
+}
+
+.mlx-outcome {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+
+.mlx-cand-outcome {
+  font-size: var(--fs-sm);
+}
+
+.mlx-metrics {
+  display: grid;
+  gap: var(--sp-3);
+}
+
+.mlx-metric-table {
+  display: grid;
+  gap: 8px;
+}
+
+.card .mlx-metric-table h3 {
+  margin: var(--sp-2) 0 0;
+}

@@ -170,6 +170,10 @@ export type PredictionCard = {
   away_team: string;
   home_name: string;
   away_name: string;
+  /** Each side's crest and badge colours (fixtures and past cards; absent on the detail,
+   * which has them in `teams`). */
+  home_media?: MediaSummary;
+  away_media?: MediaSummary;
   edition: Edition;
   record_type: RecordType;
   model_name: string;
@@ -201,6 +205,9 @@ export type RecentMatch = {
   competition: string;
   venue: "H" | "A";
   opponent: string;
+  /** The opponent's team key (sent since the team pages; absent in older copies). */
+  opponent_team?: string;
+  opponent_media?: MediaSummary;
   score: string;
   result: "W" | "D" | "L";
 };
@@ -246,8 +253,71 @@ export type PredictionDetail = PredictionCard & {
   editions: EditionRef[];
   /** Each side's last results before the training cutoff (no hindsight). */
   recent: { home: RecentMatch[]; away: RecentMatch[] };
+  /** Both sides' form and averages before the match, their meetings and, once played, the
+   * match's statistics (footy.teams.match_page). Absent in copies made before team pages. */
+  teams?: MatchTeams;
   /** Plain-English summary built only from the saved record's numbers. */
   explanation: string;
+};
+
+/** One side in a match page's `teams` block. */
+export type MatchTeamSide = {
+  team: string;
+  name: string;
+  media?: MediaSummary;
+  /** Form strings, oldest first: overall and by competition type (types it has played). */
+  form: { last_10: string; by_type: Partial<Record<CompetitionType, string>> };
+  /** Per-match averages over the last 10 counted matches, overall ("all") and by type. */
+  per_match: Record<string, { matches: number; averages: Record<string, StatAverage> }>;
+};
+
+export type HeadToHeadMeeting = {
+  ref: string;
+  date: string;
+  competition: string;
+  competition_name: string;
+  competition_type: CompetitionType;
+  season: string;
+  stage: string | null;
+  home_team: string;
+  home_name: string;
+  away_team: string;
+  away_name: string;
+  home_goals: number | null;
+  away_goals: number | null;
+  neutral: boolean;
+  extra_time: boolean | null;
+  penalties: boolean | null;
+  /** W, D or L for this fixture's home side. */
+  result_for_home_side: Result | null;
+  excluded: string | null;
+};
+
+/** One side's figures in a played match: goals, half-time goals and every statistic. */
+export type MatchSideStats = Record<string, number | null>;
+
+export type MatchTeams = {
+  /** Everything here is from matches before this date. */
+  as_of: string;
+  note: string;
+  home: MatchTeamSide;
+  away: MatchTeamSide;
+  head_to_head: {
+    meetings: HeadToHeadMeeting[];
+    home_side_won: number;
+    drawn: number;
+    away_side_won: number;
+  };
+  /** Once played, with statistics (league matches only); null otherwise. */
+  match_stats: {
+    ref: string;
+    source: string;
+    date: string;
+    referee: string | null;
+    excluded: string | null;
+    home: MatchSideStats;
+    away: MatchSideStats;
+  } | null;
 };
 
 export type FixturesResponse = {
@@ -449,6 +519,331 @@ export type HitRates = {
 };
 
 // ---------------------------------------------------------------------------------------------
+// Teams (src/footy/api/teams_routes.py, docs/teams.md) and their pictures (media_routes.py)
+
+/** A team's crest (only a downloaded, freely licensed one) and the site badge's colours and
+ * letters, sent wherever a team is named. */
+export type MediaSummary = {
+  crest_url: string | null;
+  /** `colours`: the club's official colours (Wikidata), badge background first; [] if none. */
+  badge: { colours: string[]; short: string };
+};
+
+export type CompetitionType = "league" | "europe" | "cup";
+export type Result = "W" | "D" | "L";
+export type Venue = "H" | "A" | "N";
+
+export type TeamCompetition = {
+  code: string;
+  name: string;
+  type: CompetitionType | (string & {});
+  season: string;
+  season_label: string;
+};
+
+export type TeamDivision = {
+  code: string;
+  name: string;
+  tier: number | null;
+  season: string;
+  season_label: string;
+  /** False when that league has since moved on without the club. */
+  current: boolean;
+};
+
+export type TeamListEntry = {
+  key: string;
+  name: string;
+  country: string | null;
+  division: TeamDivision | null;
+  competitions_this_season: TeamCompetition[];
+  /** Oldest first. */
+  form_last_5: string;
+  matches: number;
+  matches_by_type: Partial<Record<CompetitionType, number>>;
+  last_match_date: string | null;
+  /** The descriptive strength rating (not a model of record) and its rank. */
+  elo: number | null;
+  elo_rank: number | null;
+};
+
+export type TeamsResponse = {
+  generated_at_utc: string;
+  latest_match_held: string | null;
+  filters: { competition: string[]; q: string | null };
+  count: number;
+  teams: TeamListEntry[];
+  /** Team key -> media summary, for every listed team. */
+  media: Record<string, MediaSummary>;
+};
+
+/** A per-match average for and against, and how many matches it covers. */
+export type StatAverage = { for: number | null; against: number | null; matches: number };
+
+/** The counts every summary has. */
+export type ShortSummary = {
+  played: number;
+  won: number;
+  drawn: number;
+  lost: number;
+  goals_for: number;
+  goals_against: number;
+  goal_difference: number;
+  /** Flagged matches left out of this summary. */
+  left_out: number;
+  league_matches: number;
+  league_points: number | null;
+  points_per_game: number | null;
+};
+
+export type Rate = { matches: number; rate: number | null };
+
+export type FullSummary = ShortSummary & {
+  /** goals, half_time_goals, shots, shots_on_target, corners, fouls, yellow_cards, red_cards,
+   * fd_xg (football-data's figure, not ours). */
+  per_match: Record<string, StatAverage>;
+  /** clean_sheets, failed_to_score, both_teams_scored, over_2_5_goals. */
+  rates: Record<string, Rate>;
+  half_time: {
+    matches_with_half_time_score: number;
+    behind_at_half_time: { matches: number; won: number; drawn: number; lost: number; points_won: number };
+    ahead_at_half_time: { matches: number; won: number; drawn: number; lost: number; points_dropped: number };
+  };
+};
+
+export type TypeSummary = FullSummary & { by_venue: Partial<Record<Venue, ShortSummary>> };
+
+export type Streak = { matches: number; since: string | null };
+
+/** wins, unbeaten, without_a_win, losses, scored, clean_sheets, failed_to_score. */
+export type Streaks = Record<string, Streak>;
+
+/** Our pre-match record of record for a fixture, from the team's side. Never prices. */
+export type TeamPrediction = {
+  id: number;
+  model_name: string;
+  basis: Basis;
+  edition: Edition;
+  created_at_utc: string;
+  probabilities: Probabilities;
+  team: { win: number; draw: number; loss: number } | null;
+  pick: string | null;
+  pick_for_team: Result | null;
+  settled: boolean;
+  /** Per market, once settled. */
+  correct: Record<string, boolean> | null;
+};
+
+export type UpcomingFixture = {
+  ref: string;
+  source: string;
+  date: string;
+  kickoff_utc: string | null;
+  competition: string;
+  competition_name: string;
+  competition_type: CompetitionType;
+  season: string;
+  season_label: string;
+  stage: string | null;
+  opponent: string;
+  opponent_name: string;
+  venue: Venue;
+  status: string;
+  awaiting_result: boolean;
+  prediction: TeamPrediction | null;
+  opponent_media?: MediaSummary;
+};
+
+export type StrengthPoint = { date: string; competition: string; rating: number };
+
+export type CompetitionSummary = {
+  competition: string;
+  name: string;
+  type: CompetitionType;
+  seasons: string[];
+  summary: FullSummary;
+};
+
+export type SeasonSummary = {
+  season: string;
+  label: string;
+  competitions: string[];
+  summary: ShortSummary;
+  by_type: Partial<Record<CompetitionType, ShortSummary>>;
+};
+
+export type TeamProfile = {
+  generated_at_utc: string;
+  team: {
+    key: string;
+    name: string;
+    media?: MediaSummary;
+    country: string | null;
+    division: TeamDivision | null;
+    competitions_this_season: TeamCompetition[];
+  };
+  data: { latest_match_held: string | null };
+  notes: Record<string, string>;
+  matches: { logged: number; counted: number; left_out: number; first_date: string | null; last_date: string | null };
+  summary: FullSummary;
+  by_type: Partial<Record<CompetitionType, TypeSummary>>;
+  by_competition: CompetitionSummary[];
+  by_season: SeasonSummary[];
+  by_venue: Partial<Record<Venue, FullSummary>>;
+  form: {
+    last_5: string;
+    last_10: string;
+    by_type: Partial<Record<CompetitionType, { last_5: string; last_10: string }>>;
+  };
+  streaks: { all: Streaks; by_type: Partial<Record<CompetitionType, Streaks>> };
+  upcoming: UpcomingFixture[];
+  strength: {
+    description: string;
+    current: number | null;
+    rank: number | null;
+    ranked_teams: number;
+    rank_basis: string;
+    peak: { rating: number; date: string } | null;
+    series: StrengthPoint[];
+    series_points?: { counted_matches: number; shown: number; every_match_from: string | null; rule: string };
+  };
+};
+
+/** One row of a team's match log, from the team's side. Statistics the source lacks are null. */
+export type TeamMatch = {
+  ref: string;
+  source: string;
+  date: string;
+  kickoff_utc: string | null;
+  competition: string;
+  competition_name: string;
+  competition_type: CompetitionType;
+  season: string;
+  season_label: string;
+  stage: string | null;
+  meeting: number | null;
+  opponent: string;
+  opponent_name: string;
+  venue: Venue;
+  listed_home: boolean;
+  status: string;
+  goals_for: number | null;
+  goals_against: number | null;
+  result: Result | null;
+  ht_goals_for: number | null;
+  ht_goals_against: number | null;
+  ht_result: Result | null;
+  extra_time: boolean | null;
+  penalties: boolean | null;
+  neutral: boolean;
+  referee: string | null;
+  excluded: string | null;
+  elo: { before: number; after: number; opponent_before: number | null } | null;
+  prediction: TeamPrediction | null;
+  /** shots_for, shots_against, …, fd_xg_for, fd_xg_against. */
+  [stat: `${string}_for` | `${string}_against`]: number | null;
+};
+
+export type TeamMatchesResponse = {
+  team: string;
+  filters: { type: string | null; competition: string | null; season: string | null };
+  total: number;
+  offset: number;
+  limit: number;
+  notes: Record<string, string>;
+  matches: TeamMatch[];
+  /** Team key -> media summary for the team and every opponent on the page. */
+  media: Record<string, MediaSummary>;
+};
+
+/** A picture with its licence and credit. `url` is null until a freely licensed file has been
+ * downloaded. */
+export type MediaPicture = {
+  url: string | null;
+  licence: string | null;
+  licence_url: string | null;
+  author: string | null;
+  attribution: string | null;
+  source_url: string | null;
+};
+
+export type TeamMedia = {
+  team_key: string;
+  wikidata_url: string | null;
+  crest: MediaPicture & { kind: "crest" | "generated" | (string & {}) };
+  venue: (MediaPicture & { name: string | null }) | null;
+  colours: { name: string; hex: string | null }[];
+};
+
+// ---------------------------------------------------------------------------------------------
+// Machine learning (D-028): /api/ml/summary and the two saved reports
+
+export type MlComparison = {
+  fixtures: number;
+  composite: number;
+  target_composite: number;
+  difference: number;
+  difference_ci95: [number, number];
+};
+
+export type MlCandidate = {
+  model: string;
+  what: string;
+  fixtures_with_prices: boolean;
+  target: string;
+  validation: MlComparison & { beat_target: boolean };
+  test: { run: false } | (MlComparison & { run: true; at_least_as_good: boolean });
+  outcome: string;
+};
+
+export type MlSummary = {
+  decision: string;
+  status: string;
+  verdict: string;
+  switch_to: string[];
+  models_of_record: Record<string, string>;
+  rule: string;
+  lower_is_better: boolean;
+  candidates: MlCandidate[];
+  why: string[];
+  report_generated_utc: string | null;
+  sources: Record<string, string>;
+};
+
+export type MlCurveSplit = {
+  months: string[];
+  fixtures: number[];
+  models: Record<string, { monthly: (number | null)[]; cumulative: (number | null)[] }>;
+  tested: string[];
+};
+
+export type MlLearningCurve = {
+  generated_utc: string;
+  rule: string;
+  note: string;
+  panels: { candidate: string; target: string; splits: Record<string, MlCurveSplit> }[];
+};
+
+export type MlSelectionRow = {
+  model: string;
+  fixtures: number;
+  composite: number;
+  rps?: number;
+  acc_1x2?: number;
+  [metric: string]: number | string | undefined;
+};
+
+export type MlSelectionTable = { table: MlSelectionRow[] };
+
+/** Read defensively: a saved report's shape can grow. */
+export type MlSelection = {
+  generated_utc?: string;
+  rule?: string;
+  validation_2324?: MlSelectionTable;
+  test_2425_2526?: MlSelectionTable;
+};
+
+// ---------------------------------------------------------------------------------------------
 // Endpoints: typed URLs. `Endpoint<T>` is a plain string that remembers its response type.
 
 declare const responseType: unique symbol;
@@ -485,6 +880,15 @@ export const endpoints = {
   hitRates: () => endpoint<HitRates>("/api/hit-rates"),
   /** Saved JSON reports, e.g. "benchmark". The shape depends on the report. */
   report: <T = JsonValue>(name: string) => endpoint<T>(`/api/reports/${seg(name)}`),
+  mlSummary: () => endpoint<MlSummary>("/api/ml/summary"),
+  // The team pages ask for these four exactly as written, with no parameters, so a static
+  // snapshot (which holds only those) can answer them. Only the match log's older pages
+  // (`offset`) go beyond that, against the live API.
+  teams: () => endpoint<TeamsResponse>("/api/teams"),
+  team: (key: string) => endpoint<TeamProfile>(`/api/teams/${seg(key)}`),
+  teamMatches: (key: string, offset?: number) =>
+    endpoint<TeamMatchesResponse>(`/api/teams/${seg(key)}/matches`, { offset: offset || undefined }),
+  teamMedia: (key: string) => endpoint<TeamMedia>(`/api/teams/${seg(key)}/media`),
 };
 
 /** File downloads: plain links, not fetched by the app. */

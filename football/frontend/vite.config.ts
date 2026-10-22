@@ -6,7 +6,8 @@ export default defineConfig(({ mode }) => {
     plugins: [react()],
     server: {
       host: "127.0.0.1",
-      proxy: { "/api": "http://127.0.0.1:8000" },
+      // /media serves the teams' downloaded crests and venue photos (footy.api.media_routes).
+      proxy: { "/api": "http://127.0.0.1:8000", "/media": "http://127.0.0.1:8000" },
     },
   };
   // Snapshot build (`npm run build:snapshot`, or VITE_SNAPSHOT=1): a static, read-only copy

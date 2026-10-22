@@ -84,3 +84,71 @@ export function competitionMark(code: string): CompetitionMarkInfo {
   const region = OTHER_REGIONS[code] ?? code.slice(0, 3).toUpperCase();
   return { code: region, tier: 1, region };
 }
+
+// ---------------------------------------------------------------------------------------------
+// Countries: the API's three-letter codes (ISO 3166 alpha-3, with ENG, SCO, WAL and NIR for the
+// home nations and XKX for Kosovo). An unknown code is shown as itself.
+
+const COUNTRIES: Record<string, string> = {
+  ALB: "Albania",
+  AND: "Andorra",
+  ARM: "Armenia",
+  AUT: "Austria",
+  AZE: "Azerbaijan",
+  BEL: "Belgium",
+  BGR: "Bulgaria",
+  BIH: "Bosnia and Herzegovina",
+  BLR: "Belarus",
+  CHE: "Switzerland",
+  CYP: "Cyprus",
+  CZE: "Czechia",
+  DEU: "Germany",
+  DNK: "Denmark",
+  ENG: "England",
+  ESP: "Spain",
+  EST: "Estonia",
+  FIN: "Finland",
+  FRA: "France",
+  FRO: "Faroe Islands",
+  GEO: "Georgia",
+  GIB: "Gibraltar",
+  GRC: "Greece",
+  HRV: "Croatia",
+  HUN: "Hungary",
+  IRL: "Republic of Ireland",
+  ISL: "Iceland",
+  ISR: "Israel",
+  ITA: "Italy",
+  KAZ: "Kazakhstan",
+  LIE: "Liechtenstein",
+  LTU: "Lithuania",
+  LUX: "Luxembourg",
+  LVA: "Latvia",
+  MCO: "Monaco",
+  MDA: "Moldova",
+  MKD: "North Macedonia",
+  MLT: "Malta",
+  MNE: "Montenegro",
+  NIR: "Northern Ireland",
+  NLD: "Netherlands",
+  NOR: "Norway",
+  POL: "Poland",
+  PRT: "Portugal",
+  ROU: "Romania",
+  RUS: "Russia",
+  SCO: "Scotland",
+  SMR: "San Marino",
+  SRB: "Serbia",
+  SVK: "Slovakia",
+  SVN: "Slovenia",
+  SWE: "Sweden",
+  TUR: "Türkiye",
+  UKR: "Ukraine",
+  WAL: "Wales",
+  XKX: "Kosovo",
+};
+
+export function countryName(code: string | null | undefined): string | null {
+  if (!code) return null;
+  return COUNTRIES[code] ?? code;
+}

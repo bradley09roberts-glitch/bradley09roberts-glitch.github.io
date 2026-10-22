@@ -33,6 +33,25 @@ crest or venue, or from a Wikidata item since corrected, falls back to the gener
 }
 ```
 
+### The summary sent with every team
+
+The other endpoints that name a team (fixtures and past cards, the match page, the teams list,
+the team profile and match log) send a short summary of the same facts, so the site can draw a
+team's badge without a request per team (`service.media_summary`; where each endpoint puts it:
+[docs/teams.md](../teams.md#pictures-and-colours)):
+
+```json
+{"crest_url": null, "badge": {"colours": ["#FF0000", "#FFFFFF"], "short": "ARS"}}
+```
+
+`crest_url` is set only for a downloaded crest that the full response above would show
+(free licence, the Commons file the facts name now, inside `data/media/teams/`), never for the
+generated badge. `badge.colours` are the hex values of `colours` in the same order, and
+`badge.short` is the generated badge's three letters, so the website's own badge and
+`badge.svg` agree. `short_name` keeps a leading acronym as the club writes it ("RB Leipzig" →
+RBL, "PSV Eindhoven" → PSV, "CSKA Sofia" → CSK) and skips a four-digit year ("Iberia 1999" →
+IBE).
+
 Pictures are served from `data/media/teams/<team_key>/` under `/media/teams/<team_key>/`:
 `crest.png`, `venue.jpg` and the generated `badge.svg` (made on request, never stored). Only
 those names can be fetched (sent with `X-Content-Type-Options: nosniff`, the badge also with
@@ -40,6 +59,11 @@ a Content-Security-Policy that allows no scripts); manifests, anything else unde
 team folders that link outside `data/media/teams/` cannot. The Vite dev server proxies only
 `/api`, so the frontend needs `/media` added to its proxy (not done here: `frontend/` belongs
 to another change).
+
+The static snapshot copies every downloaded crest and venue photo of the teams it carries
+beside the page (`media/teams/<team_key>/`, crests first, as many as the host's file limits
+allow) and makes their URLs relative; the attribution stays in each team's media response. It
+has no `badge.svg` files: the site draws its own badge from `badge` ([docs/snapshot.md](../snapshot.md)).
 
 ## Sources and licences
 

@@ -4,7 +4,10 @@
 .ctl-tabs {
   display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: minmax(0, 1fr);
+  /* Never narrower than a tab's longest word; if the tabs can't all fit, the row scrolls. */
+  grid-auto-columns: minmax(min-content, 1fr);
+  overflow-x: auto;
+  scrollbar-width: none;
   gap: 3px;
   padding: 4px;
   border-radius: var(--r-lg);
@@ -278,4 +281,8 @@
   align-items: center;
   justify-content: space-between;
   gap: 8px 12px;
+}
+
+.ctl-tabs::-webkit-scrollbar {
+  display: none;
 }

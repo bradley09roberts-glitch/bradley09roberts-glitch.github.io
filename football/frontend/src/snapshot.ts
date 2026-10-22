@@ -4,11 +4,14 @@
 // VITE_SNAPSHOT=1). When off, SNAPSHOT is the constant false and the bundler drops everything
 // below, so the normal build is unchanged.
 //
-// When on, every API request is answered from snapshot.json, a file written next to the page
-// by `uv run footy export-snapshot`. It holds the API's real responses at one moment, keyed by
-// request path plus a canonical query string (see canonicalKey, and footy/snapshot.py, which
-// builds the same keys). A request that isn't in the file fails the way an unreachable API
-// does, with the message "Not in this snapshot".
+// When on, every API request is answered from the files `uv run footy export-snapshot` writes
+// next to the page. They hold the API's real responses at one moment, keyed by request path
+// plus a canonical query string (see canonicalKey, and footy/snapshot.py, which builds the same
+// keys). snapshot.json holds what the first screen needs and lists the shard files
+// (snapshot-matches-1.json, snapshot-lab-1.json, snapshot-teams-1.json, ...) with the keys each
+// one answers; a shard is fetched only when a page asks for one of its keys, then kept. A
+// request that is in no file fails the way an unreachable API does, with the message
+// "Not in this snapshot".
 
 export const SNAPSHOT: boolean = import.meta.env.VITE_SNAPSHOT === "1";
 
@@ -35,9 +38,23 @@ type SnapshotFile = {
   bodies: unknown[];
   /** Canonical request key -> [HTTP status, index into bodies]. */
   entries: Record<string, [number, number]>;
+  /** snapshot.json only: the shard files, each with the keys it answers. Absent in a
+   * snapshot written before shards existed. */
+  shards?: { file: string; bytes: number | null; keys: string[] }[];
 };
 
 let file: Promise<SnapshotFile> | null = null;
+/** snapshot.json once it has loaded (for snapshotHolds). */
+let loadedFile: SnapshotFile | null = null;
+/** Shard file name -> its load, once started; a failed load is forgotten so it is retried. */
+const shardLoads = new Map<string, Promise<SnapshotFile>>();
+/** Key -> the shard file that answers it, built once from snapshot.json. */
+let shardOf: Map<string, string> | null = null;
+
+function isSnapshotFile(body: unknown): body is SnapshotFile {
+  const b = body as SnapshotFile | null;
+  return !!b && typeof b.entries === "object" && b.entries !== null && Array.isArray(b.bodies);
+}
 
 /** How loading snapshot.json is going, for the banner. It follows every attempt, so a
  * "Try again" that succeeds after a failed load clears the banner's failure note too. */
@@ -74,11 +91,14 @@ function loadSnapshot(): Promise<SnapshotFile> {
     const pending = fetch(SNAPSHOT_URL, { headers: { Accept: "application/json" } })
       .then(async (res) => {
         if (!res.ok) throw new SnapshotError(`Couldn't load this snapshot's data (error ${res.status}).`);
-        const body = (await res.json()) as SnapshotFile;
-        if (!body || typeof body.entries !== "object" || !Array.isArray(body.bodies)) {
+        const body: unknown = await res.json();
+        if (!isSnapshotFile(body)) {
           throw new SnapshotError("This snapshot's data file is not in the expected format.");
         }
-        if (file === pending) setStatus({ state: "loaded", takenAt: body.taken_at_utc });
+        if (file === pending) {
+          loadedFile = body;
+          setStatus({ state: "loaded", takenAt: body.taken_at_utc });
+        }
         return body;
       })
       .catch((err: unknown) => {
@@ -123,15 +143,59 @@ export function canonicalKey(url: string): string {
   return qs ? `${path}?${qs}` : path;
 }
 
-/** Answer an API request from the snapshot, as the Response the API sent when it was taken.
- * Rejects with SnapshotError when it isn't there, or an AbortError when `signal` aborts. */
+/** The shard file that answers `key`, if snapshot.json lists one. */
+function shardFor(snap: SnapshotFile, key: string): string | undefined {
+  if (!shardOf) {
+    shardOf = new Map();
+    for (const shard of snap.shards ?? []) {
+      // Only a plain file name next to the page: never a path or another site.
+      if (!/^snapshot-[a-z]+-\d+\.json$/.test(shard.file)) continue;
+      for (const k of shard.keys) shardOf.set(k, shard.file);
+    }
+  }
+  return shardOf.get(key);
+}
+
+/** Fetch one shard file once; a failed load is forgotten, so "Try again" fetches it again. */
+function loadShard(name: string): Promise<SnapshotFile> {
+  let pending = shardLoads.get(name);
+  if (!pending) {
+    pending = fetch(new URL(name, SNAPSHOT_URL).href, { headers: { Accept: "application/json" } })
+      .then(async (res) => {
+        if (!res.ok) throw new SnapshotError(`Couldn't load this part of the snapshot (error ${res.status}).`);
+        const body: unknown = await res.json();
+        if (!isSnapshotFile(body)) throw new SnapshotError("This snapshot's data file is not in the expected format.");
+        return body;
+      })
+      .catch((err: unknown) => {
+        shardLoads.delete(name);
+        throw err instanceof SnapshotError ? err : new SnapshotError("Couldn't load this part of the snapshot.");
+      });
+    shardLoads.set(name, pending);
+  }
+  return pending;
+}
+
+/** Answer an API request from the snapshot, as the Response the API sent when it was taken:
+ * from snapshot.json, or from the shard file that holds it (fetched the first time a page
+ * needs it). Rejects with SnapshotError when it isn't there, or an AbortError when `signal`
+ * aborts. */
 export async function snapshotFetch(url: string, signal: AbortSignal): Promise<Response> {
   const snap = await loadSnapshot();
   if (signal.aborted) throw new DOMException("Aborted", "AbortError");
-  const hit = snap.entries[canonicalKey(url)];
-  if (!hit) throw new SnapshotError(NOT_IN_SNAPSHOT);
+  const key = canonicalKey(url);
+  let source = snap;
+  let hit = snap.entries[key];
+  if (!hit) {
+    const shard = shardFor(snap, key);
+    if (!shard) throw new SnapshotError(NOT_IN_SNAPSHOT);
+    source = await loadShard(shard);
+    if (signal.aborted) throw new DOMException("Aborted", "AbortError");
+    hit = source.entries[key];
+    if (!hit) throw new SnapshotError(NOT_IN_SNAPSHOT);
+  }
   const [status, index] = hit;
-  return new Response(JSON.stringify(snap.bodies[index] ?? null), {
+  return new Response(JSON.stringify(source.bodies[index] ?? null), {
     status,
     headers: { "content-type": "application/json" },
   });
@@ -144,4 +208,13 @@ export function startSnapshotLoad(): void {
   loadSnapshot().catch(() => {
     // Reported through snapshotStatus(); the pages show their own error and "Try again".
   });
+}
+
+/** Whether the snapshot answers this request (in snapshot.json or a shard): true or false once
+ * snapshot.json has loaded, null before then. Lets a page leave out links to pages the copy
+ * doesn't hold, such as a team without a page. Re-check after snapshotStatus() changes. */
+export function snapshotHolds(url: string): boolean | null {
+  if (!loadedFile) return null;
+  const key = canonicalKey(url);
+  return key in loadedFile.entries || shardFor(loadedFile, key) !== undefined;
 }

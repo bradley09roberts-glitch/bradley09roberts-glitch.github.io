@@ -1,6 +1,7 @@
 // Brief item 4: the backtest lab. A Hit rates tab (how often each model of record's pick was
 // right, per league or competition and market: ./HitRates.tsx), then Moneyline (1X2), Goal
-// Totals and BTTS tabs; filters for run (model), league, season and line; headline metrics
+// Totals and BTTS tabs, and a Machine learning tab (the learners and their verdict:
+// ./LabML.tsx); filters for run (model), league, season and line; headline metrics
 // with sample size and 95% interval; a calibration chart; the market benchmark from the saved
 // report; ledger exports.
 //
@@ -24,6 +25,7 @@ import {
   type MarketMetrics,
 } from "../api";
 import { Badge } from "../components/Badge";
+import { CiStrip } from "../components/CiStrip";
 import { CalibrationChart, type CalibrationSeries } from "../components/CalibrationChart";
 import {
   Segmented,
@@ -42,12 +44,13 @@ import { href, setQuery } from "../router";
 import { SNAPSHOT } from "../snapshot";
 import type { PageProps } from ".";
 import { HitRatesPanel } from "./HitRates";
+import { MachineLearningPanel } from "./LabML";
 import "./Lab.css";
 
 // ---------------------------------------------------------------------------------------------
 // Query parameters
 
-type LabTab = "hits" | MarketTab;
+type LabTab = "hits" | MarketTab | "ml";
 type MarketTab = "moneyline" | "totals" | "btts";
 type Outcome = "all" | "home" | "draw" | "away";
 
@@ -56,6 +59,7 @@ const TABS: readonly TabDef<LabTab>[] = [
   { id: "moneyline", label: "Moneyline", hint: "1X2" },
   { id: "totals", label: "Goal Totals", hint: "Over/under" },
   { id: "btts", label: "BTTS", hint: "Both score" },
+  { id: "ml", label: "Machine learning", hint: "Learners" },
 ];
 
 const LINES = [0.5, 1.5, 2.5, 3.5, 4.5] as const;
@@ -67,7 +71,7 @@ const FILTER_KEYS = ["run", "league", "season", "line", "outcome"] as const;
  * match result was the first tab): that one keeps opening the match result. */
 function parseTab(query: URLSearchParams): LabTab {
   const raw = query.get("tab");
-  if (raw === "hits" || raw === "moneyline" || raw === "totals" || raw === "btts") return raw;
+  if (raw === "hits" || raw === "moneyline" || raw === "totals" || raw === "btts" || raw === "ml") return raw;
   return FILTER_KEYS.some((k) => query.get(k) !== null) ? "moneyline" : "hits";
 }
 
@@ -327,7 +331,13 @@ export function Lab({ query }: PageProps) {
       />
 
       <div className="lab-panel" id={tabPanelId("lab")} role="tabpanel" aria-labelledby={tabId("lab", tab)}>
-        {tab === "hits" ? <HitRatesPanel query={query} /> : <MarketLab tab={tab} query={query} />}
+        {tab === "hits" ? (
+          <HitRatesPanel query={query} />
+        ) : tab === "ml" ? (
+          <MachineLearningPanel />
+        ) : (
+          <MarketLab tab={tab} query={query} />
+        )}
       </div>
     </>
   );
@@ -1086,32 +1096,6 @@ function Comparison({ name, c }: { name: string; c: BenchmarkComparison }) {
       <p className="small">{verdict}</p>
       {sources && <p className="muted small">Closing prices used: {sources}.</p>}
     </div>
-  );
-}
-
-/** One estimate and its interval on an axis centred on zero; left of zero, the model is better. */
-function CiStrip({ value, lo, hi, label }: { value: number; lo: number; hi: number; label: string }) {
-  const w = 320;
-  const h = 40;
-  const pad = 10;
-  const extent = Math.max(Math.abs(lo), Math.abs(hi), Math.abs(value), 1e-9) * 1.15;
-  const x = (v: number) => pad + ((v + extent) / (2 * extent)) * (w - 2 * pad);
-  return (
-    <svg className="ci-strip" viewBox={`0 0 ${w} ${h}`} role="img" aria-label={`${label}: ${formatNumber(value, 4)}, 95% interval ${formatNumber(lo, 4)} to ${formatNumber(hi, 4)}`}>
-      <line className="ci-track" x1={pad} x2={w - pad} y1={14} y2={14} />
-      <line className="ci-zero" x1={x(0)} x2={x(0)} y1={4} y2={24} />
-      <line className="ci-range" x1={x(lo)} x2={x(hi)} y1={14} y2={14} />
-      <circle className="ci-dot" cx={x(value)} cy={14} r={5} />
-      <text x={pad} y={37}>
-        ← model better
-      </text>
-      <text x={x(0)} y={37} textAnchor="middle">
-        0
-      </text>
-      <text x={w - pad} y={37} textAnchor="end">
-        market better →
-      </text>
-    </svg>
   );
 }
 

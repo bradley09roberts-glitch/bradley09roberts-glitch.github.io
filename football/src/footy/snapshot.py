@@ -1,17 +1,30 @@
-"""Static snapshot of the website: the built frontend plus the API's real responses in one file.
+"""Static snapshot of the website: the built frontend plus the API's real responses in files.
 
 The site needs an API server, and there is no always-on host. A snapshot is a read-only copy
 that needs none: `npm run build:snapshot` builds the frontend so that it answers every API
-request from `snapshot.json` (frontend/src/snapshot.ts), and `uv run footy export-snapshot`
-writes that file by asking the real FastAPI app, in-process and on a read-only database
-connection, for every request the frontend can make. Re-running both refreshes the copy.
+request from the snapshot's JSON files (frontend/src/snapshot.ts), and `uv run footy
+export-snapshot` writes them by asking the real FastAPI app, in-process and on a read-only
+database connection, for every request the frontend can make. Re-running both refreshes it.
 
-Nothing is computed here: every body is the API's own response, stored as it was sent.
-Identical bodies are stored once (most `/api/fixtures?days=N` windows are the same list).
+Nothing is computed here: every body is the API's own response, stored as it was sent, with
+one exception: a picture's URL (/media/teams/...) is made relative to the page, or null when the
+snapshot doesn't carry that file (the generated badge.svg; the site draws its own badge).
+Identical bodies are stored once per file (most `/api/fixtures?days=N` windows are the same).
 
-Before anything is written the output is checked: no football-data price may appear (the API
-already withholds them, D-013/D-024; this is a second line of defence), no secret from `.env`
-or the settings may appear in any file, and the whole site must fit the 16 MB page limit.
+Files (docs/snapshot.md):
+
+- `snapshot.json`: what the first screen needs (fixtures, past results, performance, status
+  pages), and the list of shard files with the request keys each one answers;
+- shard files `snapshot-<family>-<n>.json`, fetched only when a page asks for one of their
+  keys: `matches` (match pages), `lab` (backtest summaries), `teams` (the teams list alone in
+  the first, then each team's profile, match log and media, a team never split across files);
+- `media/teams/<team_key>/crest.png` and `venue.jpg`: downloaded, freely licensed pictures the
+  carried teams' media responses link to (their attribution is in those responses).
+
+Before anything is written the output is checked: no football-data price may appear in any
+file (the API already withholds them, D-013/D-024; this is a second line of defence), no
+secret from `.env` or the settings may appear in any file, and the files must fit the limits
+of the host the snapshot is published on (HOST_LIMITS).
 
 The request set mirrors frontend/src/pages (see FRONTEND_* below). Keep them in step: a page
 that starts making a new request shows "Not in this snapshot" until it is added here.
@@ -34,16 +47,35 @@ from urllib.parse import quote, unquote
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from sqlalchemy import Engine, create_engine, event, select
+from sqlalchemy import Engine, create_engine, event, func, select
 from sqlalchemy.engine import make_url
 from sqlalchemy.orm import Session
 
 from footy.config import PROJECT_ROOT, Settings
 
-FORMAT = "footy-api-snapshot/1"
+FORMAT = "footy-api-snapshot/2"  # 2: shard files and pictures beside snapshot.json
+EARLIER_FORMATS = ("footy-api-snapshot/1",)  # an earlier snapshot folder is still replaced
 SNAPSHOT_FILE = "snapshot.json"
+SHARD_FILE = re.compile(r"snapshot-[a-z]+-\d+\.json")
+MEDIA_DIR = "media"
 DEFAULT_DIST = PROJECT_ROOT / "frontend" / "dist-snapshot"
-SITE_SIZE_LIMIT = 16 * 1024 * 1024  # bytes, page plus every supporting file
+
+# Limits of the host the snapshot is published on (a private Artifact: the page plus its
+# supporting files, sent in one publish). Decimal megabytes, which is the stricter reading.
+MB = 1_000_000
+HOST_LIMITS = {
+    "text_file_bytes": 16 * MB,  # the page and each HTML, JS, CSS or JSON file
+    "binary_file_bytes": 15 * MB,  # each picture
+    "files": 255,  # per publish, the page included
+    "total_bytes": 64 * MB,  # per publish
+}
+TEXT_SUFFIXES = (".html", ".json", ".js", ".css", ".svg", ".txt", ".map")
+# A shard is closed once it holds this much. A team page or a match page loads one shard, so
+# they are kept small for a phone (about 16 teams' pages each, at about 120 KB a team); 12 MB
+# is the most any shard may hold (a single group bigger than the target gets a file of its own).
+SHARD_TARGET_BYTES = 2 * MB
+SHARD_MAX_BYTES = 12 * MB
+SHARD_FAMILIES = ("matches", "lab", "teams")  # in file order
 
 # ---------------------------------------------------------------------------------------------
 # What the frontend requests (frontend/src/pages and src/api.ts)
@@ -58,10 +90,22 @@ FRONTEND_PAST_RECORD_TYPES = ("genuine_prematch", "retrospective_backtest")
 FRONTEND_PAST_LIMIT = 500
 # Performance.tsx: the latest genuine pre-match record.
 FRONTEND_PAST_LATEST = {"record_type": "genuine_prematch", "limit": 1}
-# Lab.tsx and Data.tsx: report("model_selection"); Lab.tsx: report("benchmark").
-FRONTEND_REPORTS = ("model_selection", "benchmark")
+# Lab.tsx and Data.tsx: report("model_selection"); Lab.tsx: report("benchmark"); the machine-
+# learning panel: the D-028 reports and their summary.
+FRONTEND_REPORTS = ("model_selection", "benchmark", "ml_learning_curve", "ml_selection")
+FRONTEND_ML_SUMMARY = "/api/ml/summary"
 # Lab.tsx: the competition choices of a UEFA run whose manifest lists no leagues.
 FRONTEND_UEFA_CODES = ("UCL", "UEL", "UECL", "UCLQ", "UELQ", "UECLQ")
+# Team pages: the teams list, unfiltered (the page filters it itself), and per team its
+# profile, its match log (the API's default page: the latest 100 matches, newest first) and
+# its media. Paths are formatted with the team key.
+FRONTEND_TEAMS_LIST = "/api/teams"
+FRONTEND_TEAM_PATHS = ("/api/teams/{key}", "/api/teams/{key}/matches", "/api/teams/{key}/media")
+# Which teams have pages: every team on a fixture, past or match card the snapshot holds, every
+# team in these leagues this season, and every team in the league phase of the latest UEFA
+# season held (2026/27 on 22 Oct 2026).
+SNAPSHOT_TEAM_LEAGUES = ("E0", "SP1", "I1", "D1", "F1", "E1")
+SNAPSHOT_TEAM_UEFA = ("UCL", "UEL", "UECL")
 
 # Requests the site can make that a snapshot does not hold (each answers "Not in this
 # snapshot"). Reported with every export.
@@ -73,6 +117,9 @@ NOT_COVERED = (
     "/api/past?competition=<code> for a code typed into the address that is neither a "
     "competition with records nor a known competition code (the page's own choices are all "
     "covered)",
+    "/api/teams with filters, a team's match log with filters or beyond its latest 100 "
+    "matches, /api/teams/{key}?series=full, and the pages of teams outside the set above",
+    "/media/teams/{key}/badge.svg (drawn on request by the API; the site draws its own badge)",
 )
 
 # ---------------------------------------------------------------------------------------------
@@ -146,7 +193,12 @@ class Snapshot:
     finished_at_utc: str = ""
     bodies: list[Any] = field(default_factory=list)
     entries: dict[str, tuple[int, int]] = field(default_factory=dict)
+    # Keys answered from shard files: family -> groups of keys that stay in one file (one
+    # team's pages, one backtest run's summaries, one match page), each with whether it gets a
+    # file of its own. Every other key is in snapshot.json.
+    groups: dict[str, list[tuple[list[str], bool]]] = field(default_factory=dict)
     _index: dict[str, int] = field(default_factory=dict, repr=False)
+    _sizes: list[int] = field(default_factory=list, repr=False)
 
     def add(self, key: str, status: int, body: Any) -> None:
         text = json.dumps(body, ensure_ascii=False, separators=(",", ":"))
@@ -154,20 +206,81 @@ class Snapshot:
         if i is None:
             i = self._index[text] = len(self.bodies)
             self.bodies.append(body)
+            self._sizes.append(len(text.encode("utf-8")))
         self.entries[key] = (status, i)
 
     def body(self, key: str) -> Any:
         status, i = self.entries[key]
         return self.bodies[i] if status == 200 else None
 
-    def to_json(self) -> dict:
+    def group(self, family: str, keys: Iterable[str], alone: bool = False) -> None:
+        """Answer these keys from a `family` shard file, all from the same one (`alone`: a
+        file holding nothing else)."""
+        if family not in SHARD_FAMILIES:
+            raise ValueError(f"unknown shard family {family!r}")
+        self.groups.setdefault(family, []).append((list(dict.fromkeys(keys)), alone))
+
+    def _doc(self, keys: Iterable[str], **extra: Any) -> dict:
+        """One file's document: its keys' bodies, each stored once."""
+        bodies: list[Any] = []
+        where: dict[int, int] = {}
+        entries = {}
+        for k in sorted(keys):
+            status, i = self.entries[k]
+            if i not in where:
+                where[i] = len(bodies)
+                bodies.append(self.bodies[i])
+            entries[k] = [status, where[i]]
         return {
             "format": FORMAT,
             "taken_at_utc": self.taken_at_utc,
             "finished_at_utc": self.finished_at_utc,
-            "bodies": self.bodies,
-            "entries": {k: list(self.entries[k]) for k in sorted(self.entries)},
+            **extra,
+            "bodies": bodies,
+            "entries": entries,
         }
+
+    def _bytes(self, bodies: set[int], keys: list[str]) -> int:
+        return sum(self._sizes[i] for i in bodies) + sum(len(k) + 16 for k in keys)
+
+    def shards(self) -> list[tuple[str, list[str]]]:
+        """(file name, keys) per shard file: each family's groups in order, a file closed once
+        it holds SHARD_TARGET_BYTES (by its bodies' size, counted once each)."""
+        out: list[tuple[str, list[str]]] = []
+        for family in SHARD_FAMILIES:
+            files: list[list[str]] = []
+            size, seen, closed = 0, set(), True
+            for keys, alone in self.groups.get(family, []):
+                bodies = {self.entries[k][1] for k in keys}
+                extra = self._bytes(bodies - seen, keys)
+                if closed or alone or size + extra > SHARD_TARGET_BYTES:
+                    files.append([])
+                    size, seen = 0, set()
+                    extra = self._bytes(bodies, keys)
+                files[-1].extend(keys)
+                size += extra
+                seen |= bodies
+                closed = alone
+            out += [(f"snapshot-{family}-{n}.json", f) for n, f in enumerate(files, 1)]
+        return out
+
+    def documents(self) -> list[tuple[str, dict]]:
+        """(file name, document) for snapshot.json and every shard. snapshot.json lists each
+        shard with the keys it answers; its `bytes` are filled in when the files are written."""
+        shards = self.shards()
+        sharded = {k for _, keys in shards for k in keys}
+        main = self._doc(
+            (k for k in self.entries if k not in sharded),
+            shards=[{"file": name, "bytes": None, "keys": sorted(keys)} for name, keys in shards],
+        )
+        return [
+            (SNAPSHOT_FILE, main),
+            *((name, self._doc(keys, shard=name)) for name, keys in shards),
+        ]
+
+    def to_json(self) -> dict:
+        """Every entry in one document (for checks; the files are `documents()`)."""
+        return self._doc(self.entries)
 
     def statuses(self) -> dict[int, int]:
         out: dict[int, int] = {}
@@ -202,15 +315,14 @@ def _linked_prediction_ids(body: Any) -> Iterator[int]:
     """Prediction ids a response links to: cards, editions and counterparts."""
     if not isinstance(body, dict):
         return
-    for comp in body.get("competitions") or []:
-        for card in comp.get("fixtures") or []:
-            yield card["id"]
-    for card in body.get("matches") or []:
-        yield card["id"]
-    for e in body.get("editions") or []:
-        yield e["id"]
+    linked = [c for comp in body.get("competitions") or [] for c in comp.get("fixtures") or []]
+    linked += body.get("matches") or []  # past cards (a team's match log has no ids)
+    linked += body.get("editions") or []
     if isinstance(body.get("counterpart"), dict):
-        yield body["counterpart"]["id"]
+        linked.append(body["counterpart"])
+    for x in linked:
+        if isinstance(x, dict) and isinstance(x.get("id"), int):
+            yield x["id"]
 
 
 def _summary_requests(runs: list[dict]) -> Iterator[tuple[str, dict]]:
@@ -225,6 +337,45 @@ def _summary_requests(runs: list[dict]) -> Iterator[tuple[str, dict]]:
         for league in [None, *leagues]:
             for season in [None, *seasons]:
                 yield path, {"league": league, "season": season}
+
+
+def _card_teams(body: Any) -> Iterator[str]:
+    """Team keys on the cards of a fixtures, past or match-page response."""
+    if not isinstance(body, dict):
+        return
+    cards = [c for comp in body.get("competitions") or [] for c in comp.get("fixtures") or []]
+    cards += body.get("matches") or []
+    if "fixture_ref" in body:  # a match page: its own card
+        cards.append(body)
+    for card in cards:
+        if isinstance(card, dict):
+            yield from (t for t in (card.get("home_team"), card.get("away_team")) if t)
+
+
+def snapshot_teams(engine: Engine, snap: Snapshot) -> list[str]:
+    """The teams whose pages the snapshot carries (see SNAPSHOT_TEAM_LEAGUES), by key."""
+    from footy.models import EuroMatch, Team
+    from footy.teams import teams_list
+
+    wanted: set[str] = set()
+    for key, (status, i) in snap.entries.items():
+        if status == 200 and key.startswith(("/api/fixtures", "/api/past", "/api/predictions/")):
+            wanted.update(_card_teams(snap.bodies[i]))
+    with Session(engine) as s:
+        wanted.update(t["key"] for t in teams_list(s, SNAPSHOT_TEAM_LEAGUES))
+        latest = s.scalar(
+            select(func.max(EuroMatch.season)).where(EuroMatch.competition.in_(SNAPSHOT_TEAM_UEFA))
+        )
+        phase = s.execute(
+            select(EuroMatch.home_team, EuroMatch.away_team).where(
+                EuroMatch.competition.in_(SNAPSHOT_TEAM_UEFA),
+                EuroMatch.season == latest,
+                EuroMatch.stage.like("League%"),
+            )
+        ).all()
+        wanted.update(t for row in phase for t in row)
+        known = set(s.scalars(select(Team.team_key)))
+    return sorted(wanted & known)
 
 
 def export_snapshot(
@@ -281,9 +432,13 @@ def export_snapshot(
     get("/api/hit-rates")  # Lab.tsx, the Hit rates tab
     for name in FRONTEND_REPORTS:
         get(f"/api/reports/{_encode(name)}")
+    get(FRONTEND_ML_SUMMARY)
     runs = (get("/api/backtests") or {}).get("runs", [])
-    for path, params in _summary_requests(runs):
-        get(path, params)
+    for run in runs:  # one run's summaries stay in one shard
+        requests = list(_summary_requests([run]))
+        for path, params in requests:
+            get(path, params)
+        snap.group("lab", (canonical_key(path, params) for path, params in requests))
 
     # Every prediction in the database, then any a saved response links to that wasn't there
     # yet (one published while the export ran), until every link resolves.
@@ -292,16 +447,95 @@ def export_snapshot(
     while wanted - done:
         for pid in sorted(wanted - done):
             get(f"/api/predictions/{pid}")
+            snap.group("matches", [canonical_key(f"/api/predictions/{pid}")])
             done.add(pid)
         for status, i in snap.entries.values():
             if status == 200:
                 wanted.update(_linked_prediction_ids(snap.bodies[i]))
+
+    # Team pages: the list in a shard of its own, then each team's pages together.
+    get(FRONTEND_TEAMS_LIST)
+    snap.group("teams", [canonical_key(FRONTEND_TEAMS_LIST)], alone=True)
+    for team in snapshot_teams(engine, snap):
+        paths = [p.format(key=_encode(team)) for p in FRONTEND_TEAM_PATHS]
+        for path in paths:
+            get(path)
+        snap.group("teams", (canonical_key(path) for path in paths))
     snap.finished_at_utc = _iso_now()
     return snap
 
 
 # ---------------------------------------------------------------------------------------------
-# Checks: no prices, no secrets, within the size limit
+# Pictures: downloaded crests and venue photos the carried media responses link to
+
+# A picture URL as footy.media.service writes it (the only files /media/teams/ serves).
+MEDIA_URL = re.compile(
+    r"/media/teams/([a-z0-9][a-z0-9-]{0,63})/((?:crest|venue)\.(?:png|jpg|gif|webp)|badge\.svg)"
+)
+
+
+@dataclass
+class Picture:
+    path: str  # published path, relative to the page: media/teams/<key>/<file>
+    source: Path
+    kind: str  # crest | venue
+    bytes: int
+
+
+def pictures(snap: Snapshot, settings: Settings) -> list[Picture]:
+    """Every downloaded picture a carried /api/teams/{key}/media response links to, crests
+    first (they appear wherever the team does), then venue photos; each file checked to be
+    under data/media/teams/, as the API's own picture route does."""
+    from footy.media.service import media_dir
+
+    root = media_dir(settings).resolve()
+    found: dict[str, list[Picture]] = {"crest": [], "venue": []}
+    for key in sorted(snap.entries):
+        status, i = snap.entries[key]
+        body = snap.bodies[i]
+        if status != 200 or not re.fullmatch(r"/api/teams/[^/?]+/media", key):
+            continue
+        for kind in ("crest", "venue"):
+            url = (body.get(kind) or {}).get("url")
+            m = MEDIA_URL.fullmatch(url or "")
+            if m is None or m.group(2) == "badge.svg":
+                continue
+            source = (root / m.group(1) / m.group(2)).resolve()
+            if root in source.parents and source.is_file():
+                rel = f"{MEDIA_DIR}/teams/{m.group(1)}/{m.group(2)}"
+                found[kind].append(Picture(rel, source, kind, source.stat().st_size))
+    return found["crest"] + found["venue"]
+
+
+def relocate_media(snap: Snapshot, carried: set[str]) -> int:
+    """Point every picture URL in the stored bodies at the copy beside the page
+    ("/media/teams/x/crest.png" -> "media/teams/x/crest.png"), or at nothing (None) when the
+    snapshot doesn't carry that file. Returns how many URLs were changed."""
+    changed = 0
+
+    def fix(value: Any) -> Any:
+        nonlocal changed
+        if isinstance(value, dict):
+            return {k: fix(v) for k, v in value.items()}
+        if isinstance(value, list):
+            return [fix(v) for v in value]
+        if isinstance(value, str) and MEDIA_URL.fullmatch(value):
+            changed += 1
+            rel = value.lstrip("/")
+            return rel if rel in carried else None
+        return value
+
+    for i, body in enumerate(snap.bodies):
+        before = changed
+        snap.bodies[i] = fix(body)
+        if changed != before:
+            text = json.dumps(snap.bodies[i], ensure_ascii=False, separators=(",", ":"))
+            snap._sizes[i] = len(text.encode("utf-8"))
+    return changed
+
+
+# ---------------------------------------------------------------------------------------------
+# Checks: no prices, no secrets (the host's limits are under "Files and the host's limits")
 
 # football-data price columns: bookmaker prefix, C for closing, then the selection, e.g.
 # B365H, PSCH, AvgC>2.5, BbAv<2.5, MaxAHH.
@@ -434,10 +668,39 @@ def body_only_html(index_html: str) -> str:
     return "\n".join([*links, content, *scripts]) + "\n"
 
 
+_NON_ASCII = re.compile(r"[^\x00-\x7f]")
+
+
+def ascii_js(js: str) -> str:
+    """Every non-ASCII character as a \\u escape (UTF-16 units), which means the same in a JS
+    string, template literal, regular expression or identifier, and nothing in a comment."""
+
+    def esc(m: re.Match) -> str:
+        units = m.group().encode("utf-16-be")
+        return "".join(f"\\u{units[i]:02x}{units[i + 1]:02x}" for i in range(0, len(units), 2))
+
+    return _NON_ASCII.sub(esc, js)
+
+
+def ascii_css(css: str) -> str:
+    """Every non-ASCII character as a CSS escape (hex code point and one space, which the
+    escape consumes)."""
+    return _NON_ASCII.sub(lambda m: f"\\{ord(m.group()):x} ", css)
+
+
+def ascii_html(text: str) -> str:
+    return _NON_ASCII.sub(lambda m: f"&#x{ord(m.group()):x};", text)
+
+
 def single_page(site: Path, title: str = "Football Model") -> str:
     """One page with the stylesheet and the module script inlined, for a host whose sandbox
-    may block a separately served module script (no CORS headers). Only snapshot.json is
-    then fetched, from next to the page."""
+    may block a separately served module script (no CORS headers). Only the data files are
+    then fetched (snapshot.json, and a shard when a page needs it), from next to the page.
+
+    The page is plain ASCII (non-ASCII characters escaped), so it reads the same whatever
+    character set it is served with: served as Latin-1 (as `python -m http.server` does), the
+    bundle's "←" and its accent-stripping regular expression would otherwise break the page.
+    The data files are JSON, which fetch always reads as UTF-8."""
     index = (site / "index.html").read_text(encoding="utf-8")
     css_refs = re.findall(r'<link[^>]*href="([^"]+\.css)"', index)
     js_refs = re.findall(r'<script[^>]*src="([^"]+\.js)"', index)
@@ -448,30 +711,106 @@ def single_page(site: Path, title: str = "Football Model") -> str:
     js = js.replace("<script>", "\\x3cscript>")  # only ever inside string literals
     if "</script" in js.lower() or "<!--" in js or "</style" in css.lower():
         raise ValueError("the bundle can't be inlined safely")
+    if re.search(r"\\[^\x00-\x7f]", js + css):  # escaping that character would change it
+        raise ValueError("the bundle can't be made ASCII safely (a backslash before a character)")
     fonts = "".join(f"{m.group(0)}\n" for m in _TAG.finditer(index) if _is_font_link(m.group(0)))
     body = re.sub(r"<(link|script)\b[^>]*>(?:\s*</script>)?", "", index).strip()
     return (
-        f"<title>{title}</title>\n{fonts}<style>{css}</style>\n{body}\n"
-        f'<script type="module">{js}</script>\n'
+        f"<title>{ascii_html(title)}</title>\n{fonts}<style>{ascii_css(css)}</style>\n"
+        f"{ascii_html(body)}\n"
+        f'<script type="module">{ascii_js(js)}</script>\n'
     )
 
 
+# ---------------------------------------------------------------------------------------------
+# Files and the host's limits
+
+
+def data_files(site: Path) -> list[Path]:
+    """snapshot.json, every shard it lists and every picture under media/, in `site`."""
+    main = site / SNAPSHOT_FILE
+    shards = json.loads(main.read_text(encoding="utf-8")).get("shards") or []
+    files = [main, *(site / sh["file"] for sh in shards)]
+    if (site / MEDIA_DIR).is_dir():
+        files += sorted(f for f in (site / MEDIA_DIR).rglob("*") if f.is_file())
+    return files
+
+
+def limit_problems(files: list[tuple[str, int]]) -> list[str]:
+    """What breaks HOST_LIMITS if these files (published path, bytes) go up together, or
+    makes a shard bigger than SHARD_MAX_BYTES."""
+    problems = []
+    for name, size in files:
+        text = Path(name).suffix.lower() in TEXT_SUFFIXES
+        limit = HOST_LIMITS["text_file_bytes" if text else "binary_file_bytes"]
+        if size > limit:
+            kind = "text" if text else "binary"
+            problems.append(f"{name} is {size:,} bytes, over the {limit:,}-byte {kind} file limit")
+        elif SHARD_FILE.fullmatch(Path(name).name) and size > SHARD_MAX_BYTES:
+            problems.append(
+                f"{name} is {size:,} bytes, over the {SHARD_MAX_BYTES:,}-byte shard limit"
+            )
+    if len(files) > HOST_LIMITS["files"]:
+        problems.append(f"{len(files)} files, over the limit of {HOST_LIMITS['files']}")
+    total = sum(size for _, size in files)
+    if total > HOST_LIMITS["total_bytes"]:
+        problems.append(f"{total:,} bytes in all, over the {HOST_LIMITS['total_bytes']:,} limit")
+    return problems
+
+
+def _clear_data_files(folder: Path) -> None:
+    """Remove an earlier snapshot's shard files and pictures from `folder` (only if it holds
+    an earlier snapshot.json), so a smaller snapshot leaves none behind."""
+    if not _is_snapshot_dir(folder):
+        return
+    for f in folder.iterdir():
+        if f.is_file() and SHARD_FILE.fullmatch(f.name):
+            f.unlink()
+    if (folder / MEDIA_DIR / "teams").is_dir():
+        shutil.rmtree(folder / MEDIA_DIR / "teams")
+        if not any((folder / MEDIA_DIR).iterdir()):
+            (folder / MEDIA_DIR).rmdir()
+
+
 def write_single_page(site: Path, page: Path) -> list[Path]:
-    """Write `page` (the inlined HTML) and snapshot.json beside it, from an exported site."""
+    """Write `page` (the inlined HTML) with snapshot.json, every shard and every picture
+    beside it, from an exported site. Returns the files written: the page and the supporting
+    files to publish with it (their paths relative to the page's folder are the published
+    paths). Raises SnapshotRefused, writing nothing, if they would break HOST_LIMITS."""
+    html = single_page(site)
+    data = data_files(site)
+    problems = limit_problems(
+        [(page.name, len(html.encode("utf-8")))]
+        + [(str(f.relative_to(site)), f.stat().st_size) for f in data]
+    )
+    if problems:
+        raise SnapshotRefused(
+            "the page and its files break the host's limits: " + "; ".join(problems)
+        )
     page.parent.mkdir(parents=True, exist_ok=True)
-    page.write_text(single_page(site), encoding="utf-8")
-    shutil.copyfile(site / SNAPSHOT_FILE, page.parent / SNAPSHOT_FILE)
-    return [page, page.parent / SNAPSHOT_FILE]
+    same = page.parent.resolve() == site.resolve()
+    if not same:
+        _clear_data_files(page.parent)
+    page.write_text(html, encoding="utf-8")
+    written = [page]
+    for f in data:
+        target = page.parent / f.relative_to(site)
+        if not same:
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(f, target)
+        written.append(target)
+    return written
 
 
-SITE_NAMES = ("index.html", SNAPSHOT_FILE, "assets")  # what an export writes into `out`
+SITE_NAMES = ("index.html", SNAPSHOT_FILE, "assets", MEDIA_DIR)  # plus the shard files
 
 
 def _is_snapshot_dir(out: Path) -> bool:
     try:
-        return json.loads((out / SNAPSHOT_FILE).read_text()).get("format") == FORMAT
+        fmt = json.loads((out / SNAPSHOT_FILE).read_text()).get("format")
     except (OSError, ValueError, AttributeError):
         return False
+    return fmt == FORMAT or fmt in EARLIER_FORMATS
 
 
 def check_out_dir(out: Path) -> None:
@@ -480,8 +819,15 @@ def check_out_dir(out: Path) -> None:
         raise FileExistsError(f"{out} is not empty and is not an earlier snapshot")
 
 
-def write_site(snap: Snapshot, dist: Path, out: Path) -> list[Path]:
-    """Write the page, its assets and snapshot.json into the empty directory `out`."""
+def _dumps(doc: dict) -> str:
+    return json.dumps(doc, ensure_ascii=False, separators=(",", ":"))
+
+
+def write_site(
+    snap: Snapshot, dist: Path, out: Path, carried: Iterable[Picture] = ()
+) -> list[Path]:
+    """Write the page, its assets, snapshot.json, the shard files and the carried pictures
+    into the empty directory `out`."""
     index = dist / "index.html"
     if not index.exists():
         raise FileNotFoundError(
@@ -493,9 +839,19 @@ def write_site(snap: Snapshot, dist: Path, out: Path) -> list[Path]:
     (out / "index.html").write_text(body_only_html(index.read_text(encoding="utf-8")))
     if (dist / "assets").is_dir():
         shutil.copytree(dist / "assets", out / "assets")
-    (out / SNAPSHOT_FILE).write_text(
-        json.dumps(snap.to_json(), ensure_ascii=False, separators=(",", ":")), encoding="utf-8"
-    )
+    (main_name, main), *shards = snap.documents()
+    sizes = {}
+    for name, doc in shards:
+        text = _dumps(doc).encode("utf-8")
+        (out / name).write_bytes(text)
+        sizes[name] = len(text)
+    for sh in main["shards"]:
+        sh["bytes"] = sizes[sh["file"]]
+    (out / main_name).write_text(_dumps(main), encoding="utf-8")
+    for pic in carried:
+        target = out / pic.path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(pic.source, target)
     return sorted(p for p in out.rglob("*") if p.is_file())
 
 
@@ -503,7 +859,9 @@ def _replace_site(staged: Path, out: Path) -> None:
     """Swap the staged files into `out`, replacing an earlier snapshot's files only."""
     check_out_dir(out)
     out.mkdir(parents=True, exist_ok=True)
-    for name in SITE_NAMES:
+    old_shards = [f.name for f in out.iterdir() if f.is_file() and SHARD_FILE.fullmatch(f.name)]
+    new_shards = [f.name for f in staged.iterdir() if SHARD_FILE.fullmatch(f.name)]
+    for name in dict.fromkeys((*SITE_NAMES, *old_shards, *new_shards)):
         old = out / name
         if old.is_dir():
             shutil.rmtree(old)
@@ -521,9 +879,14 @@ class ExportResult:
     files: list[tuple[str, int]]
     env_values_shown: list[tuple[str, str]]
     seconds: float
+    teams: int = 0
+    pictures_carried: list[str] = field(default_factory=list)
+    pictures_left_out: list[str] = field(default_factory=list)
 
     def report(self) -> dict:
         total = sum(n for _, n in self.files)
+        sizes = dict(self.files)
+        main = json.loads((self.out / SNAPSHOT_FILE).read_text(encoding="utf-8"))
         return {
             "out": str(self.out),
             "taken_at_utc": self.snapshot.taken_at_utc,
@@ -534,12 +897,20 @@ class ExportResult:
             "statuses": self.snapshot.statuses(),
             "not_ok": sorted(k for k, (s, _) in self.snapshot.entries.items() if s != 200),
             "files": [{"path": p, "bytes": n} for p, n in self.files],
+            "file_count": len(self.files),
             "total_bytes": total,
-            "size_limit_bytes": SITE_SIZE_LIMIT,
+            "first_screen_bytes": sizes.get(SNAPSHOT_FILE),
+            "shards": [
+                {"file": sh["file"], "bytes": sh["bytes"], "keys": len(sh["keys"])}
+                for sh in main.get("shards") or []
+            ],
+            "team_pages": self.teams,
+            "pictures": {"carried": self.pictures_carried, "left_out": self.pictures_left_out},
+            "limits": HOST_LIMITS,
             "checks": {
                 "price_like_fields": 0,
                 "secret_values_found": 0,
-                "within_size_limit": total <= SITE_SIZE_LIMIT,
+                "within_limits": True,
             },
             "non_secret_env_values_shown": [
                 {"file": f, "variable": v} for f, v in self.env_values_shown
@@ -550,6 +921,26 @@ class ExportResult:
 
 class SnapshotRefused(RuntimeError):
     """The snapshot failed a check. Nothing was written to the output directory."""
+
+
+def _choose_pictures(
+    found: list[Picture], files: int, size: int
+) -> tuple[list[Picture], list[Picture]]:
+    """The pictures that fit beside `files` other files of `size` bytes in one publish, in
+    order (crests first); the rest are left out (their URLs become null)."""
+    carried, left = [], []
+    for pic in found:
+        fits = (
+            pic.bytes <= HOST_LIMITS["binary_file_bytes"]
+            and files + len(carried) + 1 <= HOST_LIMITS["files"]
+            and size + pic.bytes <= HOST_LIMITS["total_bytes"]
+        )
+        if fits:
+            carried.append(pic)
+            size += pic.bytes
+        else:
+            left.append(pic)
+    return carried, left
 
 
 def run_export(
@@ -565,7 +956,8 @@ def run_export(
 
     The site is written to a staging folder beside `out` and checked there; only a site that
     passes replaces `out`'s files. Raises SnapshotRefused if a price-like field or a secret
-    is found or the site is over the size limit (an earlier snapshot in `out` is kept)."""
+    is found in any file or the files break HOST_LIMITS (an earlier snapshot in `out` is
+    kept)."""
     from footy.api.main import create_app
 
     started = time.monotonic()
@@ -578,35 +970,61 @@ def run_export(
     app = app or create_app(settings=settings, engine=engine)
     snap = export_snapshot(app, engine, progress=progress)
 
-    prices = find_prices(snap.to_json())
-    if prices:
-        raise SnapshotRefused(f"price-like fields in the API's responses: {prices[:10]}")
+    # Pictures: as many as the publish limits leave room for, beside everything else.
+    assets = (
+        [f for f in (dist / "assets").rglob("*") if f.is_file()]
+        if (dist / "assets").is_dir()
+        else []
+    )
+    docs = snap.documents()
+    other_files = 1 + len(assets) + len(docs)
+    other_bytes = (
+        (dist / "index.html").stat().st_size
+        + sum(f.stat().st_size for f in assets)
+        + sum(len(_dumps(doc).encode("utf-8")) for _, doc in docs)
+    )
+    carried, left_out = _choose_pictures(pictures(snap, settings), other_files, other_bytes)
+    relocate_media(snap, {pic.path for pic in carried})
 
     out.parent.mkdir(parents=True, exist_ok=True)
     staged = Path(tempfile.mkdtemp(prefix=f".{out.name}-", dir=out.parent))
     try:
-        files = write_site(snap, dist, staged)
+        files = write_site(snap, dist, staged, carried)
+        for f in files:  # every data file, as written
+            if f.suffix == ".json":
+                prices = find_prices(json.loads(f.read_text(encoding="utf-8")))
+                if prices:
+                    raise SnapshotRefused(
+                        f"price-like fields in {f.name} (the API's responses): {prices[:10]}"
+                    )
         env = env_values(env_file)
         secrets = secret_values(settings, env)
         leaked = find_values(files, secrets)
         if leaked:
             raise SnapshotRefused(f"secret values found in the output: {sorted(set(leaked))}")
-        total = sum(f.stat().st_size for f in files)
-        if total > SITE_SIZE_LIMIT:
-            raise SnapshotRefused(
-                f"the site is {total:,} bytes, over the {SITE_SIZE_LIMIT:,}-byte limit"
-            )
+        sizes = [(str(f.relative_to(staged)), f.stat().st_size) for f in files]
+        problems = limit_problems(sizes)
+        if problems:
+            raise SnapshotRefused("the site breaks the host's limits: " + "; ".join(problems))
         public = {k: v for k, v in env.items() if k not in secrets}
         shown = find_values(files, public)
-        sizes = [(str(f.relative_to(staged)), f.stat().st_size) for f in files]
         _replace_site(staged, out)
     except BaseException:
         shutil.rmtree(staged, ignore_errors=True)
         raise
+    teams = {
+        k.split("/")[3]
+        for keys, _ in snap.groups.get("teams", [])
+        for k in keys
+        if k.count("/") >= 3
+    }
     return ExportResult(
         out=out,
         snapshot=snap,
         files=sizes,
         env_values_shown=shown,
         seconds=time.monotonic() - started,
+        teams=len(teams),
+        pictures_carried=[pic.path for pic in carried],
+        pictures_left_out=[pic.path for pic in left_out],
     )

@@ -1,6 +1,11 @@
 """FastAPI application. Run with: uv run footy serve"""
 
 import json
+import logging
+import threading
+import time
+from collections.abc import AsyncIterator, Callable
+from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 
 from fastapi import FastAPI, Query
@@ -14,10 +19,47 @@ from footy.config import Settings, get_settings
 from footy.db import check_connection, current_revision, get_engine, head_revision
 from footy.models import ImportIssue, JobRun, Match, RawFile
 
+log = logging.getLogger("footy.api")
 
-def create_app(settings: Settings | None = None, engine: Engine | None = None) -> FastAPI:
+
+def warm_caches(engine_fn: Callable[[], Engine]) -> dict:
+    """Build the team-stats index (every match, about half a second on the real database) and
+    read the team media facts, so the first page that needs them doesn't wait. Never raises: a
+    database that isn't ready is reported and the first request builds the index instead."""
+    from footy.media.service import load_facts
+    from footy.teams import teams_index
+
+    started = time.perf_counter()
+    try:
+        with Session(engine_fn()) as s:
+            idx = teams_index(s)
+        load_facts()
+    except Exception as e:  # e.g. not migrated yet: /api/health says so
+        log.warning("cache warm-up skipped: %s", e)
+        return {"status": "skipped", "error": str(e)}
+    seconds = round(time.perf_counter() - started, 2)
+    log.info("team-stats index built at start-up in %.2f s", seconds)
+    return {"status": "ok", "seconds": seconds, "teams": len(idx.entries)}
+
+
+def create_app(
+    settings: Settings | None = None, engine: Engine | None = None, warm_index: bool = False
+) -> FastAPI:
+    """The API. With `warm_index` (the served app), the team-stats index is built in a
+    background thread as the server starts, so start-up isn't delayed and the first team or
+    match page is fast; a request that arrives meanwhile waits for that build rather than
+    starting another. Tests and the snapshot export leave it off and build it lazily."""
     settings = settings or get_settings()
-    app = FastAPI(title="Football model API", version=__version__)
+
+    @asynccontextmanager
+    async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
+        if warm_index:
+            threading.Thread(
+                target=warm_caches, args=(_engine,), name="footy-warm-caches", daemon=True
+            ).start()
+        yield
+
+    app = FastAPI(title="Football model API", version=__version__, lifespan=lifespan)
 
     def _engine() -> Engine:
         return engine or get_engine()
@@ -191,4 +233,4 @@ def _iso(dt: datetime | None) -> str | None:
     return iso_utc(dt, "seconds")
 
 
-app = create_app()
+app = create_app(warm_index=True)  # what `footy serve` runs

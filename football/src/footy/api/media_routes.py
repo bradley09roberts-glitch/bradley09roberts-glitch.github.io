@@ -10,7 +10,6 @@ Pictures are served from data/media/teams/ by an explicit route, not a static mo
 See docs/research/team-media.md.
 """
 
-import re
 from collections.abc import Callable
 
 from fastapi import APIRouter, HTTPException, Response
@@ -23,8 +22,8 @@ from footy.media import service
 from footy.media.badge import badge_svg
 from footy.models import Team
 
-TEAM_KEY = re.compile(r"[a-z0-9][a-z0-9-]{0,63}")
-PICTURE_FILE = re.compile(r"(crest|venue)\.(png|jpg|gif|webp)")
+TEAM_KEY = service.TEAM_KEY
+PICTURE_FILE = service.PICTURE_FILE
 CACHE = "public, max-age=86400"
 NOSNIFF = {"X-Content-Type-Options": "nosniff"}  # a picture is only ever its declared type
 # An SVG opened on its own is a document: allow it no scripts, fetches or frames.

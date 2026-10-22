@@ -1,0 +1,1344 @@
+/* Teams: the index (Teams.tsx), a team's page (Team.tsx) and its match log (TeamMatches.tsx).
+   Colours, type and spacing come from the tokens in styles.css. */
+
+/* ---- Index ------------------------------------------------------------------------------ */
+
+.tm-tools {
+  display: grid;
+  gap: var(--sp-3);
+}
+
+.tm-search {
+  display: grid;
+  gap: 5px;
+}
+
+.tm-input {
+  font: inherit;
+  font-size: var(--fs-base);
+  width: 100%;
+  min-height: 46px;
+  padding: 8px 14px 8px 40px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--border-strong);
+  background-color: var(--surface);
+  color: var(--text);
+  /* A magnifier drawn in the muted text colour (an inline SVG with currentColor can't reach
+     a background, so it is two gradients: lens and handle). */
+  background-image: radial-gradient(circle at 19px 21px, transparent 5.5px, var(--muted) 5.6px, var(--muted) 7.4px, transparent 7.5px),
+    linear-gradient(45deg, transparent 47%, var(--muted) 47%, var(--muted) 57%, transparent 57%);
+  background-size: 100% 100%, 8px 8px;
+  background-position: 0 0, 23px 25px;
+  background-repeat: no-repeat;
+}
+
+.tm-input::placeholder {
+  color: var(--muted);
+}
+
+.tm-input:hover {
+  border-color: var(--muted);
+}
+
+.tm-tool-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3) var(--sp-5);
+}
+
+/* "Other competitions": a select dressed as a chip at the end of the chip row. */
+.chip-select {
+  position: relative;
+  padding: 0;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+}
+
+.chip-select select {
+  min-height: 36px;
+  width: auto;
+  /* As wide as the chosen option, not the longest one (where supported). */
+  field-sizing: content;
+  padding: 4px 32px 4px 13px;
+  border: 0;
+  border-radius: var(--r-pill);
+  background-color: transparent;
+  font-size: var(--fs-sm);
+  font-weight: 500;
+}
+
+.chip-select.is-on {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.chip-select.is-on select {
+  color: var(--on-accent);
+  font-weight: 600;
+}
+
+.tm-grid {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: var(--sp-2);
+}
+
+@media (min-width: 720px) {
+  .tm-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--sp-3);
+  }
+}
+
+@media (min-width: 1100px) {
+  .tm-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.tm-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: 12px 14px;
+  transition: border-color var(--dur) var(--ease-out), box-shadow var(--dur) var(--ease-out);
+}
+
+@media (hover: hover) {
+  .tm-card:hover {
+    border-color: var(--border-strong);
+    box-shadow: var(--shadow-2);
+  }
+}
+
+.tm-main {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.card .tm-name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: 0.01em;
+  text-transform: none;
+}
+
+.card .tm-name::before {
+  display: none;
+}
+
+.tm-name a {
+  color: var(--text);
+  text-decoration: none;
+}
+
+.tm-meta {
+  margin: 0;
+  font-size: var(--fs-xs);
+  color: var(--muted);
+  line-height: 1.35;
+}
+
+.tm-comps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 3px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tm-side {
+  display: grid;
+  justify-items: end;
+  gap: 4px;
+  text-align: right;
+}
+
+.tm-rank {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+}
+
+.tm-rank-label {
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.tm-rank-value {
+  font-family: var(--font-display);
+  font-size: 1.45rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.tm-unranked {
+  font-size: var(--fs-xs);
+  color: var(--muted);
+}
+
+.tm-elo {
+  font-size: var(--fs-xs);
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.tm-side .form-pips {
+  gap: 3px;
+}
+
+.tm-side .pip {
+  width: 18px;
+  height: 18px;
+  font-size: 0.72rem;
+  border-radius: 4px;
+}
+
+/* ---- Team hero: the club's colours ------------------------------------------------------ */
+
+/* Ground: the club's main colour, darkened only as far as white text needs for 7:1
+   (Team.tsx, clubTheme), with the mowing stripes of every hero. Without colours: the pitch. */
+.team-hero {
+  --th-base: var(--pitch);
+  --th-main: var(--pitch-2);
+  --th-second: var(--pitch-2);
+  --th-ink: #ffffff;
+  --th-ink-2: color-mix(in srgb, #ffffff 80%, var(--th-base));
+  --th-line: rgb(255 255 255 / 0.14);
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  margin: 0 calc(-1 * var(--gutter));
+  padding: 60px var(--gutter) 22px;
+  color: var(--th-ink);
+  background-color: var(--th-base);
+  background-image: repeating-linear-gradient(90deg, transparent 0 44px, rgb(255 255 255 / 0.035) 44px 88px);
+}
+
+.team-hero:not(.has-colours) {
+  --th-ink: var(--on-pitch);
+  --th-ink-2: var(--on-pitch-muted);
+  --th-line: var(--pitch-line);
+}
+
+/* The volt mark of every hero, on its bottom edge. */
+.team-hero::after {
+  content: "";
+  position: absolute;
+  left: var(--gutter);
+  bottom: 0;
+  width: 48px;
+  height: 4px;
+  border-radius: 2px 2px 0 0;
+  background: var(--volt);
+}
+
+/* At night the club's colour is deepened further, so the hero sits in the dark page. */
+@media (prefers-color-scheme: dark) {
+  .team-hero.has-colours {
+    background-color: color-mix(in srgb, var(--th-base) 72%, #050a07);
+  }
+}
+
+/* The centre-circle arc of every hero. */
+.team-hero::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: -70px;
+  right: -110px;
+  width: 260px;
+  height: 260px;
+  border: 2px solid var(--th-line);
+  border-radius: 50%;
+}
+
+/* Pulled up under the back link, which then sits on the hero (as on the match page). */
+.back-link + .api-view > .team-hero:first-child {
+  margin-top: calc(-1 * var(--sp-4) - 52px);
+}
+
+.back-link:has(+ .api-view > .team-hero:first-child) {
+  background: rgb(255 255 255 / 0.1);
+  border-color: rgb(255 255 255 / 0.3);
+  color: #ffffff;
+}
+
+.back-link:has(+ .api-view > .team-hero:first-child):focus-visible {
+  outline-color: var(--volt);
+}
+
+.team-hero a {
+  color: var(--th-ink);
+  text-decoration-color: currentColor;
+}
+
+.team-hero :focus-visible {
+  outline-color: var(--volt);
+}
+
+.th-inner {
+  display: grid;
+  gap: var(--sp-4);
+  max-width: var(--page-max);
+  margin: 0 auto;
+}
+
+.th-id {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  min-width: 0;
+}
+
+/* The badge on a tile in the club's second colour with a sash in its first, like a shirt. */
+.th-tile {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 92px;
+  height: 92px;
+  border-radius: var(--r-lg);
+  background-color: var(--th-second);
+  background-image: linear-gradient(
+    125deg,
+    transparent 0 58%,
+    var(--th-main) 58% 74%,
+    transparent 74%
+  );
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.18), 0 10px 24px -10px rgb(0 0 0 / 0.6);
+}
+
+.team-hero:not(.has-colours) .th-tile {
+  background-color: var(--pitch-2);
+  background-image: none;
+  box-shadow: 0 0 0 1px var(--pitch-line);
+}
+
+.th-badge {
+  filter: drop-shadow(0 4px 8px rgb(0 0 0 / 0.35));
+}
+
+.th-titles {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.th-eyebrow {
+  margin: 0;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--th-ink-2);
+}
+
+.th-name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(2rem, 9vw, 3.6rem);
+  line-height: 0.95;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  overflow-wrap: break-word;
+  hyphens: manual;
+}
+
+.th-comps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* A darker plate (never a lighter one), so the hero's lighter text keeps its 4.5:1. */
+.th-comps li {
+  padding: 5px 10px 5px 6px;
+  border-radius: var(--r-pill);
+  background: rgb(0 0 0 / 0.18);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.16);
+}
+
+.th-comps .comp-chip {
+  color: var(--th-ink);
+}
+
+.th-comps .comp-chip-detail {
+  display: none;
+  color: var(--th-ink-2);
+}
+
+@media (min-width: 720px) {
+  .th-comps .comp-chip-detail {
+    display: inline;
+  }
+}
+
+.th-quiet {
+  margin: 0;
+  font-size: var(--fs-sm);
+  color: var(--th-ink-2);
+}
+
+.th-facts {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--sp-2);
+}
+
+.th-fact {
+  display: grid;
+  align-content: start;
+  gap: 4px;
+  min-width: 0;
+  padding: 9px 11px 10px;
+  border-radius: var(--r-md);
+  background: rgb(0 0 0 / 0.2);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1);
+}
+
+.th-fact dt {
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--th-ink-2);
+}
+
+.th-fact dd {
+  margin: 0;
+  display: grid;
+  gap: 3px;
+  justify-items: start;
+}
+
+.th-fact-big {
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.th-fact-sub {
+  font-size: var(--fs-2xs);
+  line-height: 1.3;
+  color: var(--th-ink-2);
+}
+
+.th-fact .form-pips {
+  gap: 3px;
+  margin-top: 2px;
+}
+
+.th-fact .pip {
+  width: 19px;
+  height: 21px;
+  font-size: 0.75rem;
+  border-radius: 4px;
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.25);
+}
+
+.th-fact .pip-D {
+  background: #e3e8e1;
+  color: #0f1a13;
+}
+
+/* The home ground: a photo with its credit, or a pitch in chalk lines. */
+.th-side {
+  display: grid;
+  gap: 6px;
+  align-content: start;
+  min-width: 0;
+}
+
+.th-venue {
+  position: relative;
+  margin: 0;
+  min-height: 92px;
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  background: #0b2a1a;
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.16);
+}
+
+/* A photo needs more room than the pitch drawing. */
+.th-venue.has-photo {
+  min-height: 170px;
+}
+
+.th-pitch,
+.th-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.th-pitch-grass {
+  fill: #0e3b24;
+}
+
+.th-pitch-stripe {
+  fill: rgb(255 255 255 / 0.035);
+}
+
+.th-pitch-lines {
+  fill: none;
+  stroke: rgb(241 246 239 / 0.42);
+  stroke-width: 1.6;
+}
+
+.th-pitch-spot {
+  fill: rgb(241 246 239 / 0.6);
+}
+
+/* The caption sits on a near-opaque scrim at the foot of the picture, so it reads on any
+   photo, a white sky included. */
+.th-venue-cap {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: grid;
+  gap: 1px;
+  padding: 26px 14px 10px;
+  background: linear-gradient(rgb(4 12 8 / 0), rgb(4 12 8 / 0.88) 24px);
+  color: #ffffff;
+}
+
+.th-venue-label {
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: #d4e2d8;
+}
+
+.th-venue-name {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: 0.01em;
+}
+
+.th-venue-note {
+  font-size: var(--fs-xs);
+  color: #d4e2d8;
+}
+
+.th-credit {
+  margin: 0;
+  font-size: var(--fs-2xs);
+  line-height: 1.45;
+  color: var(--th-ink-2);
+}
+
+@media (min-width: 720px) {
+  .team-hero {
+    margin: 0;
+    padding: 76px var(--sp-8) var(--sp-8);
+    border-radius: var(--r-xl);
+  }
+
+  .back-link + .api-view > .team-hero:first-child {
+    margin-top: -72px;
+  }
+
+  .back-link:has(+ .api-view > .team-hero:first-child) {
+    margin-left: var(--sp-5);
+    margin-top: var(--sp-4);
+  }
+
+  .team-hero::before {
+    top: 50%;
+    right: 34%;
+    width: 300px;
+    height: 300px;
+    margin-top: -150px;
+  }
+
+  .team-hero::after {
+    left: var(--sp-8);
+  }
+
+  .th-inner {
+    grid-template-columns: minmax(0, 1.35fr) minmax(260px, 1fr);
+    grid-template-areas:
+      "id side"
+      "comps side"
+      "facts side";
+    align-items: start;
+    column-gap: var(--sp-8);
+  }
+
+  .th-id {
+    grid-area: id;
+  }
+
+  .th-comps,
+  .th-quiet {
+    grid-area: comps;
+  }
+
+  .th-facts {
+    grid-area: facts;
+  }
+
+  .th-side {
+    grid-area: side;
+    align-self: stretch;
+  }
+
+  .th-tile {
+    width: 116px;
+    height: 116px;
+  }
+
+  .th-tile .th-badge {
+    width: 92px;
+    height: 92px;
+  }
+
+  .th-venue {
+    min-height: 190px;
+    height: 100%;
+  }
+
+  .th-fact-big {
+    font-size: 2.2rem;
+  }
+}
+
+/* ---- Tabs and the layout under them ----------------------------------------------------- */
+
+.team-panel {
+  display: grid;
+  gap: var(--sp-4);
+  min-width: 0;
+}
+
+.team-panel > * {
+  min-width: 0;
+}
+
+.team-layout {
+  display: grid;
+  gap: var(--sp-4);
+}
+
+.team-main,
+.team-aside {
+  display: grid;
+  align-content: start;
+  gap: var(--sp-4);
+  min-width: 0;
+  container-type: inline-size;
+}
+
+.team-main > *,
+.team-aside > * {
+  min-width: 0;
+}
+
+@media (min-width: 720px) {
+  .team-panel,
+  .team-layout,
+  .team-main,
+  .team-aside {
+    gap: var(--sp-5);
+  }
+}
+
+@media (min-width: 1024px) {
+  .team-layout {
+    grid-template-columns: minmax(0, 1.75fr) minmax(0, 1fr);
+    align-items: start;
+  }
+}
+
+/* Record by type: one line each under the tiles. */
+.type-lines {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+}
+
+.type-lines li {
+  display: grid;
+  grid-template-columns: 4.6rem minmax(0, 1fr);
+  grid-template-areas:
+    "name figs"
+    "name bar";
+  align-items: center;
+  gap: 2px 12px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.type-line-name {
+  grid-area: name;
+  font-weight: 600;
+}
+
+.type-line-wdl {
+  grid-area: figs;
+  font-size: var(--fs-sm);
+  color: var(--text-2);
+}
+
+.type-lines .wdl {
+  grid-area: bar;
+}
+
+/* Current runs */
+.streaks {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+  gap: var(--sp-2);
+}
+
+.streak {
+  display: grid;
+  gap: 2px;
+  padding: 9px 11px;
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  box-shadow: inset 3px 0 0 var(--border-strong);
+}
+
+.streak-wins,
+.streak-unbeaten,
+.streak-scored,
+.streak-clean_sheets {
+  box-shadow: inset 3px 0 0 var(--pip-w);
+}
+
+.streak-losses,
+.streak-without_a_win,
+.streak-failed_to_score {
+  box-shadow: inset 3px 0 0 var(--pip-l);
+}
+
+.streak-label {
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.streak-value {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.05;
+}
+
+.streak-unit {
+  font-family: var(--font-text);
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  color: var(--text-2);
+}
+
+.streak-since {
+  font-size: var(--fs-xs);
+  color: var(--muted);
+}
+
+/* Coming up */
+.upcoming {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+}
+
+.up-row {
+  display: grid;
+  gap: 8px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.up-row:first-child {
+  padding-top: 0;
+}
+
+.up-row:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.up-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 12px;
+}
+
+.up-when {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+
+.up-match {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.up-venue {
+  flex: none;
+  font-family: var(--font-text);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.up-side {
+  margin-left: auto;
+  font-family: var(--font-text);
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.up-pred {
+  display: grid;
+  gap: 8px;
+}
+
+.up-probs {
+  display: grid;
+  gap: 5px;
+}
+
+.up-bar {
+  display: flex;
+  gap: 2px;
+  height: 8px;
+  border-radius: var(--r-pill);
+  overflow: hidden;
+}
+
+.up-figs {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: var(--fs-sm);
+}
+
+.up-figs b {
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.up-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  font-size: var(--fs-sm);
+}
+
+.up-pick {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+}
+
+.up-link {
+  margin-left: auto;
+  font-weight: 600;
+}
+
+.up-status {
+  font-size: var(--fs-xs);
+  color: var(--warn);
+}
+
+.up-none {
+  margin: 0;
+}
+
+/* A fixture without a prediction: its date, competition and opponent only. */
+.up-row.is-bare {
+  gap: 4px;
+}
+
+.up-row.is-bare .up-match {
+  font-size: 1.15rem;
+}
+
+/* Rates and half time */
+.ht-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 12px;
+}
+
+.ht {
+  display: grid;
+  gap: 6px;
+}
+
+.ht-head {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+
+.ht-head b {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  margin-left: 4px;
+}
+
+.ht-note {
+  font-size: var(--fs-xs);
+  color: var(--muted);
+}
+
+/* Home and away */
+.venue-split {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 14px;
+}
+
+.vs-row {
+  display: grid;
+  gap: 6px;
+}
+
+.vs-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.vs-name {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.vs-count,
+.vs-figs {
+  font-size: var(--fs-xs);
+  color: var(--muted);
+}
+
+/* Strength */
+.strength-facts {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--sp-2);
+}
+
+.strength-facts li {
+  display: grid;
+  gap: 2px;
+  padding: 9px 11px;
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+}
+
+.sf-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.sf-peak {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 2px solid var(--text);
+}
+
+.sf-value {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.05;
+}
+
+.sf-sub {
+  font-size: var(--fs-xs);
+  color: var(--muted);
+}
+
+/* Tables by competition and season */
+.team-table th[scope="row"] {
+  font-weight: 600;
+}
+
+.tt-comp {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.tt-comp .comp-mark {
+  margin-top: 1px;
+}
+
+/* ---- Match log -------------------------------------------------------------------------- */
+
+.ml-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--sp-3) var(--sp-4);
+}
+
+.ml-filters .ctl-field {
+  flex: 0 1 200px;
+}
+
+.seg-count {
+  margin-left: 2px;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  opacity: 0.8;
+}
+
+.ml-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  border-top: 1px solid var(--border);
+}
+
+@media (min-width: 900px) {
+  .ml-list {
+    border-top: 0;
+  }
+}
+
+.ml-row {
+  border-bottom: 1px solid var(--border);
+}
+
+/* Column names, wide screens only. */
+.ml-head {
+  display: none;
+}
+
+.ml-row.is-open {
+  background: var(--surface-2);
+  margin: 0 calc(-1 * var(--sp-4));
+  padding: 0 var(--sp-4);
+}
+
+/* Phone: date, competition and venue over the opponent and score; the pick under them. */
+.ml-line {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr) auto auto;
+  grid-template-areas:
+    "date comp venue venue toggle"
+    "opp opp opp score result"
+    "pick pick pick pick pick";
+  align-items: center;
+  gap: 6px 10px;
+  padding: 10px 0;
+}
+
+.ml-date {
+  grid-area: date;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  color: var(--text-2);
+  white-space: nowrap;
+}
+
+.ml-comp {
+  grid-area: comp;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+/* The competition's name beside its mark from 900 px; on a phone the mark alone (the name
+   stays for screen readers). */
+.ml-comp-name {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  font-size: var(--fs-xs);
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ml-venue {
+  grid-area: venue;
+  justify-self: start;
+  display: inline-grid;
+  place-items: center;
+  min-width: 22px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: var(--r-xs);
+  border: 1px solid var(--border-strong);
+  font-size: var(--fs-2xs);
+  font-weight: 700;
+  color: var(--text-2);
+}
+
+.ml-opp {
+  grid-area: opp;
+  min-width: 0;
+  font-weight: 600;
+}
+
+.ml-score {
+  grid-area: score;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.ml-flag {
+  font-family: var(--font-text);
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.ml-result {
+  grid-area: result;
+}
+
+.ml-pick {
+  grid-area: pick;
+  font-size: var(--fs-xs);
+  color: var(--text-2);
+}
+
+.ml-pick-label {
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.ml-nopick {
+  display: none;
+  color: var(--muted);
+}
+
+.ml-right {
+  color: var(--good);
+  font-weight: 600;
+}
+
+.ml-wrong {
+  color: var(--bad);
+  font-weight: 600;
+}
+
+.ml-toggle {
+  grid-area: toggle;
+  justify-self: end;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 4px 10px;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--accent);
+  background: transparent;
+  border-color: var(--border);
+}
+
+.ml-chev {
+  width: 7px;
+  height: 7px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: translateY(-2px) rotate(45deg);
+  transition: transform var(--dur) var(--ease-out);
+}
+
+.ml-toggle[aria-expanded="true"] .ml-chev {
+  transform: translateY(1px) rotate(225deg);
+}
+
+.ml-excluded {
+  margin: -4px 0 10px;
+  font-size: var(--fs-xs);
+  color: var(--text-2);
+}
+
+.ml-row.is-excluded .ml-score,
+.ml-row.is-excluded .ml-opp {
+  opacity: 0.7;
+}
+
+.ml-detail {
+  display: grid;
+  gap: var(--sp-3);
+  padding: 4px 0 var(--sp-4);
+}
+
+.ml-facts {
+  margin: 0;
+  display: grid;
+  gap: 6px 16px;
+  font-size: var(--fs-sm);
+}
+
+@media (min-width: 560px) {
+  .ml-facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.ml-facts div {
+  display: grid;
+  gap: 1px;
+}
+
+.ml-facts dt {
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.ml-facts dd {
+  margin: 0;
+}
+
+.ml-pred {
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px;
+  border-radius: var(--r-md);
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.ml-pred p {
+  margin: 0;
+}
+
+.ml-correct {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 14px;
+  font-size: var(--fs-sm);
+}
+
+.ml-more {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+}
+
+@media (min-width: 900px) {
+  .ml-line {
+    grid-template-columns: 6.6rem 9.5rem 2rem minmax(0, 1fr) 4.4rem 1.8rem 11rem auto;
+    grid-template-areas: "date comp venue opp score result pick toggle";
+    gap: 10px;
+  }
+
+  .ml-score {
+    justify-content: flex-end;
+  }
+
+  .ml-nopick {
+    display: inline;
+  }
+
+  .ml-head {
+    display: grid;
+    grid-template-columns: 6.6rem 9.5rem 2rem minmax(0, 1fr) 4.4rem 1.8rem 11rem 5.6rem;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: var(--fs-2xs);
+    font-weight: 600;
+    letter-spacing: var(--tracking-caps);
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .ml-head-score {
+    text-align: right;
+  }
+
+  .ml-comp-name {
+    position: static;
+    width: auto;
+    height: auto;
+    clip: auto;
+  }
+
+  .ml-row.is-open {
+    margin: 0 calc(-1 * var(--sp-5));
+    padding: 0 var(--sp-5);
+  }
+}

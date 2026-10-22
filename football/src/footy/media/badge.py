@@ -35,14 +35,22 @@ XML_INVALID = re.compile("[\x00-\x08\x0b\x0c\x0e-\x1f\ufffe\uffff]")
 
 def short_name(name: str) -> str:
     """Three letters for the badge: "Arsenal" -> "ARS", "Aston Villa" -> "AVL",
-    "Man United" -> "MUN", "Paris SG" -> "PSG", "Nott'm Forest" -> "NFR"."""
+    "Man United" -> "MUN", "Paris SG" -> "PSG", "Nott'm Forest" -> "NFR".
+
+    The one abbreviation of a team: the generated badge.svg draws it and the API sends it as
+    `badge.short` for the website's own badges. A leading word written in two to four capitals
+    is kept as the club writes it ("RB Leipzig" -> "RBL", "PSV Eindhoven" -> "PSV"), and a
+    four-digit year is skipped ("Iberia 1999" -> "IBE")."""
     text = unicodedata.normalize("NFKD", name)
-    text = "".join(ch for ch in text if not unicodedata.combining(ch)).upper()
-    text = re.sub(r"\b[DL]['’]", " ", text)  # "d'Escaldes" -> "Escaldes"
-    words = [w for w in re.findall(r"[A-Z0-9]+", re.sub(r"['’]", "", text)) if w]
-    kept = [w for w in words if w.lower() not in SKIP_WORDS] or words
+    text = "".join(ch for ch in text if not unicodedata.combining(ch))
+    text = re.sub(r"\b[DdLl]['’]", " ", text)  # "d'Escaldes" -> "Escaldes"
+    raw = re.findall(r"[A-Za-z0-9]+", re.sub(r"['’]", "", text))
+    raw = [w for w in raw if w.lower() not in SKIP_WORDS] or raw
+    kept = [w.upper() for w in raw if not re.fullmatch(r"\d{4}", w)] or [w.upper() for w in raw]
     if not kept:
         return "?"
+    if re.fullmatch(r"[A-Z]{2,4}", raw[0]) and len(kept) <= 2:  # an acronym leads
+        return (kept[0] + (kept[1] if len(kept) > 1 else ""))[:3]
     if len(kept) == 1:
         return kept[0][:3]
     if len(kept) == 2:

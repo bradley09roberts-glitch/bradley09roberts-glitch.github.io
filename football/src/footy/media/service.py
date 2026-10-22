@@ -6,16 +6,21 @@ is of the file reference/team_media.json names now. Nothing here makes a network
 """
 
 import json
+import re
+from collections.abc import Mapping
 from functools import lru_cache
 from pathlib import Path
 
 from footy.config import Settings
-from footy.media.badge import contrast, pick_colours, valid_hex
+from footy.media.badge import contrast, pick_colours, short_name, valid_hex
 from footy.media.commons import licence_is_free, read_manifest
 from footy.media.facts import MEDIA_JSON, WIKIDATA_ITEM_URL
 
 MEDIA_URL = "/media/teams"
 FACTS_PATH = MEDIA_JSON  # tests point this elsewhere
+TEAM_KEY = re.compile(r"[a-z0-9][a-z0-9-]{0,63}")
+# The only picture files ever served (footy.api.media_routes) or linked to.
+PICTURE_FILE = re.compile(r"(crest|venue)\.(png|jpg|gif|webp)")
 
 
 def media_dir(settings: Settings) -> Path:
@@ -125,3 +130,61 @@ def team_media(team_key: str, settings: Settings, facts_path: Path | None = None
         "venue": venue,
         "colours": colours,
     }
+
+
+# ---------------------------------------------------------------------------------------------
+# The short media summary sent with every team the other endpoints name
+
+
+@lru_cache(maxsize=4096)
+def _manifest_cached(path: str, mtime_ns: int) -> dict:
+    try:
+        return json.loads(Path(path).read_text(encoding="utf-8"))
+    except (OSError, ValueError):  # unreadable: no picture is shown until it is rewritten
+        return {}
+
+
+def _downloaded(team_dir: Path) -> dict:
+    """The team's manifest `files`, re-read only when the manifest changes (one stat call per
+    team otherwise, so summaries stay cheap on lists of hundreds of teams)."""
+    path = team_dir / "manifest.json"
+    try:
+        mtime = path.stat().st_mtime_ns
+    except OSError:
+        return {}
+    return _manifest_cached(str(path), mtime).get("files") or {}
+
+
+def crest_url(team_key: str, settings: Settings, facts: dict | None = None) -> str | None:
+    """The URL of the team's downloaded, freely licensed crest, as /media/teams/ serves it; None
+    when there is none (never the generated badge: the website draws its own from `badge`)."""
+    if not TEAM_KEY.fullmatch(team_key):
+        return None
+    if facts is None:
+        facts = load_facts().get(team_key) or {}
+    root = media_dir(settings)
+    team_dir = root / team_key
+    entry = _picture(team_dir, _downloaded(team_dir).get("crest"), facts.get("crest_file"))
+    if entry is None or not PICTURE_FILE.fullmatch(entry.get("file", "")):
+        return None
+    if root.resolve() not in (team_dir / entry["file"]).resolve().parents:
+        return None  # a team folder linked outside data/media/teams is never served
+    return f"{MEDIA_URL}/{team_key}/{entry['file']}"
+
+
+def media_summary(team_key: str, name: str, settings: Settings) -> dict:
+    """What every endpoint naming a team sends with it: the downloaded crest's URL (or None)
+    and what the website's own badge needs, the club's official colours as hex (the badge's
+    background first, then its band) and the three-letter short name the generated badge uses.
+    Colours are Wikidata's (CC0); none are made up, so a club without them has `[]`."""
+    facts = load_facts().get(team_key) or {}
+    colours = ordered_colours(team_key, facts.get("colours") or [])
+    return {
+        "crest_url": crest_url(team_key, settings, facts),
+        "badge": {"colours": [c["hex"] for c in colours if c["hex"]], "short": short_name(name)},
+    }
+
+
+def media_summaries(names: Mapping[str, str], settings: Settings) -> dict[str, dict]:
+    """media_summary for each team key -> name."""
+    return {key: media_summary(key, name, settings) for key, name in names.items()}

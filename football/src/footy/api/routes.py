@@ -22,6 +22,7 @@ from sqlalchemy.orm import Session
 
 from footy import models_of_record
 from footy.config import Settings
+from footy.media.service import media_summaries
 from footy.models import Prediction, PredictionSettlement, Team
 from footy.models_of_record import Period
 from footy.reference import DIVISIONS, REFERENCE_DIR
@@ -332,9 +333,21 @@ def make_router(engine_fn: Callable[[], Engine], settings: Settings) -> APIRoute
     def settlements(s: Session) -> dict[int, PredictionSettlement]:
         return {x.prediction_id: x for x in s.scalars(select(PredictionSettlement))}
 
+    def team_media(rows: Iterable[Prediction], names: dict) -> dict[str, dict]:
+        """The media summary (footy.media.service.media_summary) of every team in `rows`."""
+        keys = {k for p in rows for k in (p.home_team, p.away_team)}
+        return media_summaries({k: names.get(k, k) for k in sorted(keys)}, settings)
+
     def card(
-        p: Prediction, names: dict, st: PredictionSettlement | None, ror: RecordsOfRecord
+        p: Prediction,
+        names: dict,
+        st: PredictionSettlement | None,
+        ror: RecordsOfRecord,
+        media: dict[str, dict] | None = None,
     ) -> dict:
+        """One record as a card. With `media` (team key -> media summary), the card also
+        carries `home_media` and `away_media` (the fixture and past lists send them; the detail
+        sends them in its `teams` block instead, keeping its top-level keys)."""
         probs = json.loads(p.probabilities)
         features = json.loads(p.features) if p.features else {}
         basis = basis_of(features)
@@ -352,6 +365,11 @@ def make_router(engine_fn: Callable[[], Engine], settings: Settings) -> APIRoute
             "away_team": p.away_team,
             "home_name": names.get(p.home_team, p.home_team),
             "away_name": names.get(p.away_team, p.away_team),
+            **(
+                {"home_media": media[p.home_team], "away_media": media[p.away_team]}
+                if media is not None
+                else {}
+            ),
             "edition": p.edition,
             "record_type": p.record_type,
             "model_name": p.model_name,
@@ -398,7 +416,8 @@ def make_router(engine_fn: Callable[[], Engine], settings: Settings) -> APIRoute
             latest: dict[tuple, Prediction] = {}
             for p in rows:
                 latest[(p.fixture_ref, p.model_name)] = p
-            cards = [card(p, names, st.get(p.id), ror) for p in latest.values()]
+            media = team_media(latest.values(), names)
+            cards = [card(p, names, st.get(p.id), ror, media) for p in latest.values()]
         groups: dict[str, list] = {}
         for c in sorted(cards, key=lambda c: (c["kickoff_utc"] or c["match_date"], c["id"])):
             groups.setdefault(c["competition"], []).append(c)
@@ -453,6 +472,26 @@ def make_router(engine_fn: Callable[[], Engine], settings: Settings) -> APIRoute
             from footy.teams import match_page  # here: footy.teams imports this module
 
             out["teams"] = match_page(s, p, names)
+            recent = [r for rows in out["recent"].values() for r in rows]
+            media = media_summaries(
+                {
+                    k: names.get(k, k)
+                    for k in sorted(
+                        {p.home_team, p.away_team} | {r["opponent_team"] for r in recent}
+                    )
+                },
+                settings,
+            )
+            for r in recent:
+                r["opponent_media"] = media[r["opponent_team"]]
+            for side in ("home", "away"):  # the team objects: media after the name
+                t = out["teams"][side]
+                out["teams"][side] = {
+                    "team": t["team"],
+                    "name": t["name"],
+                    "media": media[t["team"]],
+                    **t,
+                }
         out["explanation"] = explain(out)
         return out
 
@@ -471,7 +510,9 @@ def make_router(engine_fn: Callable[[], Engine], settings: Settings) -> APIRoute
             if competition:
                 q = q.where(Prediction.competition == competition)
             rows = s.scalars(q.order_by(Prediction.match_date.desc(), Prediction.id.desc())).all()
-            cards = [card(p, names, st.get(p.id), ror) for p in rows if p.id in st][:limit]
+            shown = [p for p in rows if p.id in st][:limit]
+            media = team_media(shown, names)
+            cards = [card(p, names, st.get(p.id), ror, media) for p in shown]
         return {"record_type": record_type, "matches": cards}
 
     @r.get("/performance")
@@ -696,9 +737,22 @@ def make_router(engine_fn: Callable[[], Engine], settings: Settings) -> APIRoute
             raise HTTPException(404, "no such report")
         return json.loads(path.read_text())
 
+    @r.get("/ml/summary")
+    def ml_summary() -> dict:
+        """D-028 for the machine-learning panel: each candidate, its validation and test
+        composites against its target's, what happened to it and the verdict, read from
+        /api/reports/ml_selection (footy.ml_decision). The month-by-month learning curve is
+        /api/reports/ml_learning_curve."""
+        from footy.ml_decision import ml_summary as build
+
+        out = build(settings.data_dir / "reports")
+        if out is None:
+            raise HTTPException(404, "no such report")
+        return out
+
     from footy.api.teams_routes import make_teams_router  # here: it imports this module
 
-    r.include_router(make_teams_router(engine_fn))
+    r.include_router(make_teams_router(engine_fn, settings))
     return r
 
 
@@ -744,12 +798,14 @@ def recent_form(s: Session, team: str, before: datetime, names: dict, n: int = 6
     for d, comp, h, a, hg, ag in s.execute(q, {"t": team, "d": day, "n": n}).all():
         home = h == team
         gf, ga = (hg, ag) if home else (ag, hg)
+        opponent = a if home else h
         out.append(
             {
                 "date": str(d),
                 "competition": comp,
                 "venue": "H" if home else "A",
-                "opponent": names.get(a if home else h, a if home else h),
+                "opponent": names.get(opponent, opponent),
+                "opponent_team": opponent,
                 "score": f"{hg}-{ag}",
                 "result": "W" if gf > ga else "D" if gf == ga else "L",
             }

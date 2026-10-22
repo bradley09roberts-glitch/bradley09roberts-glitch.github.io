@@ -102,25 +102,32 @@ records come from the `predictions` table, which `records/predictions/*.jsonl` m
 
 `GET /api/teams/{key}` and `footy team-stats` give:
 
-- **`team`**: name, country, current division (the league of its latest league season; `current`
-  is false if that league has since moved on without it, e.g. after relegation to a division
-  not held) and the competitions it is in this season.
+- **`team`**: name, its media summary (see [Pictures and colours](#pictures-and-colours)),
+  country, current division (the league of its latest league season; `current` is false if
+  that league has since moved on without it, e.g. after relegation to a division not held) and
+  the competitions it is in this season.
 - **`summary`** and the splits **`by_type`** (each with `by_venue`), **`by_competition`**,
   **`by_season`** (every season, newest first, each split by type) and **`by_venue`** (H, A, N).
-  Each summary has P W D L, goals for and against, goal difference, league points per game
+  A full summary has P W D L, goals for and against, goal difference, league points per game
   (league matches only), per-match averages for and against of goals, half-time goals, shots,
   shots on target, corners, fouls, yellow and red cards and football-data xG (each with the
   number of matches that had it), rates (clean sheets, failed to score, both teams scored, over
   2.5 goals) and half-time turnarounds (points won from behind at half time, points dropped from
   ahead).
+- **Short summaries** (`SHORT_SUMMARY`: the counts only, P W D L, goals, goal difference,
+  `left_out`, league matches, points and points per game) are used for every `by_season` entry
+  (its `summary` and its `by_type`) and for each type's `by_venue`. Full ones would double a
+  club's profile (about 76 KB for Arsenal on 22 October 2026, against 34 KB now); the full
+  figures for a season or a venue are one filter away in the match log. `summary`, `by_type`,
+  `by_competition` and the top-level `by_venue` stay full.
 - **`form`**: the last 5 and last 10 results, overall and by type, oldest first (the latest is
   on the right).
 - **`streaks`**: current runs (wins, unbeaten, without a win, losses, scored, clean sheets,
   failed to score), with the date each began.
 - **`upcoming`**: stored UEFA fixtures and any fixture we have published a record for (domestic
   fixtures aren't stored until their result is imported), from a week back, with our record of
-  record where there is one. `awaiting_result` is true once the kickoff has passed with no result
-  stored yet.
+  record where there is one and the opponent's media summary (`opponent_media`).
+  `awaiting_result` is true once the kickoff has passed with no result stored yet.
 - **`strength`**: the descriptive rating series (below).
 
 ### Strength series (descriptive)
@@ -137,12 +144,21 @@ checks both the settings and that the ratings equal `PanEuropeanElo`'s. On the r
 It describes results; it is **not a model of record** and makes no forecast. `rank` is among
 clubs with a counted match in the year before the latest match held.
 
+**Thinned in the profile.** `series` holds the latest 60 counted matches in full
+(`SERIES_FULL_MATCHES`) and, before them, one point a month: the rating after that month's last
+counted match. Arsenal's 374 points become 130, which is more than a phone-width chart can
+show, and the series drops from 22 KB to 8 KB. `peak` and `current` are taken from every point,
+`series_points` says what was kept (`counted_matches`, `shown`, `every_match_from`, `rule`),
+`GET /api/teams/{key}?series=full` sends every point, and the match log has every match's
+rating before and after.
+
 ## Match page (`GET /api/predictions/{id}`)
 
 The response gains a `teams` block; every existing field is unchanged.
 
-- `home`, `away`: last-10 form overall and by type, and per-match averages over each side's last
-  10 counted matches overall and of each type.
+- `home`, `away`: the team's key, name and media summary (`media`), last-10 form overall and by
+  type, and per-match averages over each side's last 10 counted matches overall and of each
+  type.
 - `head_to_head`: the last 6 meetings in any competition, newest first, with the tally from this
   fixture's home side's view.
 - `match_stats`: both sides' figures for this match, once it is played and has statistics
@@ -151,6 +167,34 @@ The response gains a `teams` block; every existing field is unchanged.
 All of it uses only matches before the fixture's date (`as_of`), so a played match's page shows
 what was known before it. If the match was played earlier than the record's date (a league
 match brought forward keeps its record, as in settlement), `as_of` is the day it was played.
+
+## Pictures and colours
+
+Wherever these endpoints name a team they also send its media summary
+(`footy.media.service.media_summary`; [docs/research/team-media.md](research/team-media.md)):
+
+```json
+{"crest_url": null, "badge": {"colours": ["#670E36", "#95BFE5"], "short": "AVL"}}
+```
+
+- `crest_url`: `/media/teams/<key>/crest.png` only once a freely licensed crest has been
+  downloaded (none yet), else `null`. Never the generated badge.
+- `badge.colours`: the club's official colours from Wikidata (CC0) as hex, the badge's
+  background first, then its band; `[]` when Wikidata has none (nothing is made up).
+- `badge.short`: the three-letter name the generated badge.svg draws
+  (`footy.media.badge.short_name`): the one abbreviation of a team, made on the server so the
+  site's badges and the SVG agree.
+
+| Endpoint | Where |
+| --- | --- |
+| `/api/fixtures`, `/api/past` | Each card's `home_media` and `away_media` |
+| `/api/predictions/{id}` | `teams.home.media`, `teams.away.media`; each `recent` row's `opponent_team` (key) and `opponent_media`. The detail's top-level keys are unchanged |
+| `/api/teams` | `media`: team key → summary for every listed team (each entry's keys are unchanged) |
+| `/api/teams/{key}` | `team.media`; each `upcoming` fixture's `opponent_media` |
+| `/api/teams/{key}/matches` | `media`: team key → summary for the team and every opponent on the page |
+
+A summary costs one `stat` call per team without downloaded pictures (the facts file is read
+once and re-read only when it changes; a manifest is re-read only when it changes).
 
 ## API
 
@@ -171,13 +215,17 @@ and accents):
                                  "season": "2627", "season_label": "2026/27"}, "..."],
    "form_last_5": "LWDWW", "matches": 360,
    "matches_by_type": {"league": 319, "europe": 41, "cup": 0},
-   "last_match_date": "2026-10-17", "elo": 1866.2, "elo_rank": 9}, "..."]}
+   "last_match_date": "2026-10-17", "elo": 1866.2, "elo_rank": 9}, "..."],
+ "media": {"eng-aston-villa": {"crest_url": null, "badge": {"colours": ["#800032", "#007FFF"], "short": "AVL"}},
+           "esp-villarreal": {"crest_url": null, "badge": {"colours": ["#FFFF00"], "short": "VIL"}}}}
 ```
 
 `GET /api/teams/eng-arsenal` (trimmed):
 
 ```json
-{"team": {"key": "eng-arsenal", "name": "Arsenal", "country": "ENG", "division": {"code": "E0", "...": "..."}},
+{"team": {"key": "eng-arsenal", "name": "Arsenal",
+          "media": {"crest_url": null, "badge": {"colours": ["#FF0000", "#FFFFFF"], "short": "ARS"}},
+          "country": "ENG", "division": {"code": "E0", "...": "..."}},
  "matches": {"logged": 374, "counted": 374, "left_out": 0, "first_date": "2018-08-12", "last_date": "2026-10-18"},
  "summary": {"played": 374, "won": 222, "drawn": 76, "lost": 76, "goals_for": 703, "goals_against": 368,
    "league_matches": 311, "league_points": 606, "points_per_game": 1.949,
@@ -187,10 +235,12 @@ and accents):
  "by_type": {"league": {"...": "..."}, "europe": {"...": "..."}, "cup": {"played": 0, "...": "..."}},
  "form": {"last_5": "WLWWW", "last_10": "DWWWWWLWWW", "by_type": {"europe": {"last_5": "DWDWW", "...": "..."}}},
  "upcoming": [{"date": "2026-10-24", "competition": "E0", "opponent_name": "Everton", "venue": "H",
+   "opponent_media": {"crest_url": null, "badge": {"colours": ["..."], "short": "EVE"}},
    "prediction": {"model_name": "congestion_context_on_elo", "team": {"win": 0.587, "draw": 0.248, "loss": 0.165},
                   "pick_for_team": "W", "settled": false, "...": "..."}, "...": "..."}],
  "strength": {"current": 2018.7, "rank": 2, "ranked_teams": 613, "peak": {"rating": 2038.4, "date": "2026-04-07"},
-   "series": [{"date": "2026-10-18", "competition": "E0", "rating": 2018.7}, "..."]}}
+   "series": [{"date": "2026-10-18", "competition": "E0", "rating": 2018.7}, "..."],
+   "series_points": {"counted_matches": 374, "shown": 130, "every_match_from": "2025-08-31", "rule": "..."}}}
 ```
 
 `GET /api/teams/eng-arsenal/matches?type=league&limit=1` (newest first, with `total`, `offset`,
@@ -242,6 +292,11 @@ On the real database (64,693 league and 4,537 UEFA matches), 21 October 2026, in
 The `teams` block adds about 4.8 KB to each prediction's detail (1.1 MB over the 225 saved
 records), which `footy export-snapshot` carries.
 
+**At start-up.** The served app (`footy serve`, `footy.api.main:app`) builds the index in a
+background thread as it starts (`warm_caches`), so the first team or match page doesn't pay for
+it; a request that arrives during the build waits for it rather than starting another. Apps made
+by `create_app()` for tests and for the snapshot export build it on the first request instead.
+
 ## Limitations
 
 - UEFA matches have no statistics, half-time scores or referees in our sources, so a club's
@@ -256,5 +311,6 @@ records), which `footy export-snapshot` carries.
   apart from the UK calendar.
 - The strength series is descriptive and its rank compares clubs across leagues only through
   UEFA matches and promotion and relegation.
-- The new endpoints are not in the static snapshot (`footy export-snapshot` lists the requests
-  the frontend makes; the frontend has no team pages yet).
+- The static snapshot carries the teams list and, for the teams it covers, each profile, the
+  latest 100 matches of the log and the media ([docs/snapshot.md](snapshot.md)). Filters,
+  older pages of the log and `series=full` are not in it.
