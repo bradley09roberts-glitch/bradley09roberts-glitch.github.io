@@ -275,11 +275,10 @@
   background: var(--volt);
 }
 
-/* At night the club's colour is deepened further, so the hero sits in the dark page. */
-@media (prefers-color-scheme: dark) {
-  .team-hero.has-colours {
-    background-color: color-mix(in srgb, var(--th-base) 72%, #050a07);
-  }
+/* In the dark theme the club's colour is deepened further (--club-keep, 72% there and all of
+   it in light), so the hero sits in the dark page. */
+.team-hero.has-colours {
+  background-color: color-mix(in srgb, var(--th-base) var(--club-keep), #050a07);
 }
 
 /* The centre-circle arc of every hero. */

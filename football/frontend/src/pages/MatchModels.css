@@ -88,14 +88,8 @@
   margin: 0 calc(-1 * var(--sp-3));
   padding-left: var(--sp-3);
   padding-right: var(--sp-3);
-  background: color-mix(in srgb, var(--volt) 16%, var(--surface));
+  background: var(--best-row-bg);
   box-shadow: inset 4px 0 0 var(--volt);
-}
-
-@media (prefers-color-scheme: dark) {
-  .em-row.is-best {
-    background: color-mix(in srgb, var(--volt) 7%, var(--surface));
-  }
 }
 
 .em-model {

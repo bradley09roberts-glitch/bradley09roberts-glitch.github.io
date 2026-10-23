@@ -11,7 +11,7 @@
 }
 
 .badge.role-model_of_record {
-  background: var(--pitch);
+  background: var(--record-tag-bg);
   border-color: transparent;
   color: var(--on-pitch);
 }
@@ -43,12 +43,6 @@
   background: var(--surface-2);
   border-color: var(--border);
   color: var(--muted);
-}
-
-@media (prefers-color-scheme: dark) {
-  .badge.role-model_of_record {
-    background: var(--score-bg);
-  }
 }
 
 /* ---- Right / wrong ---------------------------------------------------------------------- */

@@ -1,4 +1,4 @@
-// Small inline-SVG helpers: a sparkline, W/D/L form pips and the navigation icons.
+// Small inline-SVG helpers: a sparkline, W/D/L form pips, the navigation and theme icons.
 // No chart library: each is a few elements drawn from the numbers passed in.
 
 import type { ReactNode } from "react";
@@ -82,7 +82,18 @@ export function FormPips({ results }: { results: ("W" | "D" | "L")[] }) {
   );
 }
 
-export type IconName = "fixtures" | "past" | "teams" | "performance" | "lab" | "data" | "dot";
+export type IconName =
+  | "fixtures"
+  | "past"
+  | "teams"
+  | "performance"
+  | "lab"
+  | "data"
+  | "dot"
+  | "sun"
+  | "moon"
+  | "theme-auto"
+  | "check";
 
 const ICONS: Record<IconName, ReactNode> = {
   fixtures: (
@@ -120,6 +131,21 @@ const ICONS: Record<IconName, ReactNode> = {
     </>
   ),
   dot: <circle cx="12" cy="12" r="4" />,
+  // The theme switch: the sun for Light, the moon for Dark, a half-filled disc for Auto.
+  sun: (
+    <>
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.55 1.55M17.15 17.15l1.55 1.55M5.3 18.7l1.55-1.55M17.15 6.85l1.55-1.55" />
+    </>
+  ),
+  moon: <path d="M20.5 12.8A8.5 8.5 0 1 1 11.2 3.5a6.6 6.6 0 0 0 9.3 9.3Z" />,
+  "theme-auto": (
+    <>
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M12 3.5a8.5 8.5 0 0 1 0 17Z" fill="currentColor" stroke="none" />
+    </>
+  ),
+  check: <path d="m5 12.5 4.5 4.5L19 7.5" />,
 };
 
 /** The wordmark's emblem: a centre circle and halfway line, in chalk with a floodlit spot. */

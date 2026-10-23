@@ -17,8 +17,6 @@
 /* ---- Tokens: type, space, shape, motion (shared by both themes) ---------------------------- */
 
 :root {
-  color-scheme: light dark;
-
   --font-display: "Barlow Condensed", "Avenir Next Condensed", "Arial Narrow", "Roboto Condensed",
     sans-serif-condensed, "Helvetica Neue", Arial, sans-serif;
   --font-text: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial,
@@ -78,9 +76,29 @@
   --sticky-top: calc(var(--appbar-h) + env(safe-area-inset-top, 0px));
 }
 
-/* ---- Colour: light (a printed programme on chalk paper) --------------------------------- */
+/* ---- Colour: which theme shows ------------------------------------------------------------
 
-:root {
+   Three things decide it, strongest first (theme.ts applies the first):
+   1. The reader's choice on this site: data-app-theme="light" or "dark" on <html>, absent for
+      Auto. It wins over everything below.
+   2. With Auto, the host's own theme: the artifact host that shows the phone copy may set
+      data-theme="light" or "dark" on <html> (the viewer's theme there).
+   3. Otherwise the device: prefers-color-scheme.
+   Light is the default (:root) and is stated again for an explicit Light. The dark tokens are
+   written out twice, once inside the media query (Auto on a dark device) and once outside it
+   (the host's dark, or the reader's Dark): keep the two copies the same. Every selector that
+   turns dark names [data-app-theme], as :not() or as the choice, so an explicit Light never
+   meets a dark rule whatever the host or the device says, and an explicit Dark (0,2,0) beats
+   the plain :root (0,1,0). Each block sets color-scheme, so form controls and scrollbars match.
+   Every colour on the page comes from these tokens: a component that needs its own shade per
+   theme gets a token here, never a media query of its own.
+
+   ---- Colour: light (a printed programme on chalk paper) ---------------------------------- */
+
+:root,
+:root[data-app-theme="light"] {
+  color-scheme: light;
+
   --bg: #f2f4ef;
   --surface: #ffffff;
   --surface-2: #eef2ec;
@@ -146,12 +164,26 @@
   --shadow-1: 0 1px 2px rgb(15 35 22 / 0.06), 0 1px 3px rgb(15 35 22 / 0.04);
   --shadow-2: 0 2px 4px rgb(15 35 22 / 0.05), 0 10px 28px -10px rgb(15 35 22 / 0.22);
   --shadow-pop: 0 14px 36px -10px rgb(15 35 22 / 0.32);
+
+  /* Shades of single components that differ by theme. They live here, not in a media query
+     beside the component, so every part of the page follows the theme switch. */
+  --tab-on-bg: var(--surface);
+  --tab-on-shadow: var(--shadow-1), inset 0 -3px 0 var(--accent);
+  --record-tag-bg: var(--pitch);
+  --shimmer: rgb(255 255 255 / 0.5);
+  --chip-count-on: rgb(0 0 0 / 0.24);
+  --best-row-bg: color-mix(in srgb, var(--volt) 16%, var(--surface));
+  --best-tile-bg: color-mix(in srgb, var(--volt) 18%, var(--surface));
+  --club-keep: 100%; /* how much of a club's colour the team hero keeps; the rest is night */
 }
 
 /* ---- Colour: dark (a floodlit pitch at night) ------------------------------------------- */
 
+/* Auto on a dark device, unless the host says light. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]):not([data-app-theme]) {
+    color-scheme: dark;
+
     --bg: #0a100c;
     --surface: #111a14;
     --surface-2: #17221b;
@@ -217,7 +249,105 @@
     --shadow-1: 0 1px 2px rgb(0 0 0 / 0.35);
     --shadow-2: 0 1px 2px rgb(0 0 0 / 0.3), 0 12px 28px -12px rgb(0 0 0 / 0.7);
     --shadow-pop: 0 16px 40px -12px rgb(0 0 0 / 0.75);
+
+    --tab-on-bg: var(--surface-3);
+    --tab-on-shadow: inset 0 -3px 0 var(--volt);
+    --record-tag-bg: var(--score-bg);
+    --shimmer: rgb(255 255 255 / 0.06);
+    --chip-count-on: rgb(0 0 0 / 0.16);
+    --best-row-bg: color-mix(in srgb, var(--volt) 7%, var(--surface));
+    --best-tile-bg: color-mix(in srgb, var(--volt) 8%, var(--surface-2));
+    --club-keep: 72%;
   }
+}
+
+/* Auto under a host that says dark, or the reader chose Dark. Same tokens as above. */
+:root[data-theme="dark"]:not([data-app-theme]),
+:root[data-app-theme="dark"] {
+  color-scheme: dark;
+
+  --bg: #0a100c;
+  --surface: #111a14;
+  --surface-2: #17221b;
+  --surface-3: #1e2b23;
+  --border: #24312a;
+  --border-strong: #33463b;
+  --text: #e6efe8;
+  --text-2: #c3cfc6;
+  --muted: #95a59a;
+
+  --accent: #6cd49a;
+  --accent-hover: #8be2b2;
+  --accent-soft: #163023;
+  --accent-soft-text: #8fe3b3;
+  --on-accent: #06120b;
+  --rule: #d4f54a;
+
+  --volt: #d4f54a;
+  --on-volt: #0f1a13;
+
+  --pitch: #0c2418;
+  --pitch-2: #0f2b1d;
+  --pitch-stripe: rgb(255 255 255 / 0.025);
+  --score-bg: #1c4430;
+  --pitch-line: rgb(230 239 232 / 0.13);
+  --on-pitch: #e6efe8;
+  --on-pitch-muted: #a4baac;
+  --appbar-bg: #0c1510;
+  --tabbar-bg: rgb(14 22 17 / 0.94);
+
+  --good: #6cd49a;
+  --good-bg: #12281b;
+  --bad: #ff8a80;
+  --bad-bg: #2e1614;
+  --warn: #f0b54a;
+  --warn-bg: #2a2112;
+  --info: #9cc4f5;
+  --info-bg: #142338;
+  --track: #24312a;
+
+  --home: #4a8eea;
+  --draw: #8b938c;
+  --away: #ee7440;
+  --pip-w: #6cd49a;
+  --pip-l: #ff8a80;
+  --on-pip: #0a100c;
+
+  --heat: #278a55;
+  --heat-lo: 0.14;
+  --heat-span: 0.66;
+  --heat-top: #d4f54a;
+
+  --focus: #d4f54a;
+  --badge-field: #245a3e;
+  --badge-chief: rgb(255 255 255 / 0.08);
+  --badge-line: rgb(230 239 232 / 0.32);
+  --badge-ink: #e6efe8;
+  --badge-edge: rgb(230 239 232 / 0.22);
+
+  --strip-bg: #0f1d15;
+  --strip-text: #a4baac;
+
+  --shadow-1: 0 1px 2px rgb(0 0 0 / 0.35);
+  --shadow-2: 0 1px 2px rgb(0 0 0 / 0.3), 0 12px 28px -12px rgb(0 0 0 / 0.7);
+  --shadow-pop: 0 16px 40px -12px rgb(0 0 0 / 0.75);
+
+  --tab-on-bg: var(--surface-3);
+  --tab-on-shadow: inset 0 -3px 0 var(--volt);
+  --record-tag-bg: var(--score-bg);
+  --shimmer: rgb(255 255 255 / 0.06);
+  --chip-count-on: rgb(0 0 0 / 0.16);
+  --best-row-bg: color-mix(in srgb, var(--volt) 7%, var(--surface));
+  --best-tile-bg: color-mix(in srgb, var(--volt) 8%, var(--surface-2));
+  --club-keep: 72%;
+}
+
+/* While the theme changes (theme.ts), nothing animates its colours: the page changes at once
+   rather than in a patchwork of transitions. */
+:root[data-theme-switching] *,
+:root[data-theme-switching] *::before,
+:root[data-theme-switching] *::after {
+  transition: none !important;
 }
 
 /* ---- Base ------------------------------------------------------------------------------- */
@@ -600,6 +730,7 @@ code {
 
   .nav {
     position: static;
+    margin-left: auto;
     padding: 0;
     background: none;
     border: 0;
@@ -1518,15 +1649,9 @@ select {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.5), transparent);
+  background: linear-gradient(90deg, transparent, var(--shimmer), transparent);
   transform: translateX(-100%);
   animation: shimmer 1.4s var(--ease-in-out) infinite;
-}
-
-@media (prefers-color-scheme: dark) {
-  .sk::after {
-    background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.06), transparent);
-  }
 }
 
 @keyframes shimmer {
@@ -1732,14 +1857,8 @@ select {
 }
 
 .chip[aria-pressed="true"] .chip-count {
-  background: rgb(0 0 0 / 0.24);
+  background: var(--chip-count-on);
   color: inherit;
-}
-
-@media (prefers-color-scheme: dark) {
-  .chip[aria-pressed="true"] .chip-count {
-    background: rgb(0 0 0 / 0.16);
-  }
 }
 
 .updated {

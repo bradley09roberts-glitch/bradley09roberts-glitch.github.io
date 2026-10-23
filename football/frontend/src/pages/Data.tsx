@@ -1,6 +1,7 @@
 // Brief item 6: data and methodology. Sources, how predictions are made and which model
 // versions are live, coverage by league and season, exclusions (import issues), the full
-// refresh history including failures, and the system status.
+// refresh history including failures, and the system status. Last, the site's one setting:
+// the theme (also in the app bar on every page).
 //
 // Descriptive text is fixed; every count, percentage and date comes from the API.
 
@@ -17,6 +18,7 @@ import {
 } from "../api";
 import { Badge, type Tone } from "../components/Badge";
 import { Segmented, SelectField, TableScroll } from "../components/Controls";
+import { ThemeChoiceControl } from "../components/ThemeSwitch";
 import { ApiView, Empty, StaleNotice } from "../components/StateViews";
 import {
   formatDate,
@@ -29,6 +31,7 @@ import {
 } from "../format";
 import { useDocumentTitle } from "../hooks";
 import { href, setQuery } from "../router";
+import { useResolvedTheme, useThemeChoice } from "../theme";
 import { SystemStatus } from "./Status";
 import type { PageProps } from ".";
 import "./Data.css";
@@ -40,6 +43,7 @@ const SECTIONS = [
   { id: "data-coverage", label: "Coverage" },
   { id: "data-exclusions", label: "Exclusions" },
   { id: "data-refresh", label: "Refresh history" },
+  { id: "data-appearance", label: "Appearance" },
 ] as const;
 
 export function Data({ query }: PageProps) {
@@ -75,7 +79,31 @@ export function Data({ query }: PageProps) {
       <Coverage query={query} />
       <Exclusions />
       <RefreshHistory query={query} />
+      <Appearance />
     </>
+  );
+}
+
+// ---------------------------------------------------------------------------------------------
+// Appearance
+
+function Appearance() {
+  const choice = useThemeChoice();
+  const shown = useResolvedTheme();
+  return (
+    <section className="card data-anchor" id="data-appearance" aria-labelledby="data-appearance-h">
+      <h2 id="data-appearance-h">Appearance</h2>
+      <p>
+        Light is the printed programme; dark is the floodlit pitch. Auto follows the light or dark
+        setting of your device, or of the app this page is open in
+        {choice === "auto" ? `, and is ${shown} at the moment` : ""}. The theme button at the top
+        of every page changes it too.
+      </p>
+      <div className="appearance-control">
+        <ThemeChoiceControl />
+      </div>
+      <p className="muted small appearance-note">Your choice is kept in this browser only.</p>
+    </section>
   );
 }
 

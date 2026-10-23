@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { AppBarLinks, Nav, PageErrorBoundary } from "./components/Nav";
 import { SnapshotBanner } from "./components/SnapshotBanner";
+import { ThemeMenu } from "./components/ThemeSwitch";
 import { BrandMark } from "./components/Svg";
 import { SITE_NAME, useAutoHideAppBar } from "./hooks";
 import { pages } from "./pages";
@@ -56,7 +57,10 @@ export function App() {
             </span>
           </a>
           <Nav pages={pages} active={active} />
-          <AppBarLinks pages={pages} active={active} />
+          <div className="appbar-end">
+            <AppBarLinks pages={pages} active={active} />
+            <ThemeMenu />
+          </div>
         </div>
       </header>
       {/* Snapshot builds only (a constant false otherwise, so the bundler drops it). Below the
