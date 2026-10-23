@@ -1,3 +1,0 @@
-# /etc/sudoers.d/footy, installed by deploy/setup.sh (checked with visudo). The weekly update
-# (deploy/jobs/update.sh) restarts the API after new code; nothing else runs as root.
-footy ALL=(root) NOPASSWD: /usr/bin/systemctl restart footy-api.service
