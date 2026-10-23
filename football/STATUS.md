@@ -423,7 +423,7 @@ learning" tab shows the learning curves.
 ## Publishing the phone copy
 
 The owner's phone copy is the private artifact https://claude.ai/artifact/FZeCvYx9mG2fDmrhPZ2Gyf.
-With P = /tmp/claude-0/-home-user-bradley09roberts-glitch-github-io/2e2a3e27-112f-5b7b-9aa0-b88dd615f6f7/scratchpad/app_snapshot:
+With P = /tmp/claude-0/-home-user/2e2a3e27-112f-5b7b-9aa0-b88dd615f6f7/scratchpad/app_snapshot:
 
 1. `make snapshot OUT=$P/site PAGE=$P/artifact_new/football-model.html`. Read any `WARNING:`
    line it prints (size or file count near the host's limits) and report it.
