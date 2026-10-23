@@ -46,7 +46,7 @@ none of it has had the owner's review yet.
 | M4 Five leagues | Done: every model is run and selected on the five leagues pooled |
 | M5 Profit simulation | **Partly done** (corrected 22 Oct, audit M20): `footy final-report` ran it only on the model + market model of record, whose figures are the bookmakers' prices, so it found nothing to bet (0 validation bets in all 72 threshold strategies, 1 test bet, withheld; `frozen_on_validation` is empty). Pending: a pure-model run (`congestion_context_on_elo`, `dixon_coles`) frozen on validation with its closing-line value, a confusion matrix, and the equity curve on the site; choose the publication policy first (known problem 5) |
 | M6 Website core | Done: fixtures, match, past, performance, lab, data, status pages; QA in `docs/m6/qa.md` |
-| M7 Live operations | Running on one-off check-ins that end on Tue 27 Oct (see "Scheduled check-ins") |
+| M7 Live operations | Running on recurring check-ins (see "Scheduled check-ins"); the always-on server is being set up |
 
 On 21–22 Oct the owner asked for machine learning, detailed stats for every team in the league
 and in Europe (and cups later), a less plain design and pictures for teams. All four are built
@@ -212,20 +212,19 @@ with mean RPS 0.169 for ChatGPT and 0.189 for us; over all ten our BTTS log loss
 
 ## Scheduled check-ins
 
-All one-off tasks, firing into this session (22 Oct 22:45 UK). UK clocks go back on Sun 25
-Oct; from then on UK time is UTC.
+Recurring tasks since 23 Oct (audit H1), firing into this session in UK time. Each starts with a
+server guard: once the always-on server is live (its "Records: ... from the server" commits on
+`origin/main`, or this file says so), they stop publishing or settling here and only watch that
+the server's records arrive.
 
-| When (UTC) | What |
-| --- | --- |
-| Thu 22 Oct 22:20 | Europa League and Conference League results; manual import if Wikipedia refuses (`trig_01PcdHKRQ1uKy55Tnn2yy1G7`) |
-| Fri 23 Oct 09:00 | Commit round A of the audit fixes; replace the one-off check-ins with recurring ones pointing at the runbook (`trig_012qxAV4WunYDArsyC43E2ts`) |
-| Fri 23 Oct 12:20 | Weekend prices and records (`trig_01FdMDVnBavFFhfa5ENak5Ee`); its prompt aims at 19:00 UTC, but the first kick-off is 18:30 UTC (Stuttgart v Gladbach; L10) |
-| Mon 26 Oct 08:10 | Settle the weekend's league games (`trig_01XVY6ofksYqHeaeNdMcVre2`) |
-| Tue 27 Oct 11:50 | Midweek prices and records (`trig_01JWasTHY8MisPAX1uSWEhBX`) |
+| When (UK time) | What | Task |
+| --- | --- | --- |
+| Daily 08:23 | Fallback and pure shadow records for new fixtures; Mondays also the weekend settle | `trig_01M7dfa1vHpGkYrgxqQX5spj` |
+| Tue and Fri 12:47 | Prices, model + market and shadow records; retries at 14:20 and 15:20 if the file isn't in | `trig_01Ea5ErC3NjuLdK9EauyPLto` |
+| Tue to Thu 23:37 | UEFA results (manual import while Wikipedia refuses), settle | `trig_01EmcjciAyRk8SiKW4jxnF7R` |
 
-**Last scheduled check-in: Tue 27 Oct 11:50 UTC. Nothing covers the 27–30 Oct settlements,
-the 31 Oct – 2 Nov weekend or Champions League matchday 4 (3–4 Nov)** (audit H1). Keep this
-table current.
+**Server:** the owner bought a Hetzner server on 23 Oct and is running the setup
+(docs/server.md). When it is live, write "Server live since <date>" here.
 
 ## Check-in runbook
 
