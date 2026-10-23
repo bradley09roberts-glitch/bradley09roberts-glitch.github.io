@@ -18,8 +18,8 @@ to the notifications on your phone. Nobody else creates accounts or buys anythin
 
 ### What it costs
 
-About **€7 to €9 a month** (roughly £6 to £8) at Hetzner for the server, its backups and its
-internet address, billed by the hour, so deleting it stops the cost at once. Hetzner shows the
+Well under **£10 a month** at Hetzner for a 2 vCPU / 4 GB server, its backups and its
+internet address (check the total Hetzner shows; if it's much more, the wrong server line is picked), billed by the hour, so deleting it stops the cost at once. Hetzner shows the
 exact monthly total before you confirm. Nothing else is paid: the web address, the HTTPS
 certificate and the notifications are free.
 
@@ -30,9 +30,12 @@ certificate and the notifications are free.
 2. In the project, click **Add Server** (or **Create Server**) and choose:
    - **Location:** any in Europe (Falkenstein, Nuremberg or Helsinki).
    - **Image:** **Ubuntu 24.04**.
-   - **Type:** **Shared vCPU**, **x86 (Intel/AMD)**, the plan with **4 vCPU and 8 GB RAM**
-     (in 2025 it was called CX32 or CX33; the name changes now and then, the size is what
-     matters).
+   - **Type:** the cheapest line (**Shared vCPU** / **Cost-Optimized**, often named CX),
+     **x86 (Intel/AMD)**, **2 vCPU and 4 GB RAM** is enough: the heaviest prediction job
+     peaks at about 0.2 GB of memory (measured 23 Oct) and the weekly site rebuild at about
+     1 GB, with a 2 GB swapfile on top. Avoid **Dedicated vCPU** / **General Purpose**
+     (CCX) lines: several times the price for nothing this needs. 4 vCPU / 8 GB in the cheap
+     line only makes the Friday run faster.
    - **Networking:** keep **Public IPv4** ticked (phones on some networks can't reach an
      IPv6-only server) and IPv6 too.
    - **SSH keys:** skip this if you don't know what it is. Hetzner then emails you a root
