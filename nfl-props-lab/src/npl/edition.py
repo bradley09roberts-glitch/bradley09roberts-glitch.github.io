@@ -29,6 +29,12 @@ STATUS_NOTE = {
     "default": ("Probabilities are conditional on the player taking part (most bookmakers "
                 "void a player prop if he does not play). No bookmaker prices were available "
                 "to this edition, so no value claims are made."),
+    "0.4.0": ("Model v0.4: as v0.3 (stacking weights frozen on 2022-2023 validation) with the "
+              "official-report participation adjustment estimated on 2016-2021 instead of "
+              "guessed. Every model is recorded so each has a genuine pre-match record. "
+              "Probabilities are conditional on the player taking part (most bookmakers void "
+              "a player prop if he does not play). No bookmaker prices were available to "
+              "this edition, so no value claims are made."),
     "0.3.0": ("Model v0.3 with per-market stacking weights frozen on the 2022-2023 validation "
               "seasons (reports/EXPERIMENTS.md). Every model is recorded so each has a "
               "genuine pre-match record. Probabilities are conditional on the player taking "

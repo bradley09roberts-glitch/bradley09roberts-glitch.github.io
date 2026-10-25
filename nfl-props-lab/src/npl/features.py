@@ -491,7 +491,13 @@ def _logit_combine(lg, off, deff):
     return float(_sigmoid(_logit(off) + _logit(deff) - _logit(lg)))
 
 
-INJ_DEFAULT = {"Out": 0.02, "Doubtful": 0.25, "Questionable": 0.80}
+# v0.4: official-report adjustment of P(plays), estimated on 2016-2021 skill players who
+# played their previous game: played 0.1% when Out, 1.1% when Doubtful, 74.6% when
+# Questionable vs 95.6% when not listed (ratio 0.78). (v0.1-v0.3 used guesses: caps of 2%,
+# 25% and 80%.)
+INJ_CAP = {"Out": 0.002, "Doubtful": 0.015}
+INJ_RATIO = {"Questionable": 0.78}
+INJ_DEFAULT = {**INJ_CAP, **INJ_RATIO}
 
 
 def _player_in(m, team, ph, P: Params, rec_pool, rush_pool, scr_pool, scr, inj_map,
@@ -534,8 +540,11 @@ def _player_in(m, team, ph, P: Params, rec_pool, rush_pool, scr_pool, scr, inj_m
         wp + HP["play_prior_games"])
     status = inj_map.get(pid)
     status = status if isinstance(status, str) and status else None  # practice-only rows
-    if status in INJ_DEFAULT:
-        pplay = min(pplay, P.inj_play.get(status, INJ_DEFAULT[status]))
+    if status in INJ_CAP:
+        pplay = min(pplay, INJ_CAP[status])
+        flags.append(f"injury_report:{status}")
+    elif status in INJ_RATIO:
+        pplay = pplay * INJ_RATIO[status]
         flags.append(f"injury_report:{status}")
     if role == "QB":
         sc = scr.loc[pid] if pid in scr.index else None

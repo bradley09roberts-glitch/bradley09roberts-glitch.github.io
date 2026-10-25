@@ -151,14 +151,14 @@ function reliabilityChart(rows, color = "var(--bar)") {
 
 function skillChart(models) {
   // models: [{m, d, lo, hi}] CRPS difference vs baseline (negative = better)
-  const width = 520, rowH = 30, m = { l: 150, r: 16, t: 18, b: 22 }, height = m.t + m.b + rowH * models.length;
+  const width = 400, rowH = 28, m = { l: 44, r: 14, t: 18, b: 22 }, height = m.t + m.b + rowH * models.length;
   const vals = models.flatMap((x) => [x.lo, x.hi, x.d]).filter((v) => v != null);
   let lo = Math.min(0, ...vals), hi = Math.max(0, ...vals); const pad = (hi - lo) * 0.12 || 0.01; lo -= pad; hi += pad;
   const X = (v) => m.l + ((v - lo) / (hi - lo)) * (width - m.l - m.r);
   let s = `<svg class="chart" style="max-width:${width}px" viewBox="0 0 ${width} ${height}" role="img" aria-label="CRPS difference versus baseline with 95% intervals"><g class="grid">${niceTicks(lo, hi, 5).map((t) => `<line x1="${X(t)}" x2="${X(t)}" y1="${m.t - 6}" y2="${height - m.b}"/><text x="${X(t)}" y="${height - 6}" text-anchor="middle">${+t.toFixed(3)}</text>`).join("")}</g>`;
   s += `<line x1="${X(0)}" x2="${X(0)}" y1="${m.t - 8}" y2="${height - m.b}" stroke="var(--ink)" stroke-width="1"/><text class="lab" x="${X(0) + 4}" y="${m.t - 8}">baseline</text>`;
   models.forEach((x, i) => { const y = m.t + rowH * (i + 0.5);
-    s += `<text class="lab" x="${m.l - 10}" y="${y + 4}" text-anchor="end">${esc(x.m)} ${esc(MODEL_NAMES[x.m]?.split(":")[0] ?? "")}</text>`;
+    s += `<text class="lab" x="${m.l - 10}" y="${y + 4}" text-anchor="end">${esc(x.m)}</text>`;
     if (x.lo != null) s += `<line x1="${X(x.lo)}" x2="${X(x.hi)}" y1="${y}" y2="${y}" stroke="var(--m-${x.m})" stroke-width="2" stroke-linecap="round"/>`;
     s += `<circle cx="${X(x.d)}" cy="${y}" r="5" fill="var(--m-${x.m})" stroke="var(--card)" stroke-width="2" data-tip="${sgn(x.d)} CRPS vs baseline|95% CI ${sgn(x.lo)} to ${sgn(x.hi)}" tabindex="0"/>`; });
   return s + `<text x="${m.l}" y="${height - 6 - 12}" class="tiny"></text></svg>`;
@@ -263,7 +263,7 @@ function gameCard(g) {
 // ---------------------------------------------------------------- Props explorer
 function propCard(c, idx) {
   if (c.status !== "ok") return "";
-  const ha = c.is_home ? "v" : "at";
+  const ha = "v";
   const ms = (c.milestones || []).map((m) => `<span title="P(${MARKET_LABELS[c.market]} ≥ ${m.k})">${m.k}+ <b>${pct(m.p)}</b></span>`).join("");
   const u = c.uncertainty || {};
   return `<article class="panel prop">
@@ -325,7 +325,7 @@ function openSheet(c, p) {
   const others = Object.entries(c.other_models || {}).filter(([, x]) => x.status === "ok").sort((a, b) => MODEL_ORDER.indexOf(a[0]) - MODEL_ORDER.indexOf(b[0]));
   const ri = c.role_inputs || {};
   back.innerHTML = `<div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(c.name)} ${esc(c.market_label)}">
-    <div class="row between"><div><span class="eyebrow">${esc(c.team)} ${c.is_home ? "v" : "at"} ${esc(c.opponent)} · ${esc(c.kickoff_london)}</span><h2>${esc(c.name)}: ${esc(c.market_label)}</h2></div><button class="btn ghost" id="close">Close</button></div>
+    <div class="row between"><div><span class="eyebrow">${esc(c.team)} v ${esc(c.opponent)} · ${esc(c.kickoff_london)}</span><h2>${esc(c.name)}: ${esc(c.market_label)}</h2></div><button class="btn ghost" id="close">Close</button></div>
     <div id="dchart">${c.dist ? distChart(D) : '<p class="muted">Distribution not included in this snapshot.</p>'}</div>
     <p class="tiny muted">Distribution of ${esc(c.market_label.toLowerCase())} if he takes part${c.mix_weight_J0 != null ? `: ${Math.round(c.mix_weight_J0 * 100)}% joint simulation (${(c.n_draws_played ?? 0).toLocaleString("en-GB")} of ${(c.n_draws ?? 0).toLocaleString("en-GB")} game draws), ${Math.round((1 - c.mix_weight_J0) * 100)}% gradient-boosting model` : c.n_draws ? ` (${(c.n_draws_played ?? 0).toLocaleString("en-GB")} of ${c.n_draws.toLocaleString("en-GB")} game simulations)` : ""}. P(plays) ${pct(c.p_play)}.</p>
     <form class="lineform" id="lf"><label for="lineIn" class="small"><b>Test a line</b></label><input id="lineIn" type="number" step="0.5" inputmode="decimal" placeholder="e.g. ${c.median + 0.5}" aria-describedby="lineHelp"><button class="btn" type="submit">Calculate</button><span id="lineHelp" class="tiny muted">Whole or half numbers. Integer lines can push.</span></form>
@@ -373,7 +373,7 @@ async function viewShortlist(v) {
   const draw = () => {
     const [m, k] = $("#sm").value.split("|"); store.set("short", { market: m, k: +k });
     const rows = cards.filter((c) => c.market === m && c.p_play >= 0.8 && (c.sample_size ?? 0) >= 6).map((c) => ({ c, p: c.milestones.find((x) => x.k === +k)?.p })).filter((r) => r.p != null).sort((a, b) => b.p - a.p).slice(0, 40);
-    $("#st").innerHTML = `<thead><tr><th>#</th><th class="l">Player</th><th class="l">Game</th><th>P(${k}+)</th><th>Mean</th><th>80% range</th><th>History</th></tr></thead><tbody>${rows.map((r, i) => `<tr><td>${i + 1}</td><td class="l"><a href="#player.${esc(r.c.player_id)}">${esc(r.c.name)}</a> <span class="muted">${esc(r.c.position)}</span></td><td class="l">${esc(r.c.team)} ${r.c.is_home ? "v" : "at"} ${esc(r.c.opponent)}</td><td><b>${pct(r.p)}</b></td><td>${dec(r.c.mean, 1)}</td><td>${r.c.q10}–${r.c.q90}</td><td>${r.c.sample_size} g</td></tr>`).join("")}</tbody>`;
+    $("#st").innerHTML = `<thead><tr><th>#</th><th class="l">Player</th><th class="l">Game</th><th>P(${k}+)</th><th>Mean</th><th>80% range</th><th>History</th></tr></thead><tbody>${rows.map((r, i) => `<tr><td>${i + 1}</td><td class="l"><a href="#player.${esc(r.c.player_id)}">${esc(r.c.name)}</a> <span class="muted">${esc(r.c.position)}</span></td><td class="l">${esc(r.c.team)} v ${esc(r.c.opponent)}</td><td><b>${pct(r.p)}</b></td><td>${dec(r.c.mean, 1)}</td><td>${r.c.q10}–${r.c.q90}</td><td>${r.c.sample_size} g</td></tr>`).join("")}</tbody>`;
   };
   $("#sm").addEventListener("change", draw); draw();
 }
