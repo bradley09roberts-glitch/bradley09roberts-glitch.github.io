@@ -14,7 +14,42 @@ simulations and the SHA-256 of the ledger (ledgers of non-headline runs stay in
 | 2 | exp02-validation-v0.2-bandpriors | experience-band priors (mean usage) for every player | **Rejected.** Less bias but worse CRPS on receiving and rushing (band means pulled established depth players up and starters down). |
 | 3 | exp03-validation-ml (+ merged with exp01) | ML challenger M (LightGBM + NB/normal) | M best on receptions and rush attempts; poor on yardage (normal shape wrong, PIT far from uniform). |
 | 4 | exp04-validation-v0.3-lowhistory-priors | band priors only below 6 games; depth-chart QB1 P(start) estimated on 2016-2021 | **Adopted as v0.3.** Better than v0.1 on 5 of 7 markets for J0; rushing flat. |
-| 5 | exp05-validation-v0.3-stacking | J0, J1, M and linear pools X25/X50/X75 of J0 and M | see below; per-market weights frozen from this run |
+| 5 | exp05-validation-v0.3-stacking | J0, J1, M and linear pools X25/X50/X75 of J0 and M | Pools beat every single model on all 7 markets. Frozen per-market weight on J0 (rest on M): pass att 0.5, completions 0.5, pass yds 0.5, rec yds 0.75, receptions 0 (pure M), rush att 0.25, rush yds 0.75 (commit ab6a347). |
+| 6 | **exp06-TEST-frozen-v0.3** | single run of the frozen configuration on the untouched 2024-2025 seasons (X1, X, J1, J0, M, A, C) | see the test table below. Run once; nothing was changed afterwards. |
+
+## Test result (2024-2025, 44 slates, 4,000 simulations per game, code ab6a347)
+
+Mean CRPS on the common subset (lower is better); in brackets the difference from
+baseline A with a 95% interval from resampling whole weeks.
+
+| Market | n | X (primary) | X1 (live headline) | J0 | M | A |
+|---|---|---|---|---|---|---|
+| Pass attempts | 1,434 | 5.350 (-1.55 [-1.84, -1.25]) | 5.049 (-1.85 [-2.12, -1.58]) | 5.551 | 5.735 | 6.897 |
+| Completions | 1,434 | 3.579 (-0.99 [-1.17, -0.81]) | 3.387 (-1.18 [-1.35, -1.01]) | 3.731 | 3.793 | 4.569 |
+| Passing yards | 1,434 | 42.79 (-9.54 [-11.29, -7.60]) | 40.94 (-11.38 [-13.01, -9.57]) | 44.42 | 45.37 | 52.32 |
+| Receiving yards | 13,309 | 9.644 (-0.454 [-0.513, -0.398]) | 9.647 (-0.451 [-0.516, -0.390]) | 9.688 | 10.079 | 10.098 |
+| Receptions | 13,309 | 0.740 (-0.038 [-0.044, -0.033]) | 0.740 (same as X) | 0.773 | 0.740 | 0.778 |
+| Rush attempts | 7,935 | 1.292 (-0.133 [-0.146, -0.120]) | 1.284 (-0.141 [-0.154, -0.128]) | 1.382 | 1.301 | 1.425 |
+| Rushing yards | 7,935 | 7.585 (-0.557 [-0.613, -0.506]) | 7.543 (-0.599 [-0.663, -0.543]) | 7.678 | 8.082 | 8.142 |
+
+Reading it honestly:
+* The stacked models beat the simple baselines on every market with intervals that
+  exclude zero, and the stacking gain over J0 seen in validation held out of sample.
+* Baseline A is weak for quarterbacks (bias +1.9 attempts, +13.7 passing yards), so the
+  large passing percentages partly reflect a weak baseline; the receiving and rushing gains
+  (4-10%) are the more representative size of the improvement.
+* For regular starting QBs (P(plays) >= 80%) the gain is much smaller: pass-attempt CRPS
+  4.890 (X) vs 5.110 (A), about 4%. Most of the headline passing gain comes from reserve
+  and uncertain QBs, where baseline A fails (`by_usage.csv`).
+* Known weakness: receivers whose previous game was for another team are forecast slightly
+  worse than baseline A on receiving yards (CRPS 6.92 vs 6.69, n = 325; `by_role_change.csv`).
+  Shares are carried across teams too literally; a new-team prior is the next fix to test
+  (on validation data only).
+* Postseason games (n = 63 QB games) behave like the regular season (`by_season_type.csv`).
+* X1 and J1 use injury reports and pre-2025 depth charts whose publication times are
+  assumed, so their test advantage over X/J0 is not fully cutoff-faithful.
+* These are statistical results only. Beating these baselines says nothing about beating
+  bookmaker prices, which are far sharper; no price data exist here, so ROI is unavailable.
 
 Calls (from `nfl-props-lab/`, `uv run python -c ...`):
 

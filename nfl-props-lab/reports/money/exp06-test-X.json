@@ -1,0 +1,7 @@
+{
+ "state": "ROI unavailable",
+ "reason": "no bets with real recorded prices",
+ "eligible_forecasts": 59605,
+ "bets": 0,
+ "detail": "No quotes are stored (no odds key; historical props need a paid plan). Probability evaluation is unaffected; profit is not claimed."
+}

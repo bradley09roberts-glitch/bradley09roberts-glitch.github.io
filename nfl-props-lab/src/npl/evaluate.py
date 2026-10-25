@@ -114,6 +114,33 @@ def breakdown(led: pd.DataFrame, models: list[str], by: str) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+def _team_change_flag(led: pd.DataFrame) -> pd.Series:
+    """Sensitivity flag: the player's previous game (any participation) was for a different
+    team, i.e. a trade, release or signing since his last appearance."""
+    from .config import LAKE_DIR
+
+    p = LAKE_DIR / "player_games.parquet"
+    if not p.exists():
+        return pd.Series("unknown", index=led.index)
+    pg = pd.read_parquet(p, columns=["player_id", "game_id", "team", "season", "week",
+                                     "participation"])
+    pg = pg[pg.participation == "played"].sort_values(["season", "week"])
+    pg["prev_team"] = pg.groupby("player_id").team.shift(1)
+    # forecasts are made for games the player may not have played; use his last played
+    # game strictly before the target slate
+    last = pg[["player_id", "season", "week", "team"]].rename(columns={"team": "t"})
+    key = led[["player_id", "season", "week", "team"]].copy()
+    key["k"] = (key.season * 100 + key.week).astype("int64")
+    last["k"] = (last.season * 100 + last.week).astype("int64")
+    last = last.sort_values("k")
+    key = key.reset_index().sort_values("k")
+    m = pd.merge_asof(key, last[["player_id", "k", "t"]], on="k", by="player_id",
+                      allow_exact_matches=False)
+    flag = np.where(m.t.isna(), "no previous game",
+                    np.where(m.t == m.team, "same team", "changed team"))
+    return pd.Series(flag, index=m["index"]).reindex(led.index)
+
+
 def write_report(run_dir: Path, models: list[str], baseline: str = "A",
                  label: str | None = None, headline: bool = False) -> Path:
     """Summaries are always written to reports/. The full ledger is copied (compactly)
@@ -138,10 +165,12 @@ def write_report(run_dir: Path, models: list[str], baseline: str = "A",
     summ["milestones"] = {m: {mk: milestone_reliability(gg) for mk, gg in g.groupby("market")}
                           for m, g in sc.groupby("model")}
     (out / "summary.json").write_text(json.dumps(summ, indent=1, default=str))
-    for by in ("season", "position", "usage", "history_band", "season_type"):
+    led["role_change"] = _team_change_flag(led)
+    for by in ("season", "position", "usage", "history_band", "season_type", "team",
+               "role_change"):
         breakdown(led, models, by).to_csv(out / f"by_{by}.csv", index=False)
     if headline:
-        led.drop(columns=["history_band", "usage"]).to_csv(out / "ledger.csv.gz", index=False,
+        led.drop(columns=["history_band", "usage", "role_change"]).to_csv(out / "ledger.csv.gz", index=False,
                                                            float_format="%.6g")
     shutil.copy(run_dir / "manifest.json", out / "manifest.json")
     (out / "README.md").write_text(markdown(summ))

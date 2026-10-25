@@ -1,0 +1,417 @@
+{
+ "run_id": "exp06-TEST-frozen-v0.3-20261025T035141Z",
+ "created_at": "2026-10-25T04:13:21Z",
+ "label": "exp06-TEST-frozen-v0.3",
+ "splits": {
+  "train": [
+   2012,
+   2021
+  ],
+  "validation": [
+   2022,
+   2023
+  ],
+  "test": [
+   2024,
+   2025
+  ],
+  "prospective_from": [
+   2026,
+   7
+  ]
+ },
+ "slates": [
+  [
+   2024,
+   1
+  ],
+  [
+   2024,
+   2
+  ],
+  [
+   2024,
+   3
+  ],
+  [
+   2024,
+   4
+  ],
+  [
+   2024,
+   5
+  ],
+  [
+   2024,
+   6
+  ],
+  [
+   2024,
+   7
+  ],
+  [
+   2024,
+   8
+  ],
+  [
+   2024,
+   9
+  ],
+  [
+   2024,
+   10
+  ],
+  [
+   2024,
+   11
+  ],
+  [
+   2024,
+   12
+  ],
+  [
+   2024,
+   13
+  ],
+  [
+   2024,
+   14
+  ],
+  [
+   2024,
+   15
+  ],
+  [
+   2024,
+   16
+  ],
+  [
+   2024,
+   17
+  ],
+  [
+   2024,
+   18
+  ],
+  [
+   2024,
+   19
+  ],
+  [
+   2024,
+   20
+  ],
+  [
+   2024,
+   21
+  ],
+  [
+   2024,
+   22
+  ],
+  [
+   2025,
+   1
+  ],
+  [
+   2025,
+   2
+  ],
+  [
+   2025,
+   3
+  ],
+  [
+   2025,
+   4
+  ],
+  [
+   2025,
+   5
+  ],
+  [
+   2025,
+   6
+  ],
+  [
+   2025,
+   7
+  ],
+  [
+   2025,
+   8
+  ],
+  [
+   2025,
+   9
+  ],
+  [
+   2025,
+   10
+  ],
+  [
+   2025,
+   11
+  ],
+  [
+   2025,
+   12
+  ],
+  [
+   2025,
+   13
+  ],
+  [
+   2025,
+   14
+  ],
+  [
+   2025,
+   15
+  ],
+  [
+   2025,
+   16
+  ],
+  [
+   2025,
+   17
+  ],
+  [
+   2025,
+   18
+  ],
+  [
+   2025,
+   19
+  ],
+  [
+   2025,
+   20
+  ],
+  [
+   2025,
+   21
+  ],
+  [
+   2025,
+   22
+  ]
+ ],
+ "models": [
+  "X1",
+  "X",
+  "J1",
+  "J0",
+  "A",
+  "C"
+ ],
+ "n_sims": 4000,
+ "seed": 7,
+ "model_version": "0.3.0",
+ "code": {
+  "git_commit": "ab6a3477fe1484f54ac532c6f38458c2d0e0be47",
+  "dirty": false,
+  "model_version": "0.3.0"
+ },
+ "with_ml": true,
+ "mix_grid": [],
+ "x_weights": {
+  "pass_att": 0.5,
+  "pass_cmp": 0.5,
+  "pass_yds": 0.5,
+  "rec_yds": 0.75,
+  "receptions": 0.0,
+  "rush_att": 0.25,
+  "rush_yds": 0.75
+ },
+ "ml_fits": [
+  {
+   "slate": [
+    2024,
+    1
+   ],
+   "train_rows": 70420
+  },
+  {
+   "slate": [
+    2024,
+    5
+   ],
+   "train_rows": 72450
+  },
+  {
+   "slate": [
+    2024,
+    9
+   ],
+   "train_rows": 74320
+  },
+  {
+   "slate": [
+    2024,
+    13
+   ],
+   "train_rows": 76067
+  },
+  {
+   "slate": [
+    2024,
+    17
+   ],
+   "train_rows": 77981
+  },
+  {
+   "slate": [
+    2024,
+    19
+   ],
+   "train_rows": 78997
+  },
+  {
+   "slate": [
+    2025,
+    1
+   ],
+   "train_rows": 79417
+  },
+  {
+   "slate": [
+    2025,
+    5
+   ],
+   "train_rows": 81460
+  },
+  {
+   "slate": [
+    2025,
+    9
+   ],
+   "train_rows": 83275
+  },
+  {
+   "slate": [
+    2025,
+    13
+   ],
+   "train_rows": 85095
+  },
+  {
+   "slate": [
+    2025,
+    17
+   ],
+   "train_rows": 87073
+  },
+  {
+   "slate": [
+    2025,
+    19
+   ],
+   "train_rows": 88105
+  }
+ ],
+ "lake_manifest_sha256": "52dd8ee1df11889f4469ad85ae7eefcbfb56e78eccd9d4d1739584437e896683",
+ "ledger_sha256": "829717b91d0c071faba6d7aad7fb7043cfcaa416017a9a2a62231257cd512eaa",
+ "rows": 417235,
+ "exclusions": [
+  {
+   "model": "A",
+   "participation": "dnp",
+   "status": "ok",
+   "n": 4785
+  },
+  {
+   "model": "A",
+   "participation": "inactive",
+   "status": "ok",
+   "n": 8030
+  },
+  {
+   "model": "C",
+   "participation": "dnp",
+   "status": "ok",
+   "n": 4785
+  },
+  {
+   "model": "C",
+   "participation": "inactive",
+   "status": "ok",
+   "n": 8030
+  },
+  {
+   "model": "J0",
+   "participation": "dnp",
+   "status": "ok",
+   "n": 4785
+  },
+  {
+   "model": "J0",
+   "participation": "inactive",
+   "status": "ok",
+   "n": 8030
+  },
+  {
+   "model": "J1",
+   "participation": "dnp",
+   "status": "ok",
+   "n": 4785
+  },
+  {
+   "model": "J1",
+   "participation": "inactive",
+   "status": "not_projected_to_play",
+   "n": 1514
+  },
+  {
+   "model": "J1",
+   "participation": "inactive",
+   "status": "ok",
+   "n": 6516
+  },
+  {
+   "model": "M",
+   "participation": "dnp",
+   "status": "ok",
+   "n": 4785
+  },
+  {
+   "model": "M",
+   "participation": "inactive",
+   "status": "ok",
+   "n": 8030
+  },
+  {
+   "model": "X",
+   "participation": "dnp",
+   "status": "ok",
+   "n": 4785
+  },
+  {
+   "model": "X",
+   "participation": "inactive",
+   "status": "ok",
+   "n": 8030
+  },
+  {
+   "model": "X1",
+   "participation": "dnp",
+   "status": "ok",
+   "n": 4785
+  },
+  {
+   "model": "X1",
+   "participation": "inactive",
+   "status": "not_projected_to_play",
+   "n": 1514
+  },
+  {
+   "model": "X1",
+   "participation": "inactive",
+   "status": "ok",
+   "n": 6516
+  }
+ ],
+ "seconds": 1299.9,
+ "manifest_hash": "5b8d8b593d615cc9a17cbfa6e27e46d7b0584887a19ffe96b62ed7bcb2104262"
+}

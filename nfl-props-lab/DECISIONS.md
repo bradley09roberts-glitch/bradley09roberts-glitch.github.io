@@ -71,3 +71,25 @@ No odds API key is configured. Without real recorded prices there is no ROI, yie
 value claim anywhere. The Odds API documents NFL player props for US bookmakers; it does
 not document them for UK bookmakers, and BetMGM UK is not in its UK list. US prices would
 be research references only, never "UK-accessible".
+
+## D-011 (25 Oct 2026) v0.2 rejected, v0.3 adopted
+Experience-band priors for everyone (v0.2) cut bias but worsened CRPS for established
+players. v0.3 keeps them only for players with fewer than 6 games and estimates the
+depth-chart QB1 start probabilities from 2016-2021. Evidence: reports/EXPERIMENTS.md.
+
+## D-012 (25 Oct 2026) Stacked primary model X; live headline X1
+Per-market linear pools of J0 and the ML challenger M, weights frozen on validation
+(experiment 5). X (J0-based) is the cutoff-faithful primary model for research claims; X1
+applies the same weights to J1 and is the headline in live editions because it uses the
+official report observed before publication (so a player listed Out is never shown with
+a history-only participation probability). The joint simulation J remains the source of
+game-level scenarios and cross-player coherence; X/X1 are per-market marginals.
+
+## D-013 (25 Oct 2026) Test run executed once
+exp06-TEST-frozen-v0.3 ran the frozen configuration (commit ab6a347) on 2024-2025 once.
+No change was made because of its results. Further model changes must be validated on
+2022-2023 and judged prospectively; the 2024-2025 seasons are no longer untouched.
+
+## D-014 (25 Oct 2026) Ledgers in git only for headline runs
+Full ledgers are committed for the selected validation run (exp05) and the test run
+(exp06); other experiments commit summaries and manifests with the ledger SHA-256.
