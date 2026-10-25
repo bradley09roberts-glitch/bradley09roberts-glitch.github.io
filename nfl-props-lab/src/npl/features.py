@@ -108,6 +108,7 @@ class Params:
     role_priors: dict = field(default_factory=dict)
     pools: dict = field(default_factory=dict)  # position -> per-play yard arrays
     inj_play: dict = field(default_factory=dict)  # (pos, report_status) -> P(played)
+    band_priors: dict = field(default_factory=dict)  # (role, experience band) -> priors
 
 
 def estimate_params(h: History, train_from: int = 2016) -> Params:
@@ -147,6 +148,7 @@ def estimate_params(h: History, train_from: int = 2016) -> Params:
     pj["dr"] = np.where(pj.position == "QB", np.nan, pj.carries / pj.designed_rush)
     p.alpha_carry = _alpha(pj[pj.position != "QB"], "dr", "designed_rush")
     p.role_priors = _role_priors(pg, team_att)
+    p.band_priors = _band_priors(h, team_att, train_from)
     p.pools = _pools(h.plays[h.plays.season >= train_from], h.pg)
     p.q_qb_exit = _qb_exit(h, train_from)
     p.p_qb_cameo = _qb_cameo(h, train_from)
@@ -179,6 +181,40 @@ def _role_priors(pg: pd.DataFrame, team_att: pd.DataFrame) -> dict:
             "dshare": float((g.carries / g.designed_rush.clip(lower=1)).median()),
             "catch": float(g.receptions.sum() / max(g.targets.sum(), 1)),
         }
+    return out
+
+
+BANDS = ("0", "1-2", "3-5", "6+")
+
+
+def exp_band(n_prior_played: float) -> str:
+    n = 0 if n_prior_played is None or pd.isna(n_prior_played) else n_prior_played
+    return "0" if n == 0 else ("1-2" if n <= 2 else ("3-5" if n <= 5 else "6+"))
+
+
+def _band_priors(h: History, team_att: pd.DataFrame, train_from: int) -> dict:
+    """Empirical-Bayes priors by role and experience band (number of games the player had
+    played before). New and low-history players get the usage that such players actually
+    received, not the usage of established players at their position."""
+    pg = h.pg[h.pg.position.isin(ROLE_POS)].sort_values(["season", "week"]).copy()
+    pg["role"] = pg.position.map(ROLE_POS)
+    played = (pg.participation == "played").astype(int)
+    pg["prior_played"] = played.groupby(pg.player_id).cumsum() - played
+    pg["band"] = [exp_band(x) for x in pg.prior_played]
+    pg = pg[pg.season >= train_from]
+    dr = (h.plays[h.plays.kind == "rush"].groupby(["game_id", "rusher_player_id"]).size()
+          .rename("dr_n"))
+    pl = pg[pg.participation == "played"].join(team_att, on=["game_id", "team"], how="inner")
+    pl = pl.join(dr, on=["game_id", "player_id"])
+    pl["tshare"] = pl.targets / pl.pass_att.clip(lower=1)
+    pl["dshare"] = pl.dr_n.fillna(0) / pl.designed_rush.clip(lower=1)
+    cand = pg[pg.participation.isin(["played", "dnp", "inactive"])]
+    out = {}
+    for (role, band), g in pl.groupby(["role", "band"]):
+        c = cand[(cand.role == role) & (cand.band == band)]
+        out[(role, band)] = {"tshare": float(g.tshare.mean()), "dshare": float(g.dshare.mean()),
+                             "p_play": float((c.participation == "played").mean())
+                             if len(c) else None, "n": len(g)}
     return out
 
 
@@ -372,7 +408,9 @@ def build_slate(lake: dict, season: int, week: int, *, variant: str = "J0",
                 weekly report, assumed published >= 24h before kickoff).
     """
     h = h or History.before(lake, season, week)
-    P = P or estimate_params(h)
+    # Parameters are fitted on 2016+ (participation-labelled seasons); slates in 2016 itself
+    # have no earlier 2016+ rows, so they fall back to 2012-2015 history.
+    P = P or estimate_params(h, train_from=2016 if season >= 2017 else 2012)
     games = lake["games"]
     slate = games[(games.season == season) & (games.week == week)]
     rates = _team_rates(h, P)
@@ -466,10 +504,16 @@ def _player_in(m, team, ph, P: Params, rec_pool, rush_pool, scr_pool, scr, inj_m
     flags = []
     wsum = float(row["_wsum"]) if has and pd.notna(row["_wsum"]) else 0.0
     k = HP["share_prior_games"]
-    # Role prior for shares: a deliberately low prior (median, not mean) so that unknown
-    # reserves do not receive starter usage; uncertainty is carried by the Dirichlet.
-    prior_t = rp.get("tshare", 0.02)
-    prior_d = rp.get("dshare", 0.02)
+    # Shrinkage target: the empirical usage of players at this position with the same
+    # experience band (v0.2); falls back to the position median.
+    # v0.3: experience-band priors only for players with fewer than 6 games played (where
+    # v0.1 over-predicted); established players keep the position-median prior (exp02 showed
+    # band means hurt them).
+    n_prior = int(row["_n"]) if has and pd.notna(row["_n"]) else 0
+    band = exp_band(n_prior)
+    bp = P.band_priors.get((role, band), {}) if band != "6+" else {}
+    prior_t = bp.get("tshare", rp.get("tshare", 0.02))
+    prior_d = bp.get("dshare", rp.get("dshare", 0.02))
     if has and wsum > 0:
         tshare = (row.tshare * wsum + prior_t * k) / (wsum + k)
         dsh = row.dshare if pd.notna(row.dshare) else prior_d
@@ -485,10 +529,11 @@ def _player_in(m, team, ph, P: Params, rec_pool, rush_pool, scr_pool, scr, inj_m
     catch = (rec_n + rp.get("catch", 0.65) * ke) / (tg_n + ke)
     # participation probability
     wp = float(row["_wsum_p"]) if has and pd.notna(row.get("_wsum_p", np.nan)) else 0.0
-    base_play = rp_play(role)
+    base_play = bp.get("p_play") or rp_play(role)
     pplay = ((row.played * wp if wp else 0) + base_play * HP["play_prior_games"]) / (
         wp + HP["play_prior_games"])
     status = inj_map.get(pid)
+    status = status if isinstance(status, str) and status else None  # practice-only rows
     if status in INJ_DEFAULT:
         pplay = min(pplay, P.inj_play.get(status, INJ_DEFAULT[status]))
         flags.append(f"injury_report:{status}")
@@ -532,7 +577,11 @@ def depth_qb1(dq: pd.DataFrame, season: int, week: int, team: str, cutoff) -> st
     return str(d["player_id"].iloc[0]) if len(d) else None
 
 
-DEPTH_QB1_START = 0.88  # J1 prior P(start) for an available depth-chart QB1
+# J1: P(start) for the depth-chart QB1, estimated on 2016-2021 (QB1 led his team in pass
+# attempts in 92.5% of games when not on the injury report, 61.7% when Questionable, never
+# when Out/Doubtful; divided by ~0.97 because early exits are simulated separately).
+DEPTH_QB1_START = 0.95
+DEPTH_QB1_START_QUESTIONABLE = 0.64
 
 
 def _qb_start_probs(players: list[PlayerIn], h: History, team: str,
@@ -565,7 +614,8 @@ def _qb_start_probs(players: list[PlayerIn], h: History, team: str,
     ids = [q.player_id for q in qbs]
     if qb1 in ids and qbs[ids.index(qb1)].injury_status not in ("Out", "Doubtful"):
         i = ids.index(qb1)
-        base = DEPTH_QB1_START * (0.85 if qbs[i].injury_status == "Questionable" else 1.0)
+        base = (DEPTH_QB1_START_QUESTIONABLE if qbs[i].injury_status == "Questionable"
+                else DEPTH_QB1_START)
         rest = np.delete(probs, i)
         rest = rest / rest.sum() * (1 - base) if rest.sum() > 0 else rest
         probs = np.insert(rest, i, base) if len(qbs) > 1 else np.array([1.0])

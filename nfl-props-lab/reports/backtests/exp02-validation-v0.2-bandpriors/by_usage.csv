@@ -1,0 +1,57 @@
+market,model,usage,n,crps,bias,cov80
+pass_att,A,regular (p_play>=0.8),935,4.8436,-0.834,0.833
+pass_att,A,reserve/uncertain,479,10.3097,6.687,0.351
+pass_att,C,regular (p_play>=0.8),935,5.3504,-0.69,0.848
+pass_att,C,reserve/uncertain,479,8.2228,3.131,0.848
+pass_att,J0,regular (p_play>=0.8),935,4.7671,0.142,0.86
+pass_att,J0,reserve/uncertain,479,7.9492,-2.013,0.887
+pass_att,J1,regular (p_play>=0.8),1013,5.0526,0.178,0.86
+pass_att,J1,reserve/uncertain,401,7.7509,1.034,0.893
+pass_cmp,A,regular (p_play>=0.8),935,3.4692,-0.512,0.834
+pass_cmp,A,reserve/uncertain,479,6.3881,4.417,0.378
+pass_cmp,C,regular (p_play>=0.8),935,3.8406,-0.679,0.828
+pass_cmp,C,reserve/uncertain,479,5.17,2.058,0.86
+pass_cmp,J0,regular (p_play>=0.8),935,3.4423,0.308,0.861
+pass_cmp,J0,reserve/uncertain,479,4.9691,-0.85,0.904
+pass_cmp,J1,regular (p_play>=0.8),1013,3.6238,0.343,0.851
+pass_cmp,J1,reserve/uncertain,401,4.8424,1.107,0.91
+pass_yds,A,regular (p_play>=0.8),935,42.448,-6.03,0.806
+pass_yds,A,reserve/uncertain,479,67.6979,49.252,0.432
+pass_yds,C,regular (p_play>=0.8),935,45.6755,-1.844,0.833
+pass_yds,C,reserve/uncertain,479,58.2044,25.809,0.841
+pass_yds,J0,regular (p_play>=0.8),935,42.1631,3.581,0.868
+pass_yds,J0,reserve/uncertain,479,54.7483,-7.209,0.887
+pass_yds,J1,regular (p_play>=0.8),1013,43.6902,3.556,0.858
+pass_yds,J1,reserve/uncertain,401,54.3528,14.889,0.888
+rec_yds,A,regular (p_play>=0.8),11481,10.8173,-3.02,0.842
+rec_yds,A,reserve/uncertain,1844,8.3194,-0.121,0.87
+rec_yds,C,regular (p_play>=0.8),11481,10.9999,0.52,0.884
+rec_yds,C,reserve/uncertain,1844,7.7779,3.274,0.911
+rec_yds,J0,regular (p_play>=0.8),11481,10.5729,0.367,0.88
+rec_yds,J0,reserve/uncertain,1844,7.8126,3.154,0.902
+rec_yds,J1,regular (p_play>=0.8),11234,10.5211,1.288,0.885
+rec_yds,J1,reserve/uncertain,2091,8.5165,3.853,0.899
+receptions,A,regular (p_play>=0.8),11481,0.8284,-0.115,0.902
+receptions,A,reserve/uncertain,1844,0.6817,0.219,0.926
+receptions,C,regular (p_play>=0.8),11481,0.891,-0.002,0.922
+receptions,C,reserve/uncertain,1844,0.674,0.241,0.949
+receptions,J0,regular (p_play>=0.8),11481,0.8467,0.031,0.911
+receptions,J0,reserve/uncertain,1844,0.6838,0.253,0.932
+receptions,J1,regular (p_play>=0.8),11234,0.8421,0.119,0.919
+receptions,J1,reserve/uncertain,2091,0.7361,0.306,0.927
+rush_att,A,regular (p_play>=0.8),6674,1.4436,-0.571,0.865
+rush_att,A,reserve/uncertain,1284,1.5275,-0.036,0.799
+rush_att,C,regular (p_play>=0.8),6674,1.5733,-0.188,0.889
+rush_att,C,reserve/uncertain,1284,1.5593,0.034,0.895
+rush_att,J0,regular (p_play>=0.8),6674,1.4467,0.019,0.907
+rush_att,J0,reserve/uncertain,1284,1.6448,-0.011,0.864
+rush_att,J1,regular (p_play>=0.8),6613,1.4401,0.14,0.909
+rush_att,J1,reserve/uncertain,1345,1.565,0.292,0.878
+rush_yds,A,regular (p_play>=0.8),6674,8.2053,-2.819,0.877
+rush_yds,A,reserve/uncertain,1284,7.8918,-1.244,0.871
+rush_yds,C,regular (p_play>=0.8),6674,8.6612,-0.974,0.849
+rush_yds,C,reserve/uncertain,1284,8.0294,0.229,0.847
+rush_yds,J0,regular (p_play>=0.8),6674,7.9218,0.141,0.868
+rush_yds,J0,reserve/uncertain,1284,8.0227,0.251,0.8
+rush_yds,J1,regular (p_play>=0.8),6613,7.9296,0.631,0.87
+rush_yds,J1,reserve/uncertain,1345,7.7201,1.749,0.82

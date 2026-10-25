@@ -1,0 +1,276 @@
+{
+ "run_id": "exp02-validation-v0.2-bandpriors-20261025T031454Z",
+ "created_at": "2026-10-25T03:24:42Z",
+ "label": "exp02-validation-v0.2-bandpriors",
+ "splits": {
+  "train": [
+   2012,
+   2021
+  ],
+  "validation": [
+   2022,
+   2023
+  ],
+  "test": [
+   2024,
+   2025
+  ],
+  "prospective_from": [
+   2026,
+   7
+  ]
+ },
+ "slates": [
+  [
+   2022,
+   1
+  ],
+  [
+   2022,
+   2
+  ],
+  [
+   2022,
+   3
+  ],
+  [
+   2022,
+   4
+  ],
+  [
+   2022,
+   5
+  ],
+  [
+   2022,
+   6
+  ],
+  [
+   2022,
+   7
+  ],
+  [
+   2022,
+   8
+  ],
+  [
+   2022,
+   9
+  ],
+  [
+   2022,
+   10
+  ],
+  [
+   2022,
+   11
+  ],
+  [
+   2022,
+   12
+  ],
+  [
+   2022,
+   13
+  ],
+  [
+   2022,
+   14
+  ],
+  [
+   2022,
+   15
+  ],
+  [
+   2022,
+   16
+  ],
+  [
+   2022,
+   17
+  ],
+  [
+   2022,
+   18
+  ],
+  [
+   2022,
+   19
+  ],
+  [
+   2022,
+   20
+  ],
+  [
+   2022,
+   21
+  ],
+  [
+   2022,
+   22
+  ],
+  [
+   2023,
+   1
+  ],
+  [
+   2023,
+   2
+  ],
+  [
+   2023,
+   3
+  ],
+  [
+   2023,
+   4
+  ],
+  [
+   2023,
+   5
+  ],
+  [
+   2023,
+   6
+  ],
+  [
+   2023,
+   7
+  ],
+  [
+   2023,
+   8
+  ],
+  [
+   2023,
+   9
+  ],
+  [
+   2023,
+   10
+  ],
+  [
+   2023,
+   11
+  ],
+  [
+   2023,
+   12
+  ],
+  [
+   2023,
+   13
+  ],
+  [
+   2023,
+   14
+  ],
+  [
+   2023,
+   15
+  ],
+  [
+   2023,
+   16
+  ],
+  [
+   2023,
+   17
+  ],
+  [
+   2023,
+   18
+  ],
+  [
+   2023,
+   19
+  ],
+  [
+   2023,
+   20
+  ],
+  [
+   2023,
+   21
+  ],
+  [
+   2023,
+   22
+  ]
+ ],
+ "models": [
+  "J0",
+  "J1",
+  "A",
+  "C"
+ ],
+ "n_sims": 4000,
+ "seed": 7,
+ "model_version": "0.2.0",
+ "code": {
+  "git_commit": "969875f0243baadca7c726771d9b03e563d53f49",
+  "dirty": true,
+  "model_version": "0.2.0"
+ },
+ "lake_manifest_sha256": "52dd8ee1df11889f4469ad85ae7eefcbfb56e78eccd9d4d1739584437e896683",
+ "ledger_sha256": "d954955ea6787b8b9469ad1026dd77399dc0ae6fcbedf81a6182b53f2332df39",
+ "rows": 239132,
+ "exclusions": [
+  {
+   "model": "A",
+   "participation": "dnp",
+   "status": "ok",
+   "n": 4854
+  },
+  {
+   "model": "A",
+   "participation": "inactive",
+   "status": "ok",
+   "n": 8121
+  },
+  {
+   "model": "C",
+   "participation": "dnp",
+   "status": "ok",
+   "n": 4854
+  },
+  {
+   "model": "C",
+   "participation": "inactive",
+   "status": "ok",
+   "n": 8121
+  },
+  {
+   "model": "J0",
+   "participation": "dnp",
+   "status": "ok",
+   "n": 4854
+  },
+  {
+   "model": "J0",
+   "participation": "inactive",
+   "status": "ok",
+   "n": 8121
+  },
+  {
+   "model": "J1",
+   "participation": "dnp",
+   "status": "ok",
+   "n": 4854
+  },
+  {
+   "model": "J1",
+   "participation": "inactive",
+   "status": "not_projected_to_play",
+   "n": 1400
+  },
+  {
+   "model": "J1",
+   "participation": "inactive",
+   "status": "ok",
+   "n": 6721
+  }
+ ],
+ "seconds": 588.3,
+ "manifest_hash": "224672fdae184283303f1f81dd9c9818e7e2dfce8497cc145d511ac968fe19c1"
+}

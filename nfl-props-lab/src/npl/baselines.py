@@ -58,7 +58,7 @@ def ew_means(h: History) -> pd.DataFrame:
     pg = _played(h).sort_values(["season", "week"], ascending=False)
     pg["_ord"] = pg.groupby("player_id").cumcount()
     pg["_w"] = ew_weights(pg._ord.to_numpy(), pg.season.to_numpy(), h.season, HL_A, DECAY_A)
-    cols = sorted({m.stat for m in CORE_MARKETS})
+    cols = sorted({m.stat for m in CORE_MARKETS} | {"targets"})
     w = pg["_w"]
     agg = pg[cols].mul(w, axis=0).groupby(pg.player_id).sum().div(
         w.groupby(pg.player_id).sum(), axis=0)

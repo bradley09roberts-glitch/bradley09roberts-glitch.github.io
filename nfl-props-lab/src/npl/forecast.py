@@ -12,7 +12,7 @@ from .config import CORE_MARKETS, MARKETS
 from .dist import Dist
 from .features import HP, ROLE_POS, GameIn, Params, build_slate
 
-MODEL_VERSION = "0.1.0"
+MODEL_VERSION = "0.3.0"
 MODELS = {
     "J1": "Joint simulation + official injury-report status (availability-informed)",
     "J0": "Joint simulation, participation from history only (cutoff-faithful)",

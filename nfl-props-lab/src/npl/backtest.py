@@ -74,6 +74,7 @@ def score_rows(fc: list[dict], pg: pd.DataFrame) -> pd.DataFrame:
 def run(seasons_weeks: list[tuple[int, int]], *, label: str, models=("J0", "J1", "A", "C"),
         n_sims: int = 4000, seed: int = 7, lake: dict | None = None) -> dict:
     lake = lake or load_lake()
+    code = _code()  # captured at start: the code that actually ran
     run_id = f"{label}-{utcnow().strftime('%Y%m%dT%H%M%SZ')}"
     d = RUNS_DIR / run_id
     d.mkdir(parents=True, exist_ok=True)
@@ -90,7 +91,7 @@ def run(seasons_weeks: list[tuple[int, int]], *, label: str, models=("J0", "J1",
     manifest = {
         "run_id": run_id, "created_at": iso(utcnow()), "label": label, "splits": SPLITS,
         "slates": seasons_weeks, "models": list(models), "n_sims": n_sims, "seed": seed,
-        "model_version": forecast.MODEL_VERSION, "code": _code(),
+        "model_version": forecast.MODEL_VERSION, "code": code,
         "lake_manifest_sha256": sha256_file(RUNS_DIR.parent / "lake" / "build_manifest.json"),
         "ledger_sha256": sha256_file(led_path), "rows": len(led),
         "exclusions": led[~led.scored].groupby(["model", "participation", "status"]).size()

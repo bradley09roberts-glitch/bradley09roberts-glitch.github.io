@@ -78,6 +78,13 @@ def cmd_publish(a) -> int:
     return 0
 
 
+def cmd_serve(a) -> int:
+    import uvicorn
+
+    uvicorn.run("npl.api:app", host=a.host, port=a.port, reload=False, log_level="info")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="npl", description="NFL Props Lab pipeline")
     p.add_argument("-v", "--verbose", action="store_true")
@@ -108,6 +115,11 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--dry-run", action="store_true")
     s.add_argument("--allow-dirty", action="store_true")
     s.set_defaults(func=cmd_publish)
+
+    s = sub.add_parser("serve", help="run the web app (read-only over saved outputs)")
+    s.add_argument("--host", default="127.0.0.1")
+    s.add_argument("--port", type=int, default=8765)
+    s.set_defaults(func=cmd_serve)
     return p
 
 
