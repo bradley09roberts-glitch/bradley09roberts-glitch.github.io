@@ -48,7 +48,9 @@ def build(out: Path, *, min_p_play: float = 0.5, model: str | None = None) -> di
             continue
         fkeep = ("edition_id", "model", "market", "market_label", "mean", "median", "q10",
                  "q90", "p_play", "status")
-        p["forecasts"] = [{k: f.get(k) for k in fkeep} for f in p.get("forecasts", [])]
+        latest_id = props.get("edition_id")
+        p["forecasts"] = [{k: f.get(k) for k in fkeep} for f in p.get("forecasts", [])
+                          if f.get("edition_id") == latest_id]
         lkeep = ("season", "week", "season_type", "team", "opponent", "participation",
                  "attempts", "completions", "passing_yards", "carries", "rushing_yards",
                  "targets", "receptions", "receiving_yards")
