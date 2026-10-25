@@ -25,6 +25,18 @@ class EditionError(RuntimeError):
     pass
 
 
+STATUS_NOTE = {
+    "default": ("Probabilities are conditional on the player taking part (most bookmakers "
+                "void a player prop if he does not play). No bookmaker prices were available "
+                "to this edition, so no value claims are made."),
+    "0.3.0": ("Model v0.3 with per-market stacking weights frozen on the 2022-2023 validation "
+              "seasons (reports/EXPERIMENTS.md). Every model is recorded so each has a "
+              "genuine pre-match record. Probabilities are conditional on the player taking "
+              "part (most bookmakers void a player prop if he does not play). No bookmaker "
+              "prices were available to this edition, so no value claims are made."),
+}
+
+
 def code_version() -> dict:
     def git(*a):
         return subprocess.run(["git", *a], cwd=PROJECT_ROOT, capture_output=True, text=True,
@@ -37,7 +49,7 @@ def code_version() -> dict:
 
 def publish(con, *, season: int, week: int, kind: str, result: dict, lake: dict,
             published_at: datetime | None = None, allow_dirty: bool = False,
-            notes: list[str] | None = None) -> dict:
+            notes: list[str] | None = None, headline: str = "X1") -> dict:
     now = published_at or utcnow()
     cv = code_version()
     if cv["dirty"] and not allow_dirty:
@@ -62,12 +74,8 @@ def publish(con, *, season: int, week: int, kind: str, result: dict, lake: dict,
         "edition_id": edition_id, "kind": kind, "season": season, "week": week,
         "season_type": stype, "published_at": iso(now), "cutoff_at": iso(now),
         "published_at_london": london(now), "retrospective": False,
-        "headline_model": "J1", "models": MODELS, "code": cv,
-        "status_note": ("Model version 0.1: not yet validated by the chronological backtest. "
-                        "All four models are recorded so each has a genuine pre-match record; "
-                        "probabilities are conditional on the player taking part (most "
-                        "bookmakers void a player prop if he does not play). No bookmaker "
-                        "prices were available to this edition: no value claims are made."),
+        "headline_model": headline, "models": MODELS, "code": cv,
+        "status_note": STATUS_NOTE.get(MODEL_VERSION, STATUS_NOTE["default"]),
         "notes": notes or [], "inputs_hash": sha256_json(inputs), "inputs": inputs,
         "games": g_rows, "teams": result["teams"], "forecasts": result["forecasts"],
     }

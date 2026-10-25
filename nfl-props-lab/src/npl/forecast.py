@@ -14,10 +14,13 @@ from .features import HP, ROLE_POS, GameIn, Params, build_slate
 
 MODEL_VERSION = "0.3.0"
 MODELS = {
+    "X1": "Stacked J1 + M, same frozen weights (availability-informed; live headline)",
+    "X": "Stacked: per-market linear pool of J0 and M (weights fixed on validation)",
     "J1": "Joint simulation + official injury-report status (availability-informed)",
     "J0": "Joint simulation, participation from history only (cutoff-faithful)",
     "A": "Baseline A: recency-weighted game log (NB / normal)",
     "C": "Baseline C: role-tier climatology (empirical distribution)",
+    "M": "Gradient boosting mean + NB / normal distribution (ML challenger)",
 }
 QUANTILES = (0.05, 0.10, 0.25, 0.5, 0.75, 0.90, 0.95)
 MIN_P_PLAY = 0.05
@@ -115,8 +118,73 @@ def run_baselines(games: list[GameIn], h, joint_fc: list) -> list:
     return out
 
 
+def mix_dist(a: Dist, b: Dist, w: float) -> Dist:
+    """Linear pool w*a + (1-w)*b on the union of supports (a valid single distribution, so
+    line probabilities stay monotone and sum to one)."""
+    lo = min(a.lo, b.lo)
+    hi = max(a.lo + len(a.counts), b.lo + len(b.counts))
+    pa, pb = np.zeros(hi - lo), np.zeros(hi - lo)
+    pa[a.lo - lo:a.lo - lo + len(a.counts)] = a.pmf
+    pb[b.lo - lo:b.lo - lo + len(b.counts)] = b.pmf
+    p = w * pa + (1 - w) * pb
+    nz = np.nonzero(p > 5e-7)[0]
+    return Dist.from_pmf(lo + int(nz[0]), p[nz[0]:nz[-1] + 1], scale=1_000_000)
+
+
+def ml_rows_for(lake: dict, season: int, week: int, ml_models: dict, base_rows: list) -> list:
+    """Model M forecasts for exactly the (game, player, market) rows of base_rows (J0)."""
+    from . import ml
+
+    rows = ml.load_cache([(season, week)])
+    if not len(rows):
+        rows = ml.slate_rows(lake, season, week)
+    preds = {k: m.predict(rows) for k, m in ml_models.items()}
+    idx = {(r.game_id, r.player_id): i for i, r in enumerate(rows.itertuples())}
+    out = []
+    for f in base_rows:
+        base = {k: v for k, v in f.items() if k not in ("dist", "mean", "sd", "median",
+                                                        "n_draws", "n_draws_played")
+                and not k.startswith("q")}
+        base["model"] = "M"
+        i = idx.get((f["game_id"], f["player_id"]))
+        if f["status"] != "ok" or i is None:
+            out.append({**base, "status": f["status"] if f["status"] != "ok" else "no_row"})
+            continue
+        d = ml_models[f["market"]].dist(float(preds[f["market"]][i]))
+        out.append({**base, "status": "ok", **summarise(d), "dist": d.to_json(),
+                    "n_draws": None, "n_draws_played": None})
+    return out
+
+
+def mixture_rows(a_rows: list, b_rows: list, weights: dict, name: str) -> list:
+    """weights: market -> weight on a (J0). Rows aligned by (game, player, market)."""
+    bmap = {(f["game_id"], f["player_id"], f["market"]): f for f in b_rows}
+    out = []
+    for f in a_rows:
+        g = bmap.get((f["game_id"], f["player_id"], f["market"]))
+        base = {k: v for k, v in f.items() if k not in ("dist", "mean", "sd", "median")
+                and not k.startswith("q")}
+        base["model"] = name
+        w = weights.get(f["market"]) if isinstance(weights, dict) else weights
+        if f["status"] != "ok" or g is None or g["status"] != "ok" or w is None:
+            out.append({**base, "status": f["status"] if f["status"] != "ok" else "no_pair"})
+            continue
+        d = mix_dist(Dist.from_json(f["dist"]), Dist.from_json(g["dist"]), w)
+        out.append({**base, "status": "ok", "mix_weight_J0": w, **summarise(d),
+                    "dist": d.to_json()})
+    return out
+
+
+# Per-market weight on J0 in the stacked model X (rest on M). FROZEN on 25 Oct 2026 from
+# validation experiment 5 (2022-2023, 44 slates): the CRPS-minimising weight in
+# {0, 0.25, 0.5, 0.75, 1} per market. Never re-tuned on the test seasons.
+X_WEIGHTS: dict = {"pass_att": 0.5, "pass_cmp": 0.5, "pass_yds": 0.5, "rec_yds": 0.75,
+                   "receptions": 0.0, "rush_att": 0.25, "rush_yds": 0.75}
+
+
 def run_slate(lake: dict, season: int, week: int, *, n_sims: int = 10_000, seed: int = 20261025,
-              injuries_asof: pd.DataFrame | None = None, models=("J1", "J0", "A", "C")) -> dict:
+              injuries_asof: pd.DataFrame | None = None, models=("J1", "J0", "A", "C"),
+              ml_models: dict | None = None, mix_grid: tuple = ()) -> dict:
     games0, P, h = build_slate(lake, season, week, variant="J0")
     fc, teams = run_joint(games0, P, "J0", n_sims, seed)
     games1 = None
@@ -128,6 +196,17 @@ def run_slate(lake: dict, season: int, week: int, *, n_sims: int = 10_000, seed:
         teams += t1
     if "A" in models or "C" in models:
         fc += run_baselines(games0, h, fc)
+    if ml_models is not None:
+        j0 = [f for f in fc if f["model"] == "J0"]
+        m_rows = ml_rows_for(lake, season, week, ml_models, j0)
+        fc += m_rows
+        for w in mix_grid:  # validation grid: one pooled model per weight
+            fc += mixture_rows(j0, m_rows, w, f"X{int(round(w * 100)):02d}")
+        if "X" in models and X_WEIGHTS:
+            fc += mixture_rows(j0, m_rows, X_WEIGHTS, "X")
+        if "X1" in models and X_WEIGHTS:
+            j1 = [f for f in fc if f["model"] == "J1"]
+            fc += mixture_rows(j1, m_rows, X_WEIGHTS, "X1")
     params = {"league": P.league, "alpha_target": P.alpha_target, "alpha_carry": P.alpha_carry,
               "q_qb_exit": P.q_qb_exit, "kneel_mean": P.kneel_mean,
               "resid_cov": np.round(P.resid_cov, 6).tolist(), "hp": HP,

@@ -253,13 +253,8 @@ def build(con: sqlite3.Connection | None = None, as_of: str | None = None,
     pg["has_stats"] = pg["has_stats"].eq(True)
     pg["onfield_present"] = pg["game_id"].isin(of_games)
     pg["onfield_plays"] = np.where(pg["onfield_present"], pg["onfield_plays"].fillna(0), np.nan)
-    on = pg["onfield_plays"].fillna(0) > 0
-    reserve = pg["status"].notna() & ~pg["status"].isin(["ACT", "INA"])
-    status = np.select(
-        [~pg["is_final"], pg["has_stats"] | on, pg["status"].eq("INA"),
-         pg["status"].eq("ACT") & pg["onfield_present"], pg["status"].eq("ACT"), reserve],
-        ["not_final", "played", "inactive", "dnp", "active_unverified", "reserve"],
-        default="unknown")
+    status = participation_status(pg["is_final"], pg["has_stats"], pg["onfield_plays"],
+                                  pg["onfield_present"], pg["status"])
     pg["participation"] = status
     played = pg["participation"].eq("played")
     for c in STAT_COLS:
@@ -297,6 +292,22 @@ def build(con: sqlite3.Connection | None = None, as_of: str | None = None,
                 "participation": pg.loc[pg.skill, "participation"].value_counts().to_dict()}
     (LAKE_DIR / "build_manifest.json").write_text(json.dumps(manifest, indent=1, default=str))
     return manifest
+
+
+def participation_status(is_final, has_stats, onfield_plays, onfield_present,
+                         roster_status) -> np.ndarray:
+    """Vectorised participation label for player-games (see module docstring)."""
+    is_final = pd.Series(is_final).astype(bool).to_numpy()
+    has_stats = pd.Series(has_stats).astype(bool).to_numpy()
+    on = pd.Series(onfield_plays).fillna(0).to_numpy() > 0
+    present = pd.Series(onfield_present).astype(bool).to_numpy()
+    rs = pd.Series(roster_status)
+    reserve = (rs.notna() & ~rs.isin(["ACT", "INA"])).to_numpy()
+    return np.select(
+        [~is_final, has_stats | on, (rs == "INA").to_numpy(), (rs == "ACT").to_numpy() & present,
+         (rs == "ACT").to_numpy(), reserve],
+        ["not_final", "played", "inactive", "dnp", "active_unverified", "reserve"],
+        default="unknown")
 
 
 def build_depth_qb(inp: Inputs, seasons) -> pd.DataFrame:

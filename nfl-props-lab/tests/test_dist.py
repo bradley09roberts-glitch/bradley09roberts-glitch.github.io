@@ -80,3 +80,19 @@ def test_fair_price_and_ev_with_push():
 def test_mc_error(d):
     se = d.mc_se(0.5)
     assert math.isclose(se, math.sqrt(0.25 / d.n))
+
+
+def test_linear_pool_is_valid_and_monotone():
+    from npl.forecast import mix_dist
+
+    rng = np.random.default_rng(3)
+    a = Dist.from_samples(rng.poisson(4, 5000) - 2)       # support may go negative
+    b = Dist.from_samples(rng.negative_binomial(3, 0.4, 5000))
+    for w in (0.0, 0.25, 0.5, 1.0):
+        m = mix_dist(a, b, w)
+        assert math.isclose(m.pmf.sum(), 1.0, abs_tol=1e-9)
+        overs = [m.line(x)["over"] for x in np.arange(-3.5, 20.5, 0.5)]
+        assert all(x >= y - 1e-12 for x, y in zip(overs, overs[1:], strict=False))
+        # pooled tail probability is the weighted average of the parts (to rounding)
+        assert math.isclose(m.p_ge(5), w * a.p_ge(5) + (1 - w) * b.p_ge(5), abs_tol=2e-6)
+    assert math.isclose(mix_dist(a, b, 1.0).mean(), a.mean(), abs_tol=1e-3)

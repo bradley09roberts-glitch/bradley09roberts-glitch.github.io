@@ -72,15 +72,19 @@ def score_rows(fc: list[dict], pg: pd.DataFrame) -> pd.DataFrame:
 
 
 def run(seasons_weeks: list[tuple[int, int]], *, label: str, models=("J0", "J1", "A", "C"),
-        n_sims: int = 4000, seed: int = 7, lake: dict | None = None) -> dict:
+        n_sims: int = 4000, seed: int = 7, lake: dict | None = None, with_ml: bool = False,
+        mix_grid: tuple = ()) -> dict:
     lake = lake or load_lake()
     code = _code()  # captured at start: the code that actually ran
     run_id = f"{label}-{utcnow().strftime('%Y%m%dT%H%M%SZ')}"
     d = RUNS_DIR / run_id
     d.mkdir(parents=True, exist_ok=True)
     parts, t0 = [], time.time()
+    ml_state = {"models": None, "season": None, "fits": []}
     for season, week in seasons_weeks:
-        res = forecast.run_slate(lake, season, week, n_sims=n_sims, seed=seed, models=models)
+        mlm = _ml_models_for(lake, season, week, ml_state) if with_ml else None
+        res = forecast.run_slate(lake, season, week, n_sims=n_sims, seed=seed, models=models,
+                                 ml_models=mlm, mix_grid=mix_grid)
         sc = score_rows(res["forecasts"], lake["player_games"])
         sc["season"], sc["week"] = season, week
         sc["season_type"] = res["games"][0].season_type if res["games"] else None
@@ -91,7 +95,9 @@ def run(seasons_weeks: list[tuple[int, int]], *, label: str, models=("J0", "J1",
     manifest = {
         "run_id": run_id, "created_at": iso(utcnow()), "label": label, "splits": SPLITS,
         "slates": seasons_weeks, "models": list(models), "n_sims": n_sims, "seed": seed,
-        "model_version": forecast.MODEL_VERSION, "code": code,
+        "model_version": forecast.MODEL_VERSION, "code": code, "with_ml": with_ml,
+        "mix_grid": list(mix_grid), "x_weights": forecast.X_WEIGHTS,
+        "ml_fits": ml_state["fits"],
         "lake_manifest_sha256": sha256_file(RUNS_DIR.parent / "lake" / "build_manifest.json"),
         "ledger_sha256": sha256_file(led_path), "rows": len(led),
         "exclusions": led[~led.scored].groupby(["model", "participation", "status"]).size()
@@ -101,6 +107,22 @@ def run(seasons_weeks: list[tuple[int, int]], *, label: str, models=("J0", "J1",
     manifest["manifest_hash"] = sha256_json(manifest)
     (d / "manifest.json").write_text(json.dumps(manifest, indent=1, default=str))
     return {"run_id": run_id, "dir": str(d), "rows": len(led)}
+
+
+def _ml_models_for(lake: dict, season: int, week: int, state: dict):
+    """Refit M on the fixed schedule (ml.REFIT_WEEKS, and at each new season) using cached
+    feature rows strictly before the slate."""
+    from . import ml
+
+    if state["models"] is None or week in ml.REFIT_WEEKS or state["season"] != season:
+        g = lake["games"]
+        prior = sorted({(int(s), int(w)) for s, w in zip(g.season, g.week, strict=True)
+                        if 2016 <= s and (s, w) < (season, week)})
+        train = ml.attach_outcomes(ml.load_cache(prior), lake["player_games"])
+        state["models"] = ml.fit_all(train)
+        state["season"] = season
+        state["fits"].append({"slate": [season, week], "train_rows": len(train)})
+    return state["models"]
 
 
 def _code():

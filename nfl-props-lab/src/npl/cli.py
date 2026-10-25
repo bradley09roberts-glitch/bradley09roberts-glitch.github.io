@@ -64,8 +64,13 @@ def cmd_publish(a) -> int:
     con = db.connect()
     with rawstore.job(con, "publish.edition", {"season": a.season, "week": a.week,
                                                "kind": a.kind}) as st:
+        from . import backtest
+
         lake = features.load_lake()
-        res = forecast.run_slate(lake, a.season, a.week, n_sims=a.sims, seed=a.seed)
+        mlm = backtest._ml_models_for(lake, a.season, a.week,
+                                      {"models": None, "season": None, "fits": []})
+        res = forecast.run_slate(lake, a.season, a.week, n_sims=a.sims, seed=a.seed,
+                                 models=("X1", "X", "J1", "J0", "A", "C"), ml_models=mlm)
         if a.dry_run:
             ok = [f for f in res["forecasts"] if f["status"] == "ok"]
             st["detail"] = {"dry_run": True, "forecasts_ok": len(ok)}
@@ -73,7 +78,7 @@ def cmd_publish(a) -> int:
             return 0
         st["detail"] = edition.publish(con, season=a.season, week=a.week, kind=a.kind,
                                        result=res, lake=lake, allow_dirty=a.allow_dirty,
-                                       notes=a.note or [])
+                                       notes=a.note or [], headline=a.headline)
     print(json.dumps(st["detail"], indent=1))
     return 0
 
@@ -83,6 +88,98 @@ def cmd_serve(a) -> int:
 
     uvicorn.run("npl.api:app", host=a.host, port=a.port, reload=False, log_level="info")
     return 0
+
+
+def cmd_update(a) -> int:
+    """Daily job: refresh public data, coverage audit and canonical tables."""
+    rc = cmd_ingest(argparse.Namespace(datasets=None, seasons=a.seasons or "2026",
+                                       max_age_hours=a.max_age_hours, force=False))
+    cmd_audit(a)
+    cmd_build(argparse.Namespace(as_of=None, seasons=None))
+    return rc
+
+
+def cmd_settle(a) -> int:
+    from . import settle
+
+    con = db.connect()
+    with rawstore.job(con, "settle.record") as st:
+        st["detail"] = settle.run(con)
+    print(json.dumps(st["detail"], indent=1, default=str)[:3000])
+    return 0
+
+
+def cmd_quotes(a) -> int:
+    from .sources import odds_api
+
+    con = db.connect()
+    try:
+        odds_api.api_key()
+    except odds_api.MissingKey as e:
+        print(f"BLOCKED: {e}")
+        print(json.dumps(odds_api.status(con), indent=1))
+        return 3
+    with rawstore.job(con, "quotes.snapshot", {"regions": a.regions}) as st:
+        st["detail"] = odds_api.snapshot_upcoming(con, regions=a.regions,
+                                                  hours_ahead=a.hours_ahead)
+    print(json.dumps(st["detail"], indent=1, default=str))
+    return 0
+
+
+def cmd_money(a) -> int:
+    """Price-honest money backtest: only stored real quotes; otherwise ROI unavailable."""
+    import pandas as pd
+
+    from . import money
+    from .config import REPORTS_DIR
+    from .sources import odds_api
+
+    con = db.connect()
+    q = odds_api.quotes_frame(con)
+    led = pd.read_csv(a.ledger, low_memory=False)
+    elig = int(((led.model == a.model) & (led.status == "ok")).sum())
+    if q.empty:
+        res = money.report(pd.DataFrame(), n_eligible_forecasts=elig)
+        res["detail"] = ("No quotes are stored (no odds key; historical props need a paid "
+                         "plan). Probability evaluation is unaffected; profit is not claimed.")
+    else:  # pragma: no cover - needs real quotes
+        res = {"state": "quotes present: run the strategy notebook path (not yet validated)"}
+    out = REPORTS_DIR / "money"
+    out.mkdir(parents=True, exist_ok=True)
+    (out / f"{a.label}.json").write_text(json.dumps(res, indent=1, default=str))
+    print(json.dumps(res, indent=1, default=str))
+    return 0
+
+
+def cmd_verify(a) -> int:
+    """Full local verification: lint, tests, edition hashes, API smoke test."""
+    import glob
+    import subprocess
+
+    from . import edition
+    from .config import EDITIONS_DIR, PROJECT_ROOT
+
+    ok = True
+    for cmd in (["ruff", "check", "src", "tests"], ["pytest", "-q"]):
+        r = subprocess.run(["uv", "run", *cmd], cwd=PROJECT_ROOT)
+        print(" ".join(cmd), "->", "OK" if r.returncode == 0 else "FAILED")
+        ok &= r.returncode == 0
+    files = glob.glob(str(EDITIONS_DIR / "*" / "*" / "*.json"))
+    bad = [f for f in files if not edition.verify(f)]
+    print(f"edition hashes: {len(files) - len(bad)}/{len(files)} verified")
+    ok &= not bad
+    from fastapi.testclient import TestClient
+
+    from .api import app
+
+    c = TestClient(app)
+    for path in ("/api/status", "/api/slate", "/api/props", "/api/backtests", "/api/record",
+                 "/api/data", "/"):
+        code = c.get(path).status_code
+        print(f"GET {path} -> {code}")
+        ok &= code == 200
+    print("VERIFY", "PASSED" if ok else "FAILED")
+    return 0 if ok else 1
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -114,12 +211,35 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--note", action="append")
     s.add_argument("--dry-run", action="store_true")
     s.add_argument("--allow-dirty", action="store_true")
+    s.add_argument("--headline", default="X1")
     s.set_defaults(func=cmd_publish)
 
     s = sub.add_parser("serve", help="run the web app (read-only over saved outputs)")
     s.add_argument("--host", default="127.0.0.1")
     s.add_argument("--port", type=int, default=8765)
     s.set_defaults(func=cmd_serve)
+
+    s = sub.add_parser("update", help="daily: ingest current season, audit, rebuild lake")
+    s.add_argument("--seasons")
+    s.add_argument("--max-age-hours", type=float, default=6.0)
+    s.set_defaults(func=cmd_update)
+
+    s = sub.add_parser("settle", help="append settlement revisions; score the record")
+    s.set_defaults(func=cmd_settle)
+
+    s = sub.add_parser("quotes", help="snapshot current prop quotes (needs ODDS_API_KEY)")
+    s.add_argument("--regions", default="uk")
+    s.add_argument("--hours-ahead", type=float, default=48)
+    s.set_defaults(func=cmd_quotes)
+
+    s = sub.add_parser("money", help="price-honest money backtest over a ledger")
+    s.add_argument("--ledger", required=True)
+    s.add_argument("--model", default="X")
+    s.add_argument("--label", default="money")
+    s.set_defaults(func=cmd_money)
+
+    s = sub.add_parser("verify", help="lint, tests, edition hashes and API smoke test")
+    s.set_defaults(func=cmd_verify)
     return p
 
 

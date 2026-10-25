@@ -29,10 +29,10 @@ const pct = (p) => (p == null || isNaN(p) ? "–" : p < 0.005 ? "<1%" : p > 0.99
 const pct1 = (p) => (p == null || isNaN(p) ? "–" : `${(p * 100).toFixed(1)}%`);
 const dec = (x, n = 1) => (x == null || isNaN(x) ? "–" : Number(x).toFixed(n));
 const sgn = (x, n = 3) => (x == null || isNaN(x) ? "–" : (x > 0 ? "+" : "") + Number(x).toFixed(n));
-const MODEL_NAMES = { J1: "Joint sim + injury report", J0: "Joint sim (history only)", M: "Gradient boosting", A: "Baseline A: game log", C: "Baseline C: role climatology" };
+const MODEL_NAMES = { X1: "Stacked J1 + ML (live headline)", X: "Stacked J0 + ML (primary)", J1: "Joint sim + injury report", J0: "Joint sim (history only)", M: "Gradient boosting", A: "Baseline A: game log", C: "Baseline C: role climatology" };
 const MARKET_LABELS = { pass_yds: "Passing yards", pass_att: "Pass attempts", pass_cmp: "Completions", rush_yds: "Rushing yards", rush_att: "Rushing attempts", receptions: "Receptions", rec_yds: "Receiving yards" };
 const MARKET_STAT = { pass_yds: "passing_yards", pass_att: "attempts", pass_cmp: "completions", rush_yds: "rushing_yards", rush_att: "carries", receptions: "receptions", rec_yds: "receiving_yards" };
-const MODEL_ORDER = ["J1", "J0", "M", "A", "C"];
+const MODEL_ORDER = ["X1", "X", "J1", "J0", "M", "A", "C"];
 const store = {
   get(k, d) { try { const v = localStorage.getItem("npl:" + k); return v == null ? d : JSON.parse(v); } catch { return d; } },
   set(k, v) { try { localStorage.setItem("npl:" + k, JSON.stringify(v)); } catch { /* storage unavailable */ } },

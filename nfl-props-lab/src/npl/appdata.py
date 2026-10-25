@@ -17,7 +17,7 @@ from .config import CORE_MARKETS, EDITIONS_DIR, LAKE_DIR, LONDON, MARKETS, REPOR
 from .dist import Dist, fair_decimal
 from .sources import odds_api
 
-HEADLINE = "J1"
+HEADLINE = "J1"  # fallback for editions that predate the headline field
 MARKET_LABELS = {m.key: m.label for m in CORE_MARKETS}
 MILESTONES = {"pass_yds": [200, 250, 300], "pass_att": [30, 35, 40], "pass_cmp": [20, 25],
               "rush_yds": [25, 50, 75, 100], "rush_att": [10, 15, 20],
