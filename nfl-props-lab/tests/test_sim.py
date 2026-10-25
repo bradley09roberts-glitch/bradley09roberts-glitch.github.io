@@ -112,3 +112,23 @@ def test_backup_qb_only_plays_on_exit_or_cameo(setup):
     # someone threw every pass in every draw
     both = q1.stats["attempts"] + q2.stats["attempts"]
     assert (both == out["home"][1]["attempts"]).all()
+
+
+def test_out_qb_never_enters_and_available_third_qb_replaces(setup):
+    g, P = setup
+    t = g.home
+    q3 = _player("Hqb3", "QB", p_start=0.0, dshare=0.05)
+    t.players.append(q3)
+    q2 = next(p for p in t.players if p.player_id == "Hqb2")
+    q2.injury_status, q2.p_start = "Out", 0.0
+    q1 = next(p for p in t.players if p.player_id == "Hqb1")
+    q1.p_start = 1.0
+    P.q_qb_exit = 0.5  # many early exits so the replacement path is exercised
+    out = sim.simulate_game(g, P, 20000, seed=8)
+    sims, tt = out["home"]
+    s2 = next(s for s in sims if s.player.player_id == "Hqb2")
+    s3 = next(s for s in sims if s.player.player_id == "Hqb3")
+    assert s2.played.mean() < 0.01            # Out: essentially never on the field
+    assert s3.played.mean() > 0.4             # the available third QB takes over
+    qb_att = sum(s.stats["attempts"] for s in sims if s.player.role == "QB")
+    assert (qb_att == tt["attempts"]).all()   # every pass still has a passer

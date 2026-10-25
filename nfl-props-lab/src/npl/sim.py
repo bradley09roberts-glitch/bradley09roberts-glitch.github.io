@@ -88,9 +88,15 @@ def simulate_team(rng, t: TeamIn, P: Params, N: np.ndarray, dbr: np.ndarray, z_d
         starter = rng.choice(len(qbs), size=n, p=ps)
         exit_ = rng.random(n) < P.q_qb_exit
         f = np.where(exit_, rng.uniform(0.05, 0.95, n), 1.0)
-        # backup = most likely other QB
-        order = np.argsort(-ps)
-        backup = np.where(starter == order[0], order[1] if len(qbs) > 1 else -1, order[0])
+        # v0.4.1: a non-starting QB can enter (early-exit replacement or cameo) only if he
+        # is available in this draw (official-report rates; unlisted QBs always available)
+        q_avail = rng.random((n, len(qbs))) < np.array([qb_availability(q) for q in qbs])
+        # replacement = most likely other QB who is available in the draw
+        pref = sorted(range(len(qbs)), key=lambda j: (-qbs[j].p_start, -qbs[j].p_play))
+        backup = np.full(n, -1)
+        for j in pref:
+            take = (backup == -1) & (starter != j) & q_avail[:, j]
+            backup[take] = j
         scr_rate = np.array([q.scr_rate for q in qbs])[starter]
         q_dshare = np.array([max(_qb_dshare(q), 0.0) for q in qbs])[starter]
     else:
@@ -168,7 +174,7 @@ def simulate_team(rng, t: TeamIn, P: Params, N: np.ndarray, dbr: np.ndarray, z_d
             is_back = (backup == j) & exit_
             # cameo: on the field (holder, kneel, gadget play) without a passing share;
             # simplified to zero stats (documented limitation)
-            cameo = ~is_start & ~is_back & (rng.random(n) < P.p_qb_cameo)
+            cameo = ~is_start & ~is_back & q_avail[:, j] & (rng.random(n) < P.p_qb_cameo)
             played = is_start | is_back | cameo
             att = np.where(is_start, qb_att1, np.where(is_back, A - qb_att1, 0))
             cmp_ = np.where(is_start, qb_cmp1, np.where(is_back, tot_cmp - qb_cmp1, 0))
@@ -192,6 +198,18 @@ def simulate_team(rng, t: TeamIn, P: Params, N: np.ndarray, dbr: np.ndarray, z_d
     team_tot = {"plays": N, "dropbacks": D, "attempts": A, "sacks": S, "scrambles": Sc,
                 "kneels": K, "designed_runs": R, "completions": tot_cmp, "passing_yards": tot_yds}
     return sims, team_tot
+
+
+def qb_availability(q: PlayerIn) -> float:
+    """P(a QB is dressed and able to enter), from the official report (rates measured on
+    2016-2021, see features.INJ_CAP / INJ_RATIO)."""
+    from .features import INJ_CAP, INJ_RATIO
+
+    if q.injury_status in INJ_CAP:
+        return INJ_CAP[q.injury_status]
+    if q.injury_status in INJ_RATIO:
+        return INJ_RATIO[q.injury_status]
+    return 1.0
 
 
 def _qb_dshare(q: PlayerIn) -> float:

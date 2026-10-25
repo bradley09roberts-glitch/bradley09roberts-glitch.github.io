@@ -616,7 +616,7 @@ def _qb_start_probs(players: list[PlayerIn], h: History, team: str,
         if q.injury_status == "Out":
             score[i] = 0.0
         elif q.injury_status == "Doubtful":
-            score[i] *= 0.25
+            score[i] *= 0.02  # v0.4.1: no Doubtful QB started in 2016-2021 (0 of 16)
     if score.sum() == 0:
         score = np.ones(len(qbs))
     probs = score / score.sum()
