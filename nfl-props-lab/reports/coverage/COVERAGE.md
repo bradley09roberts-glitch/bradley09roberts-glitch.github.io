@@ -80,4 +80,4 @@ Rows held per dataset and season, counted from the stored raw files. Blank = no 
 
 ## Files the source does not provide (HTTP 404 at last attempt)
 
-- participation 2026 (checked 2026-10-25T02:41:22Z)
+- participation 2026 (checked 2026-10-25T07:40:50Z)
