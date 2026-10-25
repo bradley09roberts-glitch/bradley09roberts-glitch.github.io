@@ -34,6 +34,7 @@ def build(out: Path, *, min_p_play: float = 0.5, model: str | None = None) -> di
     data["/api/props"] = props
     data["/api/backtests"] = appdata.backtests()
     data["/api/record"] = appdata.record()
+    data["/api/defense"] = appdata.defense()
     game_keep = ("player_id", "name", "position", "team", "market", "median", "q10", "q90",
                  "p_play", "injury_report", "status")
     for g in data["/api/slate"]["games"]:

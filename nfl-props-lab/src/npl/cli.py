@@ -177,7 +177,7 @@ def cmd_verify(a) -> int:
 
     c = TestClient(app)
     for path in ("/api/status", "/api/slate", "/api/props", "/api/backtests", "/api/record",
-                 "/api/data", "/"):
+                 "/api/data", "/api/defense", "/"):
         code = c.get(path).status_code
         print(f"GET {path} -> {code}")
         ok &= code == 200

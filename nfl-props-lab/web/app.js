@@ -172,12 +172,13 @@ const ICONS = {
   lab: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3h6M10 3v6l-6 10a1.5 1.5 0 0 0 1.3 2h13.4a1.5 1.5 0 0 0 1.3-2L14 9V3"/></svg>',
   record: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 2"/><circle cx="12" cy="12" r="9"/></svg>',
   data: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>',
+  defense: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6l-8-3z"/></svg>',
   more: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>',
   warn: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3 2 20h20L12 3zM12 10v4M12 17h.01"/></svg>',
   info: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7h.01"/></svg>',
   ok: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg>',
 };
-const NAV = [["today", "Today"], ["props", "Props"], ["shortlist", "Shortlist"], ["lab", "Backtest lab"], ["record", "Saved record"], ["data", "Data & method"]];
+const NAV = [["today", "Today"], ["props", "Props"], ["shortlist", "Shortlist"], ["lab", "Backtest lab"], ["defense", "Defences"], ["record", "Saved record"], ["data", "Data & method"]];
 
 function shell() {
   const theme = store.get("theme", "auto");
@@ -206,7 +207,7 @@ function route() {
   $$("nav.tabs a").forEach((a) => a.classList.toggle("on", a.dataset.k === k || (k === "more" && a.dataset.k === "more")));
   const view = $("#view");
   view.innerHTML = `<div class="skeleton">Loading…</div>`;
-  const fn = { today: viewToday, props: viewProps, shortlist: viewShortlist, lab: viewLab, record: viewRecord, data: viewData, player: viewPlayer, game: viewGame, more: viewMore }[k] || viewToday;
+  const fn = { today: viewToday, props: viewProps, shortlist: viewShortlist, lab: viewLab, record: viewRecord, data: viewData, player: viewPlayer, game: viewGame, defense: viewDefense, more: viewMore }[k] || viewToday;
   Promise.resolve(fn(view, arg)).catch((e) => { view.innerHTML = `<div class="banner crit">${ICONS.warn}<div><p><b>Could not load this view.</b></p><p class="small">${esc(e.message)}</p><p class="small">If the server is running, check <code>npl serve</code> output; otherwise this snapshot may not include the page.</p></div></div>`; });
   window.scrollTo(0, 0);
 }
@@ -261,7 +262,7 @@ function gameCard(g) {
 }
 
 // ---------------------------------------------------------------- Props explorer
-function propCard(c, idx) {
+function propCard(c, idx, D) {
   if (c.status !== "ok") return "";
   const ha = "v";
   const ms = (c.milestones || []).map((m) => `<span title="P(${MARKET_LABELS[c.market]} ≥ ${m.k})">${m.k}+ <b>${pct(m.p)}</b></span>`).join("");
@@ -277,12 +278,13 @@ function propCard(c, idx) {
     ${rangeBar(c)}
     <div class="ms">${ms}</div>
     <div class="foot"><span>P(plays) ${pct(c.p_play)}</span><span>Uncertainty ${esc(u.level || "–")}</span><span>History ${c.sample_size ?? 0} games</span>${injuryPill(c.injury_report)}</div>
+    ${oppContext(c, D)}
     <div class="row"><button class="btn ghost" data-open="${idx}">Distribution and manual line</button></div>
   </article>`;
 }
 
 async function viewProps(v) {
-  const p = await api("/api/props");
+  const [p, D] = await Promise.all([api("/api/props"), api("/api/defense").catch(() => null)]);
   const cards = p.cards.filter((c) => c.status === "ok");
   const teams = [...new Set(cards.map((c) => c.team))].sort();
   const f = Object.assign({ q: "", team: "", pos: "", market: "", minp: "0.5", sort: "kickoff" }, store.get("propsFilter", {}));
@@ -306,7 +308,7 @@ async function viewProps(v) {
     let r = cards.filter((c) => (!nf.q || c.name.toLowerCase().includes(nf.q.toLowerCase())) && (!nf.team || c.team === nf.team) && (!nf.pos || c.position === nf.pos) && (!nf.market || c.market === nf.market) && (c.p_play ?? 0) >= +nf.minp);
     if (nf.sort === "mean") r.sort((a, b) => b.mean - a.mean); else if (nf.sort === "uncert") r.sort((a, b) => (b.sample_size ?? 0) - (a.sample_size ?? 0)); else r.sort((a, b) => (b.published_before_kickoff - a.published_before_kickoff) || (a.kickoff_utc || "").localeCompare(b.kickoff_utc || "") || a.team.localeCompare(b.team) || a.name.localeCompare(b.name));
     $("#fcount").textContent = `${r.length.toLocaleString("en-GB")} forecasts match (of ${cards.length.toLocaleString("en-GB")})`;
-    $("#cards").innerHTML = r.slice(0, shown).map((c) => propCard(c, cards.indexOf(c))).join("") || `<p class="muted">No forecasts match these filters. Reset them to see the whole slate.</p>`;
+    $("#cards").innerHTML = r.slice(0, shown).map((c) => propCard(c, cards.indexOf(c), D)).join("") || `<p class="muted">No forecasts match these filters. Reset them to see the whole slate.</p>`;
     $("#more").hidden = r.length <= shown;
     const rows = r.map((c) => ({ edition_id: p.edition_id, model: c.model, player_id: c.player_id, name: c.name, position: c.position, team: c.team, opponent: c.opponent, market: c.market, p_play: c.p_play, mean: c.mean, median: c.median, q10: c.q10, q90: c.q90, ...Object.fromEntries((c.milestones || []).map((m) => [`p_ge_${m.k}`, m.p])) }));
     setCopy("props", toCSV(rows));
@@ -403,7 +405,7 @@ async function viewPlayer(v, id) {
 
 // ---------------------------------------------------------------- Game
 async function viewGame(v, id) {
-  const g = await api(`/api/game/${id}`);
+  const [g, D] = await Promise.all([api(`/api/game/${id}`), api("/api/defense").catch(() => null)]);
   const G = g.game;
   const stats = [["plays", "Offensive plays"], ["dropbacks", "Dropbacks"], ["attempts", "Pass attempts"], ["completions", "Completions"], ["passing_yards", "Passing yards"], ["sacks", "Sacks"], ["scrambles", "Scrambles"], ["designed_runs", "Designed runs"], ["kneels", "Kneels"]];
   const T = Object.fromEntries(g.teams.map((t) => [t.team, t]));
@@ -418,6 +420,8 @@ async function viewGame(v, id) {
     <section class="panel"><h2>Simulated team volume</h2><p class="small muted">From ${esc(g.model)} joint simulations of the whole game. Both teams share game-level noise: in history, when one offence ran more plays the other ran fewer (residual correlation about −0.48), and pass rates move in opposite directions with game script.</p>
       <div class="tablewrap"><table><thead><tr><th class="l">Per team</th>${[G.away, G.home].map((t) => `<th>${esc(t)} mean</th><th>${esc(t)} 80% range</th>`).join("")}</tr></thead><tbody>${stats.map(([k, l]) => `<tr><td class="l">${l}</td>${[G.away, G.home].map((t) => { const s = T[t]?.sim?.[k]; return s ? `<td>${dec(s.mean, 1)}</td><td>${s.q10}–${s.q90}</td>` : "<td>–</td><td>–</td>"; }).join("")}</tr>`).join("")}</tbody></table></div>
       <p class="tiny muted">Inputs: ${[G.away, G.home].map((t) => { const i = T[t]?.inputs || {}; return `${esc(t)} expected plays ${dec(i.mu_plays, 1)}, dropback rate ${pct1(i.dropback_rate)}, opponent pass-yards factor ${dec(i.opp_rec_yards_factor, 2)}`; }).join("; ")}.</p></section>
+    ${D && D.teams && D.teams[G.home] && D.teams[G.away] ? `<section class="panel"><h2>Defensive matchup</h2><p class="small muted">Each defence's rank (1 = best of 32) in ${D.season} before week ${D.before_week}, adjusted for opponents. Bold = clear evidence; plain = could be noise.</p>
+      <div class="tablewrap"><table class="pit"><thead><tr><th class="l">Defence</th><th>Games</th>${D.heat_columns.map((c) => `<th>${HEAT_SHORT[c]}</th>`).join("")}</tr></thead><tbody>${[G.home, G.away].map((tm) => `<tr><td class="l"><a href="#defense.${esc(tm)}">${esc(tm)}</a> <span class="muted">faces ${esc(tm === G.home ? G.away : G.home)}</span></td><td>${D.teams[tm].games}</td>${D.heat_columns.map((c) => rankCell(D.teams[tm].metrics[c], tm)).join("")}</tr>`).join("")}</tbody></table></div></section>` : ""}
     <div class="grid"><section class="panel"><h2>${esc(G.away)}</h2>${ptable(G.away)}</section><section class="panel"><h2>${esc(G.home)}</h2>${ptable(G.home)}</section></div>
     <section class="panel" id="scen"><h2>What if? (exploratory)</h2>
       <p class="small muted">Remove players and re-run this game's joint simulation with the same inputs and seed. Their volume is shared among the teammates left, in proportion to their usual shares. The result is a labelled exploration: it never changes a published edition, and stacking is not applied.</p>
@@ -486,6 +490,70 @@ async function viewLab(v) {
   $("#lr").addEventListener("change", (e) => { store.set("labRun", e.target.value); route(); });
   $("#lm").addEventListener("change", (e) => { store.set("labMkt", e.target.value); route(); });
   $("#lt").addEventListener("change", (e) => { store.set("labTab", e.target.value); route(); });
+}
+
+// ---------------------------------------------------------------- Defences
+function fmtVal(v, f) { if (v == null || isNaN(v)) return "–"; return f === "pct" ? `${(v * 100).toFixed(1)}%` : f === "dec2" ? Number(v).toFixed(2) : f === "int" ? Math.round(v) : Number(v).toFixed(1); }
+function fmtDiff(v, f) { if (v == null || isNaN(v)) return "–"; const sgnS = v > 0 ? "+" : v < 0 ? "−" : ""; const a = Math.abs(v); return sgnS + (f === "pct" ? `${(a * 100).toFixed(1)} pts` : f === "dec2" ? a.toFixed(2) : a.toFixed(1)); }
+function rankClass(r) { return r <= 4 ? "lo2" : r <= 10 ? "lo" : r >= 29 ? "hi2" : r >= 23 ? "hi" : ""; }
+function ordinal(n) { const s = ["th", "st", "nd", "rd"], v = n % 100; return n + (s[(v - 20) % 10] || s[v] || s[0]); }
+function verdictPill(v, p) { const pp = p == null ? "" : ` · ${Math.round(p * 100)}%`; return v === "likely strong" ? `<span class="pill good"><span class="dot"></span>Likely strong${pp}</span>` : v === "likely weak" ? `<span class="pill out"><span class="dot"></span>Likely weak${pp}</span>` : `<span class="pill"><span class="dot"></span>Can't tell yet${pp}</span>`; }
+const HEAT_SHORT = { ypp: "Overall", net_ypd: "Pass", sack_rate: "Pass rush", ypc: "Run", qb_rush_ypg: "QB runs", ypg_WR: "v WR", ypg_TE: "v TE", ypg_RB: "v RB" };
+const carry = (D, k) => D.reliability && D.reliability[k] ? D.reliability[k].carry_over_6g : null;
+function reliabilityWord(c) { return c == null ? "not measured" : c >= 0.25 ? "partly carries over" : c >= 0.15 ? "carries over a little" : c >= 0.08 ? "mostly noise" : "almost pure noise"; }
+
+function rankCell(m, team) {
+  if (!m) return `<td class="c">–</td>`;
+  const clear = m.verdict !== "can't tell yet";
+  return `<td class="c ${rankClass(m.rank)}" data-tip="${esc(`${ordinal(m.rank)} of 32 · ${m.verdict}`)}|${esc(m.label)}: ${esc(fmtVal(m.actual, m.fmt))} allowed v ${esc(fmtVal(m.expected, m.fmt))} usual · ${Math.round(m.p_better * 100)}% chance better than average">${clear ? `<b>${m.rank}</b>` : m.rank}</td>`;
+}
+
+async function viewDefense(v, team) {
+  const D = await api("/api/defense");
+  if (team) return viewDefenseTeam(v, D, team);
+  const cols = D.heat_columns; const sortKey = store.get("defSort", "pts_pg");
+  const teams = Object.values(D.teams).sort((a, b) => (a.metrics[sortKey]?.rank ?? 99) - (b.metrics[sortKey]?.rank ?? 99) || a.team.localeCompare(b.team));
+  v.innerHTML = `<section class="hero"><span class="eyebrow">${D.season} season · games before week ${D.before_week}</span><h1>Team defences</h1>
+      <p>How each defence has done against the pass, the run, each receiving position and quarterback runs. Every number is compared with what the same opponents managed in their other games, so a soft schedule does not flatter a defence. Rank 1 is the best defence; tap a team for the detail.</p></section>
+    <section class="panel"><div class="row between"><h2>Ranks by area</h2><label class="small">Sort by <select id="dsort">${cols.map((c) => `<option value="${c}" ${c === sortKey ? "selected" : ""}>${HEAT_SHORT[c]}</option>`).join("")}</select></label></div>
+      <div class="legend"><span><i class="box" style="background:var(--pit-lo2)"></i>Top 4</span><span><i class="box" style="background:var(--pit-lo)"></i>5–10</span><span><i class="box" style="background:var(--pit-hi)"></i>23–28</span><span><i class="box" style="background:var(--pit-hi2)"></i>Bottom 4</span><span><b>Bold</b> = clear evidence</span></div>
+      <div class="tablewrap"><table class="pit heatdef"><thead><tr><th class="l">Team</th><th>Games</th>${cols.map((c) => `<th>${HEAT_SHORT[c]}</th>`).join("")}<th class="l">Pattern</th></tr></thead><tbody>
+      ${teams.map((t) => `<tr><td class="l"><a href="#defense.${esc(t.team)}">${esc(t.team)}</a></td><td>${t.games}</td>${cols.map((c) => rankCell(t.metrics[c], t.team)).join("")}<td class="l">${esc(t.summary.tag)}</td></tr>`).join("")}</tbody></table></div>
+      <p class="tiny muted">Measures: Overall = yards per play; Pass = net yards per dropback (sacks and scrambles included); Pass rush = sack rate; Run = yards per designed run by non-quarterbacks; QB runs = quarterback rushing yards per game; v WR / TE / RB = receiving yards to that position per game. ${esc(D.note)}</p></section>
+    ${D.reliability && Object.keys(D.reliability).length ? `<section class="panel"><h2>Which of these are real?</h2>
+      <p class="small">Most early-season defensive splits are noise. We checked every measure on 2012–2025: how much of a difference seen in a defence's first games carried over into the rest of that season (first fitted on 2012–2021, then checked on 2022–2025). The ranks above already allow for this.</p>
+      <div class="tablewrap"><table><thead><tr><th class="l">Area</th><th class="l">Measure</th><th>Carries over after 6 games</th><th class="l">Reading</th><th>'Likely' labels that held, 2022–25</th></tr></thead><tbody>
+      ${cols.map((c) => { const r = D.reliability[c]; if (!r) return ""; return `<tr><td class="l">${HEAT_SHORT[c]}</td><td class="l">${esc(r.label)}</td><td>${Math.round(r.carry_over_6g * 100)}%</td><td class="l">${reliabilityWord(r.carry_over_6g)}</td><td>${r.labels_held != null && r.labels_check >= 10 ? `${Math.round(r.labels_held * 100)}% of ${r.labels_check}` : "too few labels"}</td></tr>`; }).join("")}</tbody></table></div>
+      <p class="tiny muted">"Held" = the defence stayed on the same side of average over the rest of the season; 50% would be a coin flip, and even a correct label can miss because the remaining games are noisy too. Full table for every measure: reports/defense/STABILITY.md.</p></section>` : ""}
+    <section class="panel"><h2>How the forecasts use this</h2><p class="small">The forecasts already adjust for each opponent's plays allowed, pass rate, sack rate, yards per completion, catch rate and yards per carry. Splits against each receiving position are shown here for context only: they carry over too little from week to week (table above) to justify adding them to the model.</p></section>`;
+  $("#dsort").addEventListener("change", (e) => { store.set("defSort", e.target.value); route(); });
+}
+
+function viewDefenseTeam(v, D, team) {
+  const t = D.teams[team];
+  if (!t) { v.innerHTML = banner("warn", `<p>No defence profile for ${esc(team)}.</p>`); return; }
+  const byFacet = {};
+  Object.entries(t.metrics).forEach(([k, m]) => { (byFacet[m.facet] ||= []).push([k, m]); });
+  const order = ["overall", "pass", "rush", "run", "qb", "vs_WR", "vs_TE", "vs_RB"];
+  v.innerHTML = `<section class="hero"><span class="eyebrow">${D.season} defence · ${t.games} games before week ${D.before_week}</span><h1>${esc(team)} defence</h1>
+      <p><b>${esc(t.summary.tag[0].toUpperCase() + t.summary.tag.slice(1))}.</b> ${t.summary.strong.length ? `Clear strengths: ${esc(t.summary.strong.join("; ").toLowerCase())}.` : ""} ${t.summary.weak.length ? `Clear weaknesses: ${esc(t.summary.weak.join("; ").toLowerCase())}.` : ""} ${!t.summary.strong.length && !t.summary.weak.length ? "No area is clearly better or worse than average yet; differences so far are within normal game-to-game noise." : ""}</p>
+      <p class="small"><a href="#defense">All defences</a></p></section>
+    ${order.filter((f) => byFacet[f]).map((f) => `<section class="panel"><h2>${esc(D.facets[f])}</h2><div class="tablewrap"><table><thead><tr><th class="l">Measure</th><th>Allowed</th><th>Opponents' usual</th><th>Difference (shrunk)</th><th>Rank</th><th>Last season</th><th class="l">Evidence</th></tr></thead><tbody>
+      ${byFacet[f].map(([k, m]) => `<tr><td class="l">${esc(m.label)}${carry(D, k) != null ? `<div class="tiny muted">${reliabilityWord(carry(D, k))}</div>` : ""}</td><td>${fmtVal(m.actual, m.fmt)}</td><td>${fmtVal(m.expected, m.fmt)}</td><td>${fmtDiff(m.shrunk, m.fmt)}</td><td class="${rankClass(m.rank)}">${ordinal(m.rank)}</td><td>${m.prev_rank ? ordinal(m.prev_rank) : "–"}</td><td class="l">${verdictPill(m.verdict, m.p_better)}</td></tr>`).join("")}</tbody></table></div></section>`).join("")}
+    <p class="tiny muted">Allowed = this season before week ${D.before_week}. Opponents' usual = what the same offences managed in their other games. Difference (shrunk) = the part expected to last for the rest of the season, based on how much such differences carried over in 2012–2021; noisy measures are shrunk almost to zero. The percentage is the chance the defence is truly better than average on that measure. Interception and sack rates: higher is better; everything else: lower is better. Last season = full ${D.season - 1} regular season, same method.</p>`;
+}
+
+const OPP_SHORT = { net_ypd: "pass D", sack_rate: "pass rush", ypc: "run D", rush_ypg: "rush yds/g", qb_rush_ypg: "QB runs", ypg_WR: "v WR", ypg_TE: "v TE", ypg_RB: "v RB" };
+function oppContext(c, D) {
+  if (!D || !D.teams) return "";
+  const t = D.teams[c.opponent]; if (!t) return "";
+  const pos = { WR: "WR", TE: "TE", RB: "RB", FB: "RB" }[c.position];
+  let keys = [];
+  if (["receptions", "rec_yds"].includes(c.market) && pos) keys = ["net_ypd", `ypg_${pos}`];
+  else if (["rush_yds", "rush_att"].includes(c.market)) keys = c.position === "QB" ? ["qb_rush_ypg"] : ["ypc", "rush_ypg"];
+  else if (["pass_yds", "pass_att", "pass_cmp"].includes(c.market)) keys = ["net_ypd", "sack_rate"];
+  const bits = keys.filter((k) => t.metrics[k]).map((k) => ({ ...t.metrics[k], key: k })).map((m) => `<span class="${rankClass(m.rank)}" style="padding:0 4px;border-radius:4px" data-tip="${esc(m.label)}|${esc(fmtVal(m.actual, m.fmt))} allowed v ${esc(fmtVal(m.expected, m.fmt))} usual · ${esc(m.verdict)}">${ordinal(m.rank)}${m.verdict !== "can't tell yet" ? "*" : ""} ${esc(OPP_SHORT[m.key] || m.label)}</span>`);
+  return bits.length ? `<div class="tiny muted">Opp. defence (${esc(c.opponent)}, 1 = toughest; * = clear evidence): ${bits.join(" · ")} <a href="#defense.${esc(c.opponent)}">more</a></div>` : "";
 }
 
 // ---------------------------------------------------------------- Saved record

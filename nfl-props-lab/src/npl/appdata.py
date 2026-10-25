@@ -490,3 +490,38 @@ def scenario(game_id: str, unavailable: list[str], n: int = 4000, seed: int = 99
                    "model": "J1 inputs, joint simulation only (stacking not applied)",
                    "n_draws": n, "seed": seed, "teams": teams, "players": players,
                    "joint": joint[:10]})
+
+
+# ------------------------------------------------------------------ defence profiles
+_DEF_CACHE: dict = {}
+
+
+def defense(season: int | None = None, week: int | None = None) -> dict:
+    """Team defence profiles before (season, week); defaults to the latest edition's slate,
+    i.e. the same information the forecasts used."""
+    from . import defense as dmod
+    from .features import load_lake
+
+    if season is None:
+        e = latest_edition()
+        if e is None:
+            return {"error": "no edition"}
+        season, week = e["season"], e["week"]
+    key = (season, week, _mtime(LAKE_DIR / "plays.parquet"), _mtime(dmod.CALIBRATION))
+    if key not in _DEF_CACHE:
+        _DEF_CACHE.clear()
+        prof = dmod.profiles(load_lake(), season, week)
+        prof["facets"] = dmod.FACETS
+        prof["heat_columns"] = list(dmod.HEAT_COLUMNS)
+        cal = dmod.load_calibration()
+        prof["reliability"] = {k: {f: v.get(f) for f in ("label", "facet", "K", "carry_over_6g",
+                                                        "skill_vs_average", "labels_held",
+                                                        "labels_check")}
+                               for k, v in cal.items()}
+        prof["note"] = ("Compared with what the same opponents managed in their other games "
+                        "this season before this week, then shrunk towards average by how much "
+                        "such differences carried over in past seasons. Rank 1 = best defence. "
+                        "'Likely' = at least 80% probability of being truly better (or worse) "
+                        "than average on that measure.")
+        _DEF_CACHE[key] = _clean(prof)
+    return _DEF_CACHE[key]

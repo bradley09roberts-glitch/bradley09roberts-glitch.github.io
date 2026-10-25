@@ -270,3 +270,11 @@ td .sw { display: inline-block; width: 14px; height: 3px; border-radius: 2px; ve
 .pit td.c.hi2 { background: var(--pit-hi2); }
 .pit td.c.lo { background: var(--pit-lo); }
 .pit td.c.lo2 { background: var(--pit-lo2); }
+
+/* defence ranks reuse the diverging PIT shades: blue = strong defence, red = weak */
+td.lo, span.lo { background: var(--pit-lo); }
+td.lo2, span.lo2 { background: var(--pit-lo2); }
+td.hi, span.hi { background: var(--pit-hi); }
+td.hi2, span.hi2 { background: var(--pit-hi2); }
+.heatdef td.c { min-width: 44px; }
+.heatdef td:first-child, .heatdef th:first-child { position: sticky; left: 0; background: var(--card); z-index: 1; }

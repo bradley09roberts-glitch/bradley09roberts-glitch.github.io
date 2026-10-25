@@ -73,6 +73,14 @@ def scenario(game_id: str, unavailable: str = ""):
     return _j(r)
 
 
+@app.get("/api/defense")
+def defense(season: int | None = None, week: int | None = None):
+    r = appdata.defense(season, week)
+    if "error" in r:
+        raise HTTPException(404, r["error"])
+    return _j(r)
+
+
 @app.get("/api/backtests")
 def backtests():
     return _j(appdata.backtests())
