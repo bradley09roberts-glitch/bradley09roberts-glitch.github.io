@@ -1,0 +1,29 @@
+market,game,player,ledger_actual,raw_stats_file,pbp_count,stats_sha,ok
+pass_yds,2025_14_IND_JAX,Nick Mullens,3.0,3.0,3.0,2a461becaa9a,True
+pass_yds,2025_06_ARI_IND,Jacoby Brissett,320.0,320.0,320.0,2a461becaa9a,True
+pass_yds,2025_17_NE_NYJ,Drake Maye,256.0,256.0,256.0,2a461becaa9a,True
+pass_yds,2025_16_BUF_CLE,Dillon Gabriel,0.0,0.0,0.0,2a461becaa9a,True
+pass_att,2025_07_PHI_MIN,Jalen Hurts,23.0,23.0,23.0,2a461becaa9a,True
+pass_att,2024_04_NE_SF,Brock Purdy,27.0,27.0,27.0,847569d194ca,True
+pass_att,2025_06_BUF_ATL,Josh Allen,26.0,26.0,26.0,2a461becaa9a,True
+pass_att,2024_14_JAX_TEN,Will Levis,32.0,32.0,32.0,847569d194ca,True
+pass_cmp,2025_05_TEN_ARI,Cam Ward,21.0,21.0,21.0,2a461becaa9a,True
+pass_cmp,2024_01_JAX_MIA,Trevor Lawrence,12.0,12.0,12.0,847569d194ca,True
+pass_cmp,2024_14_GB_DET,Jared Goff,32.0,32.0,32.0,847569d194ca,True
+pass_cmp,2025_09_SEA_WAS,Drew Lock,0.0,0.0,0.0,2a461becaa9a,True
+rush_yds,2024_02_CIN_KC,Skyy Moore,0.0,0.0,0.0,847569d194ca,True
+rush_yds,2025_02_BUF_NYJ,Tyrod Taylor,21.0,21.0,21.0,2a461becaa9a,True
+rush_yds,2025_18_SEA_SF,Rashid Shaheed,0.0,0.0,0.0,2a461becaa9a,True
+rush_yds,2025_11_CAR_ATL,Michael Penix Jr.,9.0,9.0,9.0,2a461becaa9a,True
+rush_att,2025_10_ATL_IND,Bijan Robinson,17.0,17.0,17.0,2a461becaa9a,True
+rush_att,2024_18_WAS_DAL,KaVontae Turpin,1.0,1.0,1.0,847569d194ca,True
+rush_att,2024_10_NYJ_ARI,Zach Pascal,0.0,0.0,0.0,847569d194ca,True
+rush_att,2024_01_PIT_ATL,Cordarrelle Patterson,4.0,4.0,4.0,847569d194ca,True
+receptions,2025_20_BUF_DEN,Evan Engram,1.0,1.0,1.0,2a461becaa9a,True
+receptions,2024_07_NYJ_PIT,Anthony Firkser,0.0,0.0,0.0,847569d194ca,True
+receptions,2025_02_JAX_CIN,Noah Fant,3.0,3.0,3.0,2a461becaa9a,True
+receptions,2025_10_CLE_NYJ,Andrew Beck,0.0,0.0,0.0,2a461becaa9a,True
+rec_yds,2024_03_SF_LA,Isaac Guerendo,0.0,0.0,0.0,847569d194ca,True
+rec_yds,2024_02_NYJ_TEN,Tony Pollard,40.0,40.0,40.0,847569d194ca,True
+rec_yds,2024_08_NYG_PIT,Calvin Austin III,54.0,54.0,54.0,847569d194ca,True
+rec_yds,2025_11_CIN_PIT,Scott Miller,0.0,0.0,0.0,2a461becaa9a,True

@@ -25,7 +25,7 @@ async function api(path) {
 
 // ---------------------------------------------------------------- helpers
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-const pct = (p) => (p == null || isNaN(p) ? "–" : p < 0.005 ? "<1%" : p > 0.995 ? ">99%" : `${Math.round(p * 100)}%`);
+const pct = (p) => (p == null || isNaN(p) ? "–" : p === 0 ? "0%" : p === 1 ? "100%" : p < 0.005 ? "<1%" : p > 0.995 ? ">99%" : `${Math.round(p * 100)}%`);
 const pct1 = (p) => (p == null || isNaN(p) ? "–" : `${(p * 100).toFixed(1)}%`);
 const dec = (x, n = 1) => (x == null || isNaN(x) ? "–" : Number(x).toFixed(n));
 const sgn = (x, n = 3) => (x == null || isNaN(x) ? "–" : (x > 0 ? "+" : "") + Number(x).toFixed(n));
@@ -418,7 +418,23 @@ async function viewGame(v, id) {
     <section class="panel"><h2>Simulated team volume</h2><p class="small muted">From ${esc(g.model)} joint simulations of the whole game. Both teams share game-level noise: in history, when one offence ran more plays the other ran fewer (residual correlation about −0.48), and pass rates move in opposite directions with game script.</p>
       <div class="tablewrap"><table><thead><tr><th class="l">Per team</th>${[G.away, G.home].map((t) => `<th>${esc(t)} mean</th><th>${esc(t)} 80% range</th>`).join("")}</tr></thead><tbody>${stats.map(([k, l]) => `<tr><td class="l">${l}</td>${[G.away, G.home].map((t) => { const s = T[t]?.sim?.[k]; return s ? `<td>${dec(s.mean, 1)}</td><td>${s.q10}–${s.q90}</td>` : "<td>–</td><td>–</td>"; }).join("")}</tr>`).join("")}</tbody></table></div>
       <p class="tiny muted">Inputs: ${[G.away, G.home].map((t) => { const i = T[t]?.inputs || {}; return `${esc(t)} expected plays ${dec(i.mu_plays, 1)}, dropback rate ${pct1(i.dropback_rate)}, opponent pass-yards factor ${dec(i.opp_rec_yards_factor, 2)}`; }).join("; ")}.</p></section>
-    <div class="grid"><section class="panel"><h2>${esc(G.away)}</h2>${ptable(G.away)}</section><section class="panel"><h2>${esc(G.home)}</h2>${ptable(G.home)}</section></div>`;
+    <div class="grid"><section class="panel"><h2>${esc(G.away)}</h2>${ptable(G.away)}</section><section class="panel"><h2>${esc(G.home)}</h2>${ptable(G.home)}</section></div>
+    <section class="panel" id="scen"><h2>What if? (exploratory)</h2>
+      <p class="small muted">Remove players and re-run this game's joint simulation with the same inputs and seed. Their volume is shared among the teammates left, in proportion to their usual shares. The result is a labelled exploration: it never changes a published edition, and stacking is not applied.</p>
+      ${SNAP ? banner("info", "<p>Scenarios run on the local server (<code>uv run npl serve</code>); this snapshot cannot simulate.</p>") : `<form id="sf" class="stack"><div class="row">${[G.away, G.home].map((t) => `<fieldset style="border:1px solid var(--rule);border-radius:8px;padding:8px 10px;min-width:0"><legend class="eyebrow">${esc(t)}</legend>${players(t).filter((x) => x.c.p_play >= 0.05).map((x) => `<label class="small" style="display:flex;gap:6px;align-items:center"><input type="checkbox" name="u" value="${esc(x.c.player_id)}">${esc(x.c.name)} <span class="muted">${esc(x.c.position)}</span></label>`).join("")}</fieldset>`).join("")}</div><div class="row"><button class="btn" type="submit">Run scenario</button><span class="tiny muted">At most 12 players; each team keeps at least one quarterback.</span></div></form><div id="sout"></div>`}
+    </section>`;
+  if (!SNAP) $("#sf").addEventListener("submit", async (e) => {
+    e.preventDefault(); const ids = $$("#sf input[name=u]:checked").map((x) => x.value);
+    const out = $("#sout"); if (!ids.length) { out.innerHTML = `<p class="small err">Tick at least one player to remove.</p>`; return; }
+    out.innerHTML = `<p class="small muted">Simulating…</p>`;
+    const r = await fetch(`/api/scenario/${encodeURIComponent(id)}?unavailable=${encodeURIComponent(ids.join(","))}`);
+    const d = await r.json(); if (!r.ok) { out.innerHTML = `<p class="small err">${esc(d.detail || "Scenario failed")}</p>`; return; }
+    const ch = (o) => o.base == null || o.scenario == null ? "–" : `${dec(o.base, 1)} → <b>${dec(o.scenario, 1)}</b>`;
+    out.innerHTML = `<div class="row"><span class="pill manual">${esc(d.label)}</span><span class="tiny muted">${esc(d.model)}; ${d.n_draws.toLocaleString("en-GB")} draws, seed ${d.seed}.</span></div>
+      <div class="tablewrap"><table><thead><tr><th class="l">Player</th><th>P(plays)</th><th>Targets</th><th>Receiving yds</th><th>Carries</th><th>Rushing yds</th><th>Pass att</th><th>Passing yds</th></tr></thead><tbody>${d.players.filter((p) => p.p_play_base >= 0.05).map((p) => `<tr class="${p.removed ? "dim" : ""}"><td class="l">${esc(p.name)} <span class="muted">${esc(p.position)} ${esc(p.team)}</span>${p.removed ? " (removed)" : ""}</td><td>${pct(p.p_play_base)} → ${pct(p.p_play_scenario)}</td><td>${ch(p.targets)}</td><td>${ch(p.receiving_yards)}</td><td>${ch(p.carries)}</td><td>${ch(p.rushing_yards)}</td><td>${ch(p.attempts)}</td><td>${ch(p.passing_yards)}</td></tr>`).join("")}</tbody></table></div>
+      <p class="tiny muted">Means if each player takes part, before → after. Team volume is unchanged by personnel in this model (a known limitation).</p>
+      ${d.joint.length ? `<h3>How outcomes move together</h3><p class="small muted">Correlation between the starting quarterback's passing yards and each receiver's yards across simulated games. Positive values mean their Overs tend to land together, so multiplying their separate probabilities would misstate a combined bet.</p><div class="tablewrap"><table><thead><tr><th class="l">Quarterback</th><th class="l">Receiver</th><th>Correlation</th></tr></thead><tbody>${d.joint.map((j) => `<tr><td class="l">${esc(j.qb)} (${esc(j.team)})</td><td class="l">${esc(j.receiver)}</td><td>${dec(j.corr, 2)}</td></tr>`).join("")}</tbody></table></div>` : ""}`;
+  });
 }
 
 // ---------------------------------------------------------------- Backtest lab

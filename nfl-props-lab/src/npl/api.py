@@ -64,6 +64,15 @@ def game(game_id: str):
     return _j(r)
 
 
+@app.get("/api/scenario/{game_id}")
+def scenario(game_id: str, unavailable: str = ""):
+    ids = [x for x in unavailable.split(",") if x]
+    r = appdata.scenario(game_id, ids)
+    if "error" in r:
+        raise HTTPException(422, r["error"])
+    return _j(r)
+
+
 @app.get("/api/backtests")
 def backtests():
     return _j(appdata.backtests())

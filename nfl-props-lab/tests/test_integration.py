@@ -89,3 +89,25 @@ def test_committed_headline_ledgers_reproduce_their_summaries():
             assert out["markets"][mk]["n_common"] == r["n_common"]
             for m, x in r["models"].items():
                 assert abs(out["markets"][mk]["models"][m]["crps"] - x["crps"]) < 1e-3
+
+
+@pytest.mark.skipif(not list((LAKE_DIR.parent.parent / "records" / "editions").glob("*/*/*.json")),
+                    reason="no edition published")
+def test_scenario_rules_and_redistribution():
+    from npl import appdata
+
+    e = appdata.latest_edition()
+    gid = next(g["game_id"] for g in e["games"] if g["published_before_kickoff"])
+    assert "error" in appdata.scenario(gid, ["not-a-player"])
+    cards = appdata.game(gid)["cards"]
+    team = cards[0]["team"]
+    qbs = sorted({c["player_id"] for c in cards if c["team"] == team and c["position"] == "QB"})
+    assert "no quarterback" in appdata.scenario(gid, qbs)["error"]
+    wr = max((c for c in cards if c["team"] == team and c["market"] == "receptions"),
+             key=lambda c: c["mean"])
+    r = appdata.scenario(gid, [wr["player_id"]])
+    mates = [p for p in r["players"] if p["team"] == team and not p["removed"]
+             and p["targets"]["base"]]
+    assert all(p["targets"]["scenario"] >= p["targets"]["base"] - 0.15 for p in mates)
+    assert sum(p["targets"]["scenario"] - p["targets"]["base"] for p in mates) > 1.0
+    assert r["label"].startswith("Exploratory")

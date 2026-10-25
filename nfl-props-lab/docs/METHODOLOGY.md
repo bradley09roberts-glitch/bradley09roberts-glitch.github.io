@@ -102,6 +102,9 @@ players shrink towards the position median (experiment 2 showed band means hurt 
 
 ### A, C: baselines
 
+Participation (v0.4): the official report adjusts P(plays) with rates measured on
+2016-2021 (Out 0.2%, Doubtful 1.5%, Questionable 0.78 x the history-based probability).
+
 * **A** recency-weighted game log (half-life 4 games) shrunk lightly to the position
   median; negative binomial for counts (dispersion by moments per market) and a
   discretised normal with a fitted mean-SD power law for yards.
@@ -124,6 +127,15 @@ and monotone.
 
 No model uses odds, spreads, totals, third-party projections or picks. A market-informed
 challenger would need recorded prices and its own name and record; none exists.
+
+### Exploratory scenarios
+
+`/api/scenario/<game>` (Game page, server only) re-runs one game's joint simulation with
+chosen players removed, using the edition's J1 inputs and a fixed seed. Removed players'
+volume is shared among the remaining teammates in proportion to their shares; unknown
+players and removing every quarterback are refused. Results are labelled exploratory,
+never written to an edition, and show QB-receiver correlations from the joint draws (why
+multiplying single-leg probabilities misstates a same-game combination).
 
 ## 5. From a distribution to a line
 

@@ -395,3 +395,98 @@ def data_status() -> dict:
                    "coverage": pd.read_csv(cov).to_dict("records") if cov.exists() else [],
                    "docs": {"audit": "docs/DATA_AUDIT.md", "decisions": "DECISIONS.md",
                             "methodology": "docs/METHODOLOGY.md"}})
+
+
+# ------------------------------------------------------------------ exploratory scenarios
+_SCEN_CACHE: dict = {}
+
+
+def scenario(game_id: str, unavailable: list[str], n: int = 4000, seed: int = 99) -> dict:
+    """Re-simulate one game with chosen players removed (J1 inputs, fixed seed).
+
+    Exploratory only: never written to an edition. Rejects players who are not on either
+    team's game-day roster and any scenario that removes every quarterback of a team."""
+    import copy
+
+    import numpy as np
+
+    from . import features, sim
+
+    e = latest_edition()
+    if e is None:
+        return {"error": "no edition"}
+    g = next((x for x in e["games"] if x["game_id"] == game_id), None)
+    if g is None:
+        return {"error": "game not in the latest edition"}
+    key = (e["edition_id"], e["season"], e["week"])
+    if key not in _SCEN_CACHE:
+        lk = features.load_lake()
+        games, P, _ = features.build_slate(lk, e["season"], e["week"], variant="J1")
+        _SCEN_CACHE.clear()
+        _SCEN_CACHE[key] = ({x.game_id: x for x in games}, P)
+    games, P = _SCEN_CACHE[key]
+    gi = copy.deepcopy(games[game_id])
+    roster = {p.player_id: p for t in (gi.home, gi.away) for p in t.players}
+    bad = [pid for pid in unavailable if pid not in roster]
+    if bad:
+        return {"error": f"not on either game-day roster: {', '.join(bad)}"}
+    if len(unavailable) > 12:
+        return {"error": "at most 12 players can be removed"}
+    for t in (gi.home, gi.away):
+        qbs = [p for p in t.players if p.role == "QB"]
+        if qbs and all(q.player_id in unavailable for q in qbs):
+            return {"error": f"{t.team} would have no quarterback; keep at least one"}
+        for p in t.players:
+            if p.player_id in unavailable:
+                p.p_play, p.p_start = 0.0, 0.0
+        left = [q for q in qbs if q.player_id not in unavailable]
+        tot = sum(q.p_start for q in left)
+        for q in left:
+            q.p_start = q.p_start / tot if tot > 0 else 1.0 / len(left)
+
+    def run(game):
+        out = sim.simulate_game(game, P, n, seed)
+        res = {}
+        for side in ("home", "away"):
+            sims, tt = out[side]
+            res[side] = (sims, tt)
+        return res
+
+    base, scen = run(games[game_id]), run(gi)
+    players, teams, joint = [], [], []
+    for side in ("home", "away"):
+        (bs, bt), (ss, st) = base[side], scen[side]
+        t = gi.home if side == "home" else gi.away
+        teams.append({"team": t.team, **{k: {"base": round(float(bt[k].mean()), 2),
+                                            "scenario": round(float(st[k].mean()), 2)}
+                                         for k in ("plays", "attempts", "designed_runs")}})
+        for b, s in zip(bs, ss, strict=True):
+            p = s.player
+            row = {"player_id": p.player_id, "name": p.name, "position": p.position,
+                   "team": t.team, "removed": p.player_id in unavailable,
+                   "p_play_base": round(float(b.played.mean()), 3),
+                   "p_play_scenario": round(float(s.played.mean()), 3)}
+            for stat in ("attempts", "passing_yards", "carries", "rushing_yards", "targets",
+                         "receiving_yards"):
+                bm = b.stats[stat][b.played].mean() if b.played.any() else np.nan
+                sm = s.stats[stat][s.played].mean() if s.played.any() else np.nan
+                row[stat] = {"base": None if np.isnan(bm) else round(float(bm), 2),
+                             "scenario": None if np.isnan(sm) else round(float(sm), 2)}
+            players.append(row)
+        # joint structure: correlation of the starting QB's passing yards with each
+        # receiver's receiving yards across scenario draws where both played
+        qb = max((s for s in ss if s.player.role == "QB"), key=lambda s: s.played.mean())
+        for s in ss:
+            if s.player.role in ("WR", "TE", "RB") and s.played.mean() > 0.5:
+                both = qb.played & s.played
+                if both.sum() > 200 and s.stats["receiving_yards"][both].std() > 0:
+                    c = np.corrcoef(qb.stats["passing_yards"][both],
+                                    s.stats["receiving_yards"][both])[0, 1]
+                    joint.append({"team": t.team, "qb": qb.player.name, "receiver": s.player.name,
+                                  "corr": round(float(c), 3)})
+    joint.sort(key=lambda r: -r["corr"])
+    return _clean({"label": "Exploratory scenario — not a published forecast",
+                   "edition_id": e["edition_id"], "game_id": game_id, "removed": unavailable,
+                   "model": "J1 inputs, joint simulation only (stacking not applied)",
+                   "n_draws": n, "seed": seed, "teams": teams, "players": players,
+                   "joint": joint[:10]})

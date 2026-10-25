@@ -325,7 +325,7 @@ def _team_rates(h: History, P: Params) -> pd.DataFrame:
     k2 = HP["opp_prior_games"]
     for c, prior in [("plays", lg["plays"]), ("dbr", lg["dbr"]), ("sack_rate", lg["sack_rate"])]:
         deff[c] = (deff[c] * deff["_wsum"] + prior * k2) / (deff["_wsum"] + k2)
-    return off.join(deff, rsuffix="_allowed", how="outer")
+    return off.join(deff.add_suffix("_allowed"), how="outer")
 
 
 def _def_eff(h: History) -> pd.DataFrame:

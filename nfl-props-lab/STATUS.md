@@ -9,12 +9,13 @@
 | Participation | played / inactive / DNP / reserve / active-unverified / not final, from rosters and on-field data (outcome labels only) |
 | Models | joint game simulation (J0, J1), baselines (A, C), gradient-boosting challenger (M), stacked primary X and live headline X1 |
 | Evaluation | weekly walk-forward on fixed splits; 7 experiments logged (`reports/EXPERIMENTS.md`), including rejected ones; one frozen test run; ledgers and manifests reproduce every headline (tested) |
-| Prospective record | two genuine pre-kickoff editions for 2026 Week 7 (03:01 and 04:01 UTC, 13 games each), committed and pushed before the first kickoff (13:30 GMT) |
+| Prospective record | three genuine pre-kickoff editions for 2026 Week 7 (03:01 v0.1, 04:01 v0.3, 04:35 v0.4 UTC; 13 games each), committed and pushed before the first kickoff (13:30 GMT); D-008 decides which counts |
 | Settlement | append-only revisions; record scoring by model and market once results are final |
 | Money | settlement, rule profiles, no-look-ahead quote eligibility, bankroll simulation and metrics, all tested on synthetic fixtures; **ROI unavailable** (no recorded prices) |
 | Odds adapter | The Odds API client, parser, UK/research classification, audited player linking: implemented, **not validated** (no key) |
-| App | FastAPI + phone-first web UI (Today, Props, Player, Game, Shortlist, Backtest lab, Saved record, Data & method), CSV/JSON exports, manual-line tool; static snapshot published as a private Artifact |
-| Tests | 63 automated tests (unit + integration on the real lake); `npl verify` |
+| App | FastAPI + phone-first web UI (Today, Props, Player, Game, Shortlist, Backtest lab, Saved record, Data & method), CSV/JSON exports, manual-line tool, exploratory "what if" scenarios (server only); static snapshot published as a private Artifact: https://claude.ai/artifact/JikfB26yYTb8Qf5qu5jHeN |
+| Tests | 65 automated tests (unit + integration on the real lake); `npl verify` passes (lint, tests, 3/3 edition hashes, API routes); 28-row manual reconciliation (`docs/RECONCILIATION.md`) |
+| Follow-ups | check-ins scheduled in this session: 25 Oct 07:40 UTC (refresh inputs, new edition only if they changed), 26 Oct 11:00 UTC (settle Sunday games), 27 Oct 11:00 UTC (settle Monday game). No recurring schedule has been created. |
 
 ## Results
 
@@ -45,6 +46,10 @@ spot. No claim about beating bookmakers is possible without prices.
 * QB efficiency does not depend on the receiver's quarterback (a backup's lower completion
   rate is only partly captured); receivers who changed teams carry old shares too literally.
 * Backup-QB cameos are simulated with zero stats.
+* Team play volume does not react to personnel in scenarios (removing a star changes how
+  volume is shared and how efficient it is, not how much there is).
+* Live editions' injury-report participation rates (v0.4) were validated on 2022-2023 only;
+  the 2024-2025 test predates them (D-013, D-015).
 * Weather, offensive-line availability and coaching changes are not modelled.
 * Touchdowns, interceptions, combined yards and longer-term markets are not built (core
   first, as specified).
