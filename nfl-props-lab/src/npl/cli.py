@@ -66,6 +66,9 @@ def cmd_publish(a) -> int:
                                                "kind": a.kind}) as st:
         from . import backtest
 
+        code = edition.code_version()  # the code loaded for this run
+        if code["dirty"] and not a.allow_dirty and not a.dry_run:
+            raise edition.EditionError("commit the code before publishing (tree is dirty)")
         lake = features.load_lake()
         mlm = backtest._ml_models_for(lake, a.season, a.week,
                                       {"models": None, "season": None, "fits": []})
@@ -78,7 +81,7 @@ def cmd_publish(a) -> int:
             return 0
         st["detail"] = edition.publish(con, season=a.season, week=a.week, kind=a.kind,
                                        result=res, lake=lake, allow_dirty=a.allow_dirty,
-                                       notes=a.note or [], headline=a.headline)
+                                       notes=a.note or [], headline=a.headline, code=code)
     print(json.dumps(st["detail"], indent=1))
     return 0
 

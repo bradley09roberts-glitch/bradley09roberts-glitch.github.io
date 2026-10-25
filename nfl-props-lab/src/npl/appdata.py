@@ -111,6 +111,7 @@ def _card(f: dict, game: dict, models: dict | None = None) -> dict:
     """Prop card fields from a saved forecast row (no recomputation of the model)."""
     c = {k: f.get(k) for k in ("player_id", "name", "position", "team", "opponent", "game_id",
                                "market", "model", "status", "p_play", "mean", "median", "q05",
+                               "mix_weight_J0",
                                "q10", "q25", "q75", "q90", "q95", "injury_report", "flags",
                                "n_draws", "n_draws_played", "is_home")}
     if not isinstance(c.get("injury_report"), str):
@@ -126,14 +127,26 @@ def _card(f: dict, game: dict, models: dict | None = None) -> dict:
         ms = []
         for k in MILESTONES.get(f["market"], []):
             p = d.p_ge(k)
-            ms.append({"k": k, "p": round(p, 4), "mc_se": round(d.mc_se(p), 4) if
-                       f.get("n_draws") else None})
+            ms.append({"k": k, "p": round(p, 4), "mc_se": mc_se(f, p)})
         c["milestones"] = ms
         c["sample_size"] = (f.get("role_inputs") or {}).get("games_in_history")
         c["uncertainty"] = _uncertainty(f)
     if models:
         c["other_models"] = models
     return c
+
+
+def mc_se(f: dict, p: float) -> float | None:
+    """Monte Carlo standard error of a probability. Simulation models: binomial on the
+    draws in which the player took part. A pool w*J + (1-w)*M carries w times the J error
+    (M has no simulation noise). Analytic baselines: none."""
+    n = f.get("n_draws_played")
+    if not n:
+        return None
+    w = f.get("mix_weight_J0", 1.0 if f.get("model", "").startswith("J") else None)
+    if w is None:
+        return None
+    return round(w * math.sqrt(max(p * (1 - p), 0.0) / n), 4)
 
 
 def _uncertainty(f: dict) -> dict:
@@ -228,7 +241,7 @@ def manual_line(edition_id, game_id, player_id, market, model, line: float) -> d
                    "push": round(p["push"], 4),
                    "fair_over": fair_decimal(p["over"], p["push"]),
                    "fair_under": fair_decimal(p["under"], p["push"]),
-                   "mc_se": round(d.mc_se(p["over"]), 4) if f.get("n_draws") else None,
+                   "mc_se": mc_se(f, p["over"]),
                    "conditional_on": "player takes part (bookmakers usually void otherwise)",
                    "p_play": f.get("p_play"), "edition_id": edition_id, "model": model,
                    "value_claim": None})

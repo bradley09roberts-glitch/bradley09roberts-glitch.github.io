@@ -49,9 +49,12 @@ def code_version() -> dict:
 
 def publish(con, *, season: int, week: int, kind: str, result: dict, lake: dict,
             published_at: datetime | None = None, allow_dirty: bool = False,
-            notes: list[str] | None = None, headline: str = "X1") -> dict:
+            notes: list[str] | None = None, headline: str = "X1",
+            code: dict | None = None) -> dict:
+    """`code` should be captured before the forecasts are computed (the code that actually
+    ran); if omitted it is read now."""
     now = published_at or utcnow()
-    cv = code_version()
+    cv = code or code_version()
     if cv["dirty"] and not allow_dirty:
         raise EditionError("refusing to publish from uncommitted code: commit first so the "
                            "edition names the exact code that produced it")

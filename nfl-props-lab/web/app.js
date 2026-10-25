@@ -327,7 +327,7 @@ function openSheet(c, p) {
   back.innerHTML = `<div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(c.name)} ${esc(c.market_label)}">
     <div class="row between"><div><span class="eyebrow">${esc(c.team)} ${c.is_home ? "v" : "at"} ${esc(c.opponent)} · ${esc(c.kickoff_london)}</span><h2>${esc(c.name)}: ${esc(c.market_label)}</h2></div><button class="btn ghost" id="close">Close</button></div>
     <div id="dchart">${c.dist ? distChart(D) : '<p class="muted">Distribution not included in this snapshot.</p>'}</div>
-    <p class="tiny muted">Simulated distribution of ${esc(c.market_label.toLowerCase())} if he takes part (${(c.n_draws_played ?? 0).toLocaleString("en-GB")} of ${(c.n_draws ?? 0).toLocaleString("en-GB")} game simulations). P(plays) ${pct(c.p_play)}.</p>
+    <p class="tiny muted">Distribution of ${esc(c.market_label.toLowerCase())} if he takes part${c.mix_weight_J0 != null ? `: ${Math.round(c.mix_weight_J0 * 100)}% joint simulation (${(c.n_draws_played ?? 0).toLocaleString("en-GB")} of ${(c.n_draws ?? 0).toLocaleString("en-GB")} game draws), ${Math.round((1 - c.mix_weight_J0) * 100)}% gradient-boosting model` : c.n_draws ? ` (${(c.n_draws_played ?? 0).toLocaleString("en-GB")} of ${c.n_draws.toLocaleString("en-GB")} game simulations)` : ""}. P(plays) ${pct(c.p_play)}.</p>
     <form class="lineform" id="lf"><label for="lineIn" class="small"><b>Test a line</b></label><input id="lineIn" type="number" step="0.5" inputmode="decimal" placeholder="e.g. ${c.median + 0.5}" aria-describedby="lineHelp"><button class="btn" type="submit">Calculate</button><span id="lineHelp" class="tiny muted">Whole or half numbers. Integer lines can push.</span></form>
     <div id="lineOut"></div>
     ${others.length ? `<h3>Other models in the same edition</h3><div class="tablewrap"><table><thead><tr><th>Model</th><th>Mean</th><th>Median</th><th>80% range</th></tr></thead><tbody>
@@ -348,13 +348,15 @@ function openSheet(c, p) {
     e.preventDefault(); const L = Number($("#lineIn", back).value);
     if (!$("#lineIn", back).value || !isFinite(L) || (L * 2) % 1 !== 0 || Math.abs(L) > 2000) { $("#lineOut", back).innerHTML = `<p class="err small">Enter a whole or half number, for example 54.5 or 5.</p>`; return; }
     if (!c.dist) return;
-    const r = D.line(L); const se = Math.sqrt(Math.max(r.over * (1 - r.over), 0) / D.n);
+    const r = D.line(L);
+    const w = c.mix_weight_J0 ?? (c.model.startsWith("J") ? 1 : null);
+    const se = w != null && c.n_draws_played ? w * Math.sqrt(Math.max(r.over * (1 - r.over), 0) / c.n_draws_played) : null;
     $("#dchart", back).innerHTML = distChart(D, { line: L });
     $("#lineOut", back).innerHTML = `<div class="row"><span class="pill manual">manual line — no verified price</span><span class="tiny muted">Conditional on taking part. Not a value judgement: no bookmaker price was recorded.</span></div>
       <div class="probs"><div><div class="l eyebrow">Over ${L}</div><div class="v num">${pct1(r.over)}</div><div class="tiny muted">fair ${dec(fair(r.over, r.push), 2)}</div></div>
       <div><div class="l eyebrow">Under ${L}</div><div class="v num">${pct1(r.under)}</div><div class="tiny muted">fair ${dec(fair(r.under, r.push), 2)}</div></div>
       <div><div class="l eyebrow">Push</div><div class="v num">${Number.isInteger(L) ? pct1(r.push) : "0%"}</div><div class="tiny muted">${Number.isInteger(L) ? "stake returned" : "half-point line"}</div></div></div>
-      <p class="tiny muted">Monte Carlo standard error ±${pct1(se)} on Over. Fair price = break-even decimal odds for this model probability (push returns the stake).</p>`;
+      <p class="tiny muted">${se == null ? "No simulation noise (analytic distribution)." : `Monte Carlo standard error ±${pct1(se)} on Over.`} Fair price = break-even decimal odds for this model probability (push returns the stake).</p>`;
   });
 }
 
@@ -441,15 +443,17 @@ async function viewLab(v) {
   if (tab === "money") {
     body.innerHTML = `<section class="panel"><h2>Profit and loss</h2>${banner("warn", `<p><b>ROI unavailable.</b> No historical bookmaker prices are stored, so there is no yield, bankroll path or closing-line value. Prices are never invented from fair odds.</p><p class="small">To enable this tab: an odds source with historical player-prop snapshots (The Odds API archive starts 3 May 2023, 5-minute snapshots, paid plans from USD 30 per month), then quotes stored with their observation times, linked to players through the audited name mapping and settled under each bookmaker's rules. US-only books would be research references, not UK-accessible results.</p>`)}</section>`;
   } else if (tab === "calib") {
-    const mrows = (ms[models[0]] || []).filter((r) => r.bin === "ALL" && String(r.threshold) && Object.keys(run.markets).includes(market));
-    const thresholds = [...new Set(Object.values(ms).flat().filter((r) => r.bin === "ALL").map((r) => r.threshold))];
-    body.innerHTML = `<section class="panel"><h2>PIT histograms: ${MARKET_LABELS[market]}</h2><p class="small muted">If a model is calibrated, each tenth of its forecast distribution holds 10% of outcomes. Taller bars on the left mean outcomes tend to land low in the forecast (over-prediction); a hump in the middle means the forecast is too wide.</p>
-      <div class="grid tight">${models.map((m) => `<div><div class="legend"><span><i class="box" style="background:var(--m-${m})"></i>${esc(m)} ${esc(MODEL_NAMES[m])}</span></div>${pitChart(R.models[m].pit_deciles, `var(--m-${m})`)}</div>`).join("")}</div></section>
+    const msm = Object.fromEntries(Object.entries(ms).map(([m, v]) => [m, Array.isArray(v) ? [] : (v[market] || [])]));
+    const show = models.filter((m) => msm[m]?.length).slice(0, 4);
+    const pitCell = (v) => { const d = v - 0.1; const cls = d > 0.03 ? "hi2" : d > 0.012 ? "hi" : d < -0.03 ? "lo2" : d < -0.012 ? "lo" : ""; return `<td class="c ${cls}" data-tip="${pct1(v)} of outcomes|calibrated = 10%">${Math.round(v * 100)}</td>`; };
+    const focus = models[0];
+    body.innerHTML = `<section class="panel"><h2>PIT: ${MARKET_LABELS[market]}</h2><p class="small muted">Share of outcomes (%) falling in each tenth of the forecast distribution. A calibrated model puts 10% in every column. High values on the left mean outcomes landed low (over-prediction); a dip at both ends means the forecast is too wide. Shading marks distance from 10%.</p>
+      <div class="tablewrap"><table class="pit"><thead><tr><th class="l">Model</th>${[...Array(10).keys()].map((i) => `<th>${i * 10}–${i * 10 + 10}</th>`).join("")}</tr></thead><tbody>${models.map((m) => `<tr><td class="l"><span class="sw" style="background:var(--m-${m})"></span>${esc(m)}</td>${R.models[m].pit_deciles.map(pitCell).join("")}</tr>`).join("")}</tbody></table></div>
+      <div><div class="legend"><span><i class="box" style="background:var(--m-${focus})"></i>${esc(focus)} ${esc(MODEL_NAMES[focus] || "")}</span></div>${pitChart(R.models[focus].pit_deciles, `var(--m-${focus})`)}</div></section>
       <section class="panel"><h2>Interval coverage</h2><div class="tablewrap"><table><thead><tr><th class="l">Model</th><th>50% interval</th><th>80% interval</th><th>90% interval</th></tr></thead><tbody>${models.map((m) => `<tr><td class="l"><span class="sw" style="background:var(--m-${m})"></span>${esc(m)}</td><td>${pct1(R.models[m].cov50)}</td><td>${pct1(R.models[m].cov80)}</td><td>${pct1(R.models[m].cov90)}</td></tr>`).join("")}</tbody></table></div><p class="tiny muted">Intervals are inclusive integer ranges, so discrete counts (receptions, attempts) cover more than the nominal level even when calibrated. PIT is the fairer check.</p></section>
-      <section class="panel"><h2>Milestone reliability (fixed thresholds, not offered lines)</h2><p class="small muted">Forecast P(stat ≥ threshold) against how often it happened, all models, all thresholds for every market in the run. Dots on the diagonal are calibrated.</p>
-      <div class="grid tight">${models.filter((m) => ms[m]).map((m) => `<div><div class="legend"><span><i class="box" style="background:var(--m-${m})"></i>${esc(m)}</span></div>${reliabilityChart(ms[m].filter((r) => r.bin !== "ALL"), `var(--m-${m})`)}</div>`).join("")}</div>
-      <div class="tablewrap"><table><thead><tr><th class="l">Model</th><th>Threshold</th><th>n</th><th>Brier</th><th>Log loss</th><th>Mean forecast</th><th>Observed</th></tr></thead><tbody>${models.filter((m) => ms[m]).flatMap((m) => ms[m].filter((r) => r.bin === "ALL").map((r) => `<tr><td class="l">${esc(m)}</td><td>${r.threshold}+</td><td>${r.n.toLocaleString("en-GB")}</td><td>${dec(r.brier, 4)}</td><td>${dec(r.log_loss, 4)}</td><td>${pct1(r.mean_p)}</td><td>${pct1(r.freq)}</td></tr>`)).join("")}</tbody></table></div>
-      <p class="tiny muted">Thresholds pooled across markets in this table (${esc(thresholds.join(", "))}). ${mrows.length ? "" : ""}Per-market reliability is in the run's summary.json.</p></section>`;
+      <section class="panel"><h2>Milestone reliability: ${MARKET_LABELS[market]}</h2><p class="small muted">Forecast P(stat ≥ threshold) against how often it happened, at fixed thresholds (not offered lines). Dots on the diagonal are calibrated; dot size grows with the number of forecasts.</p>
+      ${show.length ? `<div class="grid tight">${show.map((m) => `<div><div class="legend"><span><i class="box" style="background:var(--m-${m})"></i>${esc(m)}</span></div>${reliabilityChart(msm[m].filter((r) => r.bin !== "ALL"), `var(--m-${m})`)}</div>`).join("")}</div>
+      <div class="tablewrap"><table><thead><tr><th class="l">Model</th><th>Threshold</th><th>n</th><th>Brier</th><th>Log loss</th><th>Mean forecast</th><th>Observed</th></tr></thead><tbody>${models.filter((m) => msm[m]?.length).flatMap((m) => msm[m].filter((r) => r.bin === "ALL").map((r) => `<tr><td class="l"><span class="sw" style="background:var(--m-${m})"></span>${esc(m)}</td><td>${r.threshold}+</td><td>${r.n.toLocaleString("en-GB")}</td><td>${dec(r.brier, 4)}</td><td>${dec(r.log_loss, 4)}</td><td>${pct1(r.mean_p)}</td><td>${pct1(r.freq)}</td></tr>`)).join("")}</tbody></table></div>` : `<p class="small muted">This run's summary predates per-market reliability. Regenerate it with <code>evaluate.write_report</code>.</p>`}</section>`;
   } else {
     const base = run.baseline;
     const sk = models.filter((m) => m !== base).map((m) => ({ m, d: R.models[m].crps_minus_baseline, lo: R.models[m].crps_minus_baseline_95ci?.[0], hi: R.models[m].crps_minus_baseline_95ci?.[1] }));

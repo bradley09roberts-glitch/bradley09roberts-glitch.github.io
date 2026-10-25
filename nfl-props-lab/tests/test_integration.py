@@ -73,3 +73,19 @@ def test_committed_backtest_summaries_parse():
             for m in mk["models"].values():
                 assert np.isfinite(m["crps"])
                 assert abs(sum(m["pit_deciles"]) - 1) < 0.01
+
+
+def test_committed_headline_ledgers_reproduce_their_summaries():
+    """Anyone holding a committed ledger can recompute the headline table."""
+    import json
+
+    from npl import evaluate
+
+    for p in (REPORTS_DIR / "backtests").glob("*/ledger.csv.gz"):
+        s = json.loads((p.parent / "summary.json").read_text())
+        led = evaluate.load_ledger(p)
+        out = evaluate.compare(led, s["models"], s["baseline"])
+        for mk, r in s["markets"].items():
+            assert out["markets"][mk]["n_common"] == r["n_common"]
+            for m, x in r["models"].items():
+                assert abs(out["markets"][mk]["models"][m]["crps"] - x["crps"]) < 1e-3

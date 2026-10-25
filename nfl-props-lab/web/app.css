@@ -27,6 +27,7 @@
   --m-A: #eda100;
   --m-C: #e87ba4;
   --m-X: #6250d6;
+  --pit-hi: #f9d3cd; --pit-hi2: #ef9a8e; --pit-lo: #cde2fb; --pit-lo2: #86b6ef;
   --m-X1: #008300;
   --shadow: 0 1px 2px rgba(18, 32, 58, 0.06), 0 2px 10px rgba(18, 32, 58, 0.05);
   --f-display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", system-ui, sans-serif;
@@ -41,6 +42,7 @@
     --accent-ink: #0d141f; --line-to-gain: #f2c230; --bar: #3987e5; --bar-soft: #1f3d66;
     --hist: #e8edf4; --good-ink: #0ca30c;
     --m-J1: #3987e5; --m-J0: #d95926; --m-M: #199e70; --m-A: #c98500; --m-C: #d55181; --m-X: #9085e9; --m-X1: #0ca30c;
+    --pit-hi: #4a2420; --pit-hi2: #7a3029; --pit-lo: #17304f; --pit-lo2: #1c5cab;
     --shadow: none; color-scheme: dark;
   }
 }
@@ -51,6 +53,7 @@
   --hist: #e8edf4; --good-ink: #0ca30c;
   --m-J1: #3987e5; --m-J0: #d95926; --m-M: #199e70; --m-A: #c98500; --m-C: #d55181;
   --m-X: #9085e9; --m-X1: #0ca30c;
+  --pit-hi: #4a2420; --pit-hi2: #7a3029; --pit-lo: #17304f; --pit-lo2: #1c5cab;
   --shadow: none; color-scheme: dark;
 }
 
@@ -246,7 +249,7 @@ td .sw { display: inline-block; width: 14px; height: 3px; border-radius: 2px; ve
 .lineform { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .lineform input { width: 110px; }
 .probs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
-.probs div { border: 1px solid var(--rule); border-radius: 8px; padding: 8px; }
+.probs > div { border: 1px solid var(--rule); border-radius: 8px; padding: 8px; }
 .probs .v { font-family: var(--f-display); font-size: 1.6rem; font-weight: 700; }
 
 /* coverage heat table */
@@ -260,3 +263,10 @@ td .sw { display: inline-block; width: 14px; height: 3px; border-radius: 2px; ve
   .fade { animation: fade 0.18s ease-out; }
   @keyframes fade { from { opacity: 0.4; } to { opacity: 1; } }
 }
+
+/* PIT strip table: each cell's shade shows distance from the calibrated 10% */
+.pit td.c { text-align: center; font-size: 0.72rem; padding: 4px 3px; min-width: 30px; }
+.pit td.c.hi { background: var(--pit-hi); }
+.pit td.c.hi2 { background: var(--pit-hi2); }
+.pit td.c.lo { background: var(--pit-lo); }
+.pit td.c.lo2 { background: var(--pit-lo2); }

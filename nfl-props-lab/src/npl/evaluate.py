@@ -47,9 +47,10 @@ def pit_hist(s: pd.DataFrame, bins: int = 10) -> list[float]:
 
 
 def milestone_reliability(s: pd.DataFrame, bins=(0, .1, .2, .3, .4, .5, .6, .7, .8, .9, 1.0)):
-    """Binary calibration at fixed milestone thresholds (not bookmaker lines)."""
+    """Binary calibration at fixed milestone thresholds (not bookmaker lines), for one
+    market's rows."""
     rows = []
-    for c in [c for c in s.columns if c.startswith("p_ge_")]:
+    for c in [c for c in s.columns if c.startswith("p_ge_") and s[c].notna().any()]:
         k = c[5:]
         y = s.get(f"y_ge_{k}")
         d = pd.DataFrame({"p": s[c], "y": y}).dropna()
@@ -134,7 +135,8 @@ def write_report(run_dir: Path, models: list[str], baseline: str = "A",
     summ["slates"] = len(manifest["slates"])
     summ["exclusions"] = manifest["exclusions"]
     sc = led[led.scored]
-    summ["milestones"] = {m: milestone_reliability(g) for m, g in sc.groupby("model")}
+    summ["milestones"] = {m: {mk: milestone_reliability(gg) for mk, gg in g.groupby("market")}
+                          for m, g in sc.groupby("model")}
     (out / "summary.json").write_text(json.dumps(summ, indent=1, default=str))
     for by in ("season", "position", "usage", "history_band", "season_type"):
         breakdown(led, models, by).to_csv(out / f"by_{by}.csv", index=False)
