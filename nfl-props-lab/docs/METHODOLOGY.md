@@ -137,6 +137,33 @@ players and removing every quarterback are refused. Results are labelled explora
 never written to an edition, and show QB-receiver correlations from the joint draws (why
 multiplying single-leg probabilities misstates a same-game combination).
 
+### Team defence profiles (context, not a model input)
+
+`npl.defense` (Defences page, game-page matchup, a line on each prop card) describes each
+defence before the edition's week, regular season only. For every measure (yards per play,
+net yards per dropback, sack rate, yards per designed run, QB rushing yards, and receiving
+yards, targets, catch rate and yards per target allowed to WRs, TEs and RBs; position = the
+receiver's latest roster position):
+
+* **Opponent adjustment.** Each game is compared with what the same offence managed in its
+  other games of the season before the week (the league rate if it has fewer than two).
+* **Shrinkage measured, not guessed.** The difference is multiplied by n/(n+K), K per
+  measure, fitted on 2012-2021 as the value that best predicts the same defence's
+  difference over the rest of that season (cutoffs weeks 5, 8, 11, 14). Read as a
+  normal-normal model, K = per-game noise variance / true-skill variance.
+* **Labels.** "Likely strong/weak" when the posterior probability of being better (worse)
+  than average is at least 80%; "can't tell yet" otherwise. Ranks 1-32 order the shrunk
+  differences.
+
+Checked out of sample on 2022-2025 (`reports/defense/STABILITY.md`): about 25-30% of an
+overall or pass-defence difference seen after six games carries over to the rest of the
+season; run defence about 20%; sack rate and QB rushing about 10%; receiving splits by
+position 2-20%, with tight-end and running-back splits close to pure noise. Taken at face
+value (unshrunk), every early difference predicts the rest of the season worse than
+assuming the defence is average. The forecasts' own opponent factors are team-level (plays,
+pass rate, sack rate, yards per completion, catch rate, yards per carry); position splits
+are not added (D-017).
+
 ## 5. From a distribution to a line
 
 All probabilities for a player-market come from one saved integer distribution:

@@ -111,3 +111,16 @@ def test_scenario_rules_and_redistribution():
     assert all(p["targets"]["scenario"] >= p["targets"]["base"] - 0.15 for p in mates)
     assert sum(p["targets"]["scenario"] - p["targets"]["base"] for p in mates) > 1.0
     assert r["label"].startswith("Exploratory")
+
+
+def test_game_page_has_team_simulation_for_pooled_headline():
+    """X1 is a pool with no team simulation of its own: the game view must show J1's."""
+    from npl import appdata
+
+    e = appdata.latest_edition()
+    if e is None:
+        pytest.skip("no edition")
+    gid = e["games"][0]["game_id"]
+    g = appdata.game(gid)
+    assert g["model"] == "X1" and g["sim_model"] == "J1"
+    assert len(g["teams"]) == 2

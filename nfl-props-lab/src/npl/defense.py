@@ -16,8 +16,8 @@ For a metric num/den (e.g. receiving yards to TEs / targets to TEs) and defence 
 Ranks 1-32 order teams by the shrunk difference (1 = best defence on that metric).
 
 Descriptive context. The forecasts use team-level opponent factors (plays, pass rate,
-sack rate, yards per completion, catch rate, yards per carry); whether position splits
-improve forecasts is tested separately (reports/EXPERIMENTS.md).
+sack rate, yards per completion, catch rate, yards per carry); position splits are not a
+model input because they carry over too little (D-017, reports/defense/STABILITY.md).
 """
 
 from __future__ import annotations
@@ -337,23 +337,6 @@ def summarise(mets: dict) -> dict:
     else:
         tag = "no clear strengths or weaknesses yet"
     return {"strong": strong, "weak": weak, "tag": tag}
-
-
-def position_factors(prof: dict, team: str, position: str) -> dict | None:
-    """Shrunk ratios (actual/expected) for a defence against one receiving position:
-    yards per target and target share proxy. Used by the experimental model variant."""
-    t = prof["teams"].get(team)
-    if not t:
-        return None
-    m = t["metrics"]
-    out = {}
-    for key in (f"ypt_{position}", f"tpg_{position}"):
-        x = m.get(key)
-        if not x or not x["expected"]:
-            continue
-        ratio = (x["expected"] + x["shrunk"]) / x["expected"]
-        out[key] = float(np.clip(ratio, 0.7, 1.3))
-    return out
 
 
 def write_stability(st: dict, out_dir=CALIBRATION.parent) -> None:

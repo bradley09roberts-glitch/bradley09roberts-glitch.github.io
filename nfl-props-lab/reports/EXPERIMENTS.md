@@ -17,6 +17,7 @@ simulations and the SHA-256 of the ledger (ledgers of non-headline runs stay in
 | 5 | exp05-validation-v0.3-stacking | J0, J1, M and linear pools X25/X50/X75 of J0 and M | Pools beat every single model on all 7 markets. Frozen per-market weight on J0 (rest on M): pass att 0.5, completions 0.5, pass yds 0.5, rec yds 0.75, receptions 0 (pure M), rush att 0.25, rush yds 0.75 (commit ab6a347). |
 | 7 | exp07-validation-v0.4-injury-rates (run after the test, validation seasons only) | injury-report participation adjustment measured on 2016-2021 instead of guessed | **Adopted as v0.4** for live editions: P(plays) log loss for listed players 0.401 -> 0.385; conditional CRPS within +/-0.2%. Not evaluated on the test seasons. |
 | 8 | exp08-validation-v0.4.1-qb-availability (validation only) | QBs listed Out/Doubtful can no longer enter as replacement or cameo; replacement = most likely available QB | **Adopted as v0.4.1**: listed-player P(plays) log loss 0.385 -> 0.371; conditional CRPS within Monte Carlo noise. |
+| 9 | defense-stability (descriptive, not a model change) | how much each defensive split seen before weeks 5/8/11/14 carries over to the rest of the season; K fitted on 2012-2021, checked on 2022-2025 | Overall/pass 25-30% carry-over after six games, run ~20%, sack rate and QB runs ~10%, TE/RB receiving splits near noise. Used to calibrate the Defences page; position factors not added to the model (D-017). `reports/defense/STABILITY.md` |
 | 6 | **exp06-TEST-frozen-v0.3** | single run of the frozen configuration on the untouched 2024-2025 seasons (X1, X, J1, J0, M, A, C) | see the test table below. Run once; nothing was changed afterwards. |
 
 ## Test result (2024-2025, 44 slates, 4,000 simulations per game, code ab6a347)
@@ -65,4 +66,6 @@ ml.run_backtest(val, label="exp03-validation-ml", lake=lake)
 backtest.run(val, label="exp05-validation-v0.3-stacking", n_sims=4000, seed=7, lake=lake,
              with_ml=True, mix_grid=(0.25, 0.5, 0.75))
 evaluate.write_report("<run dir>", ["J1", "J0", "M", "X25", "X50", "X75", "A", "C"], baseline="A")
+from npl import defense
+defense.write_stability(defense.stability(lake, range(2012, 2022), range(2022, 2026)))
 ```

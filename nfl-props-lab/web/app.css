@@ -278,3 +278,6 @@ td.hi, span.hi { background: var(--pit-hi); }
 td.hi2, span.hi2 { background: var(--pit-hi2); }
 .heatdef td.c { min-width: 44px; }
 .heatdef td:first-child, .heatdef th:first-child { position: sticky; left: 0; background: var(--card); z-index: 1; }
+.deft th, .deft td { white-space: normal; vertical-align: top; }
+.deft td .pill { white-space: nowrap; }
+@media (max-width: 520px) { .deft th, .deft td { padding: 6px 5px; font-size: 0.82rem; } .deft .pill { padding-inline: 6px; } }

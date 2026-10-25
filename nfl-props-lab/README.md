@@ -20,6 +20,7 @@ touched.
 | `reports/coverage/` | measured data coverage (`COVERAGE.md`) |
 | `reports/backtests/` | backtest summaries; headline runs include their full ledger |
 | `reports/record/` | prospective record scores |
+| `reports/defense/` | defence stability study and the calibration the Defences page uses |
 | `docs/` | `DATA_AUDIT.md`, `METHODOLOGY.md`, cited research notes |
 | `DECISIONS.md` | dated decisions; `reports/EXPERIMENTS.md` lists every experiment |
 | `data/` (git-ignored) | raw immutable downloads, SQLite store, lake, runs |

@@ -107,3 +107,14 @@ replacement and the QB cameo ignored the non-starter's availability. Experiment 
 (validation): P(plays) log loss for listed players 0.385 -> 0.371, overall Brier 0.0765 ->
 0.0759; conditional CRPS changes are within Monte Carlo noise (the J0-based X, which the fix
 barely touches, moved by a similar amount). Earlier editions stay on file unchanged.
+
+## D-017 (25 Oct 2026) Defence profiles are descriptive; position splits stay out of the model
+Requested: per-team defence profiles (pass, run, each position, overall). Built as context
+with opponent adjustment and per-measure shrinkage fitted on 2012-2021. The stability check
+on 2022-2025 shows how little of most early-season splits persists (overall and pass about
+25-30% after six games; TE and RB receiving splits 2-16%, out-of-sample skill near zero).
+The planned experiment adding position-specific defence factors to the joint simulation
+(exp09) was therefore not run: the shrunk factors are within a few per cent of 1 for TEs
+and RBs and small for WRs, so the expected gain is below the Monte Carlo noise of a
+validation backtest. It can be revisited with a multi-season prior for defences.
+

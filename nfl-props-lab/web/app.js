@@ -417,7 +417,7 @@ async function viewGame(v, id) {
   const ptable = (team) => `<div class="tablewrap"><table><thead><tr><th class="l">Player</th><th>P(plays)</th><th class="l">Key forecasts (median, 80% range)</th></tr></thead><tbody>${players(team).filter((x) => x.c.p_play >= 0.05).map((x) => `<tr class="${x.c.p_play < 0.5 ? "dim" : ""}"><td class="l"><a href="#player.${esc(x.c.player_id)}">${esc(x.c.name)}</a> <span class="muted">${esc(x.c.position)}</span> ${injuryPill(x.c.injury_report)}</td><td>${pct(x.c.p_play)}</td><td class="l">${(keyMk[x.c.position] || []).filter((m) => x.m[m]).map((m) => `${MARKET_LABELS[m]} ${x.m[m].median} (${x.m[m].q10}–${x.m[m].q90})`).join(" · ")}</td></tr>`).join("")}</tbody></table></div>`;
   v.innerHTML = `<section class="hero"><span class="eyebrow">${esc(G.kickoff_london)} · edition ${esc(g.edition_id)}</span><h1>${esc(G.away)} at ${esc(G.home)}</h1>
       <p>${G.published_before_kickoff ? "Saved before kickoff: part of the pre-match record." : "This edition was saved after kickoff, so the game is excluded from the pre-match record."}</p></section>
-    <section class="panel"><h2>Simulated team volume</h2><p class="small muted">From ${esc(g.model)} joint simulations of the whole game. Both teams share game-level noise: in history, when one offence ran more plays the other ran fewer (residual correlation about −0.48), and pass rates move in opposite directions with game script.</p>
+    <section class="panel"><h2>Simulated team volume</h2><p class="small muted">From ${esc(g.sim_model || g.model)} joint simulations of the whole game${g.sim_model && g.sim_model !== g.model ? ` (the game simulation inside ${esc(g.model)})` : ""}. Both teams share game-level noise: in history, when one offence ran more plays the other ran fewer (residual correlation about −0.48), and pass rates move in opposite directions with game script.</p>
       <div class="tablewrap"><table><thead><tr><th class="l">Per team</th>${[G.away, G.home].map((t) => `<th>${esc(t)} mean</th><th>${esc(t)} 80% range</th>`).join("")}</tr></thead><tbody>${stats.map(([k, l]) => `<tr><td class="l">${l}</td>${[G.away, G.home].map((t) => { const s = T[t]?.sim?.[k]; return s ? `<td>${dec(s.mean, 1)}</td><td>${s.q10}–${s.q90}</td>` : "<td>–</td><td>–</td>"; }).join("")}</tr>`).join("")}</tbody></table></div>
       <p class="tiny muted">Inputs: ${[G.away, G.home].map((t) => { const i = T[t]?.inputs || {}; return `${esc(t)} expected plays ${dec(i.mu_plays, 1)}, dropback rate ${pct1(i.dropback_rate)}, opponent pass-yards factor ${dec(i.opp_rec_yards_factor, 2)}`; }).join("; ")}.</p></section>
     ${D && D.teams && D.teams[G.home] && D.teams[G.away] ? `<section class="panel"><h2>Defensive matchup</h2><p class="small muted">Each defence's rank (1 = best of 32) in ${D.season} before week ${D.before_week}, adjusted for opponents. Bold = clear evidence; plain = could be noise.</p>
@@ -499,8 +499,14 @@ function rankClass(r) { return r <= 4 ? "lo2" : r <= 10 ? "lo" : r >= 29 ? "hi2"
 function ordinal(n) { const s = ["th", "st", "nd", "rd"], v = n % 100; return n + (s[(v - 20) % 10] || s[v] || s[0]); }
 function verdictPill(v, p) { const pp = p == null ? "" : ` · ${Math.round(p * 100)}%`; return v === "likely strong" ? `<span class="pill good"><span class="dot"></span>Likely strong${pp}</span>` : v === "likely weak" ? `<span class="pill out"><span class="dot"></span>Likely weak${pp}</span>` : `<span class="pill"><span class="dot"></span>Can't tell yet${pp}</span>`; }
 const HEAT_SHORT = { ypp: "Overall", net_ypd: "Pass", sack_rate: "Pass rush", ypc: "Run", qb_rush_ypg: "QB runs", ypg_WR: "v WR", ypg_TE: "v TE", ypg_RB: "v RB" };
-const carry = (D, k) => D.reliability && D.reliability[k] ? D.reliability[k].carry_over_6g : null;
-function reliabilityWord(c) { return c == null ? "not measured" : c >= 0.25 ? "partly carries over" : c >= 0.15 ? "carries over a little" : c >= 0.08 ? "mostly noise" : "almost pure noise"; }
+const rel = (D, k) => (D.reliability && D.reliability[k]) || null;
+function reliabilityWord(c, skill) {
+  if (c == null) return "not measured";
+  const w = ["partly carries over", "carries over a little", "mostly noise", "almost pure noise"];
+  let i = c >= 0.25 ? 0 : c >= 0.15 ? 1 : c >= 0.08 ? 2 : 3;
+  if (skill != null && skill < 0.02) i = Math.max(i, 2); // barely beat "assume average" in 2022–25
+  return w[i];
+}
 
 function rankCell(m, team) {
   if (!m) return `<td class="c">–</td>`;
@@ -511,7 +517,7 @@ function rankCell(m, team) {
 async function viewDefense(v, team) {
   const D = await api("/api/defense");
   if (team) return viewDefenseTeam(v, D, team);
-  const cols = D.heat_columns; const sortKey = store.get("defSort", "pts_pg");
+  const cols = D.heat_columns; const saved = store.get("defSort", cols[0]); const sortKey = cols.includes(saved) ? saved : cols[0];
   const teams = Object.values(D.teams).sort((a, b) => (a.metrics[sortKey]?.rank ?? 99) - (b.metrics[sortKey]?.rank ?? 99) || a.team.localeCompare(b.team));
   v.innerHTML = `<section class="hero"><span class="eyebrow">${D.season} season · games before week ${D.before_week}</span><h1>Team defences</h1>
       <p>How each defence has done against the pass, the run, each receiving position and quarterback runs. Every number is compared with what the same opponents managed in their other games, so a soft schedule does not flatter a defence. Rank 1 is the best defence; tap a team for the detail.</p></section>
@@ -522,13 +528,14 @@ async function viewDefense(v, team) {
       <p class="tiny muted">Measures: Overall = yards per play; Pass = net yards per dropback (sacks and scrambles included); Pass rush = sack rate; Run = yards per designed run by non-quarterbacks; QB runs = quarterback rushing yards per game; v WR / TE / RB = receiving yards to that position per game. ${esc(D.note)}</p></section>
     ${D.reliability && Object.keys(D.reliability).length ? `<section class="panel"><h2>Which of these are real?</h2>
       <p class="small">Most early-season defensive splits are noise. We checked every measure on 2012–2025: how much of a difference seen in a defence's first games carried over into the rest of that season (first fitted on 2012–2021, then checked on 2022–2025). The ranks above already allow for this.</p>
-      <div class="tablewrap"><table><thead><tr><th class="l">Area</th><th class="l">Measure</th><th>Carries over after 6 games</th><th class="l">Reading</th><th>'Likely' labels that held, 2022–25</th></tr></thead><tbody>
-      ${cols.map((c) => { const r = D.reliability[c]; if (!r) return ""; return `<tr><td class="l">${HEAT_SHORT[c]}</td><td class="l">${esc(r.label)}</td><td>${Math.round(r.carry_over_6g * 100)}%</td><td class="l">${reliabilityWord(r.carry_over_6g)}</td><td>${r.labels_held != null && r.labels_check >= 10 ? `${Math.round(r.labels_held * 100)}% of ${r.labels_check}` : "too few labels"}</td></tr>`; }).join("")}</tbody></table></div>
+      <div class="tablewrap"><table class="deft"><thead><tr><th class="l">Area</th><th>Carries over after 6 games</th><th>'Likely' labels that held, 2022–25</th></tr></thead><tbody>
+      ${cols.map((c) => { const r = D.reliability[c]; if (!r) return ""; return `<tr><td class="l"><b>${HEAT_SHORT[c]}</b><div class="tiny muted">${esc(r.label)}</div></td><td>${Math.round(r.carry_over_6g * 100)}%<div class="tiny muted">${reliabilityWord(r.carry_over_6g, r.skill_vs_average)}</div></td><td>${r.labels_held != null && r.labels_check >= 10 ? `${Math.round(r.labels_held * 100)}%<div class="tiny muted">of ${r.labels_check}</div>` : `<span class="tiny muted">too few labels</span>`}</td></tr>`; }).join("")}</tbody></table></div>
       <p class="tiny muted">"Held" = the defence stayed on the same side of average over the rest of the season; 50% would be a coin flip, and even a correct label can miss because the remaining games are noisy too. Full table for every measure: reports/defense/STABILITY.md.</p></section>` : ""}
     <section class="panel"><h2>How the forecasts use this</h2><p class="small">The forecasts already adjust for each opponent's plays allowed, pass rate, sack rate, yards per completion, catch rate and yards per carry. Splits against each receiving position are shown here for context only: they carry over too little from week to week (table above) to justify adding them to the model.</p></section>`;
   $("#dsort").addEventListener("change", (e) => { store.set("defSort", e.target.value); route(); });
 }
 
+const lc1 = (x) => /^[A-Z][a-z]/.test(x) ? x[0].toLowerCase() + x.slice(1) : x;
 function viewDefenseTeam(v, D, team) {
   const t = D.teams[team];
   if (!t) { v.innerHTML = banner("warn", `<p>No defence profile for ${esc(team)}.</p>`); return; }
@@ -536,11 +543,11 @@ function viewDefenseTeam(v, D, team) {
   Object.entries(t.metrics).forEach(([k, m]) => { (byFacet[m.facet] ||= []).push([k, m]); });
   const order = ["overall", "pass", "rush", "run", "qb", "vs_WR", "vs_TE", "vs_RB"];
   v.innerHTML = `<section class="hero"><span class="eyebrow">${D.season} defence · ${t.games} games before week ${D.before_week}</span><h1>${esc(team)} defence</h1>
-      <p><b>${esc(t.summary.tag[0].toUpperCase() + t.summary.tag.slice(1))}.</b> ${t.summary.strong.length ? `Clear strengths: ${esc(t.summary.strong.join("; ").toLowerCase())}.` : ""} ${t.summary.weak.length ? `Clear weaknesses: ${esc(t.summary.weak.join("; ").toLowerCase())}.` : ""} ${!t.summary.strong.length && !t.summary.weak.length ? "No area is clearly better or worse than average yet; differences so far are within normal game-to-game noise." : ""}</p>
+      <p><b>${esc(t.summary.tag[0].toUpperCase() + t.summary.tag.slice(1))}.</b> ${t.summary.strong.length ? `Clear strengths: ${esc(t.summary.strong.map(lc1).join("; "))}.` : ""} ${t.summary.weak.length ? `Clear weaknesses: ${esc(t.summary.weak.map(lc1).join("; "))}.` : ""} ${!t.summary.strong.length && !t.summary.weak.length ? "No area is clearly better or worse than average yet; differences so far are within normal game-to-game noise." : ""}</p>
       <p class="small"><a href="#defense">All defences</a></p></section>
-    ${order.filter((f) => byFacet[f]).map((f) => `<section class="panel"><h2>${esc(D.facets[f])}</h2><div class="tablewrap"><table><thead><tr><th class="l">Measure</th><th>Allowed</th><th>Opponents' usual</th><th>Difference (shrunk)</th><th>Rank</th><th>Last season</th><th class="l">Evidence</th></tr></thead><tbody>
-      ${byFacet[f].map(([k, m]) => `<tr><td class="l">${esc(m.label)}${carry(D, k) != null ? `<div class="tiny muted">${reliabilityWord(carry(D, k))}</div>` : ""}</td><td>${fmtVal(m.actual, m.fmt)}</td><td>${fmtVal(m.expected, m.fmt)}</td><td>${fmtDiff(m.shrunk, m.fmt)}</td><td class="${rankClass(m.rank)}">${ordinal(m.rank)}</td><td>${m.prev_rank ? ordinal(m.prev_rank) : "–"}</td><td class="l">${verdictPill(m.verdict, m.p_better)}</td></tr>`).join("")}</tbody></table></div></section>`).join("")}
-    <p class="tiny muted">Allowed = this season before week ${D.before_week}. Opponents' usual = what the same offences managed in their other games. Difference (shrunk) = the part expected to last for the rest of the season, based on how much such differences carried over in 2012–2021; noisy measures are shrunk almost to zero. The percentage is the chance the defence is truly better than average on that measure. Interception and sack rates: higher is better; everything else: lower is better. Last season = full ${D.season - 1} regular season, same method.</p>`;
+    ${order.filter((f) => byFacet[f]).map((f) => `<section class="panel"><h2>${esc(D.facets[f])}</h2><div class="tablewrap"><table class="deft"><thead><tr><th class="l">Measure</th><th>Allowed / usual</th><th>Rank</th><th class="l">Evidence</th></tr></thead><tbody>
+      ${byFacet[f].map(([k, m]) => `<tr><td class="l">${esc(m.label)}${rel(D, k) ? `<div class="tiny muted">${reliabilityWord(rel(D, k).carry_over_6g, rel(D, k).skill_vs_average)}</div>` : ""}</td><td>${fmtVal(m.actual, m.fmt)} / ${fmtVal(m.expected, m.fmt)}<div class="tiny muted">lasting ${fmtDiff(m.shrunk, m.fmt)}</div></td><td class="${rankClass(m.rank)}">${ordinal(m.rank)}${m.prev_rank ? `<div class="tiny muted">${D.season - 1}: ${ordinal(m.prev_rank)}</div>` : ""}</td><td class="l">${verdictPill(m.verdict)}<div class="tiny muted">${Math.round(m.p_better * 100)}% chance better than average</div></td></tr>`).join("")}</tbody></table></div></section>`).join("")}
+    <p class="tiny muted">Allowed = this season before week ${D.before_week}. Usual = what the same offences managed in their other games. Lasting = the part of the difference expected to last for the rest of the season, based on how much such differences carried over in 2012–2021; noisy measures are shrunk almost to zero. The percentage is the chance the defence is truly better than average on that measure. Interception and sack rates: higher is better; everything else: lower is better. ${D.season - 1} = rank over the full ${D.season - 1} regular season, same method.</p>`;
 }
 
 const OPP_SHORT = { net_ypd: "pass D", sack_rate: "pass rush", ypc: "run D", rush_ypg: "rush yds/g", qb_rush_ypg: "QB runs", ypg_WR: "v WR", ypg_TE: "v TE", ypg_RB: "v RB" };

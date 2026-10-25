@@ -18,6 +18,17 @@ rosters, depth charts and schedules byte-identical (same SHA-256 as the 07:42 re
 so the edition used current inputs. Before publishing, use `npl ingest --force` for those
 files.
 
+## Team defences (25 Oct, on request)
+
+New Defences page (phone: More > Defences): every defence ranked 1-32 overall, against the
+pass, pass rush, the run, QB runs and receiving yards to WRs, TEs and RBs, with a team page
+for each and a matchup panel on every game page; prop cards show the opponent's relevant
+ranks. Numbers are opponent-adjusted and shrunk by how much each split actually carried over
+in past seasons, which turned out to be little for most splits (`reports/defense/STABILITY.md`):
+after Week 6, 25 of 32 defences have no clear strength or weakness. The splits are context,
+not forecast inputs (D-017). Also fixed: the game page's simulated team-volume table was
+empty since X1 became the headline (it now shows the J1 simulation inside X1).
+
 ## What works
 
 | Area | State |
@@ -31,8 +42,8 @@ files.
 | Settlement | append-only revisions; record scoring by model and market once results are final |
 | Money | settlement, rule profiles, no-look-ahead quote eligibility, bankroll simulation and metrics, all tested on synthetic fixtures; **ROI unavailable** (no recorded prices) |
 | Odds adapter | The Odds API client, parser, UK/research classification, audited player linking: implemented, **not validated** (no key) |
-| App | FastAPI + phone-first web UI (Today, Props, Player, Game, Shortlist, Backtest lab, Saved record, Data & method), CSV/JSON exports, manual-line tool, exploratory "what if" scenarios (server only); static snapshot published as a private Artifact: https://claude.ai/artifact/JikfB26yYTb8Qf5qu5jHeN |
-| Tests | 66 automated tests (unit + integration on the real lake); `npl verify` passes (lint, tests, edition hashes, API routes); 28-row manual reconciliation (`docs/RECONCILIATION.md`) |
+| App | FastAPI + phone-first web UI (Today, Props, Player, Game, Shortlist, Backtest lab, Defences, Saved record, Data & method), CSV/JSON exports, manual-line tool, exploratory "what if" scenarios (server only); static snapshot published as a private Artifact: https://claude.ai/artifact/JikfB26yYTb8Qf5qu5jHeN |
+| Tests | 72 automated tests (unit + integration on the real lake); `npl verify` passes (lint, tests, edition hashes, API routes); 28-row manual reconciliation (`docs/RECONCILIATION.md`) |
 | Follow-ups | check-ins scheduled in this session: 25 Oct 07:40 UTC (refresh inputs, new edition only if they changed), 26 Oct 11:00 UTC (settle Sunday games), 27 Oct 11:00 UTC (settle Monday game). No recurring schedule has been created. |
 
 ## Results

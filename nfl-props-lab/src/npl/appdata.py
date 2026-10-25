@@ -316,11 +316,13 @@ def game(game_id: str) -> dict:
         if g is None:
             continue
         head = e.get("headline_model", HEADLINE)
-        teams = [t for t in e["teams"] if t["game_id"] == game_id and t["model"] == head]
+        # pooled models (X1 = J1 + M, X = J0 + M) have no team simulation of their own
+        sim_model = {"X1": "J1", "X": "J0"}.get(head, head)
+        teams = [t for t in e["teams"] if t["game_id"] == game_id and t["model"] == sim_model]
         cards = [_card(f, g) for f in e["forecasts"] if f["game_id"] == game_id and
                  f["model"] == head]
         return _clean({"game": g, "edition_id": e["edition_id"], "model": head,
-                       "teams": teams, "cards": cards})
+                       "sim_model": sim_model, "teams": teams, "cards": cards})
     return {"error": "game not in any edition"}
 
 
