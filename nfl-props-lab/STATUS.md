@@ -7,8 +7,16 @@ nflverse updated injuries, rosters, depth charts and schedules between 06:01 and
 Barkley Questionable for Monday; several activations and reserve moves). A fourth Week 7
 edition was published at 07:43 UTC. It exposed a bug: a quarterback listed Out could still
 enter a simulated game as the replacement or for a cameo (Jackson showed P(plays) 16%). Fixed
-as v0.4.1 and validated (experiment 8) before a fifth edition. `npl update` now re-checks
-files older than 30 minutes (the 6-hour cache had hidden the 07:00 refresh).
+as v0.4.1 and validated (experiment 8); the fifth edition (08:00 UTC, v0.4.1) is the one
+that counts for kickoff under D-008. `npl update` now re-checks files older than 30 minutes
+(the 6-hour cache had hidden the 07:00 refresh).
+
+Correction on the 08:00 edition's note: it says the inputs were "re-checked before
+publishing", but that check was answered from the 18-minute-old cache (no network request).
+A forced network re-check at 08:00:36 UTC, seconds after publication, found injuries,
+rosters, depth charts and schedules byte-identical (same SHA-256 as the 07:42 retrieval),
+so the edition used current inputs. Before publishing, use `npl ingest --force` for those
+files.
 
 ## What works
 
@@ -19,12 +27,12 @@ files older than 30 minutes (the 6-hour cache had hidden the 07:00 refresh).
 | Participation | played / inactive / DNP / reserve / active-unverified / not final, from rosters and on-field data (outcome labels only) |
 | Models | joint game simulation (J0, J1), baselines (A, C), gradient-boosting challenger (M), stacked primary X and live headline X1 |
 | Evaluation | weekly walk-forward on fixed splits; 7 experiments logged (`reports/EXPERIMENTS.md`), including rejected ones; one frozen test run; ledgers and manifests reproduce every headline (tested) |
-| Prospective record | three genuine pre-kickoff editions for 2026 Week 7 (03:01 v0.1, 04:01 v0.3, 04:35 v0.4 UTC; 13 games each), committed and pushed before the first kickoff (13:30 GMT); D-008 decides which counts |
+| Prospective record | five genuine pre-kickoff editions for 2026 Week 7 (03:01 v0.1, 04:01 v0.3, 04:35 v0.4, 07:43 v0.4 with refreshed inputs, 08:00 v0.4.1 UTC; 13 games each), committed and pushed before the first kickoff (13:30 GMT); under D-008 the 08:00 edition counts |
 | Settlement | append-only revisions; record scoring by model and market once results are final |
 | Money | settlement, rule profiles, no-look-ahead quote eligibility, bankroll simulation and metrics, all tested on synthetic fixtures; **ROI unavailable** (no recorded prices) |
 | Odds adapter | The Odds API client, parser, UK/research classification, audited player linking: implemented, **not validated** (no key) |
 | App | FastAPI + phone-first web UI (Today, Props, Player, Game, Shortlist, Backtest lab, Saved record, Data & method), CSV/JSON exports, manual-line tool, exploratory "what if" scenarios (server only); static snapshot published as a private Artifact: https://claude.ai/artifact/JikfB26yYTb8Qf5qu5jHeN |
-| Tests | 65 automated tests (unit + integration on the real lake); `npl verify` passes (lint, tests, 3/3 edition hashes, API routes); 28-row manual reconciliation (`docs/RECONCILIATION.md`) |
+| Tests | 66 automated tests (unit + integration on the real lake); `npl verify` passes (lint, tests, edition hashes, API routes); 28-row manual reconciliation (`docs/RECONCILIATION.md`) |
 | Follow-ups | check-ins scheduled in this session: 25 Oct 07:40 UTC (refresh inputs, new edition only if they changed), 26 Oct 11:00 UTC (settle Sunday games), 27 Oct 11:00 UTC (settle Monday game). No recurring schedule has been created. |
 
 ## Results

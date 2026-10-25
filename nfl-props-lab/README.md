@@ -56,7 +56,7 @@ exact calls behind each committed report.
 | When | Command | Why |
 |---|---|---|
 | Daily 09:00 | `npl update` | nflverse rosters, injuries and depth charts refresh at 07:00 UTC |
-| Day before kickoff, after the update | commit code, then `npl publish` | early edition (the final injury report is out) |
+| Day before kickoff, after the update | `npl ingest --datasets injuries,rosters_weekly,depth_charts,schedules --seasons 2026 --force`, commit code, then `npl publish` | early edition (the final injury report is out); repeat on game morning after nflverse's 07:00 UTC refresh |
 | Tuesday 12:00 | `npl update && npl settle` | Monday night results; nflverse recommends Thursday's pbp for stat corrections, so re-run `npl settle` on Thursday too |
 
 Jobs are idempotent: re-running `ingest` stores nothing new if the content is unchanged,
