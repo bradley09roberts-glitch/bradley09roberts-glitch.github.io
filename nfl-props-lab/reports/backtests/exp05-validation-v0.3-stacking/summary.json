@@ -1719,6 +1719,88 @@
    "n": 8121
   }
  ],
+ "participation": {
+  "A": {
+   "n": 18122,
+   "brier": 0.09974,
+   "log_loss": 0.33811,
+   "mean_p": 0.789,
+   "played_rate": 0.8133,
+   "listed_n": 0,
+   "listed_brier": null,
+   "listed_log_loss": null
+  },
+  "C": {
+   "n": 18122,
+   "brier": 0.09974,
+   "log_loss": 0.33811,
+   "mean_p": 0.789,
+   "played_rate": 0.8133,
+   "listed_n": 0,
+   "listed_brier": null,
+   "listed_log_loss": null
+  },
+  "J0": {
+   "n": 18122,
+   "brier": 0.09974,
+   "log_loss": 0.33811,
+   "mean_p": 0.789,
+   "played_rate": 0.8133,
+   "listed_n": 0,
+   "listed_brier": null,
+   "listed_log_loss": null
+  },
+  "J1": {
+   "n": 18122,
+   "brier": 0.07668,
+   "log_loss": 0.27328,
+   "mean_p": 0.7626,
+   "played_rate": 0.8133,
+   "listed_n": 1596,
+   "listed_brier": 0.13178,
+   "listed_log_loss": 0.40084
+  },
+  "M": {
+   "n": 18122,
+   "brier": 0.09974,
+   "log_loss": 0.33811,
+   "mean_p": 0.789,
+   "played_rate": 0.8133,
+   "listed_n": 0,
+   "listed_brier": null,
+   "listed_log_loss": null
+  },
+  "X25": {
+   "n": 18122,
+   "brier": 0.09974,
+   "log_loss": 0.33811,
+   "mean_p": 0.789,
+   "played_rate": 0.8133,
+   "listed_n": 0,
+   "listed_brier": null,
+   "listed_log_loss": null
+  },
+  "X50": {
+   "n": 18122,
+   "brier": 0.09974,
+   "log_loss": 0.33811,
+   "mean_p": 0.789,
+   "played_rate": 0.8133,
+   "listed_n": 0,
+   "listed_brier": null,
+   "listed_log_loss": null
+  },
+  "X75": {
+   "n": 18122,
+   "brier": 0.09974,
+   "log_loss": 0.33811,
+   "mean_p": 0.789,
+   "played_rate": 0.8133,
+   "listed_n": 0,
+   "listed_brier": null,
+   "listed_log_loss": null
+  }
+ },
  "milestones": {
   "A": {
    "pass_att": [

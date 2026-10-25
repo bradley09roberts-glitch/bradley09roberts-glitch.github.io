@@ -93,3 +93,10 @@ No change was made because of its results. Further model changes must be validat
 ## D-014 (25 Oct 2026) Ledgers in git only for headline runs
 Full ledgers are committed for the selected validation run (exp05) and the test run
 (exp06); other experiments commit summaries and manifests with the ledger SHA-256.
+
+## D-015 (25 Oct 2026) v0.4 adopted: measured injury-report participation rates
+Experiment 7 (validation): replacing the guessed caps (Out 2%, Doubtful 25%, Questionable
+80%) with rates measured on 2016-2021 (Out 0.2%, Doubtful 1.5%, Questionable x0.78)
+improves P(plays) for listed players (log loss 0.401 -> 0.385, Brier 0.132 -> 0.130) and
+leaves conditional distributions within +/-0.2% CRPS. Only J1/X1 change. Not re-run on the
+test seasons (D-013); judged prospectively from the next edition.

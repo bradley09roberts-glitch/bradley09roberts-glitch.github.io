@@ -209,3 +209,31 @@ def test_market_registry_matches_canonical_stats():
     assert MARKETS["rush_att"].stat == "carries"
     assert math.isclose(len(MARKETS), 7)
     assert json.dumps(sorted(MARKETS))  # serialisable
+
+
+def test_record_uses_last_edition_before_kickoff(tmp_path, monkeypatch):
+    """D-008: per model and game, only the last pre-kickoff edition's rows count."""
+    from npl import appdata, settle
+
+    ed = tmp_path / "records" / "editions"
+    monkeypatch.setattr(appdata, "EDITIONS_DIR", ed)
+    appdata._load_edition.cache_clear()
+
+    def write(eid, published, games, forecasts):
+        p = ed / "2026" / "W07" / f"{eid}.json"
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(json.dumps({"edition_id": eid, "season": 2026, "week": 7,
+                                 "season_type": "REG", "kind": "early",
+                                 "published_at": published, "published_at_london": "x",
+                                 "code": {}, "inputs_hash": "h", "games": games,
+                                 "forecasts": forecasts, "retrospective": False}))
+
+    g_pre = {"game_id": "G1", "published_before_kickoff": True}
+    g_late = {"game_id": "G1", "published_before_kickoff": False}
+    f = lambda pid, mk: {"model": "X", "game_id": "G1", "player_id": pid, "market": mk,  # noqa: E731
+                         "status": "ok"}
+    write("e1", "2026-10-25T03:00:00Z", [g_pre], [f("p1", "rec_yds"), f("p2", "rec_yds")])
+    write("e2", "2026-10-25T04:00:00Z", [g_pre], [f("p1", "rec_yds")])  # p2 dropped
+    write("e3", "2026-10-25T20:00:00Z", [g_late], [f("p1", "rec_yds"), f("p3", "rec_yds")])
+    rows = settle.record_rows()
+    assert sorted((eid, r["player_id"]) for eid, r in rows) == [("e2", "p1")]

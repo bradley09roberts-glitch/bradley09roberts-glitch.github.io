@@ -69,6 +69,27 @@ def milestone_reliability(s: pd.DataFrame, bins=(0, .1, .2, .3, .4, .5, .6, .7, 
     return rows
 
 
+def participation_calibration(led: pd.DataFrame) -> dict:
+    """Brier score and log loss of P(plays) against whether the player took part, over
+    game-day candidates (played / inactive / DNP), one row per player-game per model; also
+    for players on the official injury report."""
+    out = {}
+    cand = led[led.participation.isin(["played", "inactive", "dnp"]) & led.p_play.notna()]
+    for m, x in cand.groupby("model"):
+        x = x.drop_duplicates(["game_id", "player_id"])
+        y = (x.participation == "played").astype(float)
+        p = x.p_play.clip(1e-4, 1 - 1e-4)
+        b = (p - y) ** 2
+        ll = -(y * np.log(p) + (1 - y) * np.log(1 - p))
+        listed = x.injury_report.isin(["Out", "Doubtful", "Questionable"])
+        out[m] = {"n": len(x), "brier": round(float(b.mean()), 5),
+                  "log_loss": round(float(ll.mean()), 5), "mean_p": round(float(p.mean()), 4),
+                  "played_rate": round(float(y.mean()), 4), "listed_n": int(listed.sum()),
+                  "listed_brier": round(float(b[listed].mean()), 5) if listed.any() else None,
+                  "listed_log_loss": round(float(ll[listed].mean()), 5) if listed.any() else None}
+    return out
+
+
 def compare(led: pd.DataFrame, models: list[str], baseline: str = "A") -> dict:
     out = {"models": models, "baseline": baseline, "primary_metric": PRIMARY, "markets": {}}
     led = led.copy()
@@ -161,6 +182,7 @@ def write_report(run_dir: Path, models: list[str], baseline: str = "A",
                                             "splits", "rows")}
     summ["slates"] = len(manifest["slates"])
     summ["exclusions"] = manifest["exclusions"]
+    summ["participation"] = participation_calibration(led)
     sc = led[led.scored]
     summ["milestones"] = {m: {mk: milestone_reliability(gg) for mk, gg in g.groupby("market")}
                           for m, g in sc.groupby("model")}

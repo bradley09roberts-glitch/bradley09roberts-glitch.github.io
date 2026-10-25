@@ -334,44 +334,41 @@ def backtests() -> list[dict]:
 
 
 def record() -> dict:
-    """Published editions and, where outcomes exist, their prospective scores."""
+    """Published editions, and the prospective record under D-008 (for each model and
+    game, the last edition published before kickoff) with scores once results are final."""
+    from .settle import record_rows
+
     idx = editions_index()
-    L = lake()
-    pg = L["pg"].set_index(["game_id", "player_id"])
+    pg = lake()["pg"].set_index(["game_id", "player_id"])
     rows = []
-    for e in idx:
-        full = load_edition(EDITIONS_DIR.parent.parent / e["file"])
-        games = {g["game_id"]: g for g in full["games"]}
-        for f in full["forecasts"]:
-            g = games[f["game_id"]]
-            if f["status"] != "ok":
-                continue
-            key = (f["game_id"], f["player_id"])
-            part = pg["participation"].get(key) if key in pg.index else None
-            val = pg[MARKETS[f["market"]].stat].get(key) if key in pg.index else None
-            res = {"edition_id": e["edition_id"], "model": f["model"], "game_id": f["game_id"],
-                   "player_id": f["player_id"], "name": f["name"], "market": f["market"],
-                   "published_before_kickoff": g["published_before_kickoff"],
-                   "participation": part if part else "not_final",
-                   "actual": None if val is None or pd.isna(val) else float(val)}
-            if res["actual"] is not None and part == "played" and g["published_before_kickoff"]:
-                d = Dist.from_json(f["dist"])
-                res["crps"] = d.crps(res["actual"])
-            rows.append(res)
+    for eid, f in record_rows():
+        if f["status"] != "ok":
+            continue
+        key = (f["game_id"], f["player_id"])
+        part = pg["participation"].get(key) if key in pg.index else None
+        val = pg[MARKETS[f["market"]].stat].get(key) if key in pg.index else None
+        r = {"edition_id": eid, "model": f["model"], "market": f["market"],
+             "participation": part or "not_final",
+             "actual": None if val is None or pd.isna(val) else float(val)}
+        if r["actual"] is not None and part == "played":
+            r["crps"] = Dist.from_json(f["dist"]).crps(r["actual"])
+        rows.append(r)
     df = pd.DataFrame(rows)
     summ = {}
     if len(df):
         for m, g in df.groupby("model"):
             sc = g.dropna(subset=["crps"]) if "crps" in g else g.iloc[0:0]
-            summ[m] = {"forecasts": len(g), "pre_kickoff": int(g.published_before_kickoff.sum()),
+            summ[m] = {"forecasts": len(g), "pre_kickoff": len(g),
                        "settled_scored": len(sc),
                        "pending": int((g.participation == "not_final").sum()),
-                       "mean_crps": round(float(sc.crps.mean()), 4) if len(sc) else None}
-    return _clean({"editions": [{k: v for k, v in e.items() if k != "games"} |
-                                {"games": e["games"]} for e in idx],
-                   "summary": summ,
-                   "note": "Genuine pre-match record: only editions published before kickoff "
-                           "count. Scores appear once nflverse publishes final statistics."})
+                       "void": int(g.participation.isin(["inactive", "dnp"]).sum()),
+                       "mean_crps": round(float(sc.crps.mean()), 4) if len(sc) else None,
+                       "by_market": {mk: {"n": len(x), "mean_crps": round(float(x.crps.mean()), 4)}
+                                     for mk, x in sc.groupby("market")} if len(sc) else {}}
+    return _clean({"editions": idx, "summary": summ,
+                   "note": "Genuine pre-match record: for each model and game, the last "
+                           "edition published before kickoff counts (earlier editions stay on "
+                           "file). Scores appear once nflverse publishes final statistics."})
 
 
 def data_status() -> dict:

@@ -70,19 +70,32 @@ def run(con: sqlite3.Connection | None = None) -> dict:
     return {"new_revisions": len(new), "lake_built_at": manifest["built_at"], **summ}
 
 
-def prospective_scores() -> dict:
-    """Score the prospective record per model and market (D-008: for each game and model
-    the last edition published before kickoff counts)."""
-    pg = pd.read_parquet(LAKE_DIR / "player_games.parquet").set_index(["game_id", "player_id"])
-    best: dict = {}
+def record_rows() -> list[tuple[str, dict]]:
+    """(edition_id, forecast) pairs that make up the prospective record under D-008: for
+    each model and game, every row of the LAST edition published before that game's
+    kickoff (rows of earlier editions for the same model and game are dropped)."""
+    latest: dict = {}
+    eds = {}
     for e in sorted(appdata.editions_index(), key=lambda x: x["published_at"]):
         if e["retrospective"]:
             continue
         full = appdata.load_edition(appdata.EDITIONS_DIR.parent.parent / e["file"])
+        eds[e["edition_id"]] = full
         pre = {g["game_id"] for g in full["games"] if g["published_before_kickoff"]}
-        for f in full["forecasts"]:
-            if f["game_id"] in pre:
-                best[(f["model"], f["game_id"], f["player_id"], f["market"])] = (e["edition_id"], f)
+        for m in {f["model"] for f in full["forecasts"]}:
+            for g in pre:
+                latest[(m, g)] = e["edition_id"]
+    out = []
+    for (m, g), eid in latest.items():
+        out += [(eid, f) for f in eds[eid]["forecasts"] if f["model"] == m and f["game_id"] == g]
+    return out
+
+
+def prospective_scores() -> dict:
+    """Score the prospective record per model and market (D-008)."""
+    pg = pd.read_parquet(LAKE_DIR / "player_games.parquet").set_index(["game_id", "player_id"])
+    best = {(f["model"], f["game_id"], f["player_id"], f["market"]): (eid, f)
+            for eid, f in record_rows()}
     rows = []
     for (m, g, p, mk), (eid, f) in best.items():
         part = pg.participation.get((g, p)) if (g, p) in pg.index else None
