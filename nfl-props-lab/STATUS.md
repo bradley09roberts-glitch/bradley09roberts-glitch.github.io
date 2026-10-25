@@ -1,5 +1,15 @@
 # Status (Sunday 25 October 2026)
 
+## Latest (25 Oct 07:40-08:00 UTC check-in)
+
+nflverse updated injuries, rosters, depth charts and schedules between 06:01 and 07:06 GMT
+(Lamar Jackson Questionable -> Out; DeVonta Smith and Dontayvion Wicks Out and Saquon
+Barkley Questionable for Monday; several activations and reserve moves). A fourth Week 7
+edition was published at 07:43 UTC. It exposed a bug: a quarterback listed Out could still
+enter a simulated game as the replacement or for a cameo (Jackson showed P(plays) 16%). Fixed
+as v0.4.1 and validated (experiment 8) before a fifth edition. `npl update` now re-checks
+files older than 30 minutes (the 6-hour cache had hidden the 07:00 refresh).
+
 ## What works
 
 | Area | State |

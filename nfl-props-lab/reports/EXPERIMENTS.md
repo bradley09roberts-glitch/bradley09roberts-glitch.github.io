@@ -16,6 +16,7 @@ simulations and the SHA-256 of the ledger (ledgers of non-headline runs stay in
 | 4 | exp04-validation-v0.3-lowhistory-priors | band priors only below 6 games; depth-chart QB1 P(start) estimated on 2016-2021 | **Adopted as v0.3.** Better than v0.1 on 5 of 7 markets for J0; rushing flat. |
 | 5 | exp05-validation-v0.3-stacking | J0, J1, M and linear pools X25/X50/X75 of J0 and M | Pools beat every single model on all 7 markets. Frozen per-market weight on J0 (rest on M): pass att 0.5, completions 0.5, pass yds 0.5, rec yds 0.75, receptions 0 (pure M), rush att 0.25, rush yds 0.75 (commit ab6a347). |
 | 7 | exp07-validation-v0.4-injury-rates (run after the test, validation seasons only) | injury-report participation adjustment measured on 2016-2021 instead of guessed | **Adopted as v0.4** for live editions: P(plays) log loss for listed players 0.401 -> 0.385; conditional CRPS within +/-0.2%. Not evaluated on the test seasons. |
+| 8 | exp08-validation-v0.4.1-qb-availability (validation only) | QBs listed Out/Doubtful can no longer enter as replacement or cameo; replacement = most likely available QB | **Adopted as v0.4.1**: listed-player P(plays) log loss 0.385 -> 0.371; conditional CRPS within Monte Carlo noise. |
 | 6 | **exp06-TEST-frozen-v0.3** | single run of the frozen configuration on the untouched 2024-2025 seasons (X1, X, J1, J0, M, A, C) | see the test table below. Run once; nothing was changed afterwards. |
 
 ## Test result (2024-2025, 44 slates, 4,000 simulations per game, code ab6a347)

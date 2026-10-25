@@ -224,7 +224,9 @@ def build_parser() -> argparse.ArgumentParser:
 
     s = sub.add_parser("update", help="daily: ingest current season, audit, rebuild lake")
     s.add_argument("--seasons")
-    s.add_argument("--max-age-hours", type=float, default=6.0)
+    # short window: availability files (injuries, rosters, depth charts) change on the
+    # morning of games, and a 6-hour cache once hid nflverse's 07:00 UTC refresh
+    s.add_argument("--max-age-hours", type=float, default=0.5)
     s.set_defaults(func=cmd_update)
 
     s = sub.add_parser("settle", help="append settlement revisions; score the record")

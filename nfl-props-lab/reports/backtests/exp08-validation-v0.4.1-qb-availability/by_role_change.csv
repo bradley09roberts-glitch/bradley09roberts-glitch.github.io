@@ -1,0 +1,127 @@
+market,model,role_change,n,crps,bias,cov80
+pass_att,A,changed team,59,13.9756,9.708,0.203
+pass_att,A,no previous game,23,15.2936,15.608,0.261
+pass_att,A,same team,1332,6.2243,1.12,0.697
+pass_att,C,changed team,59,8.7378,0.194,0.898
+pass_att,C,no previous game,23,8.3004,0.581,0.957
+pass_att,C,same team,1332,6.1824,0.623,0.844
+pass_att,J0,changed team,59,8.4979,-4.168,0.831
+pass_att,J0,no previous game,23,10.7198,-6.188,0.783
+pass_att,J0,same team,1332,5.6499,-0.28,0.872
+pass_att,J1,changed team,59,7.7335,0.235,0.831
+pass_att,J1,no previous game,23,6.4089,0.007,0.957
+pass_att,J1,same team,1332,5.6643,-0.034,0.847
+pass_att,X,changed team,59,8.0532,-2.273,0.78
+pass_att,X,no previous game,23,8.7904,-4.207,0.652
+pass_att,X,same team,1332,5.3946,-0.132,0.848
+pass_att,X1,changed team,59,7.6185,-0.072,0.746
+pass_att,X1,no previous game,23,6.6124,-1.11,0.783
+pass_att,X1,same team,1332,5.274,-0.009,0.857
+pass_cmp,A,changed team,59,8.6749,6.722,0.254
+pass_cmp,A,no previous game,23,9.9177,10.934,0.261
+pass_cmp,A,same team,1332,4.1769,0.743,0.706
+pass_cmp,C,changed team,59,5.3958,0.703,0.932
+pass_cmp,C,no previous game,23,5.1067,0.938,0.957
+pass_cmp,C,same team,1332,4.2279,0.216,0.833
+pass_cmp,J0,changed team,59,5.0479,-1.906,0.831
+pass_cmp,J0,no previous game,23,6.6025,-3.23,0.826
+pass_cmp,J0,same team,1332,3.8699,-0.027,0.878
+pass_cmp,J1,changed team,59,4.6375,0.911,0.847
+pass_cmp,J1,no previous game,23,3.856,0.778,0.957
+pass_cmp,J1,same team,1332,3.9027,0.106,0.855
+pass_cmp,X,changed team,59,4.8226,-0.778,0.797
+pass_cmp,X,no previous game,23,5.4286,-2.153,0.739
+pass_cmp,X,same team,1332,3.7009,-0.123,0.843
+pass_cmp,X1,changed team,59,4.5693,0.63,0.814
+pass_cmp,X1,no previous game,23,3.9913,-0.149,0.87
+pass_cmp,X1,same team,1332,3.6346,-0.057,0.857
+pass_yds,A,changed team,59,87.6098,77.01,0.305
+pass_yds,A,no previous game,23,106.7408,129.966,0.348
+pass_yds,A,same team,1332,48.4175,7.824,0.702
+pass_yds,C,changed team,59,58.2558,13.135,0.898
+pass_yds,C,no previous game,23,51.5808,24.472,0.913
+pass_yds,C,same team,1332,49.5218,6.983,0.832
+pass_yds,J0,changed team,59,55.6038,-15.26,0.78
+pass_yds,J0,no previous game,23,66.7901,-21.252,0.739
+pass_yds,J0,same team,1332,45.7315,1.445,0.88
+pass_yds,J1,changed team,59,51.293,15.251,0.831
+pass_yds,J1,no previous game,23,42.9174,22.218,0.87
+pass_yds,J1,same team,1332,46.1332,2.668,0.859
+pass_yds,X,changed team,59,50.0681,0.101,0.746
+pass_yds,X,no previous game,23,53.8521,-9.024,0.609
+pass_yds,X,same team,1332,43.8903,1.457,0.808
+pass_yds,X1,changed team,59,47.6659,15.357,0.797
+pass_yds,X1,no previous game,23,41.5029,12.712,0.826
+pass_yds,X1,same team,1332,43.2538,2.069,0.814
+rec_yds,A,changed team,330,8.499,2.521,0.897
+rec_yds,A,no previous game,227,8.3463,1.697,0.868
+rec_yds,A,same team,12767,10.5603,-2.83,0.844
+rec_yds,C,changed team,330,8.9971,-1.08,0.873
+rec_yds,C,no previous game,227,6.5052,1.136,0.899
+rec_yds,C,same team,12767,10.6664,0.947,0.888
+rec_yds,J0,changed team,330,8.6305,7.518,0.909
+rec_yds,J0,no previous game,227,6.7811,1.604,0.894
+rec_yds,J0,same team,12767,10.1435,1.212,0.883
+rec_yds,J1,changed team,330,8.8888,8.389,0.909
+rec_yds,J1,no previous game,227,6.9648,2.377,0.894
+rec_yds,J1,same team,12767,10.1833,2.421,0.886
+rec_yds,X,changed team,330,8.4733,6.945,0.918
+rec_yds,X,no previous game,227,6.8982,1.266,0.89
+rec_yds,X,same team,12767,10.0983,1.011,0.883
+rec_yds,X1,changed team,330,8.6598,7.597,0.924
+rec_yds,X1,no previous game,227,7.037,1.847,0.894
+rec_yds,X1,same team,12767,10.1322,1.918,0.886
+receptions,A,changed team,330,0.7463,0.481,0.936
+receptions,A,no previous game,227,0.8277,0.656,0.947
+receptions,A,same team,12767,0.8094,-0.096,0.904
+receptions,C,changed team,330,0.8076,-0.129,0.894
+receptions,C,no previous game,227,0.6236,0.004,0.947
+receptions,C,same team,12767,0.8666,0.036,0.926
+receptions,J0,changed team,330,0.7942,0.675,0.909
+receptions,J0,no previous game,227,0.6538,0.054,0.921
+receptions,J0,same team,12767,0.8115,0.094,0.915
+receptions,J1,changed team,330,0.8177,0.757,0.924
+receptions,J1,no previous game,227,0.6754,0.118,0.93
+receptions,J1,same team,12767,0.8154,0.205,0.921
+receptions,X,changed team,330,0.6988,0.481,0.933
+receptions,X,no previous game,227,0.608,-0.134,0.903
+receptions,X,same team,12767,0.7768,0.011,0.911
+receptions,X1,changed team,330,0.6988,0.481,0.933
+receptions,X1,no previous game,227,0.608,-0.134,0.903
+receptions,X1,same team,12767,0.7768,0.011,0.911
+rush_att,A,changed team,234,1.2827,0.636,0.808
+rush_att,A,no previous game,89,1.99,0.247,0.461
+rush_att,A,same team,7635,1.4563,-0.527,0.86
+rush_att,C,changed team,234,1.3534,-0.087,0.889
+rush_att,C,no previous game,89,1.8382,-0.547,0.888
+rush_att,C,same team,7635,1.5746,-0.15,0.89
+rush_att,J0,changed team,234,1.3044,0.864,0.855
+rush_att,J0,no previous game,89,2.1001,0.684,0.742
+rush_att,J0,same team,7635,1.4086,0.13,0.913
+rush_att,J1,changed team,234,1.3811,1.266,0.821
+rush_att,J1,no previous game,89,2.1125,1.106,0.775
+rush_att,J1,same team,7635,1.396,0.3,0.916
+rush_att,X,changed team,234,1.274,0.808,0.833
+rush_att,X,no previous game,89,1.9519,0.176,0.697
+rush_att,X,same team,7635,1.3312,0.028,0.894
+rush_att,X1,changed team,234,1.2825,0.908,0.825
+rush_att,X1,no previous game,89,1.9473,0.282,0.685
+rush_att,X1,same team,7635,1.3233,0.071,0.896
+rush_yds,A,changed team,234,5.7367,2.862,0.944
+rush_yds,A,no previous game,89,8.2715,-0.185,0.854
+rush_yds,A,same team,7635,8.2274,-2.759,0.874
+rush_yds,C,changed team,234,5.3087,0.685,0.872
+rush_yds,C,no previous game,89,7.416,-0.898,0.876
+rush_yds,C,same team,7635,8.6722,-0.823,0.848
+rush_yds,J0,changed team,234,5.4069,4.838,0.842
+rush_yds,J0,no previous game,89,8.322,4.827,0.798
+rush_yds,J0,same team,7635,7.7883,0.548,0.864
+rush_yds,J1,changed team,234,5.9009,6.443,0.816
+rush_yds,J1,no previous game,89,8.5731,6.649,0.787
+rush_yds,J1,same team,7635,7.7486,1.278,0.869
+rush_yds,X,changed team,234,5.3888,4.715,0.893
+rush_yds,X,no previous game,89,8.0721,3.833,0.865
+rush_yds,X,same team,7635,7.679,0.442,0.879
+rush_yds,X1,changed team,234,5.7415,5.92,0.872
+rush_yds,X1,no previous game,89,8.2493,5.199,0.876
+rush_yds,X1,same team,7635,7.6426,0.989,0.883

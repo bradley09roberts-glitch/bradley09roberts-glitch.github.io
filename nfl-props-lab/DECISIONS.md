@@ -100,3 +100,10 @@ Experiment 7 (validation): replacing the guessed caps (Out 2%, Doubtful 25%, Que
 improves P(plays) for listed players (log loss 0.401 -> 0.385, Brier 0.132 -> 0.130) and
 leaves conditional distributions within +/-0.2% CRPS. Only J1/X1 change. Not re-run on the
 test seasons (D-013); judged prospectively from the next edition.
+
+## D-016 (25 Oct 2026) v0.4.1 adopted: unavailable quarterbacks cannot enter a game
+The 07:43 edition showed an Out quarterback with P(plays) 16% because the early-exit
+replacement and the QB cameo ignored the non-starter's availability. Experiment 8
+(validation): P(plays) log loss for listed players 0.385 -> 0.371, overall Brier 0.0765 ->
+0.0759; conditional CRPS changes are within Monte Carlo noise (the J0-based X, which the fix
+barely touches, moved by a similar amount). Earlier editions stay on file unchanged.
