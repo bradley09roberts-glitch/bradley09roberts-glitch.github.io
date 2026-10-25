@@ -1,0 +1,41 @@
+[project]
+name = "nfl-props-lab"
+version = "0.1.0"
+description = "NFL player-prop forecasting, chronological backtesting and price-honest evaluation"
+requires-python = ">=3.12,<3.14"
+dependencies = [
+    "pandas>=2.2",
+    "pyarrow>=18",
+    "numpy>=2.0",
+    "scipy>=1.14",
+    "scikit-learn>=1.6",
+    "lightgbm>=4.5",
+    "requests>=2.32",
+    "fastapi>=0.115",
+    "uvicorn>=0.30",
+    "tzdata>=2024.1",
+]
+
+[dependency-groups]
+dev = ["pytest>=8.3", "ruff>=0.8", "httpx>=0.27"]
+
+[project.scripts]
+npl = "npl.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/npl"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
