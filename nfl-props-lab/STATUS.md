@@ -18,6 +18,17 @@ rosters, depth charts and schedules byte-identical (same SHA-256 as the 07:42 re
 so the edition used current inputs. Before publishing, use `npl ingest --force` for those
 files.
 
+## Odds (26 Oct)
+
+Odds key configured (`.env`, never committed). UK bookmakers on The Odds API list no NFL
+player props for the Monday game, only match odds, spreads and totals (D-018). US prop
+prices (six books) were stored before kickoff as a research reference for comparing the
+model with a market; nothing about them is claimable as UK profit. Early finding from that
+comparison: the headline receptions forecast (X1 uses the ML model alone for receptions,
+weight from experiment 5) does not react to teammates ruled Out, while the game simulation
+does; for Philadelphia, with two receivers Out, J1 sits near the market and X1 well below
+it. A validation experiment is needed before any change (D-013).
+
 ## Team defences (25 Oct, on request)
 
 New Defences page (phone: More > Defences): every defence ranked 1-32 overall, against the
@@ -41,7 +52,7 @@ empty since X1 became the headline (it now shows the J1 simulation inside X1).
 | Prospective record | five genuine pre-kickoff editions for 2026 Week 7 (03:01 v0.1, 04:01 v0.3, 04:35 v0.4, 07:43 v0.4 with refreshed inputs, 08:00 v0.4.1 UTC; 13 games each), committed and pushed before the first kickoff (13:30 GMT); under D-008 the 08:00 edition counts |
 | Settlement | append-only revisions; record scoring by model and market once results are final |
 | Money | settlement, rule profiles, no-look-ahead quote eligibility, bankroll simulation and metrics, all tested on synthetic fixtures; **ROI unavailable** (no recorded prices) |
-| Odds adapter | The Odds API client, parser, UK/research classification, audited player linking: implemented, **not validated** (no key) |
+| Odds adapter | The Odds API client, parser, UK/research classification, audited player linking: validated live on 26 Oct (US props stored; UK region has none) |
 | App | FastAPI + phone-first web UI (Today, Props, Player, Game, Shortlist, Backtest lab, Defences, Saved record, Data & method), CSV/JSON exports, manual-line tool, exploratory "what if" scenarios (server only); static snapshot published as a private Artifact: https://claude.ai/artifact/JikfB26yYTb8Qf5qu5jHeN |
 | Tests | 72 automated tests (unit + integration on the real lake); `npl verify` passes (lint, tests, edition hashes, API routes); 28-row manual reconciliation (`docs/RECONCILIATION.md`) |
 | Follow-ups | check-ins scheduled in this session: 25 Oct 07:40 UTC (refresh inputs, new edition only if they changed), 26 Oct 11:00 UTC (settle Sunday games), 27 Oct 11:00 UTC (settle Monday game). No recurring schedule has been created. |
@@ -56,10 +67,10 @@ spot. No claim about beating bookmakers is possible without prices.
 
 ## Missing or blocked (needs you)
 
-1. **Odds key** (`ODDS_API_KEY` in `.env`): current odds are free (500 credits/month); a
-   1-credit `markets` call per event with `regions=uk` would show whether any UK book
-   offers NFL props through The Odds API. Historical prop archives need a paid plan (from
-   USD 30/month, archive from 3 May 2023). Nothing was purchased.
+1. **UK prop prices**: the free odds key works, but UK books list no NFL player props
+   through The Odds API (checked for one game, 26 Oct). Options: keep collecting US prices
+   as a research reference, or enter UK prices by hand in the app (manual lines). Historical
+   prop archives need a paid plan (from USD 30/month); nothing was purchased.
 2. **Game-day inactives** for a late edition: no permitted automated source (NFL.com terms).
 3. **A scheduler**: none installed. The suggested schedule is in README.md.
 4. **Repository**: this project sits on a branch of the public github.io repository. Raw

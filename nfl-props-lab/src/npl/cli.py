@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import logging
+import os
 import sys
 
 from . import config, db, rawstore
@@ -248,7 +249,24 @@ def build_parser() -> argparse.ArgumentParser:
     return p
 
 
+def load_dotenv(path=None) -> None:
+    """KEY=VALUE lines from the project's git-ignored .env; never overrides the real
+    environment and never prints values."""
+    path = path or config.PROJECT_ROOT / ".env"
+    try:
+        lines = path.read_text().splitlines()
+    except OSError:
+        return
+    for line in lines:
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        k, v = line.split("=", 1)
+        os.environ.setdefault(k.strip(), v.strip().strip('"').strip("'"))
+
+
 def main(argv: list[str] | None = None) -> int:
+    load_dotenv()
     a = build_parser().parse_args(argv)
     logging.basicConfig(level=logging.INFO if a.verbose else logging.WARNING,
                         format="%(asctime)s %(levelname)s %(message)s")

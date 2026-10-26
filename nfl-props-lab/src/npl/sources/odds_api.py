@@ -1,5 +1,5 @@
-"""The Odds API adapter (https://the-odds-api.com/, v4). Status: implemented, NOT validated
-against live responses (no API key is configured; see docs/DATA_AUDIT.md).
+"""The Odds API adapter (https://the-odds-api.com/, v4). Validated against live responses on
+26 Oct 2026 (events, event markets for regions uk and us, event odds for regions us).
 
 Design rules
 * The key is read from the environment (ODDS_API_KEY) server-side only; it is redacted
@@ -81,17 +81,18 @@ class Call:
 
 
 def _get(con: sqlite3.Connection, dataset: str, part: str, path: str, params: dict,
-         session=None) -> tuple[dict | list, dict]:
+         session=None) -> tuple[dict | list, dict, int]:
+    """Returns (parsed JSON, credit headers, raw_files id of the stored response)."""
     key = api_key()
     url = f"{BASE}{path}"
     r = http_get(url, params={**params, "apiKey": key}, session=session, timeout=60)
     credits = {h: r.headers.get(h) for h in ("x-requests-remaining", "x-requests-used",
                                              "x-requests-last")}
     shown = f"{url}?" + "&".join(f"{k}={v}" for k, v in sorted(params.items()))
-    rawstore.store(con, source=SOURCE, dataset=dataset, part=part, url=shown,
-                   content=r.content, filename=f"{dataset}.json",
-                   content_type=r.headers.get("Content-Type"))
-    return r.json(), credits
+    stored = rawstore.store(con, source=SOURCE, dataset=dataset, part=part, url=shown,
+                            content=r.content, filename=f"{dataset}.json",
+                            content_type=r.headers.get("Content-Type"))
+    return r.json(), credits, stored.id
 
 
 def list_events(con, session=None):
@@ -195,12 +196,16 @@ def link_event(quotes: pd.DataFrame, games: pd.DataFrame, teams: pd.DataFrame) -
     q["home"] = q["home_team"].map(names)
     q["away"] = q["away_team"].map(names)
     q["commence"] = pd.to_datetime(q["commence_time"], utc=True)
+    q["_qi"] = range(len(q))
     g = games[["game_id", "home_team", "away_team", "kickoff_utc"]]
     m = q.merge(g, left_on=["home", "away"], right_on=["home_team", "away_team"], how="left",
                 suffixes=("", "_g"))
-    ok = (m["kickoff_utc"] - m["commence"]).abs() <= pd.Timedelta(hours=6)
-    m.loc[~ok, "game_id"] = None
-    return m.drop(columns=["home_team_g", "away_team_g"], errors="ignore")
+    # the same fixture recurs every season: keep, per quote, only the game within 6 hours
+    m["_ok"] = (m["kickoff_utc"] - m["commence"]).abs() <= pd.Timedelta(hours=6)
+    m = m.sort_values(["_qi", "_ok"], ascending=[True, False]).drop_duplicates("_qi")
+    m.loc[~m["_ok"], ["game_id", "kickoff_utc"]] = None
+    return m.drop(columns=["home_team_g", "away_team_g", "_qi", "_ok"],
+                  errors="ignore").reset_index(drop=True)
 
 
 def store_quotes(con: sqlite3.Connection, rows: pd.DataFrame, raw_file_id: int | None) -> int:
@@ -220,6 +225,13 @@ def store_quotes(con: sqlite3.Connection, rows: pd.DataFrame, raw_file_id: int |
 
 def quotes_frame(con: sqlite3.Connection, include_synthetic: bool = False) -> pd.DataFrame:
     q = pd.read_sql_query("SELECT * FROM quotes", con)
+    links = pd.read_sql_query("SELECT quote_id, game_id, player_id FROM quote_links WHERE id IN "
+                              "(SELECT MAX(id) FROM quote_links GROUP BY quote_id)", con)
+    if len(links):
+        lk = links.set_index("quote_id")
+        has = q.id.isin(lk.index)
+        q.loc[has, "game_id"] = q.loc[has, "id"].map(lk.game_id)
+        q.loc[has, "player_id"] = q.loc[has, "id"].map(lk.player_id)
     if not include_synthetic:
         q = q[q.availability != "synthetic_test"]
     return q
@@ -241,28 +253,111 @@ def status(con: sqlite3.Connection) -> dict:
             "blocker": None if keyed else "No ODDS_API_KEY configured; ROI unavailable."}
 
 
+def link_quotes(rows: list[dict], lake_dir=None) -> pd.DataFrame:
+    """Link parsed quotes to a game (team names + kickoff within 6 hours) and players
+    (unique normalised name within both teams' weekly rosters). Unlinked quotes keep NULL
+    ids and can never be used for a bet."""
+    from ..config import LAKE_DIR
+
+    lake_dir = lake_dir or LAKE_DIR
+    q = pd.DataFrame(rows)
+    if q.empty:
+        return q
+    games = pd.read_parquet(lake_dir / "games.parquet")
+    games["kickoff_utc"] = pd.to_datetime(games.kickoff_utc, utc=True)
+    q = link_event(q, games, pd.read_parquet(lake_dir / "teams.parquet"))
+    mem = pd.read_parquet(lake_dir / "membership.parquet",
+                          columns=["season", "week", "team", "player_id", "full_name"])
+    parts = []
+    for gid, x in q.groupby(q.game_id.fillna("")):
+        g = games[games.game_id == gid]
+        if g.empty:
+            parts.append(x.assign(player_id=None, link_method="UNLINKED (no matching game)"))
+            continue
+        g = g.iloc[0]
+        roster = mem[(mem.season == g.season) & (mem.week == g.week) &
+                     mem.team.isin([g.home_team, g.away_team])].rename(
+            columns={"full_name": "name"})[["player_id", "name", "team"]]
+        parts.append(link_players(x, roster))
+    return pd.concat(parts, ignore_index=True)
+
+
+def _link_summary(q: pd.DataFrame) -> dict:
+    return {"quotes": len(q), "linked_players": int(q.player_id.notna().sum()),
+            "unlinked_names": sorted(q.loc[q.player_id.isna(), "player_name_raw"].unique())[:20],
+            "game_ids": sorted(q.game_id.dropna().unique())}
+
+
+def link_and_store(con: sqlite3.Connection, rows: list[dict], raw_file_id: int | None,
+                   lake_dir=None) -> dict:
+    q = link_quotes(rows, lake_dir)
+    if q.empty:
+        return {"quotes": 0, "stored": 0, "linked_players": 0}
+    return {**_link_summary(q), "stored": store_quotes(con, q, raw_file_id)}
+
+
+def relink_raw(con: sqlite3.Connection, raw_file_id: int, lake_dir=None) -> dict:
+    """Re-link the quotes of one stored event-odds response (e.g. after a linking fix).
+    Quote rows are append-only and stay as stored; corrected game/player ids are appended
+    to quote_links and supersede them in `quotes_frame`."""
+    row = con.execute("SELECT path, url, retrieved_at FROM raw_files WHERE id = ? AND "
+                      "source = ? AND dataset = 'event_odds'", (raw_file_id, SOURCE)).fetchone()
+    if row is None:
+        raise ValueError(f"raw file {raw_file_id} is not a stored event-odds response")
+    path, url, retrieved_at = row
+    region = re.search(r"regions=([a-z,]+)", url).group(1)
+    payload = json.loads((rawstore.DATA_HOME / path).read_text())
+    q = link_quotes(parse_event_odds(payload, observed_at=retrieved_at, request_region=region),
+                    lake_dir)
+    have = quotes_frame(con, include_synthetic=True)
+    have = have[have.raw_file_id == raw_file_id]
+    key = ["bookmaker", "provider_event_id", "player_name_raw", "market", "line",
+           "selection", "quote_time", "decimal_price"]
+    norm = {"line": -1e9, "quote_time": ""}
+    m = have.fillna(norm).merge(q.fillna(norm)[key + ["game_id", "player_id", "link_method"]],
+                                on=key, suffixes=("_old", ""))
+    changed = m[(m.game_id.fillna("") != m.game_id_old.fillna("")) |
+                (m.player_id.fillna("") != m.player_id_old.fillna(""))]
+    now = iso(utcnow())
+    with db.tx(con):
+        for r in changed.itertuples():
+            con.execute("INSERT INTO quote_links(quote_id, game_id, player_id, link_method, "
+                        "linked_at) VALUES (?, ?, ?, ?, ?)",
+                        (int(r.id), None if pd.isna(r.game_id) else r.game_id,
+                         None if pd.isna(r.player_id) else r.player_id, r.link_method, now))
+    return {**_link_summary(q), "matched_rows": len(m), "links_added": len(changed)}
+
+
 def snapshot_upcoming(con, *, regions: str = "uk", hours_ahead: float = 48, session=None,
-                      max_events: int = 20) -> dict:
+                      max_events: int = 20, markets: list[str] | None = None,
+                      event_ids: list[str] | None = None) -> dict:
     """Collect current prop quotes for events kicking off within `hours_ahead`.
-    One `markets` call (1 credit) per event first, then odds only for markets offered."""
-    events, credits = list_events(con, session)
+    One `markets` call (1 credit) per event first, then odds only for the wanted markets
+    that some bookmaker offers (cost = markets returned x regions). Core markets only by
+    default (alternate lines cost extra credits)."""
+    markets = markets or CORE_PROVIDER_MARKETS
+    events, credits, _ = list_events(con, session)
     now = utcnow()
     done = []
     for e in events[:max_events]:
+        if event_ids and e["id"] not in event_ids:
+            continue
         ko = parse_iso(e["commence_time"])
         if not (now < ko <= now + pd.Timedelta(hours=hours_ahead)):
             continue
-        mk, _ = event_markets(con, e["id"], regions, session)
+        mk, credits, _ = event_markets(con, e["id"], regions, session)
         offered = {m["key"] for b in mk.get("bookmakers", []) for m in b.get("markets", [])}
-        want = [m for m in MARKET_MAP if m in offered]
+        want = [m for m in markets if m in offered]
+        label = f"{e['away_team']} @ {e['home_team']}"
         if not want:
-            done.append({"event": e["id"], "markets": 0})
+            done.append({"event": label, "player_prop_markets_offered": 0})
             continue
-        payload, credits = event_odds(con, e["id"], want, regions, session=session)
+        payload, credits, raw_id = event_odds(con, e["id"], want, regions, session=session)
         rows = parse_event_odds(payload, observed_at=iso(utcnow()), request_region=regions)
-        done.append({"event": e["id"], "markets": len(want), "quotes": len(rows)})
-    return {"events": done, "credits": credits}
+        done.append({"event": label, "markets": want,
+                     **link_and_store(con, rows, raw_id)})
+    return {"regions": regions, "events": done, "credits": credits}
 
 
 __all__ = ["parse_event_odds", "link_players", "link_event", "store_quotes", "status",
-           "snapshot_upcoming", "MissingKey", "json"]
+           "snapshot_upcoming", "link_and_store", "relink_raw", "MissingKey", "json"]

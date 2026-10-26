@@ -131,6 +131,17 @@ CREATE TABLE IF NOT EXISTS settlements (
     UNIQUE (game_id, player_id, market, revision)
 );
 
+-- a later, corrected game/player link for a stored quote (the quote row never changes;
+-- the newest link per quote supersedes the row's own ids)
+CREATE TABLE IF NOT EXISTS quote_links (
+    id INTEGER PRIMARY KEY,
+    quote_id INTEGER NOT NULL REFERENCES quotes(id),
+    game_id TEXT,
+    player_id TEXT,
+    link_method TEXT NOT NULL,
+    linked_at TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS paper_bets (
     id INTEGER PRIMARY KEY,
     strategy_id TEXT NOT NULL,
@@ -145,7 +156,7 @@ CREATE TABLE IF NOT EXISTS paper_bets (
 """
 
 APPEND_ONLY = ("raw_files", "raw_observations", "editions", "edition_games", "quotes",
-               "settlements", "paper_bets", "player_id_map")
+               "quote_links", "settlements", "paper_bets", "player_id_map")
 
 
 def _triggers() -> str:

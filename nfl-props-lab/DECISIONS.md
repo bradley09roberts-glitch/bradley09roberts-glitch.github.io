@@ -118,3 +118,15 @@ The planned experiment adding position-specific defence factors to the joint sim
 and RBs and small for WRs, so the expected gain is below the Monte Carlo noise of a
 validation backtest. It can be revisited with a multi-season prior for defences.
 
+## D-018 (26 Oct 2026) Odds key configured; UK region has no NFL player props
+The user supplied a free The Odds API key (stored only in the git-ignored `.env`). For the
+Monday game (DAL at PHI) the `uk` region listed 20 bookmakers but only game markets
+(match odds, spreads, totals): no player props. The `us` region listed core player props at
+six books (450 quotes stored at 14:01 UTC, about 6.6% average margin). US quotes are
+`research_reference`: they are used to compare the model with a market, never to claim
+UK-realisable profit. Raw odds stay in `data/` (git-ignored; the provider's terms forbid
+redistribution). The first live run exposed a linking bug (the fixture recurs every season,
+so quotes matched every DAL-PHI game and lost their links); fixed and tested, and the
+corrected links were appended to the new append-only `quote_links` table rather than
+changing stored quotes. Credits used so far: 9 of 500 this month.
+
