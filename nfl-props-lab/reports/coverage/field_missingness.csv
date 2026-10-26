@@ -13,7 +13,7 @@ depth_charts,2022,depth_team,True,37780,37780,0.0
 depth_charts,2023,depth_team,True,37327,37327,0.0
 depth_charts,2024,depth_team,True,37312,37312,0.0
 depth_charts,2025,depth_team,False,0,554215,100.0
-depth_charts,2026,depth_team,False,0,693886,100.0
+depth_charts,2026,depth_team,False,0,700888,100.0
 depth_charts,2012,dt,False,0,37312,100.0
 depth_charts,2013,dt,False,0,37066,100.0
 depth_charts,2014,dt,False,0,32542,100.0
@@ -28,7 +28,7 @@ depth_charts,2022,dt,False,0,37780,100.0
 depth_charts,2023,dt,False,0,37327,100.0
 depth_charts,2024,dt,False,0,37312,100.0
 depth_charts,2025,dt,True,554215,554215,0.0
-depth_charts,2026,dt,True,693886,693886,0.0
+depth_charts,2026,dt,True,700888,700888,0.0
 depth_charts,2012,gsis_id,True,37312,37312,0.0
 depth_charts,2013,gsis_id,True,37066,37066,0.0
 depth_charts,2014,gsis_id,True,32542,32542,0.0
@@ -43,7 +43,7 @@ depth_charts,2022,gsis_id,True,37780,37780,0.0
 depth_charts,2023,gsis_id,True,37327,37327,0.0
 depth_charts,2024,gsis_id,True,37312,37312,0.0
 depth_charts,2025,gsis_id,True,548638,554215,1.01
-depth_charts,2026,gsis_id,True,669538,693886,3.51
+depth_charts,2026,gsis_id,True,676522,700888,3.48
 depth_charts,2012,pos_abb,False,0,37312,100.0
 depth_charts,2013,pos_abb,False,0,37066,100.0
 depth_charts,2014,pos_abb,False,0,32542,100.0
@@ -58,7 +58,7 @@ depth_charts,2022,pos_abb,False,0,37780,100.0
 depth_charts,2023,pos_abb,False,0,37327,100.0
 depth_charts,2024,pos_abb,False,0,37312,100.0
 depth_charts,2025,pos_abb,True,554215,554215,0.0
-depth_charts,2026,pos_abb,True,693886,693886,0.0
+depth_charts,2026,pos_abb,True,700888,700888,0.0
 depth_charts,2012,week,True,37083,37312,0.61
 depth_charts,2013,week,True,36822,37066,0.66
 depth_charts,2014,week,True,32542,32542,0.0
@@ -73,7 +73,7 @@ depth_charts,2022,week,True,37548,37780,0.61
 depth_charts,2023,week,True,37113,37327,0.57
 depth_charts,2024,week,True,37078,37312,0.63
 depth_charts,2025,week,False,0,554215,100.0
-depth_charts,2026,week,False,0,693886,100.0
+depth_charts,2026,week,False,0,700888,100.0
 ftn_charting,2022,is_drop,True,41643,41643,0.0
 ftn_charting,2023,is_drop,True,48225,48225,0.0
 ftn_charting,2024,is_drop,True,48031,48031,0.0
@@ -118,7 +118,7 @@ injuries,2022,gsis_id,True,5682,5682,0.0
 injuries,2023,gsis_id,True,5599,5599,0.0
 injuries,2024,gsis_id,True,6215,6215,0.0
 injuries,2025,gsis_id,True,6068,6068,0.0
-injuries,2026,gsis_id,True,2138,2138,0.0
+injuries,2026,gsis_id,True,2139,2139,0.0
 injuries,2012,practice_status,True,5533,5533,0.0
 injuries,2013,practice_status,True,5070,5070,0.0
 injuries,2014,practice_status,True,5078,5078,0.0
@@ -133,7 +133,7 @@ injuries,2022,practice_status,True,5682,5682,0.0
 injuries,2023,practice_status,True,5599,5599,0.0
 injuries,2024,practice_status,True,6215,6215,0.0
 injuries,2025,practice_status,True,6023,6068,0.74
-injuries,2026,practice_status,True,2135,2138,0.14
+injuries,2026,practice_status,True,2135,2139,0.19
 injuries,2012,report_primary_injury,True,5340,5533,3.49
 injuries,2013,report_primary_injury,True,4934,5070,2.68
 injuries,2014,report_primary_injury,True,4855,5078,4.39
@@ -148,7 +148,7 @@ injuries,2022,report_primary_injury,True,2745,5682,51.69
 injuries,2023,report_primary_injury,True,2721,5599,51.4
 injuries,2024,report_primary_injury,True,2823,6215,54.58
 injuries,2025,report_primary_injury,True,2790,6068,54.02
-injuries,2026,report_primary_injury,True,921,2138,56.92
+injuries,2026,report_primary_injury,True,936,2139,56.24
 injuries,2012,report_status,True,5340,5533,3.49
 injuries,2013,report_status,True,4934,5070,2.68
 injuries,2014,report_status,True,4855,5078,4.39
@@ -163,7 +163,7 @@ injuries,2022,report_status,True,2745,5682,51.69
 injuries,2023,report_status,True,2721,5599,51.4
 injuries,2024,report_status,True,2829,6215,54.48
 injuries,2025,report_status,True,2785,6068,54.1
-injuries,2026,report_status,True,920,2138,56.97
+injuries,2026,report_status,True,935,2139,56.29
 ngs_passing,2016,avg_time_to_throw,True,573,573,0.0
 ngs_passing,2017,avg_time_to_throw,True,575,575,0.0
 ngs_passing,2018,avg_time_to_throw,True,578,578,0.0
@@ -174,7 +174,7 @@ ngs_passing,2022,avg_time_to_throw,True,603,603,0.0
 ngs_passing,2023,avg_time_to_throw,True,620,620,0.0
 ngs_passing,2024,avg_time_to_throw,True,614,614,0.0
 ngs_passing,2025,avg_time_to_throw,True,605,605,0.0
-ngs_passing,2026,avg_time_to_throw,True,228,228,0.0
+ngs_passing,2026,avg_time_to_throw,True,251,251,0.0
 ngs_passing,2016,completion_percentage_above_expectation,True,573,573,0.0
 ngs_passing,2017,completion_percentage_above_expectation,True,574,575,0.17
 ngs_passing,2018,completion_percentage_above_expectation,True,578,578,0.0
@@ -185,7 +185,7 @@ ngs_passing,2022,completion_percentage_above_expectation,True,603,603,0.0
 ngs_passing,2023,completion_percentage_above_expectation,True,620,620,0.0
 ngs_passing,2024,completion_percentage_above_expectation,True,614,614,0.0
 ngs_passing,2025,completion_percentage_above_expectation,True,605,605,0.0
-ngs_passing,2026,completion_percentage_above_expectation,True,228,228,0.0
+ngs_passing,2026,completion_percentage_above_expectation,True,251,251,0.0
 ngs_passing,2016,player_gsis_id,True,573,573,0.0
 ngs_passing,2017,player_gsis_id,True,575,575,0.0
 ngs_passing,2018,player_gsis_id,True,578,578,0.0
@@ -196,7 +196,7 @@ ngs_passing,2022,player_gsis_id,True,603,603,0.0
 ngs_passing,2023,player_gsis_id,True,620,620,0.0
 ngs_passing,2024,player_gsis_id,True,614,614,0.0
 ngs_passing,2025,player_gsis_id,True,605,605,0.0
-ngs_passing,2026,player_gsis_id,True,228,228,0.0
+ngs_passing,2026,player_gsis_id,True,251,251,0.0
 ngs_receiving,2016,avg_cushion,True,1601,1601,0.0
 ngs_receiving,2017,avg_cushion,True,1421,1422,0.07
 ngs_receiving,2018,avg_cushion,True,1419,1419,0.0
@@ -207,7 +207,7 @@ ngs_receiving,2022,avg_cushion,True,1466,1466,0.0
 ngs_receiving,2023,avg_cushion,True,1473,1473,0.0
 ngs_receiving,2024,avg_cushion,True,1435,1435,0.0
 ngs_receiving,2025,avg_cushion,True,1402,1402,0.0
-ngs_receiving,2026,avg_cushion,True,556,556,0.0
+ngs_receiving,2026,avg_cushion,True,620,620,0.0
 ngs_receiving,2016,avg_separation,True,1601,1601,0.0
 ngs_receiving,2017,avg_separation,True,1422,1422,0.0
 ngs_receiving,2018,avg_separation,True,1419,1419,0.0
@@ -218,7 +218,7 @@ ngs_receiving,2022,avg_separation,True,1466,1466,0.0
 ngs_receiving,2023,avg_separation,True,1473,1473,0.0
 ngs_receiving,2024,avg_separation,True,1435,1435,0.0
 ngs_receiving,2025,avg_separation,True,1402,1402,0.0
-ngs_receiving,2026,avg_separation,True,556,556,0.0
+ngs_receiving,2026,avg_separation,True,620,620,0.0
 ngs_receiving,2016,avg_yac_above_expectation,True,1596,1601,0.31
 ngs_receiving,2017,avg_yac_above_expectation,True,1414,1422,0.56
 ngs_receiving,2018,avg_yac_above_expectation,True,1406,1419,0.92
@@ -229,7 +229,7 @@ ngs_receiving,2022,avg_yac_above_expectation,True,1463,1466,0.2
 ngs_receiving,2023,avg_yac_above_expectation,True,1466,1473,0.48
 ngs_receiving,2024,avg_yac_above_expectation,True,1431,1435,0.28
 ngs_receiving,2025,avg_yac_above_expectation,True,1399,1402,0.21
-ngs_receiving,2026,avg_yac_above_expectation,True,556,556,0.0
+ngs_receiving,2026,avg_yac_above_expectation,True,620,620,0.0
 ngs_receiving,2016,player_gsis_id,True,1601,1601,0.0
 ngs_receiving,2017,player_gsis_id,True,1422,1422,0.0
 ngs_receiving,2018,player_gsis_id,True,1419,1419,0.0
@@ -240,7 +240,7 @@ ngs_receiving,2022,player_gsis_id,True,1466,1466,0.0
 ngs_receiving,2023,player_gsis_id,True,1473,1473,0.0
 ngs_receiving,2024,player_gsis_id,True,1435,1435,0.0
 ngs_receiving,2025,player_gsis_id,True,1402,1402,0.0
-ngs_receiving,2026,player_gsis_id,True,556,556,0.0
+ngs_receiving,2026,player_gsis_id,True,620,620,0.0
 ngs_rushing,2016,efficiency,True,579,579,0.0
 ngs_rushing,2017,efficiency,True,595,595,0.0
 ngs_rushing,2018,efficiency,True,594,594,0.0
@@ -251,7 +251,7 @@ ngs_rushing,2022,efficiency,True,617,617,0.0
 ngs_rushing,2023,efficiency,True,623,623,0.0
 ngs_rushing,2024,efficiency,True,601,601,0.0
 ngs_rushing,2025,efficiency,True,648,648,0.0
-ngs_rushing,2026,efficiency,True,231,231,0.0
+ngs_rushing,2026,efficiency,True,255,255,0.0
 ngs_rushing,2016,player_gsis_id,True,579,579,0.0
 ngs_rushing,2017,player_gsis_id,True,595,595,0.0
 ngs_rushing,2018,player_gsis_id,True,594,594,0.0
@@ -262,7 +262,7 @@ ngs_rushing,2022,player_gsis_id,True,617,617,0.0
 ngs_rushing,2023,player_gsis_id,True,623,623,0.0
 ngs_rushing,2024,player_gsis_id,True,601,601,0.0
 ngs_rushing,2025,player_gsis_id,True,648,648,0.0
-ngs_rushing,2026,player_gsis_id,True,231,231,0.0
+ngs_rushing,2026,player_gsis_id,True,255,255,0.0
 ngs_rushing,2016,rush_yards_over_expected,True,0,579,100.0
 ngs_rushing,2017,rush_yards_over_expected,True,0,595,100.0
 ngs_rushing,2018,rush_yards_over_expected,True,594,594,0.0
@@ -273,7 +273,7 @@ ngs_rushing,2022,rush_yards_over_expected,True,617,617,0.0
 ngs_rushing,2023,rush_yards_over_expected,True,623,623,0.0
 ngs_rushing,2024,rush_yards_over_expected,True,601,601,0.0
 ngs_rushing,2025,rush_yards_over_expected,True,648,648,0.0
-ngs_rushing,2026,rush_yards_over_expected,True,231,231,0.0
+ngs_rushing,2026,rush_yards_over_expected,True,255,255,0.0
 participation,2016,defense_players,True,48434,48434,0.0
 participation,2017,defense_players,True,47998,47998,0.0
 participation,2018,defense_players,True,47875,47875,0.0
@@ -348,7 +348,7 @@ pbp,2022,air_yards,True,18998,49434,61.57
 pbp,2023,air_yards,True,19250,49665,61.24
 pbp,2024,air_yards,True,18580,49492,62.46
 pbp,2025,air_yards,True,18369,48771,62.34
-pbp,2026,air_yards,True,6326,16551,61.78
+pbp,2026,air_yards,True,7083,18561,61.84
 pbp,2012,passer_player_id,True,19827,47834,58.55
 pbp,2013,passer_player_id,True,20257,48158,57.94
 pbp,2014,passer_player_id,True,19973,47629,58.07
@@ -363,7 +363,7 @@ pbp,2022,passer_player_id,True,20458,49434,58.62
 pbp,2023,passer_player_id,True,20797,49665,58.13
 pbp,2024,passer_player_id,True,20082,49492,59.42
 pbp,2025,passer_player_id,True,19819,48771,59.36
-pbp,2026,passer_player_id,True,6797,16551,58.93
+pbp,2026,passer_player_id,True,7602,18561,59.04
 pbp,2012,play_type,True,46419,47834,2.96
 pbp,2013,play_type,True,46744,48158,2.94
 pbp,2014,play_type,True,46221,47629,2.96
@@ -378,7 +378,7 @@ pbp,2022,play_type,True,47985,49434,2.93
 pbp,2023,play_type,True,48213,49665,2.92
 pbp,2024,play_type,True,48046,49492,2.92
 pbp,2025,play_type,True,47326,48771,2.96
-pbp,2026,play_type,True,16070,16551,2.91
+pbp,2026,play_type,True,18019,18561,2.92
 pbp,2012,posteam,True,45413,47834,5.06
 pbp,2013,posteam,True,45714,48158,5.07
 pbp,2014,posteam,True,45267,47629,4.96
@@ -393,7 +393,7 @@ pbp,2022,posteam,True,46711,49434,5.51
 pbp,2023,posteam,True,47027,49665,5.31
 pbp,2024,posteam,True,46779,49492,5.48
 pbp,2025,posteam,True,46042,48771,5.6
-pbp,2026,posteam,True,15646,16551,5.47
+pbp,2026,posteam,True,17547,18561,5.46
 pbp,2012,qb_kneel,True,47834,47834,0.0
 pbp,2013,qb_kneel,True,48158,48158,0.0
 pbp,2014,qb_kneel,True,47629,47629,0.0
@@ -408,7 +408,7 @@ pbp,2022,qb_kneel,True,49434,49434,0.0
 pbp,2023,qb_kneel,True,49665,49665,0.0
 pbp,2024,qb_kneel,True,49492,49492,0.0
 pbp,2025,qb_kneel,True,48771,48771,0.0
-pbp,2026,qb_kneel,True,16551,16551,0.0
+pbp,2026,qb_kneel,True,18561,18561,0.0
 pbp,2012,qb_scramble,True,47834,47834,0.0
 pbp,2013,qb_scramble,True,48158,48158,0.0
 pbp,2014,qb_scramble,True,47629,47629,0.0
@@ -423,7 +423,7 @@ pbp,2022,qb_scramble,True,49434,49434,0.0
 pbp,2023,qb_scramble,True,49665,49665,0.0
 pbp,2024,qb_scramble,True,49492,49492,0.0
 pbp,2025,qb_scramble,True,48771,48771,0.0
-pbp,2026,qb_scramble,True,16551,16551,0.0
+pbp,2026,qb_scramble,True,18561,18561,0.0
 pbp,2012,receiver_player_id,True,18374,47834,61.59
 pbp,2013,receiver_player_id,True,18608,48158,61.36
 pbp,2014,receiver_player_id,True,18446,47629,61.27
@@ -438,7 +438,7 @@ pbp,2022,receiver_player_id,True,18285,49434,63.01
 pbp,2023,receiver_player_id,True,18450,49665,62.85
 pbp,2024,receiver_player_id,True,17848,49492,63.94
 pbp,2025,receiver_player_id,True,17582,48771,63.95
-pbp,2026,receiver_player_id,True,6052,16551,63.43
+pbp,2026,receiver_player_id,True,6783,18561,63.46
 pbp,2012,rusher_player_id,True,14592,47834,69.49
 pbp,2013,rusher_player_id,True,14508,48158,69.87
 pbp,2014,rusher_player_id,True,14272,47629,70.04
@@ -453,7 +453,7 @@ pbp,2022,rusher_player_id,True,15479,49434,68.69
 pbp,2023,rusher_player_id,True,15332,49665,69.13
 pbp,2024,rusher_player_id,True,15481,49492,68.72
 pbp,2025,rusher_player_id,True,15347,48771,68.53
-pbp,2026,rusher_player_id,True,4982,16551,69.9
+pbp,2026,rusher_player_id,True,5651,18561,69.55
 pbp,2012,sack,True,46378,47834,3.04
 pbp,2013,sack,True,46700,48158,3.03
 pbp,2014,sack,True,46150,47629,3.11
@@ -468,7 +468,7 @@ pbp,2022,sack,True,47941,49434,3.02
 pbp,2023,sack,True,48177,49665,3.0
 pbp,2024,sack,True,47975,49492,3.07
 pbp,2025,sack,True,47260,48771,3.1
-pbp,2026,sack,True,16054,16551,3.0
+pbp,2026,sack,True,18001,18561,3.02
 pbp,2012,spread_line,True,47834,47834,0.0
 pbp,2013,spread_line,True,48158,48158,0.0
 pbp,2014,spread_line,True,47629,47629,0.0
@@ -483,7 +483,7 @@ pbp,2022,spread_line,True,49434,49434,0.0
 pbp,2023,spread_line,True,49665,49665,0.0
 pbp,2024,spread_line,True,49492,49492,0.0
 pbp,2025,spread_line,True,48771,48771,0.0
-pbp,2026,spread_line,True,16551,16551,0.0
+pbp,2026,spread_line,True,18561,18561,0.0
 pbp,2012,temp,True,33990,47834,28.94
 pbp,2013,temp,True,35032,48158,27.26
 pbp,2014,temp,True,35757,47629,24.93
@@ -498,7 +498,7 @@ pbp,2022,temp,True,18538,49434,62.5
 pbp,2023,temp,True,27354,49665,44.92
 pbp,2024,temp,True,31477,49492,36.4
 pbp,2025,temp,True,32321,48771,33.73
-pbp,2026,temp,True,7816,16551,52.78
+pbp,2026,temp,True,7816,18561,57.89
 pbp,2012,total_line,True,47834,47834,0.0
 pbp,2013,total_line,True,48158,48158,0.0
 pbp,2014,total_line,True,47629,47629,0.0
@@ -513,7 +513,7 @@ pbp,2022,total_line,True,49434,49434,0.0
 pbp,2023,total_line,True,49665,49665,0.0
 pbp,2024,total_line,True,49492,49492,0.0
 pbp,2025,total_line,True,48771,48771,0.0
-pbp,2026,total_line,True,16551,16551,0.0
+pbp,2026,total_line,True,18561,18561,0.0
 pbp,2012,vegas_wp,True,47559,47834,0.57
 pbp,2013,vegas_wp,True,47882,48158,0.57
 pbp,2014,vegas_wp,True,47357,47629,0.57
@@ -528,7 +528,7 @@ pbp,2022,vegas_wp,True,49150,49434,0.57
 pbp,2023,vegas_wp,True,49380,49665,0.57
 pbp,2024,vegas_wp,True,49207,49492,0.58
 pbp,2025,vegas_wp,True,48486,48771,0.58
-pbp,2026,vegas_wp,True,16457,16551,0.57
+pbp,2026,vegas_wp,True,18455,18561,0.57
 pbp,2012,weather,True,47834,47834,0.0
 pbp,2013,weather,True,48158,48158,0.0
 pbp,2014,weather,True,47629,47629,0.0
@@ -543,7 +543,7 @@ pbp,2022,weather,True,47830,49434,3.24
 pbp,2023,weather,True,48214,49665,2.92
 pbp,2024,weather,True,46503,49492,6.04
 pbp,2025,weather,True,45263,48771,7.19
-pbp,2026,weather,True,15008,16551,9.32
+pbp,2026,weather,True,16830,18561,9.33
 pbp,2012,wind,True,33990,47834,28.94
 pbp,2013,wind,True,35032,48158,27.26
 pbp,2014,wind,True,35757,47629,24.93
@@ -558,7 +558,7 @@ pbp,2022,wind,True,18538,49434,62.5
 pbp,2023,wind,True,27354,49665,44.92
 pbp,2024,wind,True,31477,49492,36.4
 pbp,2025,wind,True,32321,48771,33.73
-pbp,2026,wind,True,7816,16551,52.78
+pbp,2026,wind,True,7816,18561,57.89
 pbp,2012,xpass,True,36345,47834,24.02
 pbp,2013,xpass,True,36517,48158,24.17
 pbp,2014,xpass,True,36302,47629,23.78
@@ -573,7 +573,7 @@ pbp,2022,xpass,True,37691,49434,23.75
 pbp,2023,xpass,True,37935,49665,23.62
 pbp,2024,xpass,True,37686,49492,23.85
 pbp,2025,xpass,True,37064,48771,24.0
-pbp,2026,xpass,True,12600,16551,23.87
+pbp,2026,xpass,True,14153,18561,23.75
 pbp,2012,yards_after_catch,True,11307,47834,76.36
 pbp,2013,yards_after_catch,True,11551,48158,76.01
 pbp,2014,yards_after_catch,True,11689,47629,75.46
@@ -588,7 +588,7 @@ pbp,2022,yards_after_catch,True,12199,49434,75.32
 pbp,2023,yards_after_catch,True,12427,49665,74.98
 pbp,2024,yards_after_catch,True,12136,49492,75.48
 pbp,2025,yards_after_catch,True,11748,48771,75.91
-pbp,2026,yards_after_catch,True,4047,16551,75.55
+pbp,2026,yards_after_catch,True,4543,18561,75.52
 pfr_adv_rec,2018,pfr_player_id,True,4292,4292,0.0
 pfr_adv_rec,2019,pfr_player_id,True,4269,4269,0.0
 pfr_adv_rec,2020,pfr_player_id,True,4428,4428,0.0
@@ -849,7 +849,7 @@ schedules,2022,away_score,True,284,284,0.0
 schedules,2023,away_score,True,285,285,0.0
 schedules,2024,away_score,True,285,285,0.0
 schedules,2025,away_score,True,285,285,0.0
-schedules,2026,away_score,True,94,272,65.44
+schedules,2026,away_score,True,106,272,61.03
 schedules,1999,gameday,True,259,259,0.0
 schedules,2000,gameday,True,259,259,0.0
 schedules,2001,gameday,True,259,259,0.0
@@ -933,7 +933,7 @@ schedules,2022,home_score,True,284,284,0.0
 schedules,2023,home_score,True,285,285,0.0
 schedules,2024,home_score,True,285,285,0.0
 schedules,2025,home_score,True,285,285,0.0
-schedules,2026,home_score,True,94,272,65.44
+schedules,2026,home_score,True,106,272,61.03
 schedules,1999,referee,True,259,259,0.0
 schedules,2000,referee,True,259,259,0.0
 schedules,2001,referee,True,259,259,0.0
@@ -1214,7 +1214,7 @@ stats_player_week,2022,attempts,True,18831,18831,0.0
 stats_player_week,2023,attempts,True,18643,18643,0.0
 stats_player_week,2024,attempts,True,18983,18983,0.0
 stats_player_week,2025,attempts,True,19422,19422,0.0
-stats_player_week,2026,attempts,True,6558,6558,0.0
+stats_player_week,2026,attempts,True,7377,7377,0.0
 stats_player_week,2012,carries,True,17419,17419,0.0
 stats_player_week,2013,carries,True,17248,17248,0.0
 stats_player_week,2014,carries,True,17622,17622,0.0
@@ -1229,7 +1229,7 @@ stats_player_week,2022,carries,True,18831,18831,0.0
 stats_player_week,2023,carries,True,18643,18643,0.0
 stats_player_week,2024,carries,True,18983,18983,0.0
 stats_player_week,2025,carries,True,19422,19422,0.0
-stats_player_week,2026,carries,True,6558,6558,0.0
+stats_player_week,2026,carries,True,7377,7377,0.0
 stats_player_week,2012,completions,True,17419,17419,0.0
 stats_player_week,2013,completions,True,17248,17248,0.0
 stats_player_week,2014,completions,True,17622,17622,0.0
@@ -1244,7 +1244,7 @@ stats_player_week,2022,completions,True,18831,18831,0.0
 stats_player_week,2023,completions,True,18643,18643,0.0
 stats_player_week,2024,completions,True,18983,18983,0.0
 stats_player_week,2025,completions,True,19422,19422,0.0
-stats_player_week,2026,completions,True,6558,6558,0.0
+stats_player_week,2026,completions,True,7377,7377,0.0
 stats_player_week,2012,game_id,True,17419,17419,0.0
 stats_player_week,2013,game_id,True,17248,17248,0.0
 stats_player_week,2014,game_id,True,17622,17622,0.0
@@ -1259,7 +1259,7 @@ stats_player_week,2022,game_id,True,18831,18831,0.0
 stats_player_week,2023,game_id,True,18643,18643,0.0
 stats_player_week,2024,game_id,True,18983,18983,0.0
 stats_player_week,2025,game_id,True,19422,19422,0.0
-stats_player_week,2026,game_id,True,6558,6558,0.0
+stats_player_week,2026,game_id,True,7377,7377,0.0
 stats_player_week,2012,passing_yards,True,17419,17419,0.0
 stats_player_week,2013,passing_yards,True,17248,17248,0.0
 stats_player_week,2014,passing_yards,True,17622,17622,0.0
@@ -1274,7 +1274,7 @@ stats_player_week,2022,passing_yards,True,18831,18831,0.0
 stats_player_week,2023,passing_yards,True,18643,18643,0.0
 stats_player_week,2024,passing_yards,True,18983,18983,0.0
 stats_player_week,2025,passing_yards,True,19422,19422,0.0
-stats_player_week,2026,passing_yards,True,6558,6558,0.0
+stats_player_week,2026,passing_yards,True,7377,7377,0.0
 stats_player_week,2012,player_id,True,17398,17419,0.12
 stats_player_week,2013,player_id,True,17227,17248,0.12
 stats_player_week,2014,player_id,True,17601,17622,0.12
@@ -1289,7 +1289,7 @@ stats_player_week,2022,player_id,True,18809,18831,0.12
 stats_player_week,2023,player_id,True,18621,18643,0.12
 stats_player_week,2024,player_id,True,18961,18983,0.12
 stats_player_week,2025,player_id,True,19400,19422,0.11
-stats_player_week,2026,player_id,True,6551,6558,0.11
+stats_player_week,2026,player_id,True,7370,7377,0.09
 stats_player_week,2012,receiving_air_yards,True,17419,17419,0.0
 stats_player_week,2013,receiving_air_yards,True,17248,17248,0.0
 stats_player_week,2014,receiving_air_yards,True,17622,17622,0.0
@@ -1304,7 +1304,7 @@ stats_player_week,2022,receiving_air_yards,True,18831,18831,0.0
 stats_player_week,2023,receiving_air_yards,True,18643,18643,0.0
 stats_player_week,2024,receiving_air_yards,True,18983,18983,0.0
 stats_player_week,2025,receiving_air_yards,True,19422,19422,0.0
-stats_player_week,2026,receiving_air_yards,True,6558,6558,0.0
+stats_player_week,2026,receiving_air_yards,True,7377,7377,0.0
 stats_player_week,2012,receiving_yards,True,17419,17419,0.0
 stats_player_week,2013,receiving_yards,True,17248,17248,0.0
 stats_player_week,2014,receiving_yards,True,17622,17622,0.0
@@ -1319,7 +1319,7 @@ stats_player_week,2022,receiving_yards,True,18831,18831,0.0
 stats_player_week,2023,receiving_yards,True,18643,18643,0.0
 stats_player_week,2024,receiving_yards,True,18983,18983,0.0
 stats_player_week,2025,receiving_yards,True,19422,19422,0.0
-stats_player_week,2026,receiving_yards,True,6558,6558,0.0
+stats_player_week,2026,receiving_yards,True,7377,7377,0.0
 stats_player_week,2012,receptions,True,17419,17419,0.0
 stats_player_week,2013,receptions,True,17248,17248,0.0
 stats_player_week,2014,receptions,True,17622,17622,0.0
@@ -1334,7 +1334,7 @@ stats_player_week,2022,receptions,True,18831,18831,0.0
 stats_player_week,2023,receptions,True,18643,18643,0.0
 stats_player_week,2024,receptions,True,18983,18983,0.0
 stats_player_week,2025,receptions,True,19422,19422,0.0
-stats_player_week,2026,receptions,True,6558,6558,0.0
+stats_player_week,2026,receptions,True,7377,7377,0.0
 stats_player_week,2012,rushing_yards,True,17419,17419,0.0
 stats_player_week,2013,rushing_yards,True,17248,17248,0.0
 stats_player_week,2014,rushing_yards,True,17622,17622,0.0
@@ -1349,7 +1349,7 @@ stats_player_week,2022,rushing_yards,True,18831,18831,0.0
 stats_player_week,2023,rushing_yards,True,18643,18643,0.0
 stats_player_week,2024,rushing_yards,True,18983,18983,0.0
 stats_player_week,2025,rushing_yards,True,19422,19422,0.0
-stats_player_week,2026,rushing_yards,True,6558,6558,0.0
+stats_player_week,2026,rushing_yards,True,7377,7377,0.0
 stats_player_week,2012,target_share,True,17419,17419,0.0
 stats_player_week,2013,target_share,True,17248,17248,0.0
 stats_player_week,2014,target_share,True,17622,17622,0.0
@@ -1364,7 +1364,7 @@ stats_player_week,2022,target_share,True,18831,18831,0.0
 stats_player_week,2023,target_share,True,18643,18643,0.0
 stats_player_week,2024,target_share,True,18983,18983,0.0
 stats_player_week,2025,target_share,True,19422,19422,0.0
-stats_player_week,2026,target_share,True,6558,6558,0.0
+stats_player_week,2026,target_share,True,7377,7377,0.0
 stats_player_week,2012,targets,True,17419,17419,0.0
 stats_player_week,2013,targets,True,17248,17248,0.0
 stats_player_week,2014,targets,True,17622,17622,0.0
@@ -1379,7 +1379,7 @@ stats_player_week,2022,targets,True,18831,18831,0.0
 stats_player_week,2023,targets,True,18643,18643,0.0
 stats_player_week,2024,targets,True,18983,18983,0.0
 stats_player_week,2025,targets,True,19422,19422,0.0
-stats_player_week,2026,targets,True,6558,6558,0.0
+stats_player_week,2026,targets,True,7377,7377,0.0
 stats_team_week,2012,attempts,True,534,534,0.0
 stats_team_week,2013,attempts,True,534,534,0.0
 stats_team_week,2014,attempts,True,534,534,0.0
@@ -1394,7 +1394,7 @@ stats_team_week,2022,attempts,True,568,568,0.0
 stats_team_week,2023,attempts,True,570,570,0.0
 stats_team_week,2024,attempts,True,570,570,0.0
 stats_team_week,2025,attempts,True,570,570,0.0
-stats_team_week,2026,attempts,True,188,188,0.0
+stats_team_week,2026,attempts,True,212,212,0.0
 stats_team_week,2012,carries,True,534,534,0.0
 stats_team_week,2013,carries,True,534,534,0.0
 stats_team_week,2014,carries,True,534,534,0.0
@@ -1409,7 +1409,7 @@ stats_team_week,2022,carries,True,568,568,0.0
 stats_team_week,2023,carries,True,570,570,0.0
 stats_team_week,2024,carries,True,570,570,0.0
 stats_team_week,2025,carries,True,570,570,0.0
-stats_team_week,2026,carries,True,188,188,0.0
+stats_team_week,2026,carries,True,212,212,0.0
 stats_team_week,2012,game_id,True,534,534,0.0
 stats_team_week,2013,game_id,True,534,534,0.0
 stats_team_week,2014,game_id,True,534,534,0.0
@@ -1424,7 +1424,7 @@ stats_team_week,2022,game_id,True,568,568,0.0
 stats_team_week,2023,game_id,True,570,570,0.0
 stats_team_week,2024,game_id,True,570,570,0.0
 stats_team_week,2025,game_id,True,570,570,0.0
-stats_team_week,2026,game_id,True,188,188,0.0
+stats_team_week,2026,game_id,True,212,212,0.0
 stats_team_week,2012,team,True,534,534,0.0
 stats_team_week,2013,team,True,534,534,0.0
 stats_team_week,2014,team,True,534,534,0.0
@@ -1439,6 +1439,6 @@ stats_team_week,2022,team,True,568,568,0.0
 stats_team_week,2023,team,True,570,570,0.0
 stats_team_week,2024,team,True,570,570,0.0
 stats_team_week,2025,team,True,570,570,0.0
-stats_team_week,2026,team,True,188,188,0.0
+stats_team_week,2026,team,True,212,212,0.0
 teams,all,team_abbr,True,36,36,0.0
 teams,all,team_division,True,36,36,0.0
