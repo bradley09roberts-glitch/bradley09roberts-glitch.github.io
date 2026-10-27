@@ -21,7 +21,10 @@ def _slim_card(c: dict, keep_dist: bool) -> dict:
     return c
 
 
-def build(out: Path, *, min_p_play: float = 0.5, model: str | None = None) -> dict:
+def build(out: Path, *, min_p_play: float = 0.5, model: str | None = None,
+          standalone: bool = False) -> dict:
+    """standalone=True writes a complete HTML document (doctype, charset, viewport) to open
+    straight from disk; the default is a fragment for hosts that add their own skeleton."""
     data = {}
     st = appdata.data_status()
     idx = appdata.editions_index()
@@ -75,7 +78,13 @@ def build(out: Path, *, min_p_play: float = 0.5, model: str | None = None) -> di
 {js}
 </script>
 """
+    if standalone:
+        html = ('<!doctype html>\n<html lang="en-GB">\n<head>\n<meta charset="utf-8">\n'
+                '<meta name="viewport" content="width=device-width, initial-scale=1, '
+                'viewport-fit=cover">\n' + html.replace('<div id="app"></div>',
+                                                         '</head>\n<body>\n<div id="app"></div>', 1)
+                + "</body>\n</html>\n")
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(html)
+    out.write_text(html, encoding="utf-8")
     return {"path": str(out), "bytes": out.stat().st_size, "players": len(players),
             "games": len(data["/api/slate"]["games"]), "paths": len(data)}

@@ -45,6 +45,7 @@ uv run npl settle                 # append settlement revisions, score the recor
 uv run npl quotes                 # odds snapshot (reports BLOCKED without ODDS_API_KEY)
 uv run npl money --ledger reports/backtests/<run>/ledger.csv.gz
 uv run npl serve                  # web app at http://127.0.0.1:8765
+uv run npl snapshot --out app.html  # self-contained offline copy of the app (no server)
 uv run npl verify                 # lint, tests, edition hashes, API smoke test
 ```
 

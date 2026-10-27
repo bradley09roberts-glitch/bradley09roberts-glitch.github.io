@@ -94,6 +94,16 @@ def cmd_serve(a) -> int:
     return 0
 
 
+def cmd_snapshot(a) -> int:
+    """Self-contained HTML copy of the app (saved outputs embedded; opens offline)."""
+    from pathlib import Path
+
+    from . import snapshot
+
+    print(json.dumps(snapshot.build(Path(a.out), standalone=not a.fragment), indent=1))
+    return 0
+
+
 def cmd_update(a) -> int:
     """Daily job: refresh public data, coverage audit and canonical tables."""
     rc = cmd_ingest(argparse.Namespace(datasets=None, seasons=a.seasons or "2026",
@@ -222,6 +232,12 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--host", default="127.0.0.1")
     s.add_argument("--port", type=int, default=8765)
     s.set_defaults(func=cmd_serve)
+
+    s = sub.add_parser("snapshot", help="write a self-contained offline HTML copy of the app")
+    s.add_argument("--out", default="nfl-props-lab.html")
+    s.add_argument("--fragment", action="store_true",
+                   help="omit the HTML document skeleton (for hosts that add their own)")
+    s.set_defaults(func=cmd_snapshot)
 
     s = sub.add_parser("update", help="daily: ingest current season, audit, rebuild lake")
     s.add_argument("--seasons")
