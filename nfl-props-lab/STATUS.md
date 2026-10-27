@@ -18,6 +18,16 @@ rosters, depth charts and schedules byte-identical (same SHA-256 as the 07:42 re
 so the edition used current inputs. Before publishing, use `npl ingest --force` for those
 files.
 
+## Week 7 record complete (27 Oct)
+
+All 13 games saved before kickoff are settled (Monday: DAL 38, PHI 21). On the common
+subset the headline X1 beat baseline A on every market (pass attempts -20%, receiving
+yards -5%), better on 55% of 907 player-markets; one week is far too small to conclude
+anything. For the Monday game, 12 model leans against US lines were saved before kickoff
+(`data/runs/`, not committed: they contain odds): 8 landed (7.3 expected); over 34 props the
+model's log loss was 0.646 against the market's 0.693. One game, correlated props: not
+evidence of an edge.
+
 ## Odds (26 Oct)
 
 Odds key configured (`.env`, never committed). UK bookmakers on The Odds API list no NFL

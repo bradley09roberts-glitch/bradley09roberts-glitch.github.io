@@ -1,300 +1,300 @@
 {
  "forecasts": 9625,
- "scored": 5915,
+ "scored": 6349,
  "by_model_market": [
   {
    "model": "A",
    "market": "pass_att",
-   "mean": 6.134,
-   "size": 27
+   "mean": 6.0836,
+   "size": 29
   },
   {
    "model": "A",
    "market": "pass_cmp",
-   "mean": 4.1501,
-   "size": 27
+   "mean": 4.2047,
+   "size": 29
   },
   {
    "model": "A",
    "market": "pass_yds",
-   "mean": 49.6994,
-   "size": 27
+   "mean": 48.1516,
+   "size": 29
   },
   {
    "model": "A",
    "market": "rec_yds",
-   "mean": 11.6368,
-   "size": 238
+   "mean": 11.3908,
+   "size": 255
   },
   {
    "model": "A",
    "market": "receptions",
-   "mean": 0.7859,
-   "size": 238
+   "mean": 0.7841,
+   "size": 255
   },
   {
    "model": "A",
    "market": "rush_att",
-   "mean": 1.5699,
-   "size": 144
+   "mean": 1.6246,
+   "size": 155
   },
   {
    "model": "A",
    "market": "rush_yds",
-   "mean": 9.5863,
-   "size": 144
+   "mean": 9.9312,
+   "size": 155
   },
   {
    "model": "C",
    "market": "pass_att",
-   "mean": 6.1859,
-   "size": 27
+   "mean": 5.9665,
+   "size": 29
   },
   {
    "model": "C",
    "market": "pass_cmp",
-   "mean": 4.2766,
-   "size": 27
+   "mean": 4.1745,
+   "size": 29
   },
   {
    "model": "C",
    "market": "pass_yds",
-   "mean": 51.5847,
-   "size": 27
+   "mean": 49.5886,
+   "size": 29
   },
   {
    "model": "C",
    "market": "rec_yds",
-   "mean": 12.5128,
-   "size": 238
+   "mean": 12.2332,
+   "size": 255
   },
   {
    "model": "C",
    "market": "receptions",
-   "mean": 0.8892,
-   "size": 238
+   "mean": 0.8835,
+   "size": 255
   },
   {
    "model": "C",
    "market": "rush_att",
-   "mean": 1.6207,
-   "size": 144
+   "mean": 1.6314,
+   "size": 155
   },
   {
    "model": "C",
    "market": "rush_yds",
-   "mean": 9.3448,
-   "size": 144
+   "mean": 9.4801,
+   "size": 155
   },
   {
    "model": "J0",
    "market": "pass_att",
-   "mean": 5.9269,
-   "size": 27
+   "mean": 5.8082,
+   "size": 29
   },
   {
    "model": "J0",
    "market": "pass_cmp",
-   "mean": 4.0863,
-   "size": 27
+   "mean": 4.0365,
+   "size": 29
   },
   {
    "model": "J0",
    "market": "pass_yds",
-   "mean": 49.6052,
-   "size": 27
+   "mean": 47.8643,
+   "size": 29
   },
   {
    "model": "J0",
    "market": "rec_yds",
-   "mean": 10.9922,
-   "size": 238
+   "mean": 10.7651,
+   "size": 255
   },
   {
    "model": "J0",
    "market": "receptions",
-   "mean": 0.7614,
-   "size": 238
+   "mean": 0.7594,
+   "size": 255
   },
   {
    "model": "J0",
    "market": "rush_att",
-   "mean": 1.4793,
-   "size": 144
+   "mean": 1.5185,
+   "size": 155
   },
   {
    "model": "J0",
    "market": "rush_yds",
-   "mean": 9.0999,
-   "size": 144
+   "mean": 9.3071,
+   "size": 155
   },
   {
    "model": "J1",
    "market": "pass_att",
-   "mean": 4.5229,
-   "size": 27
+   "mean": 4.5015,
+   "size": 29
   },
   {
    "model": "J1",
    "market": "pass_cmp",
-   "mean": 3.1266,
-   "size": 27
+   "mean": 3.1473,
+   "size": 29
   },
   {
    "model": "J1",
    "market": "pass_yds",
-   "mean": 38.4579,
-   "size": 27
+   "mean": 37.3738,
+   "size": 29
   },
   {
    "model": "J1",
    "market": "rec_yds",
-   "mean": 11.0662,
-   "size": 238
+   "mean": 10.8669,
+   "size": 255
   },
   {
    "model": "J1",
    "market": "receptions",
-   "mean": 0.7669,
-   "size": 238
+   "mean": 0.7682,
+   "size": 255
   },
   {
    "model": "J1",
    "market": "rush_att",
-   "mean": 1.4573,
-   "size": 144
+   "mean": 1.4984,
+   "size": 155
   },
   {
    "model": "J1",
    "market": "rush_yds",
-   "mean": 9.1022,
-   "size": 144
+   "mean": 9.3227,
+   "size": 155
   },
   {
    "model": "M",
    "market": "pass_att",
-   "mean": 5.958,
-   "size": 27
+   "mean": 5.8932,
+   "size": 29
   },
   {
    "model": "M",
    "market": "pass_cmp",
-   "mean": 4.2118,
-   "size": 27
+   "mean": 4.2261,
+   "size": 29
   },
   {
    "model": "M",
    "market": "pass_yds",
-   "mean": 49.6854,
-   "size": 27
+   "mean": 47.6807,
+   "size": 29
   },
   {
    "model": "M",
    "market": "rec_yds",
-   "mean": 11.3663,
-   "size": 238
+   "mean": 11.1185,
+   "size": 255
   },
   {
    "model": "M",
    "market": "receptions",
-   "mean": 0.7564,
-   "size": 238
+   "mean": 0.7538,
+   "size": 255
   },
   {
    "model": "M",
    "market": "rush_att",
-   "mean": 1.4098,
-   "size": 144
+   "mean": 1.4652,
+   "size": 155
   },
   {
    "model": "M",
    "market": "rush_yds",
-   "mean": 8.8665,
-   "size": 144
+   "mean": 9.1107,
+   "size": 155
   },
   {
    "model": "X",
    "market": "pass_att",
-   "mean": 5.8106,
-   "size": 27
+   "mean": 5.7206,
+   "size": 29
   },
   {
    "model": "X",
    "market": "pass_cmp",
-   "mean": 4.0708,
-   "size": 27
+   "mean": 4.0501,
+   "size": 29
   },
   {
    "model": "X",
    "market": "pass_yds",
-   "mean": 48.4427,
-   "size": 27
+   "mean": 46.6222,
+   "size": 29
   },
   {
    "model": "X",
    "market": "rec_yds",
-   "mean": 10.948,
-   "size": 238
+   "mean": 10.7191,
+   "size": 255
   },
   {
    "model": "X",
    "market": "receptions",
-   "mean": 0.7564,
-   "size": 238
+   "mean": 0.7538,
+   "size": 255
   },
   {
    "model": "X",
    "market": "rush_att",
-   "mean": 1.4011,
-   "size": 144
+   "mean": 1.4504,
+   "size": 155
   },
   {
    "model": "X",
    "market": "rush_yds",
-   "mean": 8.8583,
-   "size": 144
+   "mean": 9.0701,
+   "size": 155
   },
   {
    "model": "X1",
    "market": "pass_att",
-   "mean": 4.9176,
-   "size": 27
+   "mean": 4.8896,
+   "size": 29
   },
   {
    "model": "X1",
    "market": "pass_cmp",
-   "mean": 3.4602,
-   "size": 27
+   "mean": 3.4849,
+   "size": 29
   },
   {
    "model": "X1",
    "market": "pass_yds",
-   "mean": 41.7495,
-   "size": 27
+   "mean": 40.3531,
+   "size": 29
   },
   {
    "model": "X1",
    "market": "rec_yds",
-   "mean": 11.0059,
-   "size": 238
+   "mean": 10.7869,
+   "size": 255
   },
   {
    "model": "X1",
    "market": "receptions",
-   "mean": 0.7564,
-   "size": 238
+   "mean": 0.7538,
+   "size": 255
   },
   {
    "model": "X1",
    "market": "rush_att",
-   "mean": 1.3914,
-   "size": 144
+   "mean": 1.4397,
+   "size": 155
   },
   {
    "model": "X1",
    "market": "rush_yds",
-   "mean": 8.8633,
-   "size": 144
+   "mean": 9.0793,
+   "size": 155
   }
  ]
 }
