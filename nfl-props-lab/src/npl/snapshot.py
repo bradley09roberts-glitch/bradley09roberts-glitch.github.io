@@ -21,6 +21,32 @@ def _slim_card(c: dict, keep_dist: bool) -> dict:
     return c
 
 
+def _add_nba(data: dict, min_p_play: float = 0.3) -> None:
+    """NBA pages for the latest NBA edition (if any), trimmed: 20-game logs on cards and the
+    last 15 games on player pages."""
+    from .nba import appdata as nba
+
+    s = nba.slate()
+    if "error" in s:
+        return
+    data["/api/nba/slate"] = nba.clean(s)
+    props = nba.props()
+    for c in props["cards"]:
+        c["log"] = {k: (v[-20:] if isinstance(v, list) else v) for k, v in c["log"].items()}
+    props["cards"] = [c for c in props["cards"] if c["p_play"] >= min_p_play]
+    data["/api/nba/props"] = nba.clean(props)
+    data["/api/nba/backtests"] = nba.clean(nba.backtests())
+    for g in s["games"]:
+        data[f"/api/nba/game/{g['game_id']}"] = nba.clean(nba.game(g["game_id"]))
+    for pid in sorted({c["player_id"] for c in props["cards"]}):
+        p = nba.player(pid)
+        if "error" in p:
+            continue
+        p["game_log"] = p["game_log"][-15:]
+        p.pop("forecasts", None)
+        data[f"/api/nba/player/{pid}"] = nba.clean(p)
+
+
 def build(out: Path, *, min_p_play: float = 0.5, model: str | None = None,
           standalone: bool = False) -> dict:
     """standalone=True writes a complete HTML document (doctype, charset, viewport) to open
@@ -60,11 +86,12 @@ def build(out: Path, *, min_p_play: float = 0.5, model: str | None = None,
                  "targets", "receptions", "receiving_yards")
         p["game_log"] = [{k: g.get(k) for k in lkeep} for g in p["game_log"]]
         data[f"/api/player/{pid}"] = p
+    _add_nba(data)
     snap = {"built_at": utcnow().isoformat(), "built_london": london(utcnow()), "data": data}
     blob = json.dumps(snap, separators=(",", ":"), default=str).replace("</", "<\\/")
     css = (WEB / "app.css").read_text()
     js = (WEB / "app.js").read_text()
-    html = f"""<title>NFL Props Lab</title>
+    html = f"""<title>Props Lab</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

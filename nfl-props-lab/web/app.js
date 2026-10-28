@@ -1,4 +1,4 @@
-// NFL Props Lab web app. Works against the FastAPI server (/api/...) or, when a
+// Props Lab web app (NFL and NBA). Works against the FastAPI server (/api/...) or, when a
 // snapshot is embedded (window.NPL_SNAPSHOT), entirely offline from that snapshot.
 // Every number shown is read from a saved edition, lake table or backtest summary.
 
@@ -178,36 +178,52 @@ const ICONS = {
   info: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7h.01"/></svg>',
   ok: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg>',
 };
-const NAV = [["today", "Today"], ["props", "Props"], ["shortlist", "Shortlist"], ["lab", "Backtest lab"], ["defense", "Defences"], ["record", "Saved record"], ["data", "Data & method"]];
+const NAV_NFL = [["today", "Today"], ["props", "Props"], ["shortlist", "Shortlist"], ["lab", "Backtest lab"], ["defense", "Defences"], ["record", "Saved record"], ["data", "Data & method"]];
+const NAV_NBA = [["nba-today", "Tonight"], ["nba-props", "Props"], ["nba-lab", "Model lab"], ["nba-about", "Data & method"]];
+let NAV = NAV_NFL;
+const NAV_ICON = { "nba-today": "today", "nba-props": "props", "nba-lab": "lab", "nba-about": "data" };
+const sportOf = (k) => (k.startsWith("nba-") ? "nba" : "nfl");
 
 function shell() {
-  const theme = store.get("theme", "auto");
-  if (theme !== "auto") document.documentElement.setAttribute("data-theme", theme);
+  const theme = store.get("theme", "dark") === "light" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", theme);
   document.body.insertAdjacentHTML("afterbegin", `
     <header class="topbar"><div class="topbar-in">
-      <a class="brand" href="#today"><span class="yard" aria-hidden="true"></span><b>NFL Props Lab</b></a>
+      <a class="brand" href="#" id="brandLink"><span class="mark" aria-hidden="true"></span><b>Props Lab</b></a>
+      <div class="sport" role="tablist" aria-label="Sport"><a href="#today" data-sport="nfl">NFL</a><a href="#nba-today" data-sport="nba">NBA</a></div>
       <span class="spacer"></span>
-      <span class="tiny muted" id="modeTag">${SNAP ? "Snapshot " + esc(SNAP.built_london) : "Live server"}</span>
+      <span class="tiny muted hide-phone" id="modeTag">${SNAP ? "Snapshot " + esc(SNAP.built_london) : "Live server"}</span>
       <button class="chipbtn" id="themeBtn" aria-label="Colour theme">Theme: ${esc(theme)}</button>
     </div></header>`);
-  app.innerHTML = `<div class="layout"><nav class="tabs" aria-label="Sections">${NAV.map(([k, l], i) =>
-    `<a href="#${k}" data-k="${k}" class="${i > 3 ? "more-only" : ""}">${ICONS[k]}<span>${l}</span></a>`).join("")}
-    <a href="#more" data-k="more" class="phone-only">${ICONS.more}<span>More</span></a></nav><main id="view"></main></div>`;
+  app.innerHTML = `<div class="layout"><nav class="tabs" aria-label="Sections"></nav><main id="view"></main></div>`;
   $("#themeBtn").addEventListener("click", () => {
-    const order = ["auto", "light", "dark"]; const next = order[(order.indexOf(store.get("theme", "auto")) + 1) % 3];
-    store.set("theme", next); if (next === "auto") document.documentElement.removeAttribute("data-theme"); else document.documentElement.setAttribute("data-theme", next);
+    const next = document.documentElement.getAttribute("data-theme") === "light" ? "dark" : "light";
+    store.set("theme", next); document.documentElement.setAttribute("data-theme", next);
     $("#themeBtn").textContent = "Theme: " + next;
   });
 }
 
+function renderNav(sport) {
+  NAV = sport === "nba" ? NAV_NBA : NAV_NFL;
+  const nav = $("nav.tabs"); if (nav.dataset.sport === sport) return;
+  nav.dataset.sport = sport;
+  nav.style.gridTemplateColumns = `repeat(${Math.min(NAV.length, 4) + (NAV.length > 4 ? 1 : 0)}, 1fr)`;
+  nav.innerHTML = NAV.map(([k, l], i) => `<a href="#${k}" data-k="${k}" class="${i > 3 ? "more-only" : ""}">${ICONS[NAV_ICON[k] || k]}<span>${l}</span></a>`).join("") +
+    (NAV.length > 4 ? `<a href="#more" data-k="more" class="phone-only">${ICONS.more}<span>More</span></a>` : "");
+  $$(".sport a").forEach((a) => a.classList.toggle("on", a.dataset.sport === sport));
+  $("#brandLink").setAttribute("href", sport === "nba" ? "#nba-today" : "#today");
+}
+
 function route() {
-  const h = decodeURIComponent(location.hash.replace(/^#/, "")) || "today";
+  const h = decodeURIComponent(location.hash.replace(/^#/, "")) || (store.get("sport", "nfl") === "nba" ? "nba-today" : "today");
   const [k, ...rest] = h.split(".");
   const arg = rest.join(".");
+  if (k !== "more") { store.set("sport", sportOf(k)); renderNav(sportOf(k)); } else renderNav(store.get("sport", "nfl"));
   $$("nav.tabs a").forEach((a) => a.classList.toggle("on", a.dataset.k === k || (k === "more" && a.dataset.k === "more")));
   const view = $("#view");
   view.innerHTML = `<div class="skeleton">Loading…</div>`;
-  const fn = { today: viewToday, props: viewProps, shortlist: viewShortlist, lab: viewLab, record: viewRecord, data: viewData, player: viewPlayer, game: viewGame, defense: viewDefense, more: viewMore }[k] || viewToday;
+  const fn = { today: viewToday, props: viewProps, shortlist: viewShortlist, lab: viewLab, record: viewRecord, data: viewData, player: viewPlayer, game: viewGame, defense: viewDefense, more: viewMore,
+    "nba-today": viewNbaToday, "nba-props": viewNbaProps, "nba-player": viewNbaPlayer, "nba-game": viewNbaGame, "nba-lab": viewNbaLab, "nba-about": viewNbaAbout }[k] || viewToday;
   Promise.resolve(fn(view, arg)).catch((e) => { view.innerHTML = `<div class="banner crit">${ICONS.warn}<div><p><b>Could not load this view.</b></p><p class="small">${esc(e.message)}</p><p class="small">If the server is running, check <code>npl serve</code> output; otherwise this snapshot may not include the page.</p></div></div>`; });
   window.scrollTo(0, 0);
 }
@@ -276,6 +292,8 @@ function propCard(c, idx, D) {
       <div><div class="v num">${c.median}</div><div class="l">median</div></div>
       <div><div class="v num" style="font-size:1.3rem">${c.q10}–${c.q90}</div><div class="l">80% range</div></div></div>
     ${rangeBar(c)}
+    ${c.log && c.log.values.length ? (() => { const { line, src, fair: isFair } = lineFor("nfl", c); const L = new Dist(c.dist).line(line);
+      return `<div class="pline"><div><span class="mk">Line</span><button class="linebtn" data-line="${idx}">${line}<small>${src} ✎</small></button></div></div>${ouBar(L, isFair)}${hitChips(c.log, line, c.opponent)}${miniBars(c.log, line, 10)}`; })() : ""}
     <div class="ms">${ms}</div>
     <div class="foot"><span>P(plays) ${pct(c.p_play)}</span><span>Uncertainty ${esc(u.level || "–")}</span><span>History ${c.sample_size ?? 0} games</span>${injuryPill(c.injury_report)}</div>
     ${oppContext(c, D)}
@@ -310,6 +328,7 @@ async function viewProps(v) {
     $("#fcount").textContent = `${r.length.toLocaleString("en-GB")} forecasts match (of ${cards.length.toLocaleString("en-GB")})`;
     $("#cards").innerHTML = r.slice(0, shown).map((c) => propCard(c, cards.indexOf(c), D)).join("") || `<p class="muted">No forecasts match these filters. Reset them to see the whole slate.</p>`;
     $("#more").hidden = r.length <= shown;
+    bindLineButtons($("#cards"), cards, "nfl", apply);
     const rows = r.map((c) => ({ edition_id: p.edition_id, model: c.model, player_id: c.player_id, name: c.name, position: c.position, team: c.team, opponent: c.opponent, market: c.market, p_play: c.p_play, mean: c.mean, median: c.median, q10: c.q10, q90: c.q90, ...Object.fromEntries((c.milestones || []).map((m) => [`p_ge_${m.k}`, m.p])) }));
     setCopy("props", toCSV(rows));
     $("#fexport").innerHTML = SNAP ? copyBtn("props", "filtered CSV") : `<a class="btn ghost" href="/api/export/props.csv">All CSV</a> <a class="btn ghost" href="/api/export/props.json">JSON</a> ${copyBtn("props", "filtered CSV")}`;
@@ -490,6 +509,200 @@ async function viewLab(v) {
   $("#lr").addEventListener("change", (e) => { store.set("labRun", e.target.value); route(); });
   $("#lm").addEventListener("change", (e) => { store.set("labMkt", e.target.value); route(); });
   $("#lt").addEventListener("change", (e) => { store.set("labTab", e.target.value); route(); });
+}
+
+// ---------------------------------------------------------------- prop research components (NFL + NBA)
+// Hit rates count past games where the stat went OVER the line; the line is the user's own
+// (saved per player and market), else the model's fair line: the half point at which its
+// over and under chances are closest to 50/50. No bookmaker line is invented.
+const lineKey = (sport, c) => `line:${sport}:${c.player_id}:${c.market}`;
+function modelLine(c) {
+  if (!c.dist) return Math.floor(c.mean) + 0.5;
+  const D = new Dist(c.dist); let best = c.median + 0.5, gap = 2;
+  for (let L = c.median - 1.5; L <= c.median + 1.5; L += 1) { if (L < 0) continue; const g = Math.abs(D.line(L).over - 0.5); if (g < gap) { gap = g; best = L; } }
+  return best;
+}
+function lineFor(sport, c) { const v = store.get(lineKey(sport, c), null); return v == null ? { line: modelLine(c), src: "fair line", fair: true } : { line: v, src: "your line", fair: false }; }
+function leanLabel(L, fair) { if (fair) return `<span class="lean">Model's 50/50 line</span>`; return L.over >= 0.55 ? `<span class="lean over">Model leans over</span>` : L.under >= 0.55 ? `<span class="lean under">Model leans under</span>` : `<span class="lean">Close to 50/50</span>`; }
+function ouBar(L, fairLine) { return `<div class="ou"><div class="bar2"><span class="o" style="width:${(L.over * 100).toFixed(1)}%"></span></div><div class="row between tiny"><span>Over <b>${pct(L.over)}</b></span>${leanLabel(L, fairLine)}<span>Under <b>${pct(L.under)}</b></span></div></div>`; }
+function hitRate(vals, line) { if (!vals.length) return null; const over = vals.filter((v) => v > line).length; return { over, n: vals.length, r: over / vals.length }; }
+function hitChips(log, line, opp) {
+  const v = log.values || [];
+  const cur = v.filter((_, i) => (log.season || [])[i] === log.current_season);
+  const h2h = v.filter((_, i) => (log.opp || [])[i] === opp);
+  const sets = [["L5", v.slice(-5)], ["L10", v.slice(-10)], ["L20", v.slice(-20)], ["Season", cur], ["H2H", h2h]];
+  return `<div class="hits">${sets.map(([k, s]) => { const h = hitRate(s, line);
+    const cls = !h ? "na" : h.r >= 0.6 ? "hot" : h.r <= 0.4 ? "cold" : "mid";
+    return `<span class="hit ${cls}" data-tip="${esc(k)}: ${h ? `${h.over} of ${h.n} games over ${line}` : "no games"}"><i>${k}</i><b>${h ? Math.round(h.r * 100) + "%" : "–"}</b><em>${h ? `${h.over}/${h.n}` : ""}</em></span>`; }).join("")}</div>`;
+}
+function miniBars(log, line, n = 10, { width = 300, height = 92, labels = true } = {}) {
+  const v = (log.values || []).slice(-n), o = (log.opp || []).slice(-n), d = (log.date || []).slice(-n);
+  if (!v.length) return `<p class="tiny muted">No previous games.</p>`;
+  const top = Math.max(...v, line) * 1.18 || 1;
+  const m = { t: 12, b: labels ? 16 : 4 }, H = height - m.t - m.b, slot = width / v.length, bw = Math.min(26, slot - 4);
+  const Y = (x) => m.t + H - (x / top) * H;
+  let s = `<svg class="chart minibars" viewBox="0 0 ${width} ${height}" role="img" aria-label="Last ${v.length} games against the line ${line}">`;
+  v.forEach((x, i) => { const cx = slot * (i + 0.5), h = Math.max(1.5, m.t + H - Y(x)), cls = x > line ? "over" : x < line ? "under" : "push";
+    s += `<rect class="${cls}" x="${cx - bw / 2}" y="${m.t + H - h}" width="${bw}" height="${h}" rx="3" data-tip="${esc(x)}|${esc(d[i] || "")} v ${esc(o[i] || "")}"/>`;
+    if (bw >= 14) s += `<text class="bv" x="${cx}" y="${m.t + H - h - 3}" text-anchor="middle">${x}</text>`;
+    if (labels) s += `<text class="bl" x="${cx}" y="${height - 4}" text-anchor="middle">${esc((o[i] || "").slice(0, 4))}</text>`; });
+  const ly = Y(line);
+  s += `<line class="lline" x1="0" x2="${width}" y1="${ly}" y2="${ly}"/><text class="lval" x="${width - 2}" y="${ly - 3}" text-anchor="end">${line}</text>`;
+  return s + "</svg>";
+}
+function avatar(team, name) {
+  const ini = String(name || "").split(/\s+/).map((w) => w[0]).filter(Boolean).slice(0, 2).join("");
+  return `<span class="ava" aria-hidden="true"><b>${esc(ini)}</b><i>${esc(team)}</i></span>`;
+}
+function rankTone(rank, n = 30) { return rank >= n - 7 ? "soft" : rank <= 8 ? "tough" : "avg"; }
+
+// ---------------------------------------------------------------- NBA
+const NBA_MKT = { pts: "Points", reb: "Rebounds", ast: "Assists", fg3m: "3-pointers made", pra: "Pts + Reb + Ast" };
+const NBA_SHORT = { pts: "PTS", reb: "REB", ast: "AST", fg3m: "3PM", pra: "PRA" };
+
+function nbaInjury(inj) {
+  if (!inj) return "";
+  const out = ["OUT", "OFS"].includes(inj.fantasy);
+  return `<span class="pill ${out ? "out" : "questionable"}" data-tip="Injury report (${esc(inj.as_of)})|${esc(inj.status)}${inj.detail ? " · " + esc(inj.detail) : ""}"><span class="dot"></span>${out ? "Out" : "Game-time decision"}</span>`;
+}
+
+function nbaCard(c, idx) {
+  const { line, src, fair: isFair } = lineFor("nba", c);
+  const D = new Dist(c.dist); const L = D.line(line);
+  const o = c.opp_factor;
+  return `<article class="pcard">
+    <header>${avatar(c.team, c.name)}<div class="who"><a href="#nba-player.${esc(c.player_id)}">${esc(c.name)}</a>
+      <div class="sub">${esc(c.position)} · ${esc(c.team)} ${c.is_home ? "v" : "@"} ${esc(c.opponent)} · ${esc(c.tip_london)}</div></div>${nbaInjury(c.injury)}</header>
+    <div class="pline"><div><span class="mk">${esc(NBA_MKT[c.market])}</span><button class="linebtn" data-line="${idx}" aria-label="Change the line">${line}<small>${src} ✎</small></button></div>
+      <div class="proj"><b>${dec(c.mean, 1)}</b><span>projection</span></div></div>
+    ${ouBar(L, isFair)}
+    ${hitChips(c.log, line, c.opponent)}
+    ${miniBars(c.log, line, 10)}
+    <div class="facts"><span data-tip="Chance he plays|${c.injury ? "Includes the injury report (assumed effect, not validated)" : "From recent appearances"}">Plays ${pct(c.p_play)}</span><span>Min ${dec(c.minutes_expected, 0)}</span><span>80% range ${c.q10}–${c.q90}</span>
+      ${o ? `<span class="mu ${rankTone(o.rank)}" data-tip="${esc(c.opponent)} defence v ${esc(NBA_SHORT[c.market === "pra" ? "pts" : c.market])}|Rank ${o.rank} of 30 (1 = allows least); model factor ${o.factor > 1 ? "+" : ""}${((o.factor - 1) * 100).toFixed(1)}%">Matchup ${o.rank}/30</span>` : ""}
+      ${c.opp_pace ? `<span data-tip="${esc(c.opponent)} pace|${c.opp_pace.value} possessions per 48 min (rank ${c.opp_pace.rank})">Pace ${c.opp_pace.rank}/30</span>` : ""}</div>
+    ${c.teammates_out && c.teammates_out.length ? `<div class="warnline">${ICONS.warn}<span>${c.teammates_out.map((t) => esc(t.name)).join(", ")} ruled out after playing last game: extra minutes and shots are not in this projection yet.</span></div>` : ""}
+  </article>`;
+}
+
+function bindLineButtons(root, cards, sport, rerender) {
+  root.querySelectorAll("[data-line]").forEach((b) => b.addEventListener("click", () => {
+    const c = cards[+b.dataset.line]; const cur = lineFor(sport, c).line;
+    const v = prompt(`Line for ${c.name} (${c.market_label || NBA_MKT[c.market]}). Half points avoid pushes. Leave empty to go back to the model line.`, cur);
+    if (v === null) return;
+    if (v.trim() === "") store.set(lineKey(sport, c), null); else { const x = parseFloat(v); if (!isNaN(x)) store.set(lineKey(sport, c), x); }
+    rerender();
+  }));
+}
+
+async function viewNbaToday(v) {
+  const [s, p] = await Promise.all([api("/api/nba/slate"), api("/api/nba/props")]);
+  const outs = {}; p.cards.filter((c) => c.market === "pts" && c.injury).forEach((c) => { (outs[c.team] ||= []).push(c); });
+  v.innerHTML = `<section class="hero"><span class="eyebrow">NBA · ${esc(s.date_et)} (US date) · ${esc(s.kind)} edition</span><h1>Tonight's slate</h1>
+      <p>${s.games.length} games, saved ${esc(s.published_london)} before tip-off. Times are UK time. Every projection comes from the saved edition; tap a game for both teams or open the props board.</p>
+      <div class="row"><a class="btn" href="#nba-props">Open the props board</a></div></section>
+    <div class="games">${s.games.map((g) => `<a class="panel game-tile" href="#nba-game.${esc(g.game_id)}">
+      <div class="teams"><b>${esc(g.away)}</b><span class="at">@</span><b>${esc(g.home)}</b></div>
+      <div class="tiny muted">${esc(g.tip_london)}${g.time_valid ? "" : " (time to be confirmed)"}</div>
+      <div class="tiny">${[g.away, g.home].map((t) => { const l = outs[t] || []; const o = l.filter((c) => ["OUT", "OFS"].includes(c.injury.fantasy)).length, q = l.length - o; return `${esc(t)}: ${o} out${q ? `, ${q} questionable` : ""}`; }).join(" · ")}</div></a>`).join("")}</div>
+    ${banner("info", `<p class="small">${(s.notes || []).map(esc).join(" ")}</p><p class="tiny muted">Box scores through ${esc(londonTime(s.inputs.box_last_tip))}; injury snapshot ${esc(s.inputs.injury_snapshot || "none")}. Data: SportsDataverse (CC BY 4.0).</p>`)}`;
+}
+
+async function viewNbaProps(v) {
+  const p = await api("/api/nba/props");
+  const all = p.cards;
+  const games = [...new Map(all.map((c) => [c.game_id, `${c.is_home ? c.opponent : c.team} @ ${c.is_home ? c.team : c.opponent}`])).entries()];
+  const f = Object.assign({ q: "", game: "", market: "pts", minp: "0.6", sort: "proj" }, store.get("nbaFilter", {}));
+  v.innerHTML = `<section class="hero"><span class="eyebrow">NBA props · ${esc(p.date_et)} · saved ${esc(p.published_london)}</span><h1>Props board</h1>
+      <p>Each card shows the model's projection, its over/under chance at a line, and how often the player went over that line recently. Until you enter a line it uses the model's fair line (its 50/50 point), so leans only appear once you tap the line and type your bookmaker's.</p></section>
+    <div class="mktabs" role="tablist">${Object.entries(NBA_SHORT).map(([k, l]) => `<button role="tab" class="${k === f.market ? "on" : ""}" data-mk="${k}">${l}</button>`).join("")}</div>
+    <div class="filters" role="search">
+      <label>Player<input type="search" id="nq" value="${esc(f.q)}" placeholder="Name"></label>
+      <label>Game<select id="ngame"><option value="">All games</option>${games.map(([id, l]) => `<option value="${esc(id)}" ${id === f.game ? "selected" : ""}>${esc(l)}</option>`).join("")}</select></label>
+      <label>Plays at least<select id="nminp">${["0", "0.3", "0.6", "0.85"].map((x) => `<option value="${x}" ${x === f.minp ? "selected" : ""}>${Math.round(x * 100)}%</option>`).join("")}</select></label>
+      <label>Sort<select id="nsort">${[["proj", "Projection"], ["edge", "Biggest lean at your lines"], ["l10", "L10 hit rate"], ["tip", "Tip-off"]].map(([k, l]) => `<option value="${k}" ${k === f.sort ? "selected" : ""}>${l}</option>`).join("")}</select></label>
+    </div>
+    <p class="tiny muted" id="ncount"></p><div class="cards" id="ncards"></div><div class="row"><button class="btn ghost" id="nmore" hidden>Show more</button></div>`;
+  let shown = 24;
+  const render = () => {
+    let r = all.filter((c) => c.market === f.market && c.p_play >= +f.minp && (!f.game || c.game_id === f.game) && (!f.q || c.name.toLowerCase().includes(f.q.toLowerCase())));
+    const key = (c) => { const { line } = lineFor("nba", c); const L = new Dist(c.dist).line(line);
+      if (f.sort === "edge") return -Math.abs(L.over - 0.5); if (f.sort === "l10") { const h = hitRate(c.log.values.slice(-10), line); return -(h ? h.r : 0); } if (f.sort === "proj") return -c.mean; return c.tip_utc; };
+    r = r.map((c) => [key(c), c]).sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0)).map((x) => x[1]);
+    $("#ncount").textContent = `${r.length} players · ${NBA_MKT[f.market]}`;
+    $("#ncards").innerHTML = r.slice(0, shown).map((c) => nbaCard(c, all.indexOf(c))).join("") || banner("info", "<p>No players match these filters.</p>");
+    $("#nmore").hidden = r.length <= shown;
+    bindLineButtons($("#ncards"), all, "nba", render);
+  };
+  const save = () => { store.set("nbaFilter", f); shown = 24; render(); };
+  $$(".mktabs button").forEach((b) => b.addEventListener("click", () => { f.market = b.dataset.mk; $$(".mktabs button").forEach((x) => x.classList.toggle("on", x === b)); save(); }));
+  $("#nq").addEventListener("input", (e) => { f.q = e.target.value; save(); });
+  $("#ngame").addEventListener("change", (e) => { f.game = e.target.value; save(); });
+  $("#nminp").addEventListener("change", (e) => { f.minp = e.target.value; save(); });
+  $("#nsort").addEventListener("change", (e) => { f.sort = e.target.value; save(); });
+  $("#nmore").addEventListener("click", () => { shown += 24; render(); });
+  render();
+}
+
+async function viewNbaPlayer(v, pid) {
+  const [P, props] = await Promise.all([api(`/api/nba/player/${pid}`), api("/api/nba/props")]);
+  const cards = props.cards.filter((c) => c.player_id === pid);
+  let mk = store.get("nbaPlayerMk", "pts"); if (!cards.find((c) => c.market === mk)) mk = cards[0]?.market || "pts";
+  const draw = () => {
+    const c = cards.find((x) => x.market === mk);
+    const head = `<section class="hero">${avatar(P.team, P.name)}<span class="eyebrow">${esc(P.position)} · ${esc(P.team)}</span><h1>${esc(P.name)}</h1></section>`;
+    if (!c) { v.innerHTML = head + banner("info", "<p>No forecast for this player in the latest edition (no game tonight, or no previous NBA minutes).</p>") + logTable(P); return; }
+    const { line, src } = lineFor("nba", c); const D = new Dist(c.dist); const L = D.line(line);
+    v.innerHTML = head + `<div class="mktabs">${cards.map((x) => `<button class="${x.market === mk ? "on" : ""}" data-mk="${x.market}">${NBA_SHORT[x.market]}</button>`).join("")}</div>
+      <section class="panel"><div class="row between"><div><span class="eyebrow">${esc(c.team)} ${c.is_home ? "v" : "@"} ${esc(c.opponent)} · ${esc(c.tip_london)}</span><h2>${esc(NBA_MKT[mk])}</h2></div>${nbaInjury(c.injury)}</div>
+        <div class="pline"><div><span class="mk">Line</span><button class="linebtn" data-line="0">${line}<small>${src} ✎</small></button></div><div class="proj"><b>${dec(c.mean, 1)}</b><span>projection (median ${c.median}, 80% ${c.q10}–${c.q90})</span></div></div>
+        ${ouBar(L, lineFor("nba", c).fair)}<p class="tiny muted">Break-even decimal prices at this line: over ${dec(fair(L.over), 2)}, under ${dec(fair(L.under), 2)}.</p>
+        ${hitChips(c.log, line, c.opponent)}
+        <h3 style="margin-top:12px">Last 20 games</h3>${miniBars(c.log, line, 20, { width: 640, height: 170 })}
+        <h3 style="margin-top:12px">Model distribution</h3>${distChart(D, { line })}
+        <p class="tiny muted">Conditional on playing (chance he plays ${pct(c.p_play)}). Model N1; simpler forecasts for comparison: recent average ${dec(c.baselines.A, 1)}, last-10 average ${dec(c.baselines.C, 1)}. "Fair" is the break-even decimal price if the model were exactly right.</p></section>
+      ${logTable(P)}`;
+    $$(".mktabs button", v).forEach((b) => b.addEventListener("click", () => { mk = b.dataset.mk; store.set("nbaPlayerMk", mk); draw(); }));
+    bindLineButtons(v, [c], "nba", draw);
+  };
+  draw();
+}
+function logTable(P) {
+  const rows = P.game_log.slice(-15).reverse();
+  return `<section class="panel"><h2>Game log</h2><div class="tablewrap"><table><thead><tr><th class="l">Date</th><th class="l">Opp</th><th>Min</th><th>PTS</th><th>REB</th><th>AST</th><th>3PM</th><th>PRA</th></tr></thead><tbody>
+    ${rows.map((r) => r.participation === "played" ? `<tr><td class="l">${esc(r.date)}${r.starter ? "" : ' <span class="tiny muted">bench</span>'}</td><td class="l">${r.home ? "v" : "@"} ${esc(r.opp)}</td><td>${dec(r.minutes, 0)}</td><td>${dec(r.pts, 0)}</td><td>${dec(r.reb, 0)}</td><td>${dec(r.ast, 0)}</td><td>${dec(r.fg3m, 0)}</td><td>${dec(r.pts + r.reb + r.ast, 0)}</td></tr>`
+      : `<tr class="dim"><td class="l">${esc(r.date)}</td><td class="l">${r.home ? "v" : "@"} ${esc(r.opp)}</td><td colspan="6" class="l">Did not play</td></tr>`).join("")}</tbody></table></div></section>`;
+}
+
+async function viewNbaGame(v, gid) {
+  const g = await api(`/api/nba/game/${gid}`); const G = g.game;
+  const tbl = (team) => `<div class="tablewrap"><table><thead><tr><th class="l">Player</th><th>Plays</th><th>Min</th><th>PTS</th><th>REB</th><th>AST</th><th>3PM</th><th>PRA</th></tr></thead><tbody>
+    ${g.players.filter((p) => p.team === team && p.p_play >= 0.05).map((p) => `<tr class="${p.p_play < 0.5 ? "dim" : ""}"><td class="l"><a href="#nba-player.${esc(p.player_id)}">${esc(p.name)}</a> ${nbaInjury(p.injury)}</td><td>${pct(p.p_play)}</td><td>${dec(p.minutes_expected, 0)}</td>${["pts", "reb", "ast", "fg3m", "pra"].map((m) => `<td data-tip="${esc(NBA_MKT[m])}|median ${p[m]?.median}, 80% ${p[m]?.q10}–${p[m]?.q90}">${dec(p[m]?.mean, 1)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
+  const mu = (t) => { const o = g.opp[t]; if (!o) return ""; return ["pts", "reb", "ast", "fg3m"].map((s) => `<span class="mu ${rankTone(o[s].rank)}">${NBA_SHORT[s]} ${o[s].rank}/30</span>`).join(" ") + ` <span class="tiny muted">pace ${o.pace.value} (${o.pace.rank}/30)</span>`; };
+  v.innerHTML = `<section class="hero"><span class="eyebrow">${esc(G.tip_london)} · edition ${esc(g.edition_id)}</span><h1>${esc(G.away)} @ ${esc(G.home)}</h1><p class="small">Projections are means conditional on playing; rows below 50% to play are dimmed.</p></section>
+    <section class="panel"><h2>Defences</h2><p class="small">Rank of each defence by what it allows per possession (1 = allows least, 30 = most), shrunk towards average as the model uses it.</p>
+      <p><b>${esc(G.away)} defence</b> ${mu(G.away)}</p><p><b>${esc(G.home)} defence</b> ${mu(G.home)}</p></section>
+    <div class="grid"><section class="panel"><h2>${esc(G.away)}</h2>${tbl(G.away)}</section><section class="panel"><h2>${esc(G.home)}</h2>${tbl(G.home)}</section></div>`;
+}
+
+async function viewNbaLab(v) {
+  const runs = await api("/api/nba/backtests");
+  const tbl = (r) => `<div class="tablewrap"><table><thead><tr><th class="l">Market</th><th>Player-games</th><th>Model N1</th><th>Recent average</th><th>Last-10 average</th><th>N1 v recent average</th></tr></thead><tbody>
+    ${Object.entries(r.markets).map(([m, x]) => `<tr><td class="l">${esc(NBA_MKT[m])}</td><td>${x.n.toLocaleString("en-GB")}</td><td>${dec(x.N1, 3)}</td><td>${dec(x.A, 3)}</td><td>${dec(x.C, 3)}</td><td><b>${dec((x.N1_minus_A / x.A) * 100, 1)}%</b> <span class="tiny muted">[${dec((x.N1_minus_A_ci[0] / x.A) * 100, 1)}, ${dec((x.N1_minus_A_ci[1] / x.A) * 100, 1)}]</span></td></tr>`).join("")}</tbody></table></div>`;
+  const show = runs.filter((r) => /n02|n03/.test(r.label));
+  v.innerHTML = `<section class="hero"><span class="eyebrow">NBA · retrospective research, not a published record</span><h1>Model lab</h1>
+      <p>Every game is forecast using only games played before it. Scores are CRPS: the average distance between the forecast distribution and what happened (lower is better). In brackets, a 95% interval from resampling whole weeks.</p></section>
+    ${show.map((r) => `<section class="panel"><h2>${/TEST/.test(r.label) ? "Test season 2025-26 (run once, frozen model)" : "Validation 2023-24 and 2024-25"}</h2>${tbl(r)}
+      <p class="tiny muted">${esc(r.label)} · ${r.rows_scored.toLocaleString("en-GB")} player-games scored. Chance of playing: Brier ${dec(r.participation.p_play.brier, 3)} (share of last 10 games played: ${dec(r.participation.p_play_naive.brier, 3)}).</p></section>`).join("")}
+    ${banner("info", `<p><b>Reading this honestly.</b> The model beats a player's recent average by 1–4% depending on the market, consistently. That is a real but modest edge in forecast accuracy, not evidence of beating bookmakers, whose lines already sit close to a good estimate. The last-10 average many prop sites show is the weakest of the three.</p>`)}`;
+}
+
+async function viewNbaAbout(v) {
+  v.innerHTML = `<section class="hero"><span class="eyebrow">NBA</span><h1>Data and method</h1></section>
+    <section class="panel"><h2>What the model does</h2><p class="small">For each player: expected minutes (recent games weighted towards the latest three) with the spread of minutes players actually showed in past seasons, so short nights from blowouts and foul trouble are included; per-minute scoring, rebounding, assist and three-point rates weighted over about 15 games and shrunk towards the position average when minutes are few; an opponent adjustment (what that defence allows per possession, relative to the league at the time) and pace. Points + rebounds + assists is built from the same minutes, so it is consistent with its parts.</p>
+      <p class="small">Chance of playing comes from recent appearances, then the daily injury report: Out = 1%, game-time decision = 65% of the usual chance. Those two numbers are assumptions; injury reports have no history here before September 2026, so their effect is judged from now on.</p></section>
+    <section class="panel"><h2>Known gaps</h2><ul class="small"><li>When a teammate who played last game is ruled out, the extra minutes and shots are not added yet (flagged on the card).</li><li>Data arrive the morning after games (about 11:45 UK time); late scratches after the injury snapshot (about 18:40 UK time) are missed.</li><li>No bookmaker prices are used. UK bookmakers' NBA props are not available through the odds feed; any line you enter is your own.</li></ul></section>
+    <section class="panel"><h2>Sources</h2><p class="small">Box scores, schedules and injury snapshots: SportsDataverse (sportsdataverse-data releases, CC BY 4.0), originally from ESPN game feeds. Not used: NBA.com statistics and injury PDFs (their terms forbid use in connection with gambling) and ESPN's own site.</p></section>`;
 }
 
 // ---------------------------------------------------------------- Defences

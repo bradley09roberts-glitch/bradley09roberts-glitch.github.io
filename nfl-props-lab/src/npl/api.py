@@ -81,6 +81,53 @@ def defense(season: int | None = None, week: int | None = None):
     return _j(r)
 
 
+@app.get("/api/nba/slate")
+def nba_slate():
+    from .nba import appdata as nba
+
+    d = nba.slate()
+    if "error" in d:
+        raise HTTPException(404, d["error"])
+    return _j(nba.clean(d))
+
+
+@app.get("/api/nba/props")
+def nba_props():
+    from .nba import appdata as nba
+
+    d = nba.props()
+    if "error" in d:
+        raise HTTPException(404, d["error"])
+    return _j(nba.clean(d))
+
+
+@app.get("/api/nba/player/{player_id}")
+def nba_player(player_id: str):
+    from .nba import appdata as nba
+
+    d = nba.player(player_id)
+    if "error" in d:
+        raise HTTPException(404, d["error"])
+    return _j(nba.clean(d))
+
+
+@app.get("/api/nba/game/{game_id}")
+def nba_game(game_id: str):
+    from .nba import appdata as nba
+
+    d = nba.game(game_id)
+    if "error" in d:
+        raise HTTPException(404, d["error"])
+    return _j(nba.clean(d))
+
+
+@app.get("/api/nba/backtests")
+def nba_backtests():
+    from .nba import appdata as nba
+
+    return _j(nba.clean(nba.backtests()))
+
+
 @app.get("/api/backtests")
 def backtests():
     return _j(appdata.backtests())

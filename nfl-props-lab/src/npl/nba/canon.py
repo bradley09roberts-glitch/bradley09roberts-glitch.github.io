@@ -42,6 +42,14 @@ def build(con: sqlite3.Connection | None = None) -> dict:
     con = con or db.connect()
     d = _raw_box(con)
     d = d[d.season_type.isin(SEASON_TYPES) & d.athlete_id.notna()].copy()
+    # All-Star and exhibition games use made-up teams: keep games between teams that play a
+    # normal schedule (at least 20 team-games in the season)
+    tgc = d.drop_duplicates(["season", "game_id", "team_abbreviation"]).groupby(
+        ["season", "team_abbreviation"]).size()
+    real = {k for k, v in tgc.items() if v >= 20 or k[0] == source.CURRENT_SEASON}
+    keep = [(s_, t) in real and (s_, o) in real for s_, t, o in
+            zip(d.season, d.team_abbreviation, d.opponent_team_abbreviation, strict=True)]
+    d = d[keep]
     d["game_id"] = d.game_id.astype("int64").astype(str)
     # ESPN athlete ids are integers; some season files store them as floats, so normalise to
     # plain integer strings (the same form as the injury snapshots)

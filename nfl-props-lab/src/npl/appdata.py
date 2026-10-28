@@ -195,6 +195,20 @@ def slate(season: int | None = None, week: int | None = None) -> dict:
                    "games": out})
 
 
+NFL_STAT = {"pass_yds": "passing_yards", "pass_att": "attempts", "pass_cmp": "completions",
+            "rush_yds": "rushing_yards", "rush_att": "carries", "receptions": "receptions",
+            "rec_yds": "receiving_yards"}
+
+
+def _nfl_logs(pids: set, season: int, week: int, n: int = 20) -> dict:
+    """Last `n` games played before (season, week), for hit rates on prop cards."""
+    pg = lake()["pg"]
+    pg = pg[pg.player_id.isin(pids) & (pg.participation == "played") &
+            ((pg.season < season) | ((pg.season == season) & (pg.week < week)))]
+    pg = pg.sort_values(["season", "week"]).groupby("player_id").tail(n)
+    return {pid: g for pid, g in pg.groupby("player_id")}
+
+
 def props(season=None, week=None, model: str | None = None) -> dict:
     e = latest_edition(season, week)
     if e is None:
@@ -213,6 +227,15 @@ def props(season=None, week=None, model: str | None = None) -> dict:
                       "q90": x.get("q90"), "status": x["status"]}
                   for m, x in fm.items() if m != model}
         cards.append(_card(f, games[gid], others))
+    logs = _nfl_logs({c["player_id"] for c in cards}, e["season"], e["week"])
+    for c in cards:
+        g = logs.get(c["player_id"])
+        if g is None or c["market"] not in NFL_STAT:
+            c["log"] = {"values": [], "opp": [], "date": [], "season": []}
+            continue
+        c["log"] = {"values": [int(v) for v in g[NFL_STAT[c["market"]]].fillna(0)],
+                    "opp": g.opponent.tolist(), "date": [f"W{w}" for w in g.week],
+                    "season": g.season.astype(str).tolist(), "current_season": str(e["season"])}
     return _clean({"edition_id": e["edition_id"], "model": model, "season": e["season"],
                    "week": e["week"], "published_at_london": e["published_at_london"],
                    "cards": cards})

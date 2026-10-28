@@ -1,0 +1,210 @@
+"""Read-only NBA views for the app: slate, prop cards (with recent game logs for hit rates),
+player and game pages, and opponent factors. Built from the latest NBA edition and the lake."""
+
+from __future__ import annotations
+
+import json
+from functools import lru_cache
+
+import numpy as np
+import pandas as pd
+
+from ..config import LONDON
+from . import canon, live
+from . import model as M
+
+STAT_COLS = {"pts": "pts", "reb": "reb", "ast": "ast", "fg3m": "fg3m"}
+
+
+def _london(ts) -> str:
+    t = pd.Timestamp(ts)
+    t = t.tz_localize("UTC") if t.tzinfo is None else t
+    return t.tz_convert(LONDON).strftime("%a %d %b %H:%M %Z")
+
+
+@lru_cache(maxsize=4)
+def _edition(path: str, mtime: float) -> dict:
+    return json.loads(open(path).read())
+
+
+def latest() -> dict | None:
+    p = live.latest_edition_path()
+    return _edition(str(p), p.stat().st_mtime) if p else None
+
+
+@lru_cache(maxsize=2)
+def _lake(mtime: float) -> dict:
+    return canon.load()
+
+
+def lake() -> dict:
+    return _lake((canon.NBA_LAKE / "player_games.parquet").stat().st_mtime)
+
+
+def _values(pg: pd.DataFrame, mk: str) -> pd.Series:
+    return pg.pts + pg.reb + pg.ast if mk == "pra" else pg[STAT_COLS[mk]]
+
+
+def game_logs(pids: set[str], before: str) -> dict[str, pd.DataFrame]:
+    pg = lake()["player_games"]
+    pg = pg[pg.player_id.isin(pids) & (pg.participation == "played") &
+            (pg.tip_utc < pd.Timestamp(before))].sort_values("tip_utc")
+    return {pid: g for pid, g in pg.groupby("player_id")}
+
+
+def opponent_factors(at: str) -> dict:
+    """Model opponent factor per team and stat (shrunk as N1 uses it), with ranks
+    (1 = allows least)."""
+    L = lake()
+    p = M.load_params()
+    ts = M.team_states(L["team_games"][L["team_games"].tip_utc < pd.Timestamp(at)], p)
+    last = ts.sort_values("tip_utc").groupby("team").tail(1).set_index("team")
+    out = {}
+    for s in M.BASE_STATS:
+        raw = last[f"def_{s}"] / last[f"lg_{s}"]
+        f = 1 + (raw - 1) * last.n_team / (last.n_team + p.k_def)
+        r = f.rank(method="min").astype(int)
+        for t in f.index:
+            out.setdefault(t, {})[s] = {"factor": round(float(f[t]), 4), "rank": int(r[t]),
+                                        "games": int(last.n_team[t])}
+    pace = last.pace_ew.rank(ascending=False, method="min").astype(int)
+    for t in last.index:
+        out[t]["pace"] = {"value": round(float(last.pace_ew[t]), 1), "rank": int(pace[t])}
+    return out
+
+
+def slate() -> dict:
+    e = latest()
+    if e is None:
+        return {"error": "no NBA edition yet"}
+    games = [{**g, "tip_london": _london(g["tip_utc"])} for g in e["games"]]
+    return {"edition_id": e["edition_id"], "date_et": e["date_et"],
+            "published_at": e["published_at"], "published_london": _london(e["published_at"]),
+            "kind": e["kind"], "games": games, "notes": e.get("notes", []),
+            "inputs": e.get("inputs", {}), "model_version": e["code"]["model_version"]}
+
+
+def props() -> dict:
+    e = latest()
+    if e is None:
+        return {"error": "no NBA edition yet"}
+    fc = [f for f in e["forecasts"] if f["model"] == e["headline_model"]]
+    others = {(f["player_id"], f["market"], f["model"]): f for f in e["forecasts"]
+              if f["model"] != e["headline_model"]}
+    logs = game_logs({f["player_id"] for f in fc}, e["published_at"])
+    games = {g["game_id"]: g for g in e["games"]}
+    opp = opponent_factors(e["published_at"])
+    season = e["date_et"][:4]
+    out_by_team: dict[str, list] = {}
+    for f in fc:
+        if f["market"] == "pts" and f.get("injury") and f["injury"]["fantasy"] in ("OUT", "OFS"):
+            lg = logs.get(f["player_id"])
+            out_by_team.setdefault(f["team"], []).append(
+                {"name": f["name"], "minutes": f["minutes_expected"],
+                 "played_last": bool(lg is not None and len(lg) and
+                                     lg.tip_utc.iloc[-1] >= _team_last_tip(f["team"], e))})
+    cards = []
+    for f in fc:
+        lg = logs.get(f["player_id"])
+        vals, opps, dates = [], [], []
+        if lg is not None and len(lg):
+            v = _values(lg, f["market"]).tail(40)
+            sub = lg.tail(40)
+            vals = [int(z) for z in v]
+            opps = sub.opp.tolist()
+            dates = sub.date.dt.strftime("%d %b").tolist()
+            seasons = sub.season.astype(str).tolist()
+        else:
+            seasons = []
+        g = games[f["game_id"]]
+        o = opp.get(f["opponent"], {})
+        stat = "pts" if f["market"] == "pra" else f["market"]
+        cards.append({
+            **{k: f[k] for k in ("game_id", "player_id", "name", "team", "opponent", "position",
+                                 "market", "p_play", "injury", "minutes_expected", "mean",
+                                 "median", "q10", "q90", "dist")},
+            "market_label": M.MARKET_LABELS[f["market"]], "model": e["headline_model"],
+            "tip_utc": g["tip_utc"], "tip_london": _london(g["tip_utc"]),
+            "is_home": g["home"] == f["team"],
+            "baselines": {m: others[(f["player_id"], f["market"], m)]["mean"]
+                          for m in ("A", "C") if (f["player_id"], f["market"], m) in others},
+            "log": {"values": vals, "opp": opps, "date": dates, "season": seasons,
+                    "current_season": str(int(season) + 1) if int(e["date_et"][5:7]) >= 8
+                    else season},
+            "opp_factor": o.get(stat), "opp_pace": o.get("pace"),
+            # only absences that recent minutes cannot reflect yet (he played last game)
+            "teammates_out": [t for t in out_by_team.get(f["team"], [])
+                              if t["name"] != f["name"] and t["minutes"] >= 20 and
+                              t["played_last"]]})
+    return {"edition_id": e["edition_id"], "date_et": e["date_et"], "cards": cards,
+            "markets": {k: M.MARKET_LABELS[k] for k in M.MARKETS},
+            "published_london": _london(e["published_at"])}
+
+
+def _team_last_tip(team: str, e: dict):
+    tg = lake()["team_games"]
+    t = tg[(tg.team == team) & (tg.tip_utc < pd.Timestamp(e["published_at"]))]
+    return t.tip_utc.max() if len(t) else pd.Timestamp(0, tz="UTC")
+
+
+def player(pid: str) -> dict:
+    e = latest()
+    pg = lake()["player_games"]
+    g = pg[pg.player_id == pid].sort_values("tip_utc")
+    if g.empty:
+        return {"error": "unknown player"}
+    rows = [{"date": r.date.strftime("%Y-%m-%d"), "season": int(r.season),
+             "season_type": r.season_type, "team": r.team, "opp": r.opp, "home": bool(r.is_home),
+             "participation": r.participation, "starter": bool(r.starter),
+             **{k: (None if pd.isna(getattr(r, k)) else float(getattr(r, k)))
+                for k in ("minutes", "pts", "reb", "ast", "fg3m")}}
+            for r in g.tail(100).itertuples()]
+    fc = [f for f in (e or {}).get("forecasts", []) if f["player_id"] == pid]
+    last = g.iloc[-1]
+    return {"player_id": pid, "name": last["name"], "team": last.team, "position": last.pos,
+            "game_log": rows, "forecasts": fc,
+            "edition_id": (e or {}).get("edition_id")}
+
+
+def game(gid: str) -> dict:
+    e = latest()
+    if e is None:
+        return {"error": "no NBA edition"}
+    g = next((x for x in e["games"] if x["game_id"] == gid), None)
+    if g is None:
+        return {"error": "game not in the latest NBA edition"}
+    fc = [f for f in e["forecasts"] if f["game_id"] == gid and f["model"] == e["headline_model"]]
+    players: dict[str, dict] = {}
+    for f in fc:
+        d = players.setdefault(f["player_id"], {k: f[k] for k in (
+            "player_id", "name", "team", "position", "p_play", "injury", "minutes_expected")})
+        d[f["market"]] = {"median": f["median"], "q10": f["q10"], "q90": f["q90"],
+                          "mean": f["mean"]}
+    opp = opponent_factors(e["published_at"])
+    return {"game": {**g, "tip_london": _london(g["tip_utc"])}, "edition_id": e["edition_id"],
+            "players": sorted(players.values(), key=lambda d: -d["minutes_expected"]),
+            "opp": {t: opp.get(t) for t in (g["home"], g["away"])}}
+
+
+def backtests() -> list[dict]:
+    from ..config import REPORTS_DIR
+    out = []
+    for f in sorted((REPORTS_DIR / "nba" / "backtests").glob("*/summary.json")):
+        d = json.loads(f.read_text())
+        out.append({k: d[k] for k in ("label", "seasons", "markets", "participation",
+                                      "rows_scored") if k in d})
+    return out
+
+
+def clean(o):
+    if isinstance(o, dict):
+        return {k: clean(v) for k, v in o.items()}
+    if isinstance(o, list | tuple):
+        return [clean(v) for v in o]
+    if isinstance(o, float | np.floating):
+        return None if np.isnan(o) else float(o)
+    if isinstance(o, np.integer):
+        return int(o)
+    if isinstance(o, pd.Timestamp):
+        return o.isoformat()
+    return o
