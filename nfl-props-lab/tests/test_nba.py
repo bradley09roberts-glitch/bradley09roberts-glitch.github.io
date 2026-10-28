@@ -85,3 +85,16 @@ def test_candidates_mark_absent_players_and_features_are_point_in_time():
     r = x[(x.game_id == "g3") & (x.player_id == "p1")].iloc[0]
     assert r.n_played == 2  # g1 and g2 only, never the game being forecast
     assert r.pts_l10 == pytest.approx(25.0)
+
+
+def test_latest_edition_is_by_publish_time_not_label(tmp_path, monkeypatch):
+    from npl.nba import live
+
+    d = tmp_path / "2026-10-28"
+    d.mkdir()
+    for name in ("NBA-2026-10-28-preview-20261028T1117Z", "NBA-2026-10-28-early-20261028T1227Z",
+                 "NBA-2026-10-28-final-20261028T1905Z"):
+        (d / f"{name}.json").write_text("{}")
+    monkeypatch.setattr(live, "NBA_EDITIONS", tmp_path)
+    assert live.latest_edition_path().stem.endswith("final-20261028T1905Z")
+    assert [p.stem.split("-")[4] for p in live.edition_files()] == ["preview", "early", "final"]

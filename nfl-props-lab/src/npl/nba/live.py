@@ -208,7 +208,10 @@ def publish(date_et: str, kind: str = "early", con: sqlite3.Connection | None = 
 
 
 def edition_files() -> list:
-    return sorted(NBA_EDITIONS.glob("*/*.json"))
+    """Editions in publication order (the file name ends with its UTC publish time; the kind
+    label in the middle must not decide the order)."""
+    return sorted(NBA_EDITIONS.glob("*/*.json"), key=lambda p: (p.parent.name,
+                                                                p.stem.rsplit("-", 1)[-1]))
 
 
 def latest_edition_path(date_et: str | None = None):
