@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#07090c">
+<title>FM26 Toolkit</title>
+<style>
+:root{color-scheme:dark;--bg:#07090c;--panel:#12161c;--panel2:#171c24;--line:#2a313b;--txt:#f5f7fa;--mut:#8993a0;--acc:#3ddc97;--acc2:#1f8f61;--warn:#ffb454;--bad:#ff6b7a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;padding-bottom:76px;line-height:1.4}
+header{position:sticky;top:0;z-index:10;background:#07090ce8;backdrop-filter:blur(16px);border-bottom:1px solid #242a33;padding:12px 14px;display:flex;align-items:center;justify-content:space-between}
+.brand{display:flex;gap:9px;align-items:center}
+.logo{width:40px;height:40px;border-radius:12px;background:linear-gradient(145deg,var(--acc),var(--acc2));color:#04150d;display:grid;place-items:center;font-weight:900;font-size:13px}
+.brand b{letter-spacing:1px}
+.brand small{display:block;color:var(--mut);font-size:9px}
+header select{height:36px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--txt);padding:0 8px}
+.page{padding:14px;max-width:900px;margin:auto}
+.panel{display:none}.panel.on{display:block}
+.hero{border:1px solid #1f4a38;border-radius:22px;padding:18px 16px;background:linear-gradient(145deg,#1b2027,#101318 65%,#0d2119)}
+.hero small{color:var(--acc);font-size:10px;font-weight:900;letter-spacing:1.4px}
+.hero h1{font-size:26px;line-height:1;margin:7px 0}
+.hero p{margin:0;color:#a8b0ba;font-size:12px}
+.form{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
+.f{display:flex;flex-direction:column;gap:4px}
+.f span{font-size:10px;color:var(--mut);text-transform:uppercase;letter-spacing:.5px}
+.f input,.f select{height:44px;border:1px solid var(--line);border-radius:12px;background:var(--panel);color:var(--txt);padding:0 12px;font-size:15px;width:100%}
+.f.wide{grid-column:1/-1}
+.chk{display:flex;align-items:center;gap:8px;font-size:12px;color:#c3cad3}
+.chk input{width:20px;height:20px;accent-color:var(--acc)}
+.out{border:1px solid var(--line);border-radius:18px;background:var(--panel);padding:14px;margin-bottom:12px}
+.out h3{margin:0 0 10px;font-size:14px}
+.tri{display:grid;grid-template-columns:1fr 1.15fr 1fr;gap:8px;text-align:center}
+.tri div{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:10px 4px}
+.tri .mid{border-color:#1f6e4d;background:#0e2119}
+.tri small{display:block;font-size:9px;color:var(--mut);text-transform:uppercase}
+.tri b{font-size:17px}
+.tri .mid b{color:var(--acc);font-size:20px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.chip{border:1px solid var(--line);border-radius:999px;background:var(--panel2);color:#aab3be;padding:5px 9px;font-size:10px;font-weight:700}
+.chip.up{color:var(--bad);border-color:#5a2a31}.chip.down{color:var(--acc);border-color:#1f5a40}
+.note{color:var(--mut);font-size:11px;margin:8px 0 0}
+.warn{border:1px solid #6b4a1c;background:#241a0b;color:var(--warn);border-radius:12px;padding:9px 11px;font-size:12px;margin-top:10px}
+.bad{border-color:#6b2c35;background:#281116;color:var(--bad)}
+.good{border-color:#1f5a40;background:#0d2119;color:var(--acc)}
+.kv{display:grid;grid-template-columns:1fr auto;gap:6px 10px;font-size:13px}
+.kv span{color:var(--mut)}.kv b{text-align:right}
+.kv.roles{grid-template-columns:minmax(0,.8fr) minmax(0,1.5fr);font-size:12px}.kv.roles b{font-weight:600}
+ol.lad{margin:8px 0 0;padding-left:20px;font-size:13px}
+.msg{padding:20px;text-align:center;color:var(--mut)}
+button.btn{height:44px;border:0;border-radius:12px;background:var(--acc);color:#04150d;font-weight:800;padding:0 16px;font-size:14px}
+button.ghost{background:var(--panel2);color:var(--txt);border:1px solid var(--line)}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.pl{display:grid;grid-template-columns:34px 1fr auto;gap:10px;align-items:center;border:1px solid var(--line);border-radius:14px;background:var(--panel);padding:10px;margin-bottom:8px}
+.rk{width:34px;height:34px;border-radius:10px;background:var(--panel2);display:grid;place-items:center;font-weight:900;color:var(--acc)}
+.pl:first-child .rk{background:var(--acc);color:#04150d}
+.pl b{font-size:14px}.pl small{display:block;color:var(--mut);font-size:11px}
+.idx{text-align:right}.idx b{font-size:18px;color:var(--acc)}.idx small{font-size:9px}
+.tag{font-size:10px;font-weight:800}.tag.a{color:var(--acc)}.tag.d{color:var(--bad)}.tag.s{color:var(--warn)}
+.pl button{border:0;background:none;color:var(--mut);font-size:18px;padding:0 4px}
+textarea{width:100%;min-height:90px;border:1px solid var(--line);border-radius:12px;background:var(--panel);color:var(--txt);padding:10px;font-family:ui-monospace,Menlo,monospace;font-size:12px}
+.seg{display:flex;gap:6px;overflow:auto;padding-bottom:6px;scrollbar-width:none}
+.seg button{border:1px solid var(--line);border-radius:999px;background:var(--panel);color:#aab3be;padding:8px 12px;white-space:nowrap;font-size:12px;font-weight:800}
+.seg button.on{background:#0e2e21;border-color:#1f6e4d;color:#fff}
+.pitch{width:100%;max-width:420px;display:block;margin:10px auto;border-radius:16px;border:1px solid var(--line)}
+.slots{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;font-size:12px;margin-top:8px}
+.slots div{display:flex;justify-content:space-between;gap:6px;border-bottom:1px solid #ffffff0d;padding:4px 0}
+.slots em{font-style:normal;color:var(--mut)}
+ul.pl2{margin:6px 0 0;padding-left:18px;font-size:13px}
+.nav{position:fixed;left:0;right:0;bottom:0;background:#090b0eef;backdrop-filter:blur(16px);border-top:1px solid #242a33;padding:8px 10px calc(8px + env(safe-area-inset-bottom));display:grid;grid-template-columns:repeat(4,1fr);z-index:20}
+.nav button{border:0;background:none;color:#78828f;font-weight:800;font-size:10px}
+.nav button.on{color:#fff}
+.nav span{display:block;font-size:20px}
+details{border:1px solid var(--line);border-radius:14px;background:var(--panel);padding:10px 12px;margin-top:14px;font-size:12px;color:#c3cad3}
+summary{cursor:pointer;font-weight:800}
+details a{color:var(--acc)}
+@media(min-width:700px){.form{grid-template-columns:repeat(4,1fr)}}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand"><div class="logo">FM</div><div><b>FM26 TOOLKIT</b><small>TRANSFERS · WAGES · MONEYBALL · TACTICS</small></div></div>
+  <select id="cur" data-save aria-label="Currency"><option>£</option><option>€</option><option>$</option></select>
+</header>
+
+<main class="page">
+
+<!-- ============ TRANSFER FEE ============ -->
+<section class="panel on" id="fee">
+  <div class="hero"><small>TRANSFER FEE</small><h1>What should I bid?</h1><p>Enter what FM shows on the player’s profile and the context of the deal. You get an opening bid, an expected price and a walk-away ceiling.</p></div>
+  <div class="form">
+    <label class="f"><span>Listed value (M)</span><input id="f-value" data-save type="number" inputmode="decimal" step="any" value="12"></label>
+    <label class="f"><span>Age</span><input id="f-age" data-save type="number" inputmode="numeric" value="24"></label>
+    <label class="f"><span>Months left on contract</span><input id="f-months" data-save type="number" inputmode="numeric" value="18"></label>
+    <label class="f"><span>Role at his club</span><select id="f-status" data-save><option value="key">Key player</option><option value="rotation" selected>Rotation</option><option value="surplus">Surplus / fringe</option><option value="listed">Transfer-listed</option></select></label>
+    <label class="f"><span>Window timing</span><select id="f-timing" data-save><option value="early">Early (first weeks)</option><option value="mid" selected>Mid-window</option><option value="late">Deadline days</option></select></label>
+    <label class="f"><span>Release clause (M, optional)</span><input id="f-clause" data-save type="number" inputmode="decimal" step="any" placeholder="none"></label>
+    <label class="f"><span>Your transfer budget (M)</span><input id="f-budget" data-save type="number" inputmode="decimal" step="any" placeholder="optional"></label>
+    <div class="f" style="justify-content:end;gap:8px">
+      <label class="chk"><input id="f-hype" data-save type="checkbox"> Hyped prospect</label>
+      <label class="chk"><input id="f-broke" data-save type="checkbox"> Seller needs cash</label>
+    </div>
+  </div>
+  <div id="f-out"></div>
+</section>
+
+<!-- ============ WAGES ============ -->
+<section class="panel" id="wage">
+  <div class="hero"><small>WAGES &amp; CONTRACT</small><h1>What should I pay?</h1><p>Anchors the offer to your own wage structure, so one signing doesn’t blow up everyone else’s contract demands.</p></div>
+  <div class="form">
+    <label class="f"><span>Squad average (K/wk)</span><input id="w-avg" data-save type="number" inputmode="decimal" step="any" value="35"></label>
+    <label class="f"><span>Top earner (K/wk)</span><input id="w-top" data-save type="number" inputmode="decimal" step="any" value="140"></label>
+    <label class="f"><span>Squad status you’ll offer</span><select id="w-status" data-save><option value="star">Star player</option><option value="important" selected>Important player</option><option value="rotation">Rotation</option><option value="backup">Backup</option><option value="prospect">Prospect</option></select></label>
+    <label class="f"><span>Player age</span><input id="w-age" data-save type="number" inputmode="numeric" value="24"></label>
+    <label class="f"><span>Agent’s ask (K/wk, optional)</span><input id="w-ask" data-save type="number" inputmode="decimal" step="any" placeholder="from the offer screen"></label>
+    <label class="f"><span>Transfer fee (M, 0 = free)</span><input id="w-fee" data-save type="number" inputmode="decimal" step="any" value="12"></label>
+    <label class="f"><span>Contract years (0 = suggested)</span><input id="w-years" data-save type="number" inputmode="numeric" value="0"></label>
+  </div>
+  <div id="w-out"></div>
+</section>
+
+<!-- ============ MONEYBALL BOARD ============ -->
+<section class="panel" id="board">
+  <div class="hero"><small>MONEYBALL BOARD</small><h1>Rank your shortlist.</h1><p>Add candidates and the board ranks them by ability gained per million spent, counting wages over the contract and growth for young players.</p></div>
+  <div class="form">
+    <label class="f"><span>Baseline rating</span><input id="b-base" data-save type="number" inputmode="decimal" step="any" value="110"></label>
+    <label class="f"><span>Contract years assumed</span><input id="b-years" data-save type="number" inputmode="numeric" value="4"></label>
+  </div>
+  <div class="out" style="padding:12px">
+    <h3>Add a candidate</h3>
+    <div class="form" style="margin:0">
+      <label class="f"><span>Name</span><input id="n-name" placeholder="Player name"></label>
+      <label class="f"><span>Position</span><input id="n-pos" placeholder="e.g. DM"></label>
+      <label class="f"><span>Age</span><input id="n-age" type="number" inputmode="numeric"></label>
+      <label class="f"><span>Current rating</span><input id="n-cur" type="number" inputmode="decimal" step="any"></label>
+      <label class="f"><span>Potential rating</span><input id="n-pot" type="number" inputmode="decimal" step="any"></label>
+      <label class="f"><span>Value (M)</span><input id="n-val" type="number" inputmode="decimal" step="any"></label>
+      <label class="f"><span>Wage (K/wk)</span><input id="n-wage" type="number" inputmode="decimal" step="any"></label>
+      <div class="f" style="justify-content:end"><button class="btn" id="n-add" type="button">Add to board</button></div>
+    </div>
+    <p class="note">“Rating” is any one scale you use consistently: CA/PA from an editor or scouting tool, or scouted star ratings ×40. Keep the baseline on the same scale.</p>
+  </div>
+  <div id="b-out"></div>
+  <div class="row"><button class="btn ghost" id="b-copy" type="button">Copy CSV</button><button class="btn ghost" id="b-imp" type="button">Import CSV</button><button class="btn ghost" id="b-clear" type="button">Clear board</button></div>
+  <textarea id="b-csv" placeholder="name,pos,age,current,potential,value_m,wage_k — paste rows here and press Import CSV" hidden></textarea>
+</section>
+
+<!-- ============ TACTICS ============ -->
+<section class="panel" id="tac">
+  <div class="hero"><small>TACTICS</small><h1>Starting-point systems.</h1><p>FM26 splits tactics into in-possession and out-of-possession shapes. Each preset shows both, the roles, and what to scout for.</p></div>
+  <div class="seg" id="t-pick" style="margin-top:12px"></div>
+  <div class="seg" id="t-phase"><button data-ph="ip" class="on">In possession</button><button data-ph="oop">Out of possession</button></div>
+  <div class="out"><div id="t-pitch"></div><div class="slots" id="t-slots"></div></div>
+  <div id="t-info"></div>
+  <div class="row"><button class="btn" id="t-copy" type="button">Copy setup as text</button></div>
+</section>
+
+<details>
+  <summary>How these numbers work (read this)</summary>
+  <p>Football Manager doesn’t publish how its AI values players, so none of these are the game’s formulas. They’re rules of thumb drawn from community guides, meant as starting points you adjust using the in-game responses (agent reactions, “suggest terms”, club replies). I couldn’t run FM26 here, so nothing has been tested in a match.</p>
+  <ul class="pl2">
+    <li>Fee: shorter contract, older age, fringe role and a cash-strapped seller lower the expected price; key-player status and an early window raise it.</li>
+    <li>Wages: bands are multiples of your own squad average, capped by your top earner.</li>
+    <li>Signing-on ≤ one year of wages and agent fee ≈ 10% of the transfer fee are community habits, not game rules.</li>
+    <li>Role attribute lists are the classic FM role emphasis; check the role description in-game, since FM26 may have changed some.</li>
+  </ul>
+  <p>Further reading: <a href="https://sortitoutsi.net/content/76697/fm26-guide-buying-players">Sortitoutsi: buying players</a> · <a href="https://www.fmscout.com/a-fm26-moneyball-spreadsheet-and-views.html">FM26 Moneyball spreadsheet</a> · <a href="https://www.passion4fm.com/fm-value-scout-moneyball-scouting-tool/">FM Value Scout</a> · <a href="https://footballgpt.co/fm/meta/FM26">FM26 meta report</a> · <a href="https://www.fmscout.com/a-how-to-get-a-good-deal-in-the-transfer-market.html">Getting a good deal</a></p>
+</details>
+</main>
+
+<nav class="nav">
+  <button class="on" data-tab="fee"><span>£</span>Fee</button>
+  <button data-tab="wage"><span>▤</span>Wages</button>
+  <button data-tab="board"><span>◎</span>Moneyball</button>
+  <button data-tab="tac"><span>✚</span>Tactics</button>
+</nav>
+
+<script>
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const num=(id,d=0)=>{const v=parseFloat($(id).value);return Number.isFinite(v)?v:d};
+const store={get(k,d){try{const v=JSON.parse(localStorage.getItem(k));return v==null?d:v}catch{return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}};
+let CUR='£';
+const money=m=>m>=1?CUR+(m>=100?m.toFixed(0):m>=10?m.toFixed(1):m.toFixed(2))+'M':CUR+Math.round(m*1000)+'K';
+const wk=k=>k>=1000?CUR+(k/1000).toFixed(2)+'M/wk':CUR+(k>=10?Math.round(k):k.toFixed(1))+'K/wk';
+const kvs=(rows,cls='')=>`<div class="kv ${cls}">`+rows.map(([a,b])=>`<span>${a}</span><b>${b}</b>`).join('')+'</div>';
+
+/* ---------- TRANSFER FEE ---------- */
+function feeCalc(){
+  const v=num('#f-value'),age=num('#f-age',25),m=num('#f-months',24),clause=num('#f-clause'),budget=num('#f-budget');
+  const out=$('#f-out');
+  if(v<=0){out.innerHTML='<div class="msg">Enter the player’s listed value.</div>';return}
+  const f={
+    contract:m<=6?.55:m<=12?.75:m<=18?.9:m<=30?1:m<=48?1.08:1.15,
+    age:age>=33?.75:age>=31?.85:age>=29?.95:1,
+    role:{key:1.25,rotation:1,surplus:.8,listed:.7}[$('#f-status').value],
+    timing:{early:1.08,mid:1,late:.94}[$('#f-timing').value],
+    hype:$('#f-hype').checked?1.1:1,
+    cash:$('#f-broke').checked?.9:1
+  };
+  const labels={contract:'Contract',age:'Age',role:'Role',timing:'Timing',hype:'Hype',cash:'Seller cash'};
+  const chips=Object.entries(f).filter(([,x])=>x!==1).map(([k,x])=>`<span class="chip ${x>1?'up':'down'}">${labels[k]} ×${x}</span>`).join('');
+  let fair=v*Object.values(f).reduce((a,b)=>a*b,1),open=fair*.75,ceil=fair*1.25,html='';
+  if(clause>0&&clause<=fair){
+    html=`<div class="out"><h3>Pay the release clause</h3><div class="tri"><div><small>Clause</small><b>${money(clause)}</b></div><div class="mid"><small>Expected price</small><b>${money(fair)}</b></div><div><small>Saving</small><b>${money(fair-clause)}</b></div></div><div class="warn good">The clause is at or below the expected price, so triggering it beats negotiating with the club.</div></div>`;
+    if(budget>0&&clause>budget)html+=`<div class="warn bad">Clause is over your ${money(budget)} budget.</div>`;
+    out.innerHTML=html;return;
+  }
+  if(clause>0)ceil=Math.min(ceil,clause);
+  open=Math.min(open,ceil);
+  const lad=[];for(let o=open;o<ceil*.999&&lad.length<5;o*=1.08)lad.push(o);lad.push(ceil);
+  html=`<div class="out"><h3>Bid range</h3>
+    <div class="tri"><div><small>Open at</small><b>${money(open)}</b></div><div class="mid"><small>Expected price</small><b>${money(fair)}</b></div><div><small>Walk away above</small><b>${money(ceil)}</b></div></div>
+    <div class="chips">${chips||'<span class="chip">No adjustments</span>'}<span class="chip">vs listed ×${(fair/v).toFixed(2)}</span></div></div>
+  <div class="out"><h3>If they reject</h3><ol class="lad">${lad.map(x=>`<li>${money(x)}</li>`).join('')}</ol><p class="note">Raise in small steps (~8%). If the club says it wants a specific figure, jump to it only when it’s under your ceiling.</p></div>
+  <div class="out"><h3>Deal structure to try</h3>${kvs([
+    ['Paid up front (60%)',money(fair*.6)],
+    ['Two instalments (20% each)',money(fair*.2)+' ×2'],
+    ['Agent fee cap (~10%)',money(fair*.1)],
+    ['Sell-on clause to offer if stuck','10–15%']])}
+    <p class="note">Instalments protect cash flow; a sell-on is a cheap sweetener for young players you plan to flip.</p></div>`;
+  if(budget>0){
+    if(open>budget)html+=`<div class="warn bad">Even the opening bid (${money(open)}) is over your ${money(budget)} budget. Look at a loan with an option, or a cheaper target.</div>`;
+    else if(fair>budget)html+=`<div class="warn">The expected price (${money(fair)}) is over your ${money(budget)} budget. Open low and expect a squeeze; instalments may bridge the gap.</div>`;
+    else html+=`<div class="warn good">Expected price fits your ${money(budget)} budget with ${money(budget-fair)} to spare.</div>`;
+  }
+  if(m<=6)html+=`<div class="warn good">Under six months left: also check whether he can be signed on a pre-contract or as a free agent, which skips the fee.</div>`;
+  out.innerHTML=html;
+}
+
+/* ---------- WAGES ---------- */
+const BANDS={star:[1.8,3],important:[1.2,1.8],rotation:[.7,1.2],backup:[.4,.7],prospect:[.15,.4]};
+function wageCalc(){
+  const avg=num('#w-avg'),top=num('#w-top'),ask=num('#w-ask'),age=num('#w-age',25),fee=num('#w-fee'),out=$('#w-out');
+  if(avg<=0){out.innerHTML='<div class="msg">Enter your squad’s average weekly wage.</div>';return}
+  const b=BANDS[$('#w-status').value];
+  let hi=avg*b[1];if(top>0)hi=Math.min(hi,top);
+  let lo=avg*b[0];if(lo>hi)lo=hi*.85;
+  const target=lo+.4*(hi-lo),walk=hi*1.1;
+  const open=ask>0?Math.min(ask*.8,target*.85):target*.85;
+  const sug=age<=23?5:age<=27?4:age<=30?3:age<=33?2:1;
+  const yrs=num('#w-years')>0?num('#w-years'):sug;
+  const annual=target*52/1000,total=annual*yrs;
+  const signCap=annual,agentCap=fee>0?fee*.1:target*10/1000;
+  const swap10=target*.1*52*yrs/1000;
+  let html=`<div class="out"><h3>Weekly wage</h3>
+    <div class="tri"><div><small>Open at</small><b>${wk(open)}</b></div><div class="mid"><small>Target</small><b>${wk(target)}</b></div><div><small>Hard ceiling</small><b>${wk(walk)}</b></div></div>
+    <p class="note">Band for this status: ${wk(lo)} – ${wk(hi)}. Going above it invites knock-on raises from teammates on lower deals.</p></div>`;
+  if(ask>0){
+    html+=ask>walk
+      ?`<div class="warn bad">The agent’s ask (${wk(ask)}) is above your ceiling. Counter lower and trade the difference for a signing-on fee, or pass.</div>`
+      :ask>target
+        ?`<div class="warn">The ask (${wk(ask)}) is ${Math.round((ask/target-1)*100)}% over target but within your ceiling. Close the gap with bonuses instead of weekly pay.</div>`
+        :`<div class="warn good">The ask (${wk(ask)}) is at or under target. Accept it, or shave a little.</div>`;
+  }
+  html+=`<div class="out"><h3>Contract</h3>${kvs([
+    ['Suggested length (age '+age+')',sug+' yr'+(sug>1?'s':'')],
+    ['Using',yrs+' yr'+(yrs>1?'s':'')],
+    ['Signing-on cap (≤1 yr wages)',money(signCap)],
+    ['Agent fee cap',money(agentCap)],
+    ['Trade: cut weekly 10% to save',money(swap10)],
+    ['…and pay up to as signing-on',money(swap10*.6)]])}
+    <p class="note">Weekly wage is paid every week of the deal; signing-on is paid once. Swapping one for the other is the usual way to get a deal over the line without bending your structure. Also ask for a relegation wage cut (~25–30%) and an appearance-based rise.</p></div>
+  <div class="out"><h3>Total cost</h3>${kvs([
+    ['Wages at target × '+yrs+' yrs',money(total)],
+    ['Transfer fee',money(fee)],
+    ['Likely all-in',money(total+fee)],
+    ['Worst case (all ceilings)',money(walk*52*yrs/1000+fee+signCap+agentCap)]])}</div>`;
+  out.innerHTML=html;
+}
+
+/* ---------- MONEYBALL BOARD ---------- */
+let BOARD=store.get('fm26.board',[]);
+const growthF=a=>a<=19?.6:a<=21?.5:a<=23?.35:a<=25?.15:0;
+function boardRows(){
+  const base=num('#b-base'),yrs=Math.max(num('#b-years',4),1);
+  return BOARD.map(p=>{
+    const cost=Math.max(p.val+p.wage*52*yrs/1000,.05);
+    const gain=Math.max(p.cur-base,0)+Math.max(p.pot-p.cur,0)*growthF(p.age);
+    const outlook=p.age<=23&&p.pot-p.cur>=8?['Appreciating','a']:p.age>=29?['Depreciating','d']:['Stable','s'];
+    return{...p,cost,gain,idx:gain/cost,outlook};
+  }).sort((a,b)=>b.idx-a.idx);
+}
+function boardRender(){
+  const rows=boardRows(),out=$('#b-out');
+  if(!rows.length){out.innerHTML='<div class="msg">No candidates yet. Add a few above to see them ranked.</div>';return}
+  out.innerHTML=rows.map((p,i)=>`<div class="pl"><div class="rk">${i+1}</div>
+    <div><b>${esc(p.name)}</b> <span class="tag ${p.outlook[1]}">${p.outlook[0]}</span>
+    <small>${esc(p.pos)} · ${p.age}y · ${p.cur}/${p.pot} · ${money(p.val)} + ${wk(p.wage)} → ${money(p.cost)} all-in</small></div>
+    <div class="idx"><b>${p.gain>0?p.idx.toFixed(1):'—'}</b><small>pts per ${CUR}M</small><br><button data-del="${p.id}" aria-label="Remove ${esc(p.name)}">×</button></div></div>`).join('')
+    +'<p class="note">Index = (rating above baseline + growth room × youth factor) ÷ (fee + wages over the contract). Growth only counts for players 25 and under.</p>';
+  $$('[data-del]').forEach(b=>b.onclick=()=>{BOARD=BOARD.filter(p=>String(p.id)!==b.dataset.del);store.set('fm26.board',BOARD);boardRender()});
+}
+function addPlayer(p){
+  if(!p.name||![p.age,p.cur,p.pot,p.val,p.wage].every(Number.isFinite))return false;
+  BOARD.push({id:Date.now()+Math.random(),...p});store.set('fm26.board',BOARD);return true;
+}
+$('#n-add').onclick=()=>{
+  const p={name:$('#n-name').value.trim(),pos:$('#n-pos').value.trim(),age:parseFloat($('#n-age').value),cur:parseFloat($('#n-cur').value),pot:parseFloat($('#n-pot').value),val:parseFloat($('#n-val').value),wage:parseFloat($('#n-wage').value)};
+  if(!addPlayer(p)){alert('Fill in name, age, ratings, value and wage.');return}
+  ['#n-name','#n-pos','#n-age','#n-cur','#n-pot','#n-val','#n-wage'].forEach(s=>$(s).value='');
+  boardRender();
+};
+$('#b-clear').onclick=()=>{if(BOARD.length&&confirm('Remove all candidates?')){BOARD=[];store.set('fm26.board',BOARD);boardRender()}};
+$('#b-copy').onclick=async()=>{
+  const csv=BOARD.map(p=>[p.name.replace(/,/g,' '),p.pos.replace(/,/g,' '),p.age,p.cur,p.pot,p.val,p.wage].join(',')).join('\n');
+  $('#b-csv').hidden=false;$('#b-csv').value=csv;
+  try{await navigator.clipboard.writeText(csv);$('#b-copy').textContent='Copied ✓';setTimeout(()=>$('#b-copy').textContent='Copy CSV',1500)}catch{$('#b-csv').select()}
+};
+$('#b-imp').onclick=()=>{
+  const ta=$('#b-csv');
+  if(ta.hidden){ta.hidden=false;ta.value='';ta.focus();return}
+  let n=0;
+  ta.value.split('\n').map(l=>l.trim()).filter(Boolean).forEach(l=>{
+    const c=l.split(',').map(x=>x.trim());
+    if(c[0].toLowerCase()==='name')return;
+    if(addPlayer({name:c[0],pos:c[1]||'',age:parseFloat(c[2]),cur:parseFloat(c[3]),pot:parseFloat(c[4]),val:parseFloat(c[5]),wage:parseFloat(c[6])}))n++;
+  });
+  ta.hidden=true;ta.value='';boardRender();alert(n+' candidate'+(n===1?'':'s')+' imported.');
+};
+
+/* ---------- TACTICS ---------- */
+const ATTR={
+ 'Goalkeeper':'Reflexes, Handling, Aerial Reach, Positioning',
+ 'Sweeper Keeper':'Reflexes, Handling, Command of Area, Kicking, Anticipation',
+ 'Full-Back':'Tackling, Marking, Positioning, Pace, Stamina',
+ 'Wing-Back':'Crossing, Dribbling, Stamina, Work Rate, Pace',
+ 'Inverted Wing-Back':'Tackling, Passing, Technique, Positioning, Composure',
+ 'Ball Playing Defender':'Passing, Composure, Technique, Marking, Tackling, Heading',
+ 'Central Defender':'Marking, Tackling, Heading, Positioning, Strength, Jumping Reach',
+ 'No-Nonsense Centre-Back':'Heading, Marking, Tackling, Strength, Jumping Reach',
+ 'Deep-Lying Playmaker':'Passing, Vision, First Touch, Technique, Composure, Teamwork',
+ 'Ball Winning Midfielder':'Tackling, Aggression, Work Rate, Stamina, Anticipation',
+ 'Box-to-Box Midfielder':'Passing, Stamina, Work Rate, Off the Ball, Tackling',
+ 'Mezzala':'Passing, Dribbling, Off the Ball, Stamina, Work Rate',
+ 'Advanced Playmaker':'Passing, Vision, Technique, Dribbling, Off the Ball, Flair',
+ 'Attacking Midfielder':'Passing, Technique, Off the Ball, Long Shots, Composure',
+ 'Wide Midfielder':'Passing, Crossing, Stamina, Work Rate, Teamwork',
+ 'Inside Forward':'Dribbling, Finishing, Off the Ball, Pace, Acceleration',
+ 'Winger':'Crossing, Dribbling, Pace, Acceleration, Technique',
+ 'Advanced Forward':'Finishing, Off the Ball, Pace, Acceleration, Composure',
+ 'Pressing Forward':'Work Rate, Aggression, Stamina, Finishing, Acceleration',
+ 'Complete Forward':'Finishing, Dribbling, Passing, Strength, Composure, Off the Ball, Pace',
+ 'Target Forward':'Heading, Strength, Jumping Reach, Balance, Bravery',
+ 'Poacher':'Finishing, Off the Ball, Anticipation, Composure, Acceleration'
+};
+const P=(pos,x,y,role,duty)=>({pos,x,y,role,duty}), O=(pos,x,y,job)=>({pos,x,y,job});
+const TACTICS=[
+{id:'ctrl',name:'Balanced control',ipShape:'4-3-3',oopShape:'4-1-4-1',mentality:'Balanced',staffing:'Expensive: needs technical, composed midfielders',
+ ip:[P('GK',50,91,'Sweeper Keeper','S'),P('LB',14,73,'Full-Back','S'),P('CB',37,78,'Ball Playing Defender','D'),P('CB',63,78,'Central Defender','D'),P('RB',86,73,'Wing-Back','S'),P('DM',50,60,'Deep-Lying Playmaker','S'),P('CM',31,46,'Box-to-Box Midfielder','S'),P('CM',69,46,'Mezzala','A'),P('LW',16,24,'Inside Forward','S'),P('RW',84,24,'Winger','A'),P('ST',50,14,'Complete Forward','S')],
+ oop:[O('GK',50,91,'Sweeper behind the line'),O('LB',14,74,'Holds width'),O('CB',37,79,'Covers'),O('CB',63,79,'Steps out to engage'),O('RB',86,74,'Holds width'),O('DM',50,64,'Screens the back four'),O('LM',15,48,'Tracks the full-back'),O('CM',38,50,'Compact, shuts the middle'),O('CM',62,50,'Compact, shuts the middle'),O('RM',85,48,'Tracks the full-back'),O('ST',50,28,'Blocks the pivot')],
+ ins:['Build up with shorter passing and play out from the back.','Work the ball into the box; mix low crosses with cut-backs.','Standard line of engagement with a moderate press trigger.','Use the Sweeper Keeper as an extra passing option.'],
+ best:'Sides that should dominate the ball and have a couple of genuinely good passers.',watch:'Without a composed pivot and a real ball-player at centre-back, it turns into aimless possession.'},
+{id:'ctr',name:'Counter attack',ipShape:'4-2-3-1',oopShape:'4-4-2 mid/low block',mentality:'Cautious or balanced',staffing:'Medium: pace on the flanks and up front is what you pay for',
+ ip:[P('GK',50,91,'Goalkeeper','D'),P('LB',14,73,'Full-Back','S'),P('CB',37,78,'Central Defender','D'),P('CB',63,78,'Central Defender','D'),P('RB',86,73,'Full-Back','A'),P('CM',38,60,'Ball Winning Midfielder','D'),P('CM',62,60,'Box-to-Box Midfielder','S'),P('LW',16,34,'Inside Forward','A'),P('AM',50,36,'Advanced Playmaker','S'),P('RW',84,34,'Winger','A'),P('ST',50,16,'Advanced Forward','A')],
+ oop:[O('GK',50,91,'Commands the box'),O('LB',14,74,'Narrow, protects the half-space'),O('CB',37,79,'Deep, compact'),O('CB',63,79,'Deep, compact'),O('RB',86,74,'Narrow, protects the half-space'),O('LM',14,52,'Drops to the midfield line'),O('CM',38,56,'Wins duels'),O('CM',62,56,'Wins duels'),O('RM',86,52,'Drops to the midfield line'),O('ST',40,36,'Stays high as the outlet'),O('ST',60,36,'Playmaker drops to partner the striker')],
+ ins:['Counter on winning possession; be more direct through the middle.','Faster tempo once the ball is won; hold the shape otherwise.','Lower line of engagement; do not press high.','Pass into space for the wide forwards.'],
+ best:'Underdogs against teams that dominate the ball, and sides with quick wide players.',watch:'Struggles to break down deep blocks. Have a second plan for games you should control.'},
+{id:'press',name:'High press',ipShape:'4-2-3-1',oopShape:'4-4-2 high press',mentality:'Positive',staffing:'Expensive in fitness: wants high Stamina, Work Rate and Acceleration',
+ ip:[P('GK',50,91,'Sweeper Keeper','S'),P('LB',14,73,'Wing-Back','S'),P('CB',37,78,'Ball Playing Defender','D'),P('CB',63,78,'Central Defender','D'),P('RB',86,73,'Full-Back','S'),P('CM',38,60,'Ball Winning Midfielder','S'),P('CM',62,60,'Box-to-Box Midfielder','S'),P('LW',16,34,'Inside Forward','S'),P('AM',50,36,'Advanced Playmaker','S'),P('RW',84,34,'Winger','S'),P('ST',50,16,'Pressing Forward','A')],
+ oop:[O('GK',50,91,'Sweeps the space behind'),O('LB',14,66,'Steps up to the winger'),O('CB',37,70,'High line, tight to the midfield'),O('CB',63,70,'High line, tight to the midfield'),O('RB',86,66,'Steps up to the winger'),O('CM',38,52,'Jumps onto the first pass'),O('CM',62,52,'Jumps onto the first pass'),O('LM',14,40,'Presses the full-back'),O('RM',86,40,'Presses the full-back'),O('ST',40,22,'Presses the centre-backs'),O('ST',60,22,'Playmaker joins the front line')],
+ ins:['Higher line of engagement with a more aggressive press trigger.','Counter-press after losing the ball.','Play at a higher tempo; shorter passing in the build-up.','Rotate the front line often to manage fitness.'],
+ best:'Squads with depth and good fitness, especially against sides that play out from the back.',watch:'Pace at centre-back is mandatory or the space behind gets punished. Tired legs wreck it late in games.'},
+{id:'iwb',name:'Inverted wing-backs',ipShape:'2-3-5',oopShape:'4-4-2 mid block',mentality:'Positive',staffing:'Expensive: full-backs who can pass and read the game are rare',
+ ip:[P('GK',50,91,'Sweeper Keeper','S'),P('CB',36,82,'Ball Playing Defender','D'),P('CB',64,82,'Ball Playing Defender','D'),P('LB',26,64,'Inverted Wing-Back','S'),P('DM',50,62,'Deep-Lying Playmaker','D'),P('RB',74,64,'Inverted Wing-Back','S'),P('LW',10,30,'Winger','A'),P('AM',36,38,'Attacking Midfielder','S'),P('AM',64,38,'Advanced Playmaker','S'),P('RW',90,30,'Winger','A'),P('ST',50,16,'Complete Forward','S')],
+ oop:[O('GK',50,91,'Sweeper behind the line'),O('LB',14,74,'Inverted wing-back returns wide'),O('CB',37,79,'Covers'),O('CB',63,79,'Covers'),O('RB',86,74,'Inverted wing-back returns wide'),O('CM',40,58,'Pivot screens the centre'),O('CM',60,58,'Playmaker drops in'),O('LM',14,46,'Winger tracks back'),O('RM',86,46,'Winger tracks back'),O('ST',40,28,'Leads the press'),O('ST',60,28,'Joins the striker')],
+ ins:['Play out from the back with shorter passing.','Work the ball into the box, with wingers holding the width.','Standard-to-high line of engagement; counter-press to keep the ball.','Keep the inverted wing-backs central in possession and wide out of it.'],
+ best:'Dominant sides that need to overload the centre and protect against counters.',watch:'Weak full-backs get exposed on the transition. It also needs two ball-playing centre-backs.'},
+{id:'cheap',name:'Underdog 4-4-2',ipShape:'4-4-2',oopShape:'4-4-2 low block',mentality:'Cautious',staffing:'Cheap: physical, honest players, and little technical quality is required',
+ ip:[P('GK',50,91,'Goalkeeper','D'),P('LB',14,73,'Full-Back','D'),P('CB',37,78,'Central Defender','D'),P('CB',63,78,'No-Nonsense Centre-Back','D'),P('RB',86,73,'Full-Back','S'),P('LM',14,46,'Wide Midfielder','S'),P('CM',38,52,'Ball Winning Midfielder','D'),P('CM',62,52,'Box-to-Box Midfielder','S'),P('RM',86,46,'Winger','A'),P('ST',40,22,'Target Forward','S'),P('ST',60,24,'Poacher','A')],
+ oop:[O('GK',50,91,'Commands the box'),O('LB',14,80,'Stays tight to the winger'),O('CB',37,82,'Deep, compact'),O('CB',63,82,'Deep, compact'),O('RB',86,80,'Stays tight to the winger'),O('LM',14,62,'Drops to the line'),O('CM',38,64,'Compact, shuts the middle'),O('CM',62,64,'Compact, shuts the middle'),O('RM',86,62,'Drops to the line'),O('ST',40,42,'Stays high as the outlet'),O('ST',60,44,'Stays high as the outlet')],
+ ins:['Lower line of engagement; stay compact and narrow.','Go direct to the target forward; look for knock-downs.','Stay disciplined: do not chase the ball out of shape.','Set pieces are your best chance, so recruit tall, strong players.'],
+ best:'Lower-league or low-budget saves, where you can fill the XI with athletes you can afford.',watch:'Low ceiling against better technical sides. It is the best pairing with the Moneyball board.'}
+];
+const S={t:0,ph:'ip'};
+function tacticsRender(){
+  const t=TACTICS[S.t],slots=S.ph==='ip'?t.ip:t.oop;
+  $('#t-pick').innerHTML=TACTICS.map((x,i)=>`<button data-t="${i}" class="${i===S.t?'on':''}">${esc(x.name)}</button>`).join('');
+  $$('#t-pick button').forEach(b=>b.onclick=()=>{S.t=+b.dataset.t;tacticsRender()});
+  $$('#t-phase button').forEach(b=>b.classList.toggle('on',b.dataset.ph===S.ph));
+  const dots=slots.map(s=>`<g><circle cx="${s.x}" cy="${8+s.y*1.24}" r="4.8" fill="${S.ph==='ip'?'#1f8f61':'#2f6fb5'}" stroke="#fff" stroke-width=".5"/><text x="${s.x}" y="${8+s.y*1.24+1.2}" text-anchor="middle" font-size="3.3" font-weight="700" fill="#fff">${s.pos}</text></g>`).join('');
+  $('#t-pitch').innerHTML=`<svg class="pitch" viewBox="0 0 100 140" role="img" aria-label="${esc(t.name)} ${S.ph==='ip'?'in possession':'out of possession'} shape"><rect width="100" height="140" fill="#0d2a1c"/><g fill="none" stroke="#ffffff30" stroke-width=".4"><rect x="3" y="3" width="94" height="134"/><line x1="3" y1="70" x2="97" y2="70"/><circle cx="50" cy="70" r="10"/><rect x="24" y="3" width="52" height="18"/><rect x="24" y="119" width="52" height="18"/><rect x="38" y="3" width="24" height="7"/><rect x="38" y="130" width="24" height="7"/></g>${dots}</svg>
+    <p class="note" style="text-align:center">${S.ph==='ip'?'In possession: '+esc(t.ipShape):'Out of possession: '+esc(t.oopShape)}</p>`;
+  $('#t-slots').innerHTML=slots.map(s=>`<div><span>${s.pos}</span><em>${esc(s.role?s.role+' ('+s.duty+')':s.job)}</em></div>`).join('');
+  const roles=[...new Set(t.ip.map(s=>s.role))];
+  $('#t-info').innerHTML=`<div class="out"><h3>${esc(t.name)}</h3>${kvs([['Mentality',esc(t.mentality)],['Cost to staff',esc(t.staffing)]])}
+    <ul class="pl2">${t.ins.map(i=>`<li>${esc(i)}</li>`).join('')}</ul>
+    <div class="warn good"><b>Best when:</b> ${esc(t.best)}</div><div class="warn"><b>Watch out:</b> ${esc(t.watch)}</div></div>
+    <div class="out"><h3>Scout for (by role)</h3>${kvs(roles.map(r=>[esc(r),esc(ATTR[r]||'')]),'roles')}
+    <p class="note">Classic FM role emphasis. Check each role’s description in FM26 and use the attribute columns in your shortlist. Then put candidates on the Moneyball board.</p></div>`;
+}
+$$('#t-phase button').forEach(b=>b.onclick=()=>{S.ph=b.dataset.ph;tacticsRender()});
+$('#t-copy').onclick=async()=>{
+  const t=TACTICS[S.t];
+  const txt=[`${t.name}: IP ${t.ipShape} / OOP ${t.oopShape}, ${t.mentality}`,'','In possession:',...t.ip.map(s=>`  ${s.pos}: ${s.role} (${s.duty})`),'','Out of possession:',...t.oop.map(s=>`  ${s.pos}: ${s.job}`),'','Instructions:',...t.ins.map(i=>'  - '+i)].join('\n');
+  try{await navigator.clipboard.writeText(txt);$('#t-copy').textContent='Copied ✓'}catch{$('#t-copy').textContent='Copy failed'}
+  setTimeout(()=>$('#t-copy').textContent='Copy setup as text',1500);
+};
+
+/* ---------- wiring ---------- */
+const saved=store.get('fm26.inputs',{});
+function recalc(){CUR=$('#cur').value;feeCalc();wageCalc();boardRender()}
+$$('[data-save]').forEach(el=>{
+  if(el.id in saved){if(el.type==='checkbox')el.checked=!!saved[el.id];else el.value=saved[el.id]}
+  el.addEventListener('input',()=>{saved[el.id]=el.type==='checkbox'?el.checked:el.value;store.set('fm26.inputs',saved);recalc()});
+});
+$$('.nav button').forEach(b=>b.onclick=()=>{
+  $$('.nav button').forEach(x=>x.classList.toggle('on',x===b));
+  $$('.panel').forEach(x=>x.classList.toggle('on',x.id===b.dataset.tab));
+  scrollTo(0,0);
+});
+recalc();tacticsRender();
+</script>
+</body>
+</html>
