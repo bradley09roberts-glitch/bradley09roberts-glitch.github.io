@@ -61,6 +61,8 @@ NBA_MARKET_MAP = {
     "player_points_rebounds_assists_alternate": ("pra", True),
 }
 SPORTS = {"nfl": ("americanfootball_nfl", MARKET_MAP), "nba": ("basketball_nba", NBA_MARKET_MAP)}
+# provider team names that differ from the schedule's display names
+NBA_NAME_ALIASES = {"Los Angeles Clippers": "LAC"}
 
 
 def core_markets(sport: str) -> list[str]:
@@ -310,6 +312,7 @@ def link_quotes_nba(rows: list[dict], con: sqlite3.Connection) -> pd.DataFrame:
     sched, _ = nba_live._latest(con, "nba_schedule")
     names = dict(zip(sched.home_display_name, sched.home_abbreviation, strict=False))
     names.update(dict(zip(sched.away_display_name, sched.away_abbreviation, strict=False)))
+    names.update(NBA_NAME_ALIASES)
     sg = pd.DataFrame({"game_id": sched.game_id.astype("int64").astype(str),
                        "home": sched.home_abbreviation, "away": sched.away_abbreviation,
                        "tip": pd.to_datetime(sched.date, utc=True)})

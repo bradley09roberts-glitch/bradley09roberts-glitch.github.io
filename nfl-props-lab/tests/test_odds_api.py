@@ -117,3 +117,7 @@ def test_nba_market_keys_parse_with_the_nba_map():
     assert {r["market"] for r in rows} == {"pts"} and len(rows) == 2
     assert oa.core_markets("nba") == ["player_points", "player_rebounds", "player_assists",
                                       "player_threes", "player_points_rebounds_assists"]
+
+
+def test_nba_aliases_cover_provider_names():
+    assert oa.NBA_NAME_ALIASES["Los Angeles Clippers"] == "LAC"
