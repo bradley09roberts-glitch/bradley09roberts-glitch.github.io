@@ -32,6 +32,8 @@ class Dataset:
 
 DATASETS = {d.key: d for d in [
     Dataset("nba_player_box", "espn_nba_player_boxscores/player_box_{season}.parquet", 2002),
+    Dataset("nba_schedule", "espn_nba_schedules/nba_schedule_{season}.parquet", 2027),
+    Dataset("nba_injuries", "espn_nba_injuries/injuries_{season}.parquet", 2027),
 ]}
 
 

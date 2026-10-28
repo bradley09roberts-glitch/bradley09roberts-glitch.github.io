@@ -41,9 +41,11 @@ def _raw_box(con: sqlite3.Connection) -> pd.DataFrame:
 def build(con: sqlite3.Connection | None = None) -> dict:
     con = con or db.connect()
     d = _raw_box(con)
-    d = d[d.season_type.isin(SEASON_TYPES)].copy()
-    d["game_id"] = d.game_id.astype(str)
-    d["player_id"] = d.athlete_id.astype(str)
+    d = d[d.season_type.isin(SEASON_TYPES) & d.athlete_id.notna()].copy()
+    d["game_id"] = d.game_id.astype("int64").astype(str)
+    # ESPN athlete ids are integers; some season files store them as floats, so normalise to
+    # plain integer strings (the same form as the injury snapshots)
+    d["player_id"] = d.athlete_id.astype("int64").astype(str)
     tip = pd.to_datetime(d.game_date_time, utc=True)
     dnp = d.did_not_play.fillna(False).astype(bool)
     pg = pd.DataFrame({

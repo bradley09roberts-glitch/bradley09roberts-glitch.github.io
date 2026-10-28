@@ -32,6 +32,11 @@ minus A from resampling whole weeks.
 P(plays): Brier 0.132 (share of last 10 games played: 0.174). Bias of N1's mean: points
 -0.11, PRA -0.11, rebounds +0.03.
 
+Data note (28 Oct, after n03): one 2025-26 season file stores athlete ids as floats, and
+33 of its rows have no id; those 33 rows were grouped as a single "nan" player in n01-n03
+(0.1% of 2025-26, every other id consistent across seasons). Ids are now normalised and
+id-less rows dropped. The effect on the reported numbers is negligible, so n03 stands.
+
 Reading it honestly:
 * The gains are modest. An NBA player's recent average is already a strong forecast; most
   of N1's edge comes from modelling minutes and their uncertainty.
