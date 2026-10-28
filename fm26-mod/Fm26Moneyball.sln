@@ -1,0 +1,43 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{CB99B782-1AD2-4ADD-BA47-11D227CE63DF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fm26Moneyball.Core", "src\Fm26Moneyball.Core\Fm26Moneyball.Core.csproj", "{FA2A9F34-2D53-49AC-8D99-C7A41734A1C4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fm26Moneyball.Plugin", "src\Fm26Moneyball.Plugin\Fm26Moneyball.Plugin.csproj", "{8DAA4954-86F5-48BD-BE2B-465D62C9B916}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{AE4B58BC-2694-4B4E-A05E-573F8F4C9266}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fm26Moneyball.Tests", "tests\Fm26Moneyball.Tests\Fm26Moneyball.Tests.csproj", "{ADAE08EC-FC9A-453C-B7F1-FF70DF6D38E0}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FA2A9F34-2D53-49AC-8D99-C7A41734A1C4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FA2A9F34-2D53-49AC-8D99-C7A41734A1C4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FA2A9F34-2D53-49AC-8D99-C7A41734A1C4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FA2A9F34-2D53-49AC-8D99-C7A41734A1C4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8DAA4954-86F5-48BD-BE2B-465D62C9B916}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8DAA4954-86F5-48BD-BE2B-465D62C9B916}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8DAA4954-86F5-48BD-BE2B-465D62C9B916}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8DAA4954-86F5-48BD-BE2B-465D62C9B916}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ADAE08EC-FC9A-453C-B7F1-FF70DF6D38E0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ADAE08EC-FC9A-453C-B7F1-FF70DF6D38E0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ADAE08EC-FC9A-453C-B7F1-FF70DF6D38E0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ADAE08EC-FC9A-453C-B7F1-FF70DF6D38E0}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{FA2A9F34-2D53-49AC-8D99-C7A41734A1C4} = {CB99B782-1AD2-4ADD-BA47-11D227CE63DF}
+		{8DAA4954-86F5-48BD-BE2B-465D62C9B916} = {CB99B782-1AD2-4ADD-BA47-11D227CE63DF}
+		{ADAE08EC-FC9A-453C-B7F1-FF70DF6D38E0} = {AE4B58BC-2694-4B4E-A05E-573F8F4C9266}
+	EndGlobalSection
+EndGlobal

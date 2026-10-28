@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>Fm26Moneyball.Tests</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- Newer than Core's 2.10.2: the older MonoMod inside it crashes on .NET 8, which only the tests run on. -->
+    <PackageReference Include="HarmonyX" Version="2.16.1" />
+    <ProjectReference Include="..\..\src\Fm26Moneyball.Core\Fm26Moneyball.Core.csproj" />
+  </ItemGroup>
+</Project>
