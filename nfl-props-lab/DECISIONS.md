@@ -130,3 +130,23 @@ so quotes matched every DAL-PHI game and lost their links); fixed and tested, an
 corrected links were appended to the new append-only `quote_links` table rather than
 changing stored quotes. Credits used so far: 9 of 500 this month.
 
+## D-019 (28 Oct 2026) NBA added at the user's request; data sources and splits
+The original brief excluded the NBA; on 28 Oct the user asked for it explicitly, so the
+exclusion is lifted for the NBA only (UFC, association football and college football stay
+out). Data: SportsDataverse release assets (player and team box scores, schedules with
+tip-off times, daily injury snapshots from 8 Sep 2026), CC BY 4.0 with attribution. Their
+content originates from ESPN, whose terms forbid automated collection from ESPN itself; we
+never access ESPN, only the openly licensed releases, the same footing as the nflverse data.
+The NBA's own injury report is not used: NBA.com terms (sect. 9(iv)) bar use of NBA
+statistics in connection with gambling. Splits: fit 2018-2023 (2016-2017 warm-up),
+validation 2024-2025, test 2026 (one frozen run), prospective from 2027 (2026-27). Markets:
+points, rebounds, assists, 3-pointers made, PRA. Injury reports have no history before
+Sep 2026, so their effect can only be judged prospectively.
+
+## D-020 (28 Oct 2026) NBA model v0.1 frozen (N1, empirical minutes)
+Validation (2024-2025, 56,071 player-games, week-block 95% intervals): N1 beats the
+exponentially weighted average (A, its dispersions tuned the same way) on every market:
+points -2.7%, rebounds -2.2%, assists -1.7%, threes -1.1%, PRA -3.8% CRPS. Over/under
+probabilities at book-like lines are calibrated within about 2 points. Parameters frozen in
+`reports/nba/model/n1_params.json` before the single test run.
+

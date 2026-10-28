@@ -61,3 +61,36 @@ pbp/stats/rosters/injuries/depth charts updated 24 Oct (nflverse daily ~07:00-13
 UTC); 2026 data runs through the Thursday Week 7 game (NE at CHI). nflverse notes that
 Thursday's pbp is the cleanest after Monday-Wednesday stat corrections, so stat
 corrections are handled as new raw versions (append-only settlement revisions).
+
+## 6. NBA (added 28 Oct 2026, D-019)
+
+Audited 28 Oct 2026. Base URL `https://github.com/sportsdataverse/sportsdataverse-data/releases/download/<tag>/<file>`;
+seasons are named by their ending year (2027 = 2026-27). Licence: repository MIT, data
+labelled CC BY 4.0 (credit: SportsDataverse). Content originates from ESPN game feeds.
+
+| Dataset | Tag / file | Coverage | Use |
+|---|---|---|---|
+| Player box scores | `espn_nba_player_boxscores/player_box_{s}.parquet` | 1994-2027 | outcomes, minutes, starters, did-not-play with reason |
+| Team box scores | `espn_nba_team_boxscores/team_box_{s}.parquet` | 1994-2027 | not yet used (team totals are summed from player rows) |
+| Schedules | `espn_nba_schedules/nba_schedule_{s}.parquet` | 1994-2027, includes future games with UTC tip-off times | live slates |
+| Injuries | `espn_nba_injuries/injuries_{s}.parquet` | 2027 only, one snapshot a day (about 18:40 UTC) since 8 Sep 2026 | live P(plays) only; no history, so not backtested |
+| Depth charts | `espn_nba_depthcharts/depthcharts_{s}.parquet` | 2027 only | not used |
+
+Freshness: game data lands about 11:45 UTC the morning after (07:45 ET); same-day results
+are not available.
+
+Not used:
+* **NBA official injury report** (official.nba.com PDFs): NBA.com Terms of Use sect. 9(iv),
+  "the NBA Statistics may not be used in connection with any gambling activity (including
+  legal gambling activity)".
+* **ESPN site or APIs directly**: Disney Terms of Use sect. 2.B.x forbid access "using a
+  robot, spider, script, or other automated means". This project only downloads the
+  SportsDataverse releases; it never accesses ESPN.
+* **stats.nba.com-derived releases** (`nba_stats_*`): same NBA.com gambling clause.
+* **Basketball-Reference**: Sports Reference terms (as for the NFL).
+* Injury-snapshot comment text (`short_comment`, `long_comment`) is third-party news copy:
+  not shown in the app or committed.
+
+Odds: The Odds API lists NBA player props (`player_points`, `player_rebounds`,
+`player_assists`, `player_threes`, `player_points_rebounds_assists`, alternates and
+combos) mainly at US books and DFS sites; no UK bookmaker is listed for NBA props.
