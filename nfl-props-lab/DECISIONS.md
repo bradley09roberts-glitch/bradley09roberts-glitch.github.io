@@ -155,3 +155,12 @@ The frozen nba-0.1 was run once on 2025-26 (n03): it beat the recent average on 
 markets with intervals excluding zero (points -2.9%, PRA -4.1%). Further NBA changes are
 validated on 2024-2025 and judged prospectively on 2026-27.
 
+## D-022 (28 Oct 2026) Prop-research presentation; lines shown are never invented
+The user asked for an app that looks like a commercial prop tool. The app adopts the
+generic features (hit rates over recent games against a line, game-log charts, matchup
+ranks, projections) under its own name and design; no branding, text, code or accuracy
+claims are copied. The line on a card is, in order: the user's own, a stored US market
+line (labelled research reference), or the model's fair 50/50 line. Hit rates are
+descriptive (how often a player beat a line in the past), not forecasts: the L10 average
+was the weakest NBA forecast tested (reports/nba/EXPERIMENTS.md).
+

@@ -1,4 +1,4 @@
-# Status (Sunday 25 October 2026)
+# Status (Wednesday 28 October 2026)
 
 ## Latest (25 Oct 07:40-08:00 UTC check-in)
 
@@ -17,6 +17,22 @@ A forced network re-check at 08:00:36 UTC, seconds after publication, found inju
 rosters, depth charts and schedules byte-identical (same SHA-256 as the 07:42 retrieval),
 so the edition used current inputs. Before publishing, use `npl ingest --force` for those
 files.
+
+## NBA and redesign (28 Oct, on request)
+
+* **NBA added** (D-019 to D-021): SportsDataverse box scores 2015-16 onwards, schedules
+  and daily injury snapshots. Model nba-0.1 (minutes x per-minute rates, opponent and
+  pace, empirical minutes spread) beat a tuned recent average on the untouched 2025-26
+  test season: points -2.9%, rebounds -2.4%, assists -1.9%, threes -1.2%, PRA -4.1% CRPS
+  (all week-block intervals exclude zero). Modest, and no claim about bookmakers.
+* **Live NBA editions**: one after the morning box-score update, a final one after the
+  ~18:40 UTC injury snapshot, both committed before the first tip-off. Injury effects
+  (Out 1%, game-time decision x0.65) are assumptions; a newly-out teammate's minutes are
+  not redistributed yet (flagged on cards).
+* **App redesign ("Props Lab")**: NFL/NBA switch; prop cards with a fair line or your own
+  line, over/under split, L5/L10/L20/season/head-to-head hit rates, last-10 chart against
+  the line, matchup and pace ranks; stored US market lines shown as a research reference.
+  Own name and design, not a copy of any commercial product's branding.
 
 ## Week 7 record complete (27 Oct)
 
