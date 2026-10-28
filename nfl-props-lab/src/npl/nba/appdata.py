@@ -84,9 +84,16 @@ def market_lines(game_ids: set[str]) -> dict:
         q = odds_api.quotes_frame(db.connect())
     except Exception:  # noqa: BLE001 - no database or table: no lines
         return {}
-    q = q[q.game_id.isin(game_ids) & q.player_id.notna() & q.market.isin(M.MARKETS)]
+    return consensus_lines(q[q.game_id.isin(game_ids)])
+
+
+def consensus_lines(q: pd.DataFrame) -> dict:
+    """Only the most recent collection for each game and market counts: a line a bookmaker
+    offered earlier but no longer shows (it moved 39.5 -> 38.5) must not stay in the mix."""
+    q = q[q.player_id.notna() & q.market.isin(M.MARKETS)]
     if q.empty:
         return {}
+    q = q[q.observed_at == q.groupby(["game_id", "market"]).observed_at.transform("max")]
     q = q.sort_values("observed_at").drop_duplicates(
         ["bookmaker", "player_id", "market", "line", "selection"], keep="last")
     out = {}

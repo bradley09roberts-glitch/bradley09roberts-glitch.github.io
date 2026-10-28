@@ -98,3 +98,20 @@ def test_latest_edition_is_by_publish_time_not_label(tmp_path, monkeypatch):
     monkeypatch.setattr(live, "NBA_EDITIONS", tmp_path)
     assert live.latest_edition_path().stem.endswith("final-20261028T1905Z")
     assert [p.stem.split("-")[4] for p in live.edition_files()] == ["preview", "early", "final"]
+
+
+def test_market_line_ignores_lines_a_book_no_longer_offers():
+    from npl.nba import appdata
+
+    def q(t, book, line, over, under):
+        return [{"game_id": "g", "player_id": "p", "market": "pra", "bookmaker": book,
+                 "line": line, "selection": s, "decimal_price": d, "observed_at": t,
+                 "availability": "research_reference"}
+                for s, d in (("over", over), ("under", under))]
+    early, late = "2026-10-28T12:27:49Z", "2026-10-28T21:40:02Z"
+    rows = (q(early, "dk", 39.5, 1.9, 1.9) + q(early, "fd", 39.5, 1.9, 1.9) +
+            q(early, "mgm", 39.5, 1.9, 1.9) + q(late, "dk", 38.5, 1.92, 1.83) +
+            q(late, "fd", 38.5, 1.96, 1.82))
+    m = appdata.consensus_lines(pd.DataFrame(rows))[("p", "pra")]
+    assert m["line"] == 38.5 and m["books"] == 2  # mgm stopped quoting: not counted
+    assert m["best_under"] == 1.83 and m["observed_at"] == late
