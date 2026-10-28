@@ -150,3 +150,8 @@ points -2.7%, rebounds -2.2%, assists -1.7%, threes -1.1%, PRA -3.8% CRPS. Over/
 probabilities at book-like lines are calibrated within about 2 points. Parameters frozen in
 `reports/nba/model/n1_params.json` before the single test run.
 
+## D-021 (28 Oct 2026) NBA test run done; 2026 is no longer untouched
+The frozen nba-0.1 was run once on 2025-26 (n03): it beat the recent average on all five
+markets with intervals excluding zero (points -2.9%, PRA -4.1%). Further NBA changes are
+validated on 2024-2025 and judged prospectively on 2026-27.
+
