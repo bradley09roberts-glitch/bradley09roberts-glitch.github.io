@@ -329,3 +329,5 @@ span.mu { border: 1px solid var(--rule); border-radius: 999px; padding: 1px 7px;
 .game-tile .at { color: var(--muted); font-size: 1rem; }
 .prop .pline { margin-top: 2px; }
 .prop .linebtn { font-size: 1.4rem; }
+.mkline { display: flex; justify-content: space-between; gap: 8px; font-size: 0.75rem; color: var(--ink-2);
+  background: var(--card-2); border: 1px dashed var(--rule-2); border-radius: 10px; padding: 4px 8px; }

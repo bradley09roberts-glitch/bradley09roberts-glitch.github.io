@@ -104,6 +104,25 @@ def cmd_snapshot(a) -> int:
     return 0
 
 
+def cmd_nba(a) -> int:
+    """NBA jobs: update (fetch + build), publish (edition for an ET date), settle, quotes."""
+    from .nba import canon, live, settle, source
+
+    con = db.connect()
+    if a.action == "update":
+        out = source.fetch(con, seasons=[source.CURRENT_SEASON], max_age_hours=a.max_age_hours,
+                           force=a.force)
+        out["build"] = canon.build(con)["counts"]
+    elif a.action == "publish":
+        out = live.publish(a.date or live.next_date_et(), a.kind, con)
+    elif a.action == "settle":
+        out = settle.run()
+    else:
+        raise SystemExit(f"unknown action {a.action}")
+    print(json.dumps(out, indent=1, default=str))
+    return 0
+
+
 def cmd_update(a) -> int:
     """Daily job: refresh public data, coverage audit and canonical tables."""
     rc = cmd_ingest(argparse.Namespace(datasets=None, seasons=a.seasons or "2026",
@@ -135,7 +154,7 @@ def cmd_quotes(a) -> int:
         return 3
     with rawstore.job(con, "quotes.snapshot", {"regions": a.regions}) as st:
         st["detail"] = odds_api.snapshot_upcoming(con, regions=a.regions,
-                                                  hours_ahead=a.hours_ahead)
+                                                  hours_ahead=a.hours_ahead, sport=a.sport)
     print(json.dumps(st["detail"], indent=1, default=str))
     return 0
 
@@ -233,6 +252,14 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--port", type=int, default=8765)
     s.set_defaults(func=cmd_serve)
 
+    s = sub.add_parser("nba", help="NBA jobs: update | publish | settle")
+    s.add_argument("action", choices=["update", "publish", "settle"])
+    s.add_argument("--date", help="US (ET) date of the slate, YYYY-MM-DD (publish)")
+    s.add_argument("--kind", default="early", help="edition label, e.g. early or final")
+    s.add_argument("--max-age-hours", type=float, default=0.5)
+    s.add_argument("--force", action="store_true")
+    s.set_defaults(func=cmd_nba)
+
     s = sub.add_parser("snapshot", help="write a self-contained offline HTML copy of the app")
     s.add_argument("--out", default="nfl-props-lab.html")
     s.add_argument("--fragment", action="store_true",
@@ -252,6 +279,7 @@ def build_parser() -> argparse.ArgumentParser:
     s = sub.add_parser("quotes", help="snapshot current prop quotes (needs ODDS_API_KEY)")
     s.add_argument("--regions", default="uk")
     s.add_argument("--hours-ahead", type=float, default=48)
+    s.add_argument("--sport", choices=["nfl", "nba"], default="nfl")
     s.set_defaults(func=cmd_quotes)
 
     s = sub.add_parser("money", help="price-honest money backtest over a ledger")

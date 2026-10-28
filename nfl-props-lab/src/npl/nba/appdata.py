@@ -73,6 +73,44 @@ def opponent_factors(at: str) -> dict:
     return out
 
 
+def market_lines(game_ids: set[str]) -> dict:
+    """Latest stored quotes per (player, market) for these games: the most common line, the
+    market's over chance with the bookmaker margin removed (average over books quoting both
+    sides), best prices and when they were seen. US books are a research reference only."""
+    from .. import db
+    from ..sources import odds_api
+
+    try:
+        q = odds_api.quotes_frame(db.connect())
+    except Exception:  # noqa: BLE001 - no database or table: no lines
+        return {}
+    q = q[q.game_id.isin(game_ids) & q.player_id.notna() & q.market.isin(M.MARKETS)]
+    if q.empty:
+        return {}
+    q = q.sort_values("observed_at").drop_duplicates(
+        ["bookmaker", "player_id", "market", "line", "selection"], keep="last")
+    out = {}
+    for (pid, mk), x in q.groupby(["player_id", "market"]):
+        line = x.line.mode().iloc[0]
+        y = x[x.line == line].pivot_table(index="bookmaker", columns="selection",
+                                          values="decimal_price", aggfunc="last")
+        if not {"over", "under"} <= set(y.columns):
+            continue
+        y = y.dropna()
+        if y.empty:
+            continue
+        fair = (1 / y.over) / (1 / y.over + 1 / y.under)
+        out[(pid, mk)] = {"line": float(line), "fair_over": round(float(fair.mean()), 4),
+                          "best_over": float(y.over.max()), "best_under": float(y.under.max()),
+                          "books": int(len(y)), "margin": round(float((1 / y.over + 1 / y.under
+                                                                        - 1).mean()), 4),
+                          "observed_at": str(x.observed_at.max()),
+                          "availability": "research_reference" if (x.availability !=
+                                                                   "verified_uk").any()
+                          else "verified_uk"}
+    return out
+
+
 def slate() -> dict:
     e = latest()
     if e is None:
@@ -94,6 +132,7 @@ def props() -> dict:
     logs = game_logs({f["player_id"] for f in fc}, e["published_at"])
     games = {g["game_id"]: g for g in e["games"]}
     opp = opponent_factors(e["published_at"])
+    mkt = market_lines(set(games))
     season = e["date_et"][:4]
     out_by_team: dict[str, list] = {}
     for f in fc:
@@ -132,6 +171,7 @@ def props() -> dict:
                     "current_season": str(int(season) + 1) if int(e["date_et"][5:7]) >= 8
                     else season},
             "opp_factor": o.get(stat), "opp_pace": o.get("pace"),
+            "market_line": mkt.get((f["player_id"], f["market"])),
             # only absences that recent minutes cannot reflect yet (he played last game)
             "teammates_out": [t for t in out_by_team.get(f["team"], [])
                               if t["name"] != f["name"] and t["minutes"] >= 20 and

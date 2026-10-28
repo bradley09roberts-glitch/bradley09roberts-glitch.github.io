@@ -1,4 +1,7 @@
-# NFL Props Lab
+# Props Lab (NFL and NBA)
+
+The folder keeps its original name. NBA support was added on 28 Oct 2026 (D-019); its
+model, validation and test are in `reports/nba/` and `src/npl/nba/`.
 
 NFL player-prop forecasting and chronological backtesting: QB passing yards, attempts and
 completions; QB/RB rushing yards and attempts; WR/TE/RB receptions and receiving yards.
@@ -44,6 +47,10 @@ uv run npl publish --season 2026 --week 8   # immutable edition (refuses uncommi
 uv run npl settle                 # append settlement revisions, score the record
 uv run npl quotes                 # odds snapshot (reports BLOCKED without ODDS_API_KEY)
 uv run npl money --ledger reports/backtests/<run>/ledger.csv.gz
+uv run npl nba update             # NBA: SportsDataverse box scores, schedule, injuries
+uv run npl nba publish --date 2026-10-28 --kind final   # NBA edition (US date)
+uv run npl nba settle             # NBA pre-tip record -> reports/nba/record/
+uv run npl quotes --sport nba --regions us --hours-ahead 24   # NBA prop prices (credits)
 uv run npl serve                  # web app at http://127.0.0.1:8765
 uv run npl snapshot --out app.html  # self-contained offline copy of the app (no server)
 uv run npl verify                 # lint, tests, edition hashes, API smoke test

@@ -52,6 +52,19 @@ MARKET_MAP = {
     "player_reception_yds_alternate": ("rec_yds", True),
 }
 CORE_PROVIDER_MARKETS = [k for k, (_, alt) in MARKET_MAP.items() if not alt]
+NBA_MARKET_MAP = {
+    "player_points": ("pts", False), "player_points_alternate": ("pts", True),
+    "player_rebounds": ("reb", False), "player_rebounds_alternate": ("reb", True),
+    "player_assists": ("ast", False), "player_assists_alternate": ("ast", True),
+    "player_threes": ("fg3m", False), "player_threes_alternate": ("fg3m", True),
+    "player_points_rebounds_assists": ("pra", False),
+    "player_points_rebounds_assists_alternate": ("pra", True),
+}
+SPORTS = {"nfl": ("americanfootball_nfl", MARKET_MAP), "nba": ("basketball_nba", NBA_MARKET_MAP)}
+
+
+def core_markets(sport: str) -> list[str]:
+    return [k for k, (_, alt) in SPORTS[sport][1].items() if not alt]
 
 # The provider's `uk` region bookmakers (bookmaker-apis page, retrieved 25 Oct 2026).
 UK_BOOKMAKERS = {
@@ -95,18 +108,20 @@ def _get(con: sqlite3.Connection, dataset: str, part: str, path: str, params: di
     return r.json(), credits, stored.id
 
 
-def list_events(con, session=None):
-    return _get(con, "events", iso(utcnow()), f"/sports/{SPORT}/events", {}, session)
+def list_events(con, session=None, sport: str = "nfl"):
+    return _get(con, "events", f"{sport}:{iso(utcnow())}",
+                f"/sports/{SPORTS[sport][0]}/events", {}, session)
 
 
-def event_markets(con, event_id: str, regions: str = "uk", session=None):
+def event_markets(con, event_id: str, regions: str = "uk", session=None, sport: str = "nfl"):
     """1 credit: which markets each bookmaker currently offers for an event."""
     return _get(con, "event_markets", f"{event_id}:{regions}",
-                f"/sports/{SPORT}/events/{event_id}/markets", {"regions": regions}, session)
+                f"/sports/{SPORTS[sport][0]}/events/{event_id}/markets", {"regions": regions},
+                session)
 
 
 def event_odds(con, event_id: str, markets: list[str], regions: str = "uk",
-               bookmakers: list[str] | None = None, session=None):
+               bookmakers: list[str] | None = None, session=None, sport: str = "nfl"):
     """Cost = unique markets returned x regions. Props are one event per call."""
     params = {"markets": ",".join(markets), "oddsFormat": "decimal", "dateFormat": "iso"}
     if bookmakers:
@@ -114,7 +129,7 @@ def event_odds(con, event_id: str, markets: list[str], regions: str = "uk",
     else:
         params["regions"] = regions
     return _get(con, "event_odds", f"{event_id}:{regions}:{iso(utcnow())}",
-                f"/sports/{SPORT}/events/{event_id}/odds", params, session)
+                f"/sports/{SPORTS[sport][0]}/events/{event_id}/odds", params, session)
 
 
 def historical_event_odds(con, event_id: str, date_iso: str, markets: list[str],
@@ -136,15 +151,16 @@ def availability(bookmaker: str, request_region: str, synthetic: bool = False) -
 
 
 def parse_event_odds(payload: dict, *, observed_at: str, request_region: str,
-                     synthetic: bool = False) -> list[dict]:
+                     synthetic: bool = False, market_map: dict | None = None) -> list[dict]:
     """Flatten an event-odds response into quote rows (one per outcome)."""
     data = payload.get("data", payload)  # historical responses wrap the event in `data`
+    market_map = market_map or MARKET_MAP
     out = []
     for bk in data.get("bookmakers", []):
         for mk in bk.get("markets", []):
-            if mk.get("key") not in MARKET_MAP:
+            if mk.get("key") not in market_map:
                 continue
-            ours, alt = MARKET_MAP[mk["key"]]
+            ours, alt = market_map[mk["key"]]
             for o in mk.get("outcomes", []):
                 name = str(o.get("name", "")).lower()
                 sel = {"over": "over", "under": "under", "yes": "yes", "no": "no"}.get(name)
@@ -282,6 +298,43 @@ def link_quotes(rows: list[dict], lake_dir=None) -> pd.DataFrame:
     return pd.concat(parts, ignore_index=True)
 
 
+def link_quotes_nba(rows: list[dict], con: sqlite3.Connection) -> pd.DataFrame:
+    """NBA: event -> game via the SportsDataverse schedule (full team names, tip-off within
+    6 hours); player -> unique normalised name among both teams' recent box-score listings."""
+    from ..nba import canon as nba_canon
+    from ..nba import live as nba_live
+
+    q = pd.DataFrame(rows)
+    if q.empty:
+        return q
+    sched, _ = nba_live._latest(con, "nba_schedule")
+    names = dict(zip(sched.home_display_name, sched.home_abbreviation, strict=False))
+    names.update(dict(zip(sched.away_display_name, sched.away_abbreviation, strict=False)))
+    sg = pd.DataFrame({"game_id": sched.game_id.astype("int64").astype(str),
+                       "home": sched.home_abbreviation, "away": sched.away_abbreviation,
+                       "tip": pd.to_datetime(sched.date, utc=True)})
+    q["home"], q["away"] = q.home_team.map(names), q.away_team.map(names)
+    q["commence"] = pd.to_datetime(q.commence_time, utc=True)
+    q["_qi"] = range(len(q))
+    m = q.merge(sg, on=["home", "away"], how="left")
+    m["_ok"] = (m.tip - m.commence).abs() <= pd.Timedelta(hours=6)
+    m = m.sort_values(["_qi", "_ok"], ascending=[True, False]).drop_duplicates("_qi")
+    m.loc[~m._ok, "game_id"] = None
+    pg = nba_canon.load()["player_games"]
+    pg = pg[pg.season == pg.season.max()]
+    parts = []
+    for gid, x in m.groupby(m.game_id.fillna("")):
+        if not gid:
+            parts.append(x.assign(player_id=None, link_method="UNLINKED (no matching game)"))
+            continue
+        teams = [x.home.iloc[0], x.away.iloc[0]]
+        roster = pg[pg.team.isin(teams)].drop_duplicates("player_id")[
+            ["player_id", "name", "team"]]
+        parts.append(link_players(x, roster))
+    return pd.concat(parts, ignore_index=True).drop(columns=["_qi", "_ok", "tip"],
+                                                    errors="ignore")
+
+
 def _link_summary(q: pd.DataFrame) -> dict:
     return {"quotes": len(q), "linked_players": int(q.player_id.notna().sum()),
             "unlinked_names": sorted(q.loc[q.player_id.isna(), "player_name_raw"].unique())[:20],
@@ -289,8 +342,8 @@ def _link_summary(q: pd.DataFrame) -> dict:
 
 
 def link_and_store(con: sqlite3.Connection, rows: list[dict], raw_file_id: int | None,
-                   lake_dir=None) -> dict:
-    q = link_quotes(rows, lake_dir)
+                   lake_dir=None, sport: str = "nfl") -> dict:
+    q = link_quotes_nba(rows, con) if sport == "nba" else link_quotes(rows, lake_dir)
     if q.empty:
         return {"quotes": 0, "stored": 0, "linked_players": 0}
     return {**_link_summary(q), "stored": store_quotes(con, q, raw_file_id)}
@@ -307,8 +360,10 @@ def relink_raw(con: sqlite3.Connection, raw_file_id: int, lake_dir=None) -> dict
     path, url, retrieved_at = row
     region = re.search(r"regions=([a-z,]+)", url).group(1)
     payload = json.loads((rawstore.DATA_HOME / path).read_text())
-    q = link_quotes(parse_event_odds(payload, observed_at=retrieved_at, request_region=region),
-                    lake_dir)
+    sport = "nba" if SPORTS["nba"][0] in url else "nfl"
+    rows = parse_event_odds(payload, observed_at=retrieved_at, request_region=region,
+                            market_map=SPORTS[sport][1])
+    q = link_quotes_nba(rows, con) if sport == "nba" else link_quotes(rows, lake_dir)
     have = quotes_frame(con, include_synthetic=True)
     have = have[have.raw_file_id == raw_file_id]
     key = ["bookmaker", "provider_event_id", "player_name_raw", "market", "line",
@@ -330,13 +385,13 @@ def relink_raw(con: sqlite3.Connection, raw_file_id: int, lake_dir=None) -> dict
 
 def snapshot_upcoming(con, *, regions: str = "uk", hours_ahead: float = 48, session=None,
                       max_events: int = 20, markets: list[str] | None = None,
-                      event_ids: list[str] | None = None) -> dict:
+                      event_ids: list[str] | None = None, sport: str = "nfl") -> dict:
     """Collect current prop quotes for events kicking off within `hours_ahead`.
     One `markets` call (1 credit) per event first, then odds only for the wanted markets
     that some bookmaker offers (cost = markets returned x regions). Core markets only by
     default (alternate lines cost extra credits)."""
-    markets = markets or CORE_PROVIDER_MARKETS
-    events, credits, _ = list_events(con, session)
+    markets = markets or core_markets(sport)
+    events, credits, _ = list_events(con, session, sport)
     now = utcnow()
     done = []
     for e in events[:max_events]:
@@ -345,19 +400,22 @@ def snapshot_upcoming(con, *, regions: str = "uk", hours_ahead: float = 48, sess
         ko = parse_iso(e["commence_time"])
         if not (now < ko <= now + pd.Timedelta(hours=hours_ahead)):
             continue
-        mk, credits, _ = event_markets(con, e["id"], regions, session)
+        mk, credits, _ = event_markets(con, e["id"], regions, session, sport)
         offered = {m["key"] for b in mk.get("bookmakers", []) for m in b.get("markets", [])}
         want = [m for m in markets if m in offered]
         label = f"{e['away_team']} @ {e['home_team']}"
         if not want:
             done.append({"event": label, "player_prop_markets_offered": 0})
             continue
-        payload, credits, raw_id = event_odds(con, e["id"], want, regions, session=session)
-        rows = parse_event_odds(payload, observed_at=iso(utcnow()), request_region=regions)
+        payload, credits, raw_id = event_odds(con, e["id"], want, regions, session=session,
+                                              sport=sport)
+        rows = parse_event_odds(payload, observed_at=iso(utcnow()), request_region=regions,
+                                market_map=SPORTS[sport][1])
         done.append({"event": label, "markets": want,
-                     **link_and_store(con, rows, raw_id)})
-    return {"regions": regions, "events": done, "credits": credits}
+                     **link_and_store(con, rows, raw_id, sport=sport)})
+    return {"sport": sport, "regions": regions, "events": done, "credits": credits}
 
 
 __all__ = ["parse_event_odds", "link_players", "link_event", "store_quotes", "status",
-           "snapshot_upcoming", "link_and_store", "relink_raw", "MissingKey", "json"]
+           "snapshot_upcoming", "link_and_store", "link_quotes_nba", "relink_raw", "MissingKey",
+           "json", "core_markets", "NBA_MARKET_MAP"]

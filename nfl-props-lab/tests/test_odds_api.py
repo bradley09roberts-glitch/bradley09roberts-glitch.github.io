@@ -102,3 +102,18 @@ def test_relink_appends_links_and_leaves_quotes_untouched(tmp_path, monkeypatch,
     raw_rows = con.execute("SELECT COUNT(*) FROM quotes WHERE player_id IS NULL").fetchone()[0]
     assert raw_rows == 4  # the stored rows themselves never change
     assert oa.relink_raw(con, raw.id, lake_dir=lake)["links_added"] == 0
+
+
+def test_nba_market_keys_parse_with_the_nba_map():
+    nba = {"id": "e2", "commence_time": "2026-10-29T02:30:00Z", "home_team": "LA Clippers",
+           "away_team": "Los Angeles Lakers", "bookmakers": [{"key": "fanduel", "markets": [
+               {"key": "player_points", "last_update": "2026-10-28T19:00:00Z", "outcomes": [
+                   {"name": "Over", "description": "Luka Doncic", "price": 1.87, "point": 31.5},
+                   {"name": "Under", "description": "Luka Doncic", "price": 1.95,
+                    "point": 31.5}]}]}]}
+    assert oa.parse_event_odds(nba, observed_at="t", request_region="us") == []  # NFL map
+    rows = oa.parse_event_odds(nba, observed_at="t", request_region="us",
+                               market_map=oa.NBA_MARKET_MAP)
+    assert {r["market"] for r in rows} == {"pts"} and len(rows) == 2
+    assert oa.core_markets("nba") == ["player_points", "player_rebounds", "player_assists",
+                                      "player_threes", "player_points_rebounds_assists"]

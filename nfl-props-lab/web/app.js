@@ -522,7 +522,17 @@ function modelLine(c) {
   for (let L = c.median - 1.5; L <= c.median + 1.5; L += 1) { if (L < 0) continue; const g = Math.abs(D.line(L).over - 0.5); if (g < gap) { gap = g; best = L; } }
   return best;
 }
-function lineFor(sport, c) { const v = store.get(lineKey(sport, c), null); return v == null ? { line: modelLine(c), src: "fair line", fair: true } : { line: v, src: "your line", fair: false }; }
+function lineFor(sport, c) {
+  const v = store.get(lineKey(sport, c), null);
+  if (v != null) return { line: v, src: "your line", fair: false };
+  if (c.market_line) return { line: c.market_line.line, src: "US market line", fair: false, market: true };
+  return { line: modelLine(c), src: "fair line", fair: true };
+}
+function marketRow(c, L, line) {
+  const m = c.market_line; if (!m || m.line !== line) return "";
+  const gap = L.over - m.fair_over;
+  return `<div class="mkline" data-tip="US books (research reference)|${m.books} books at ${m.line}; margin removed; best prices over ${m.best_over} / under ${m.best_under}; seen ${esc(londonTime(m.observed_at))}. Not available to UK bettors."><span>Market over <b>${pct(m.fair_over)}</b></span><span>Model ${gap >= 0 ? "+" : "−"}${Math.abs(gap * 100).toFixed(0)} pts</span><span class="muted">${m.books} US books</span></div>`;
+}
 function leanLabel(L, fair) { if (fair) return `<span class="lean">Model's 50/50 line</span>`; return L.over >= 0.55 ? `<span class="lean over">Model leans over</span>` : L.under >= 0.55 ? `<span class="lean under">Model leans under</span>` : `<span class="lean">Close to 50/50</span>`; }
 function ouBar(L, fairLine) { return `<div class="ou"><div class="bar2"><span class="o" style="width:${(L.over * 100).toFixed(1)}%"></span></div><div class="row between tiny"><span>Over <b>${pct(L.over)}</b></span>${leanLabel(L, fairLine)}<span>Under <b>${pct(L.under)}</b></span></div></div>`; }
 function hitRate(vals, line) { if (!vals.length) return null; const over = vals.filter((v) => v > line).length; return { over, n: vals.length, r: over / vals.length }; }
@@ -576,6 +586,7 @@ function nbaCard(c, idx) {
     <div class="pline"><div><span class="mk">${esc(NBA_MKT[c.market])}</span><button class="linebtn" data-line="${idx}" aria-label="Change the line">${line}<small>${src} ✎</small></button></div>
       <div class="proj"><b>${dec(c.mean, 1)}</b><span>projection</span></div></div>
     ${ouBar(L, isFair)}
+    ${marketRow(c, L, line)}
     ${hitChips(c.log, line, c.opponent)}
     ${miniBars(c.log, line, 10)}
     <div class="facts"><span data-tip="Chance he plays|${c.injury ? "Includes the injury report (assumed effect, not validated)" : "From recent appearances"}">Plays ${pct(c.p_play)}</span><span>Min ${dec(c.minutes_expected, 0)}</span><span>80% range ${c.q10}–${c.q90}</span>
@@ -614,7 +625,7 @@ async function viewNbaProps(v) {
   const games = [...new Map(all.map((c) => [c.game_id, `${c.is_home ? c.opponent : c.team} @ ${c.is_home ? c.team : c.opponent}`])).entries()];
   const f = Object.assign({ q: "", game: "", market: "pts", minp: "0.6", sort: "proj" }, store.get("nbaFilter", {}));
   v.innerHTML = `<section class="hero"><span class="eyebrow">NBA props · ${esc(p.date_et)} · saved ${esc(p.published_london)}</span><h1>Props board</h1>
-      <p>Each card shows the model's projection, its over/under chance at a line, and how often the player went over that line recently. Until you enter a line it uses the model's fair line (its 50/50 point), so leans only appear once you tap the line and type your bookmaker's.</p></section>
+      <p>Each card shows the model's projection, its over/under chance at a line, and how often the player went over that line recently. The line is, in order: yours (tap it to type your bookmaker's), the US market line where stored (a research reference; US books are not open to UK bettors), or the model's fair 50/50 line.</p></section>
     <div class="mktabs" role="tablist">${Object.entries(NBA_SHORT).map(([k, l]) => `<button role="tab" class="${k === f.market ? "on" : ""}" data-mk="${k}">${l}</button>`).join("")}</div>
     <div class="filters" role="search">
       <label>Player<input type="search" id="nq" value="${esc(f.q)}" placeholder="Name"></label>
