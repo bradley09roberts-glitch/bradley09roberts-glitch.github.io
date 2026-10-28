@@ -121,6 +121,23 @@ def nba_game(game_id: str):
     return _j(nba.clean(d))
 
 
+@app.get("/api/nba/matchups")
+def nba_matchups():
+    from .nba import appdata as nba
+
+    return _j(nba.matchups())
+
+
+@app.get("/api/nba/shotprofile/{player_id}")
+def nba_shot_profile(player_id: str):
+    from .nba import appdata as nba
+
+    d = nba.shot_profile(player_id)
+    if "error" in d:
+        raise HTTPException(404, d["error"])
+    return _j(d)
+
+
 @app.get("/api/nba/backtests")
 def nba_backtests():
     from .nba import appdata as nba

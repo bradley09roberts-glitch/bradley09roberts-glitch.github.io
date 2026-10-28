@@ -122,7 +122,35 @@ def slate() -> dict:
             "inputs": e.get("inputs", {}), "model_version": e["code"]["model_version"]}
 
 
+_PROPS: dict = {}
+
+
+def _props_key():
+    from .. import db
+
+    p = live.latest_edition_path()
+    try:
+        con = db.connect()
+        q = con.execute("SELECT (SELECT MAX(id) FROM quotes), (SELECT MAX(id) FROM quote_links)"
+                        ).fetchone()
+        q = tuple(q)
+    except Exception:  # noqa: BLE001 - no database: lines are simply absent
+        q = None
+    lk = (canon.NBA_LAKE / "player_games.parquet").stat().st_mtime
+    return (str(p), p.stat().st_mtime if p else None, lk, q)
+
+
 def props() -> dict:
+    """Prop cards for the latest edition, cached until the edition, lake or stored quotes
+    change."""
+    key = _props_key()
+    if _PROPS.get("key") != key:
+        _PROPS.clear()
+        _PROPS.update(key=key, data=_props())
+    return _PROPS["data"]
+
+
+def _props() -> dict:
     e = latest()
     if e is None:
         return {"error": "no NBA edition yet"}
@@ -248,3 +276,30 @@ def clean(o):
     if isinstance(o, pd.Timestamp):
         return o.isoformat()
     return o
+
+
+_MU: dict = {}
+
+
+def matchups() -> dict:
+    """Defensive-matchup payload (rebuilt when the shot tables change)."""
+    from . import matchups as mu
+    from . import shots
+
+    key = (shots.SHOTS_LAKE / "def_shots.parquet").stat().st_mtime
+    if _MU.get("key") != key:
+        _MU.clear()
+        _MU.update(key=key, data=clean(mu.payload()))
+    return _MU["data"]
+
+
+def shot_profile(pid: str) -> dict:
+    from . import matchups as mu
+
+    pg = lake()["player_games"]
+    g = pg[pg.player_id == pid]
+    if g.empty:
+        return {"error": "unknown player"}
+    last = g.sort_values("tip_utc").iloc[-1]
+    return clean({"player_id": pid, "name": last["name"], "team": last.team,
+                  "position": last.pos, "seasons": mu.player_profile(pid)})

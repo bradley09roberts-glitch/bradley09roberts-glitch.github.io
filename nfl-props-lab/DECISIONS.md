@@ -164,3 +164,17 @@ line (labelled research reference), or the model's fair 50/50 line. Hit rates ar
 descriptive (how often a player beat a line in the past), not forecasts: the L10 average
 was the weakest NBA forecast tested (reports/nba/EXPERIMENTS.md).
 
+## D-023 (28 Oct 2026) NBA defensive matchups: definitions and reliability
+Requested: defence by shot type and court area, by opposing position, fouls and free throws,
+with filters, a half-court map and player matchups. Each field-goal attempt is placed in one
+area by its recorded type (2 or 3) and its coordinates (restricted area within 4 ft;
+non-restricted paint; mid-range; left/right corner; left/right wing; top of the arc within
+9 ft of centre), so areas never overlap; summaries (2PT, 3PT, paint, corners, above the
+break) add areas. Free throws are separate. Positions are the single G/F/C listing per game;
+PG/SG/SF/PF are shown as unavailable. Filters are applied to per-game rows for all teams
+alike, so ranks compare like with like (1st = allows the least). Split-half reliability on
+2023-2026 regular seasons is shown with every split: points allowed per 100 possessions
+0.39 after 10 games and 0.84 after a full season; rim attempts allowed 0.89 for a season;
+corner-3 percentage allowed is pure noise (0). These splits are context; none feeds the
+NBA projections.
+

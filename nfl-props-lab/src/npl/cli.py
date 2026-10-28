@@ -113,6 +113,8 @@ def cmd_nba(a) -> int:
         out = source.fetch(con, seasons=[source.CURRENT_SEASON], max_age_hours=a.max_age_hours,
                            force=a.force)
         out["build"] = canon.build(con)["counts"]
+        from .nba import shots
+        out["shots"] = shots.build(con)
     elif a.action == "publish":
         out = live.publish(a.date or live.next_date_et(), a.kind, con)
     elif a.action == "settle":

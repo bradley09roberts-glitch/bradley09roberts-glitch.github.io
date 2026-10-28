@@ -34,6 +34,18 @@ files.
   the line, matchup and pace ranks; stored US market lines shown as a research reference.
   Own name and design, not a copy of any commercial product's branding.
 
+## NBA defensive matchups (28 Oct, on request)
+
+New NBA "Defence" section: league table (sortable), and for each team a half-court map of
+points, attempts or percentage allowed by area (restricted area, paint, mid-range, both
+corners, both wings, top of the arc), filters (season, last 5/10/20, home/away, regular
+season or playoffs, per game or per 100 possessions, opposing position), defence against
+guards, forwards and centres with points by area and position, and fouls and free throws.
+Player pages compare the player's shot profile with what tonight's opponent allows to his
+position, with plain-English advantages and difficulties and how much signal each carries.
+Individual positions (PG/SG/SF/PF) and fouls drawn by position are not available in the
+source and are marked as such (D-023). Props board has a hot/cold filter.
+
 ## Week 7 record complete (27 Oct)
 
 All 13 games saved before kickoff are settled (Monday: DAL 38, PHI 21). On the common

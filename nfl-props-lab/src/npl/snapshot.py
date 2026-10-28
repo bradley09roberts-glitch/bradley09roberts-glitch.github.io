@@ -38,7 +38,14 @@ def _add_nba(data: dict, min_p_play: float = 0.3) -> None:
     data["/api/nba/backtests"] = nba.clean(nba.backtests())
     for g in s["games"]:
         data[f"/api/nba/game/{g['game_id']}"] = nba.clean(nba.game(g["game_id"]))
+    try:
+        data["/api/nba/matchups"] = nba.matchups()
+    except FileNotFoundError:
+        pass
     for pid in sorted({c["player_id"] for c in props["cards"]}):
+        sp = nba.shot_profile(pid)
+        if "error" not in sp:
+            data[f"/api/nba/shotprofile/{pid}"] = sp
         p = nba.player(pid)
         if "error" in p:
             continue

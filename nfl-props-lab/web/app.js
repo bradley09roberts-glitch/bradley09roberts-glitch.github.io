@@ -179,9 +179,9 @@ const ICONS = {
   ok: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg>',
 };
 const NAV_NFL = [["today", "Today"], ["props", "Props"], ["shortlist", "Shortlist"], ["lab", "Backtest lab"], ["defense", "Defences"], ["record", "Saved record"], ["data", "Data & method"]];
-const NAV_NBA = [["nba-today", "Tonight"], ["nba-props", "Props"], ["nba-lab", "Model lab"], ["nba-about", "Data & method"]];
+const NAV_NBA = [["nba-today", "Tonight"], ["nba-props", "Props"], ["nba-defense", "Defence"], ["nba-lab", "Model lab"], ["nba-about", "Data & method"]];
 let NAV = NAV_NFL;
-const NAV_ICON = { "nba-today": "today", "nba-props": "props", "nba-lab": "lab", "nba-about": "data" };
+const NAV_ICON = { "nba-today": "today", "nba-props": "props", "nba-defense": "defense", "nba-lab": "lab", "nba-about": "data" };
 const sportOf = (k) => (k.startsWith("nba-") ? "nba" : "nfl");
 
 function shell() {
@@ -223,7 +223,7 @@ function route() {
   const view = $("#view");
   view.innerHTML = `<div class="skeleton">Loading…</div>`;
   const fn = { today: viewToday, props: viewProps, shortlist: viewShortlist, lab: viewLab, record: viewRecord, data: viewData, player: viewPlayer, game: viewGame, defense: viewDefense, more: viewMore,
-    "nba-today": viewNbaToday, "nba-props": viewNbaProps, "nba-player": viewNbaPlayer, "nba-game": viewNbaGame, "nba-lab": viewNbaLab, "nba-about": viewNbaAbout }[k] || viewToday;
+    "nba-today": viewNbaToday, "nba-props": viewNbaProps, "nba-player": viewNbaPlayer, "nba-game": viewNbaGame, "nba-lab": viewNbaLab, "nba-about": viewNbaAbout, "nba-defense": viewNbaDefense }[k] || viewToday;
   Promise.resolve(fn(view, arg)).catch((e) => { view.innerHTML = `<div class="banner crit">${ICONS.warn}<div><p><b>Could not load this view.</b></p><p class="small">${esc(e.message)}</p><p class="small">If the server is running, check <code>npl serve</code> output; otherwise this snapshot may not include the page.</p></div></div>`; });
   window.scrollTo(0, 0);
 }
@@ -623,7 +623,10 @@ async function viewNbaProps(v) {
   const p = await api("/api/nba/props");
   const all = p.cards;
   const games = [...new Map(all.map((c) => [c.game_id, `${c.is_home ? c.opponent : c.team} @ ${c.is_home ? c.team : c.opponent}`])).entries()];
-  const f = Object.assign({ q: "", game: "", market: "pts", minp: "0.6", sort: "proj" }, store.get("nbaFilter", {}));
+  const f = Object.assign({ q: "", game: "", market: "pts", minp: "0.6", sort: "proj", form: "all" }, store.get("nbaFilter", {}));
+  // hot: over the line in >= 4 of the last 5 and >= 7 of the last 10; cold: the reverse
+  const formOf = (c) => { const { line } = lineFor("nba", c); const v = c.log.values; const h5 = hitRate(v.slice(-5), line), h10 = hitRate(v.slice(-10), line);
+    if (!h5 || !h10 || h10.n < 10) return "none"; if (h5.over >= 4 && h10.over >= 7) return "hot"; if (h5.over <= 1 && h10.over <= 3) return "cold"; return "none"; };
   v.innerHTML = `<section class="hero"><span class="eyebrow">NBA props · ${esc(p.date_et)} · saved ${esc(p.published_london)}</span><h1>Props board</h1>
       <p>Each card shows the model's projection, its over/under chance at a line, and how often the player went over that line recently. The line is, in order: yours (tap it to type your bookmaker's), the US market line where stored (a research reference; US books are not open to UK bettors), or the model's fair 50/50 line.</p></section>
     <div class="mktabs" role="tablist">${Object.entries(NBA_SHORT).map(([k, l]) => `<button role="tab" class="${k === f.market ? "on" : ""}" data-mk="${k}">${l}</button>`).join("")}</div>
@@ -631,16 +634,17 @@ async function viewNbaProps(v) {
       <label>Player<input type="search" id="nq" value="${esc(f.q)}" placeholder="Name"></label>
       <label>Game<select id="ngame"><option value="">All games</option>${games.map(([id, l]) => `<option value="${esc(id)}" ${id === f.game ? "selected" : ""}>${esc(l)}</option>`).join("")}</select></label>
       <label>Plays at least<select id="nminp">${["0", "0.3", "0.6", "0.85"].map((x) => `<option value="${x}" ${x === f.minp ? "selected" : ""}>${Math.round(x * 100)}%</option>`).join("")}</select></label>
+      <label>Form<select id="nform">${[["all", "Everyone"], ["hot", "Hot: 4+ of last 5 over"], ["cold", "Cold: 1 or fewer of last 5 over"]].map(([k, l]) => `<option value="${k}" ${k === f.form ? "selected" : ""}>${l}</option>`).join("")}</select></label>
       <label>Sort<select id="nsort">${[["proj", "Projection"], ["edge", "Biggest lean at your lines"], ["l10", "L10 hit rate"], ["tip", "Tip-off"]].map(([k, l]) => `<option value="${k}" ${k === f.sort ? "selected" : ""}>${l}</option>`).join("")}</select></label>
     </div>
     <p class="tiny muted" id="ncount"></p><div class="cards" id="ncards"></div><div class="row"><button class="btn ghost" id="nmore" hidden>Show more</button></div>`;
   let shown = 24;
   const render = () => {
-    let r = all.filter((c) => c.market === f.market && c.p_play >= +f.minp && (!f.game || c.game_id === f.game) && (!f.q || c.name.toLowerCase().includes(f.q.toLowerCase())));
+    let r = all.filter((c) => c.market === f.market && c.p_play >= +f.minp && (!f.game || c.game_id === f.game) && (!f.q || c.name.toLowerCase().includes(f.q.toLowerCase())) && (f.form === "all" || formOf(c) === f.form));
     const key = (c) => { const { line } = lineFor("nba", c); const L = new Dist(c.dist).line(line);
       if (f.sort === "edge") return -Math.abs(L.over - 0.5); if (f.sort === "l10") { const h = hitRate(c.log.values.slice(-10), line); return -(h ? h.r : 0); } if (f.sort === "proj") return -c.mean; return c.tip_utc; };
     r = r.map((c) => [key(c), c]).sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0)).map((x) => x[1]);
-    $("#ncount").textContent = `${r.length} players · ${NBA_MKT[f.market]}`;
+    $("#ncount").textContent = `${r.length} players · ${NBA_MKT[f.market]}${f.form !== "all" ? ` · ${f.form} at each card's line (form describes the past; the last-10 average was the weakest forecast tested)` : ""}`;
     $("#ncards").innerHTML = r.slice(0, shown).map((c) => nbaCard(c, all.indexOf(c))).join("") || banner("info", "<p>No players match these filters.</p>");
     $("#nmore").hidden = r.length <= shown;
     bindLineButtons($("#ncards"), all, "nba", render);
@@ -651,6 +655,7 @@ async function viewNbaProps(v) {
   $("#ngame").addEventListener("change", (e) => { f.game = e.target.value; save(); });
   $("#nminp").addEventListener("change", (e) => { f.minp = e.target.value; save(); });
   $("#nsort").addEventListener("change", (e) => { f.sort = e.target.value; save(); });
+  $("#nform").addEventListener("change", (e) => { f.form = e.target.value; save(); });
   $("#nmore").addEventListener("click", () => { shown += 24; render(); });
   render();
 }
@@ -672,7 +677,11 @@ async function viewNbaPlayer(v, pid) {
         <h3 style="margin-top:12px">Last 20 games</h3>${miniBars(c.log, line, 20, { width: 640, height: 170 })}
         <h3 style="margin-top:12px">Model distribution</h3>${distChart(D, { line })}
         <p class="tiny muted">Conditional on playing (chance he plays ${pct(c.p_play)}). Model N1; simpler forecasts for comparison: recent average ${dec(c.baselines.A, 1)}, last-10 average ${dec(c.baselines.C, 1)}. "Fair" is the break-even decimal price if the model were exactly right.</p></section>
+      <div id="mupanel"></div>
       ${logTable(P)}`;
+    const mu = (season) => nbaMatchupPanel(c, season).then((h) => { const el = $("#mupanel", v); if (!el) return; el.innerHTML = h;
+      $$("[data-museason]", el).forEach((b) => b.addEventListener("click", () => { store.set("muSeason", b.dataset.museason); mu(b.dataset.museason); })); });
+    mu();
     $$(".mktabs button", v).forEach((b) => b.addEventListener("click", () => { mk = b.dataset.mk; store.set("nbaPlayerMk", mk); draw(); }));
     bindLineButtons(v, [c], "nba", draw);
   };
@@ -691,7 +700,7 @@ async function viewNbaGame(v, gid) {
     ${g.players.filter((p) => p.team === team && p.p_play >= 0.05).map((p) => `<tr class="${p.p_play < 0.5 ? "dim" : ""}"><td class="l"><a href="#nba-player.${esc(p.player_id)}">${esc(p.name)}</a> ${nbaInjury(p.injury)}</td><td>${pct(p.p_play)}</td><td>${dec(p.minutes_expected, 0)}</td>${["pts", "reb", "ast", "fg3m", "pra"].map((m) => `<td data-tip="${esc(NBA_MKT[m])}|median ${p[m]?.median}, 80% ${p[m]?.q10}–${p[m]?.q90}">${dec(p[m]?.mean, 1)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
   const mu = (t) => { const o = g.opp[t]; if (!o) return ""; return ["pts", "reb", "ast", "fg3m"].map((s) => `<span class="mu ${rankTone(o[s].rank)}">${NBA_SHORT[s]} ${o[s].rank}/30</span>`).join(" ") + ` <span class="tiny muted">pace ${o.pace.value} (${o.pace.rank}/30)</span>`; };
   v.innerHTML = `<section class="hero"><span class="eyebrow">${esc(G.tip_london)} · edition ${esc(g.edition_id)}</span><h1>${esc(G.away)} @ ${esc(G.home)}</h1><p class="small">Projections are means conditional on playing; rows below 50% to play are dimmed.</p></section>
-    <section class="panel"><h2>Defences</h2><p class="small">Rank of each defence by what it allows per possession (1 = allows least, 30 = most), shrunk towards average as the model uses it.</p>
+    <section class="panel"><h2>Defences</h2><p class="small">Rank of each defence by what it allows per possession (1 = allows least, 30 = most), shrunk towards average as the model uses it. Full breakdowns by court area, shot type and position: <a href="#nba-defense.${esc(G.away)}">${esc(G.away)}</a> · <a href="#nba-defense.${esc(G.home)}">${esc(G.home)}</a>.</p>
       <p><b>${esc(G.away)} defence</b> ${mu(G.away)}</p><p><b>${esc(G.home)} defence</b> ${mu(G.home)}</p></section>
     <div class="grid"><section class="panel"><h2>${esc(G.away)}</h2>${tbl(G.away)}</section><section class="panel"><h2>${esc(G.home)}</h2>${tbl(G.home)}</section></div>`;
 }
@@ -714,6 +723,214 @@ async function viewNbaAbout(v) {
       <p class="small">Chance of playing comes from recent appearances, then the daily injury report: Out = 1%, game-time decision = 65% of the usual chance. Those two numbers are assumptions; injury reports have no history here before September 2026, so their effect is judged from now on.</p></section>
     <section class="panel"><h2>Known gaps</h2><ul class="small"><li>When a teammate who played last game is ruled out, the extra minutes and shots are not added yet (flagged on the card).</li><li>Data arrive the morning after games (about 11:45 UK time); late scratches after the injury snapshot (about 18:40 UK time) are missed.</li><li>No bookmaker prices are used. UK bookmakers' NBA props are not available through the odds feed; any line you enter is your own.</li></ul></section>
     <section class="panel"><h2>Sources</h2><p class="small">Box scores, schedules and injury snapshots: SportsDataverse (sportsdataverse-data releases, CC BY 4.0), originally from ESPN game feeds. Not used: NBA.com statistics and injury PDFs (their terms forbid use in connection with gambling) and ESPN's own site.</p></section>`;
+}
+
+// ---------------------------------------------------------------- NBA defensive matchups
+// Every number is aggregated in the browser from per-game rows, so all 30 teams are compared
+// under the same season, game-window, venue and game-type filters.
+const DZ = ["RA", "PAINT", "MID", "LC3", "RC3", "LW3", "RW3", "TOP3"];
+const DZ3 = new Set(["LC3", "RC3", "LW3", "RW3", "TOP3"]);
+const DZ_SHORT = { RA: "Rim", PAINT: "Paint", MID: "Mid", LC3: "L corner", RC3: "R corner", LW3: "L wing", RW3: "R wing", TOP3: "Top" };
+const DSUM = { "2PT": ["RA", "PAINT", "MID"], "3PT": ["LC3", "RC3", "LW3", "RW3", "TOP3"], "Paint (rim + lane)": ["RA", "PAINT"], "Corner 3s": ["LC3", "RC3"], "Above-break 3s": ["LW3", "RW3", "TOP3"], "All field goals": DZ };
+const POS_NAME = { ALL: "All opponents", G: "Guards", F: "Forwards", C: "Centres" };
+function dmF() { return Object.assign({ season: "2027", games: "all", venue: "all", stype: "R", rate: "pg", pos: "ALL", metric: "pts" }, store.get("dmFilter", {})); }
+function dmRows(M, team, f) {
+  let r = ((M.rows[f.season] || {})[team] || []);
+  if (f.stype !== "all") r = r.filter((x) => (f.stype === "R" ? x.t === "R" : x.t !== "R"));
+  if (f.venue !== "all") r = r.filter((x) => (f.venue === "home") === (x.h === 1));
+  if (f.games !== "all") r = r.slice(-(+f.games));
+  return r;
+}
+function dmAgg(rows, pos) {
+  const pl = pos === "ALL" ? ["G", "F", "C", "U"] : [pos];
+  const a = { games: rows.length, poss: 0, pa: 0, fouls: 0, sf: 0, fn: 0, z: DZ.map(() => [0, 0]), fta: 0, ftm: 0, bx: Array(10).fill(0) };
+  for (const r of rows) {
+    a.poss += r.p; a.pa += r.pa; if (r.f != null) { a.fouls += r.f; a.sf += r.sf; a.fn++; }
+    for (const p of pl) {
+      const z = r.z[p]; if (z) DZ.forEach((_, i) => { a.z[i][0] += z[2 * i]; a.z[i][1] += z[2 * i + 1]; });
+      const t = r.ft[p]; if (t) { a.fta += t[0]; a.ftm += t[1]; }
+      const b = r.bx[p]; if (b) b.forEach((v, i) => { a.bx[i] += v; });
+    }
+  }
+  return a;
+}
+const dmScale = (a, f) => (f.rate === "p100" ? (a.poss ? 100 / a.poss : 0) : (a.games ? 1 / a.games : 0));
+function dmZone(a, zs, f) { // stats for a set of zones
+  let fga = 0, fgm = 0, pts = 0; for (const z of zs) { const i = DZ.indexOf(z); fga += a.z[i][0]; fgm += a.z[i][1]; pts += a.z[i][1] * (DZ3.has(z) ? 3 : 2); }
+  const tot = a.z.reduce((s, x) => s + x[0], 0); const k = dmScale(a, f);
+  return { fga_n: fga, att: fga * k, made: fgm * k, pct: fga ? fgm / fga : null, pts: pts * k, share: tot ? fga / tot : null };
+}
+function dmLeague(M, f, fn) { // fn(agg) -> value; returns {vals: {team: v}, avg, rank(team) 1 = lowest}
+  const vals = {}; for (const t of Object.keys(M.rows[f.season] || {})) { const v = fn(dmAgg(dmRows(M, t, f), f.pos)); if (v != null && !isNaN(v)) vals[t] = v; }
+  const arr = Object.values(vals); const avg = arr.reduce((s, x) => s + x, 0) / (arr.length || 1);
+  const sorted = Object.entries(vals).sort((a, b) => a[1] - b[1]).map((x) => x[0]);
+  return { vals, avg, n: arr.length, rank: (t) => sorted.indexOf(t) + 1 };
+}
+const DM_METRIC = { pts: ["Points allowed", (s) => s.pts, "1st = fewest points allowed"], att: ["Attempts allowed", (s) => s.att, "1st = fewest attempts allowed"], pct: ["FG% allowed", (s) => s.pct, "1st = lowest FG% allowed"] };
+function dmFmt(m, v) { return v == null || isNaN(v) ? "–" : m === "pct" || m === "share" ? `${(v * 100).toFixed(1)}%` : v.toFixed(1); }
+function dmTone(m, v, avg) { // favourable for the scorer when the defence allows more than average
+  if (v == null || avg == null || !avg) return "zn";
+  const d = m === "pct" ? (v - avg) * 100 : (v / avg - 1) * 100; const s = m === "pct" ? [1.5, 4] : [5, 15];
+  return d >= s[1] ? "zf2" : d >= s[0] ? "zf1" : d <= -s[1] ? "zd2" : d <= -s[0] ? "zd1" : "zn";
+}
+function dmRel(M, pos, z, m) { const r = M.reliability[`${pos === "U" ? "ALL" : pos}|${z}|${m === "pct" ? "pct" : "att"}`]; return r; }
+function relAt(r, n) { if (!r) return null; const rho = r.rho_game; return (n * rho) / (1 + (n - 1) * rho); }
+function relWord(x) { return x == null ? "not measured" : x >= 0.6 ? "solid" : x >= 0.35 ? "some signal" : x >= 0.15 ? "mostly noise" : "noise"; }
+
+function zoneAt(x, y) { // mirrors npl/nba/shots.py zone_of, for drawing the court
+  const dx = x - 25, d = Math.hypot(dx, y);
+  const three = y <= 8.75 ? Math.abs(dx) >= 22 : d >= 23.75;
+  if (!three) return d <= 4 ? "RA" : Math.abs(dx) <= 8 && y <= 13.75 ? "PAINT" : "MID";
+  if (y <= 8.75) return dx < 0 ? "LC3" : "RC3";
+  return Math.abs(dx) <= 9 ? "TOP3" : dx < 0 ? "LW3" : "RW3";
+}
+const DZ_LABEL_AT = { RA: [25, 1.6], PAINT: [25, 10.5], MID: [25, 18.5], LC3: [1.5, 1.5], RC3: [48.5, 1.5], LW3: [6.5, 23], RW3: [43.5, 23], TOP3: [25, 30] };
+function courtMap(cells, { width = 500 } = {}) { // cells[z] = {tone, label, tip}
+  const S = 10, H = 47, Y = (y) => (41.75 - y) * S;
+  const groups = {}; for (let x = 0; x < 50; x++) for (let y = -5; y < 42; y++) { const z = zoneAt(x + 0.5, y + 0.5); (groups[z] ||= []).push(`M${x * S},${Y(y + 1)}h${S}v${S}h-${S}z`); }
+  let s = `<svg class="court" viewBox="0 0 500 ${H * S}" style="max-width:${width}px" role="img" aria-label="Half court: defence by shooting area">`;
+  for (const z of DZ) { const c = cells[z] || {}; s += `<g class="zone ${c.tone || "zn"}" data-zone="${z}" tabindex="0" data-tip="${esc(c.tip || DZ_SHORT[z])}"><path d="${groups[z].join("")}"/></g>`; }
+  // court lines
+  s += `<g class="lines"><rect x="${17 * S}" y="${Y(13.75)}" width="${16 * S}" height="${19 * S}"/><path d="M${21 * S},${Y(0)} a${4 * S},${4 * S} 0 0 0 ${8 * S},0"/>`;
+  s += `<path d="M${3 * S},${Y(-5.25)} V${Y(8.75)} A${23.75 * S},${23.75 * S} 0 0 1 ${47 * S},${Y(8.75)} V${Y(-5.25)}"/>`;
+  s += `<circle cx="${25 * S}" cy="${Y(13.75)}" r="${6 * S}"/><circle class="rim" cx="${25 * S}" cy="${Y(0)}" r="7.5"/><line x1="${22 * S}" x2="${28 * S}" y1="${Y(-1.25)}" y2="${Y(-1.25)}"/><rect x="0" y="0" width="500" height="${H * S}"/></g>`;
+  for (const z of DZ) { const c = cells[z]; if (!c || !c.label) continue; const [lx, ly] = DZ_LABEL_AT[z]; const small = z === "LC3" || z === "RC3";
+    s += `<text class="zl${small ? " sm" : ""}" x="${lx * S}" y="${Y(ly)}" text-anchor="middle">${esc(c.label)}</text>`; }
+  return s + "</svg>";
+}
+function dmFilters(M, f, extra = "") {
+  const opt = (id, pairs, cur) => `<select id="${id}">${pairs.map(([k, l]) => `<option value="${k}" ${String(k) === String(cur) ? "selected" : ""}>${l}</option>`).join("")}</select>`;
+  return `<div class="filters dmf" role="search">
+    <label>Season${opt("dms", Object.entries(M.seasons).reverse(), f.season)}</label>
+    <label>Games${opt("dmg", [["all", "Whole season"], ["5", "Last 5"], ["10", "Last 10"], ["20", "Last 20"]], f.games)}</label>
+    <label>Venue${opt("dmv", [["all", "Home and away"], ["home", "Home"], ["away", "Away"]], f.venue)}</label>
+    <label>Games type${opt("dmt", [["R", "Regular season"], ["P", "Playoffs and play-in"], ["all", "All"]], f.stype)}</label>
+    <label>Scale${opt("dmr", [["pg", "Per game"], ["p100", "Per 100 possessions"]], f.rate)}</label>${extra}</div>`;
+}
+function dmBind(v, f) {
+  [["#dms", "season"], ["#dmg", "games"], ["#dmv", "venue"], ["#dmt", "stype"], ["#dmr", "rate"], ["#dmm", "metric"], ["#dmp", "pos"]].forEach(([id, k]) => { const el = $(id, v); if (el) el.addEventListener("change", () => { f[k] = el.value; store.set("dmFilter", f); route(); }); });
+  $$("[data-dmpos]", v).forEach((b) => b.addEventListener("click", () => { f.pos = b.dataset.dmpos; store.set("dmFilter", f); route(); }));
+  $$("[data-dmmetric]", v).forEach((b) => b.addEventListener("click", () => { f.metric = b.dataset.dmmetric; store.set("dmFilter", f); route(); }));
+}
+const rateLbl = (f) => (f.rate === "p100" ? "per 100 poss." : "per game");
+const ord = (n) => { const s = ["th", "st", "nd", "rd"], v = n % 100; return n + (s[(v - 20) % 10] || s[v] || s[0]); };
+
+async function viewNbaDefense(v, team) {
+  const M = await api("/api/nba/matchups"); const f = dmF();
+  if (!M.rows[f.season]) f.season = Object.keys(M.rows).slice(-1)[0];
+  if (team) return viewNbaDefenseTeam(v, M, f, team);
+  const teams = Object.keys(M.rows[f.season]).sort();
+  const cols = [["Pts", "Points allowed", (a) => a.pa * dmScale(a, f), "pts"], ["Paint", "Paint points (rim + lane)", (a) => dmZone(a, DSUM["Paint (rim + lane)"], f).pts, "pts"], ["Mid", "Mid-range points", (a) => dmZone(a, ["MID"], f).pts, "pts"], ["3PT", "Three-point points", (a) => dmZone(a, DSUM["3PT"], f).pts, "pts"],
+    ["Rim att", "Rim attempts allowed", (a) => dmZone(a, ["RA"], f).att, "att"], ["Corner 3 att", "Corner 3 attempts allowed", (a) => dmZone(a, DSUM["Corner 3s"], f).att, "att"], ["Opp 3P%", "Opponent 3P%", (a) => dmZone(a, DSUM["3PT"], f).pct, "pct"], ["FT rate", "Opponent FTA / FGA", (a) => { const t = a.z.reduce((s, x) => s + x[0], 0); return t ? a.fta / t : null; }, "pct"], ["Fouls", "Fouls committed per game", (a) => (a.fn ? a.fouls / a.fn : null), "n"]];
+  const sortK = store.get("dmSort", 0);
+  const L = cols.map((c) => dmLeague(M, { ...f, pos: "ALL" }, c[2]));
+  const order = [...teams].sort((a, b) => (L[sortK].vals[a] ?? 99) - (L[sortK].vals[b] ?? 99));
+  const gsum = teams.map((t) => dmRows(M, t, f).length); const gmin = Math.min(...gsum), gmax = Math.max(...gsum);
+  v.innerHTML = `<section class="hero"><span class="eyebrow">NBA · defensive matchups · ${esc(M.seasons[f.season])}</span><h1>Team defence</h1>
+      <p>What each defence allows and where it comes from: court area, shot type and opposing position. Tap a team for its half-court map, position splits and fouls. Ranks: <b>1st = allows the least</b> (fewest points, attempts, lowest percentage).</p></section>
+    ${dmFilters(M, f)}
+    ${gmax < 10 ? banner("warn", `<p class="small">Only ${gmin}–${gmax} games per team in this selection. Defence splits this early are mostly noise (see the reliability notes on each team page); switch the season to 2025-26 for a full season of evidence.</p>`) : ""}
+    <section class="panel"><div class="tablewrap"><table class="pit dmtab"><thead><tr><th class="l">Team</th><th>Games</th>${cols.map(([s, l], i) => `<th><button class="thbtn ${i === sortK ? "on" : ""}" data-sort="${i}" title="${esc(l)}">${esc(s)}</button></th>`).join("")}</tr></thead><tbody>
+      ${order.map((t) => `<tr><td class="l"><a href="#nba-defense.${esc(t)}">${esc(t)}</a></td><td>${dmRows(M, t, f).length}</td>${cols.map((c, i) => { const val = L[i].vals[t]; const r = L[i].rank(t); return `<td class="c ${r && L[i].n ? (r <= 5 ? "lo2" : r <= 10 ? "lo" : r > L[i].n - 5 ? "hi2" : r > L[i].n - 10 ? "hi" : "") : ""}" data-tip="${esc(c[1])} (${c[3] === "pct" ? "share" : rateLbl(f)})|${dmFmt(c[3] === "pct" ? "pct" : "n", val)} · ${ord(r)} of ${L[i].n} · league ${dmFmt(c[3] === "pct" ? "pct" : "n", L[i].avg)}">${dmFmt(c[3] === "pct" ? "pct" : "n", val)}</td>`; }).join("")}</tr>`).join("")}</tbody></table></div>
+      <p class="tiny muted">Per game unless "Per 100 possessions" is chosen (fouls are always per game). Blue = among the stingiest, red = among the most generous. Tap a column to sort.</p></section>
+    ${dmSources(M)}`;
+  dmBind(v, f);
+  $$("[data-sort]", v).forEach((b) => b.addEventListener("click", () => { store.set("dmSort", +b.dataset.sort); route(); }));
+}
+function dmSources(M) {
+  return `<section class="panel"><h2>Sources and definitions</h2><p class="small">${esc(M.source)}. Play-by-play updated ${esc(londonTime(M.updated.play_by_play))}; box scores ${esc(londonTime(M.updated.box_scores))}. Games played overnight arrive about 11:45 UK time.</p>
+    <details class="small"><summary>Shooting areas</summary><pre class="defs">${esc(M.definitions.zones)}</pre></details>
+    <details class="small"><summary>Positions</summary><p>${esc(M.definitions.positions)}</p></details>
+    <details class="small"><summary>Fouls, free throws, per 100 possessions and points</summary><p>${esc(M.definitions.fouls)}</p><p>${esc(M.definitions.ft_rate)}</p><p>${esc(M.definitions.per100)}</p><p>${esc(M.definitions.points)}</p></details></section>`;
+}
+
+function viewNbaDefenseTeam(v, M, f, team) {
+  const rows = dmRows(M, team, f); const a = dmAgg(rows, f.pos);
+  const tot = a.z.reduce((s, x) => s + x[0], 0);
+  const met = DM_METRIC[f.metric] ? f.metric : "pts";
+  // league for each zone and summary, same filters and position
+  const zl = {}; for (const z of DZ) zl[z] = dmLeague(M, f, (q) => DM_METRIC[met][1](dmZone(q, [z], f)));
+  const cells = {}; for (const z of DZ) { const s = dmZone(a, [z], f); const L = zl[z]; const val = DM_METRIC[met][1](s); const rel = relAt(dmRel(M, f.pos, z, met), Math.max(a.games, 1));
+    cells[z] = { tone: s.fga_n < 8 ? "zn" : dmTone(met, val, L.avg), label: met === "pct" ? (s.pct == null ? "–" : `${Math.round(s.pct * 100)}%`) : dmFmt(met, val),
+      tip: `${M.zone_labels[z]} · ${POS_NAME[f.pos]}|${DM_METRIC[met][0]} ${dmFmt(met, val)} (${met === "pct" ? "" : rateLbl(f) + ", "}league ${dmFmt(met, L.avg)}) · ${ord(L.rank(team))} of ${L.n}|${s.fga_n} attempts, ${a.games} games · signal: ${relWord(rel)}` }; }
+  const sumRows = Object.entries(DSUM);
+  const zoneRow = (label, zs, isSum) => { const s = dmZone(a, zs, f); const L = dmLeague(M, f, (q) => DM_METRIC[met][1](dmZone(q, zs, f))); const val = DM_METRIC[met][1](s);
+    return `<tr class="${isSum ? "sum" : ""}"><td class="l">${esc(label)}<div class="tiny muted">${s.fga_n} att.</div></td><td>${dmFmt("n", s.made)}-${dmFmt("n", s.att)}</td><td>${dmFmt("pct", s.pct)}</td><td>${dmFmt("n", s.pts)}</td><td>${dmFmt("share", s.share)}</td><td>${dmFmt(met, L.avg)}</td><td class="${dmTone(met, val, L.avg)}t">${s.fga_n ? ord(L.rank(team)) : "–"}</td></tr>`; };
+  // position matrix: points per game by area for each position
+  const pm = ["G", "F", "C"].map((p) => { const q = dmAgg(rows, p); return { p, q, areas: [["RA"], ["PAINT"], ["MID"], ["LC3", "RC3"], ["LW3", "RW3"], ["TOP3"]].map((zs) => dmZone(q, zs, f)) }; });
+  const posTable = ["G", "F", "C"].map((p) => { const q = dmAgg(rows, p); const k = dmScale(q, f); const b = q.bx; const L = dmLeague(M, { ...f, pos: p }, (x) => x.bx[0] * dmScale(x, f));
+    return `<tr class="${f.pos === p ? "on" : ""}"><td class="l"><button class="linkbtn" data-dmpos="${p}">${POS_NAME[p]}</button></td><td><b>${dmFmt("n", b[0] * k)}</b><div class="tiny muted">${ord(L.rank(team))} · lg ${dmFmt("n", L.avg)}</div></td>
+      <td>${dmFmt("n", (b[5] - b[7]) * k)}-${dmFmt("n", (b[4] - b[6]) * k)}<div class="tiny muted">${dmFmt("pct", b[4] - b[6] ? (b[5] - b[7]) / (b[4] - b[6]) : null)}</div></td>
+      <td>${dmFmt("n", b[7] * k)}-${dmFmt("n", b[6] * k)}<div class="tiny muted">${dmFmt("pct", b[6] ? b[7] / b[6] : null)}</div></td>
+      <td>${dmFmt("n", b[9] * k)}-${dmFmt("n", b[8] * k)}<div class="tiny muted">${dmFmt("n", b[9] * k)} pts</div></td><td>${dmFmt("n", b[1] * k)}</td><td>${dmFmt("n", b[2] * k)}</td></tr>`; }).join("");
+  const LF = { fouls: dmLeague(M, { ...f, pos: "ALL" }, (x) => (x.fn ? x.fouls / x.fn : null)), sf: dmLeague(M, { ...f, pos: "ALL" }, (x) => (x.fn ? x.sf / x.fn : null)),
+    fta: dmLeague(M, { ...f, pos: "ALL" }, (x) => x.fta * dmScale(x, f)), ftr: dmLeague(M, { ...f, pos: "ALL" }, (x) => { const t = x.z.reduce((s, y) => s + y[0], 0); return t ? x.fta / t : null; }) };
+  const all = dmAgg(rows, "ALL"); const kAll = dmScale(all, f); const totAll = all.z.reduce((s, x) => s + x[0], 0);
+  const relPts = relAt(M.reliability["ALL|pts_per100"], Math.max(a.games, 1));
+  v.innerHTML = `<section class="hero"><span class="eyebrow">${esc(M.seasons[f.season])} · ${a.games} games · ${tot.toLocaleString("en-GB")} opponent shots</span><h1>${esc(team)} defence</h1>
+      <p>Allows <b>${dmFmt("n", all.pa * kAll)}</b> points ${rateLbl(f)} (${ord(dmLeague(M, { ...f, pos: "ALL" }, (x) => x.pa * dmScale(x, f)).rank(team))} of 30, 1st = fewest). How much this sample says about the defence: <b>${relWord(relPts)}</b>.</p>
+      <p class="small"><a href="#nba-defense">All teams</a></p></section>
+    ${dmFilters(M, f, `<label>Opposing position<select id="dmp">${Object.entries(POS_NAME).map(([k, l]) => `<option value="${k}" ${k === f.pos ? "selected" : ""}>${l}</option>`).join("")}</select></label>`)}
+    ${a.games < 10 ? banner("warn", `<p class="small">${a.games} games in this selection: area and position splits are mostly noise this early. Treat colours as a hint, and compare with the full 2025-26 season.</p>`) : ""}
+    <section class="panel"><div class="row between"><h2>Where opponents score${f.pos !== "ALL" ? ` · ${POS_NAME[f.pos]}` : ""}</h2>
+      <div class="mktabs small">${Object.entries(DM_METRIC).map(([k, [l]]) => `<button class="${k === met ? "on" : ""}" data-dmmetric="${k}">${l}</button>`).join("")}</div></div>
+      <div class="courtwrap">${courtMap(cells)}<div class="courtside">
+        <div class="legend"><span><i class="box zf2b"></i>Favourable for a scorer</span><span><i class="box zf1b"></i>Slightly</span><span><i class="box znb"></i>About average</span><span><i class="box zd1b"></i>Slightly difficult</span><span><i class="box zd2b"></i>Difficult</span></div>
+        <p class="tiny muted">${esc(DM_METRIC[met][0])} ${met === "pct" ? "" : rateLbl(f)} compared with the league under the same filters; ${esc(DM_METRIC[met][2])}. Areas with fewer than 8 attempts stay grey. Tap an area for its numbers.</p>
+        <div class="ftbox"><b>Free throws (separate from court areas)</b><div>${dmFmt("n", a.ftm * dmScale(a, f))}-${dmFmt("n", a.fta * dmScale(a, f))} ${rateLbl(f)} · ${dmFmt("pct", a.fta ? a.ftm / a.fta : null)} · FT rate ${dmFmt("pct", tot ? a.fta / tot : null)}</div></div>
+        <div id="zoneInfo" class="tiny"></div></div></div>
+      <div class="tablewrap"><table class="deft"><thead><tr><th class="l">Area</th><th>Made-Att</th><th>FG%</th><th>Pts</th><th>Share</th><th>League (${esc(DM_METRIC[met][0].toLowerCase())})</th><th>Rank</th></tr></thead><tbody>
+        ${DZ.map((z) => zoneRow(M.zone_labels[z], [z], false)).join("")}${sumRows.map(([l, zs]) => zoneRow(l, zs, true)).join("")}</tbody></table></div>
+      <p class="tiny muted">${rateLbl(f)} for made-attempted and points. Summary rows (shaded) add the areas above them and are not extra shots. Left and right are as drawn, basket at the bottom.</p></section>
+    <section class="panel"><h2>Defence v position</h2><p class="small">Box-score production by opposing players listed at each position. Tap a position to filter the map and areas above.</p>
+      <div class="tablewrap"><table class="deft"><thead><tr><th class="l">Position</th><th>Pts</th><th>2PM-2PA</th><th>3PM-3PA</th><th>FTM-FTA</th><th>Reb</th><th>Ast</th></tr></thead><tbody>${posTable}</tbody></table></div>
+      <h3 style="margin-top:12px">Points by area and position (${rateLbl(f)})</h3>
+      <div class="tablewrap"><table class="deft"><thead><tr><th class="l">Position</th><th>Rim</th><th>Paint</th><th>Mid</th><th>Corner 3</th><th>Wing 3</th><th>Top 3</th><th>3PA</th></tr></thead><tbody>
+        ${pm.map(({ p, q, areas }) => `<tr><td class="l">${POS_NAME[p]}</td>${areas.map((s, i) => { const zs = [["RA"], ["PAINT"], ["MID"], ["LC3", "RC3"], ["LW3", "RW3"], ["TOP3"]][i]; const L = dmLeague(M, { ...f, pos: p }, (x) => dmZone(x, zs, f).pts); return `<td class="${dmTone("pts", s.pts, L.avg)}t" data-tip="${esc(POS_NAME[p])} · ${esc(zs.map((z) => M.zone_labels[z]).join(" + "))}|${dmFmt("n", s.pts)} pts (league ${dmFmt("n", L.avg)}) · ${s.fga_n} attempts">${dmFmt("n", s.pts)}</td>`; }).join("")}<td>${dmFmt("n", dmZone(q, DSUM["3PT"], f).att)}</td></tr>`).join("")}</tbody></table></div>
+      <p class="tiny muted">Individual positions (PG, SG, SF, PF) are not available: this source lists each player as G, F or C in each game, and every shot and free throw belongs to exactly one of those. Position splits are the noisiest numbers here (about 0.15 reliability after 10 games, 0.55–0.65 after a full season).</p></section>
+    <section class="panel"><h2>Fouls and free throws</h2><div class="tablewrap"><table class="deft"><thead><tr><th class="l">Measure</th><th>${esc(team)}</th><th>League</th><th>Rank</th></tr></thead><tbody>
+      <tr><td class="l">Fouls committed per game</td><td>${dmFmt("n", all.fn ? all.fouls / all.fn : null)}</td><td>${dmFmt("n", LF.fouls.avg)}</td><td>${ord(LF.fouls.rank(team))}</td></tr>
+      <tr><td class="l">Shooting fouls per game</td><td>${dmFmt("n", all.fn ? all.sf / all.fn : null)}</td><td>${dmFmt("n", LF.sf.avg)}</td><td>${ord(LF.sf.rank(team))}</td></tr>
+      <tr><td class="l">Opponent FTM-FTA ${rateLbl(f)}</td><td>${dmFmt("n", all.ftm * kAll)}-${dmFmt("n", all.fta * kAll)}</td><td>${dmFmt("n", LF.fta.avg)} FTA</td><td>${ord(LF.fta.rank(team))}</td></tr>
+      <tr><td class="l">Free-throw points allowed ${rateLbl(f)}</td><td>${dmFmt("n", all.ftm * kAll)}</td><td colspan="2" class="l tiny muted">kept separate from court areas</td></tr>
+      <tr><td class="l">Opponent FT rate (FTA / FGA)</td><td>${dmFmt("pct", totAll ? all.fta / totAll : null)}</td><td>${dmFmt("pct", LF.ftr.avg)}</td><td>${ord(LF.ftr.rank(team))}</td></tr>
+      ${["G", "F", "C"].map((p) => { const q = dmAgg(rows, p); const t = q.z.reduce((s, x) => s + x[0], 0); return `<tr><td class="l">FTM-FTA by opposing ${POS_NAME[p].toLowerCase()} ${rateLbl(f)}</td><td>${dmFmt("n", q.ftm * dmScale(q, f))}-${dmFmt("n", q.fta * dmScale(q, f))}</td><td colspan="2" class="l tiny muted">FT rate ${dmFmt("pct", t ? q.fta / t : null)}</td></tr>`; }).join("")}
+      </tbody></table></div><p class="tiny muted">1st = fewest. Fouls drawn by position are not available (the play-by-play does not record who was fouled). ${esc(M.definitions.ft_rate)}</p></section>
+    ${dmSources(M)}`;
+  dmBind(v, f);
+  $$(".court .zone", v).forEach((g) => g.addEventListener("click", () => { $("#zoneInfo", v).innerHTML = esc(g.dataset.tip).split("|").map((x, i) => (i ? `<div>${x}</div>` : `<b>${x}</b>`)).join(""); }));
+}
+
+// player matchup panel: his shot profile against the opponent's defence
+async function nbaMatchupPanel(card, oppSeason) {
+  let M, P; try { [M, P] = await Promise.all([api("/api/nba/matchups"), api(`/api/nba/shotprofile/${card.player_id}`)]); } catch { return ""; }
+  const seasons = Object.keys(M.rows).sort(); const cur = seasons[seasons.length - 1], prev = seasons[seasons.length - 2];
+  // his profile: this season once he has 10 games, otherwise last season
+  const pSeason = P.seasons[cur] && P.seasons[cur].games >= 10 ? cur : P.seasons[prev] ? prev : cur;
+  const pf = P.seasons[pSeason];
+  if (!pf) return `<section class="panel"><h2>Matchup</h2><p class="small muted">No shot data for this player yet.</p></section>`;
+  oppSeason = oppSeason || store.get("muSeason", cur);
+  const f = { season: oppSeason, games: "all", venue: "all", stype: "R", rate: "p100", pos: P.position };
+  const toggle = `<div class="mktabs small">${[cur, prev].filter(Boolean).map((s) => `<button class="${s === oppSeason ? "on" : ""}" data-museason="${s}">${esc(card.opponent)} ${esc(M.seasons[s])} (${dmRows(M, card.opponent, { ...f, season: s }).length} g)</button>`).join("")}</div>`;
+  const opp = card.opponent; const rows = dmRows(M, opp, f); const allRows = dmRows(M, opp, { ...f, pos: "ALL" });
+  const tot = DZ.reduce((s, z) => s + pf.zones[z][0], 0);
+  const lines = []; const tbl = DZ.map((z) => {
+    const [a, m] = pf.zones[z]; const share = tot ? a / tot : 0; const q = dmAgg(rows, f.pos); const s = dmZone(q, [z], f);
+    const La = dmLeague(M, f, (x) => dmZone(x, [z], f).att), Lp = dmLeague(M, f, (x) => dmZone(x, [z], f).pct);
+    const rel = relAt(dmRel(M, f.pos, z, "att"), Math.max(q.games, 1));
+    if (share >= 0.12 && s.fga_n >= 8 && La.avg) {
+      const dAtt = s.att / La.avg - 1, dPct = s.pct != null && Lp.avg != null ? (s.pct - Lp.avg) * 100 : 0;
+      const what = `${Math.round(share * 100)}% of his shots come from ${M.zone_labels[z].toLowerCase()}`;
+      if (dAtt >= 0.1 || dPct >= 3) lines.push(["adv", `${what}; ${opp} allow ${POS_NAME[f.pos].toLowerCase()} ${dAtt >= 0 ? "+" : ""}${Math.round(dAtt * 100)}% attempts there and ${dmFmt("pct", s.pct)} (league ${dmFmt("pct", Lp.avg)}).`, rel]);
+      else if (dAtt <= -0.1 || dPct <= -3) lines.push(["dif", `${what}; ${opp} allow ${POS_NAME[f.pos].toLowerCase()} ${Math.round(dAtt * 100)}% attempts there and ${dmFmt("pct", s.pct)} (league ${dmFmt("pct", Lp.avg)}).`, rel]);
+    }
+    return `<tr><td class="l">${esc(M.zone_labels[z])}</td><td>${Math.round(share * 100)}%</td><td>${dmFmt("pct", a ? m / a : null)}</td><td>${dmFmt("n", (m * (DZ3.has(z) ? 3 : 2)) / pf.games)}</td><td class="${dmTone("att", s.att, La.avg)}t">${dmFmt("n", s.att)}<div class="tiny muted">lg ${dmFmt("n", La.avg)}</div></td><td class="${dmTone("pct", s.pct, Lp.avg)}t">${dmFmt("pct", s.pct)}<div class="tiny muted">lg ${dmFmt("pct", Lp.avg)}</div></td></tr>`; }).join("");
+  const gN = dmAgg(rows, f.pos).games;
+  return `<section class="panel"><div class="row between"><h2>Matchup v ${esc(opp)} defence</h2>${toggle}</div>
+    <p class="small">His shot profile (${esc(M.seasons[pSeason])}, ${pf.games} games) beside what ${esc(opp)} allow to opposing ${esc(POS_NAME[f.pos].toLowerCase())} per 100 possessions (${esc(M.seasons[f.season])}, ${gN} games). Green = the defence allows more than average there, red = less.</p>
+    ${lines.length ? `<ul class="small mlist">${lines.map(([k, t, rel]) => `<li class="${k}"><b>${k === "adv" ? "Advantage" : "Difficulty"}:</b> ${esc(t)} <span class="tiny muted">(signal: ${relWord(rel)})</span></li>`).join("")}</ul>` : `<p class="small muted">No clear advantage or difficulty in his main shooting areas at this sample size.</p>`}
+    <div class="tablewrap"><table class="deft"><thead><tr><th class="l">Area</th><th>His share</th><th>His FG%</th><th>His pts/g</th><th>${esc(opp)} att. allowed</th><th>${esc(opp)} FG% allowed</th></tr></thead><tbody>${tbl}</tbody></table></div>
+    <p class="tiny muted">Free throws: he takes ${dmFmt("n", pf.ft[0] / pf.games)} a game (${dmFmt("pct", pf.ft[0] ? pf.ft[1] / pf.ft[0] : null)}). <a href="#nba-defense.${esc(opp)}">Full ${esc(opp)} defence breakdown</a>. Context only: these splits are not inputs to the projection.</p></section>`;
 }
 
 // ---------------------------------------------------------------- Defences

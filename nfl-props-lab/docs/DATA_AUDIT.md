@@ -75,6 +75,14 @@ labelled CC BY 4.0 (credit: SportsDataverse). Content originates from ESPN game 
 | Schedules | `espn_nba_schedules/nba_schedule_{s}.parquet` | 1994-2027, includes future games with UTC tip-off times | live slates |
 | Injuries | `espn_nba_injuries/injuries_{s}.parquet` | 2027 only, one snapshot a day (about 18:40 UTC) since 8 Sep 2026 | live P(plays) only; no history, so not backtested |
 | Depth charts | `espn_nba_depthcharts/depthcharts_{s}.parquet` | 2027 only | not used |
+| Play-by-play | `espn_nba_pbp/play_by_play_{s}.parquet` | 2002-2027 (2023-2027 ingested) | shot locations (raw coordinates, basket at (25, 0)), free throws, fouls by type and fouler |
+| Team box scores | `espn_nba_team_boxscores/team_box_{s}.parquet` | 1994-2027 (2016-2027 ingested) | ingested for audit; totals are summed from player rows |
+
+Play-by-play checks (28 Oct 2026): field-goal attempts per team-game equal the box score in
+80% of team-games and are within 2 in 99.5% (5,430 team-games, 2023-2027); shooter position
+unknown for under 0.01% of attempts. The fouled player is not recorded, so fouls drawn by
+position are unavailable. ESPN lists one position per player per game (G, F or C); PG, SG,
+SF and PF appear on about 0.3% of rows and are not used.
 
 Freshness: game data lands about 11:45 UTC the morning after (07:45 ET); same-day results
 are not available.
