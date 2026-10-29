@@ -838,7 +838,7 @@ async function viewNbaDefense(v, team) {
   $$("[data-sort]", v).forEach((b) => b.addEventListener("click", () => { store.set("dmSort", +b.dataset.sort); route(); }));
 }
 function dmSources(M) {
-  return `<section class="panel"><h2>Sources and definitions</h2><p class="small">${esc(M.source)}. Play-by-play updated ${esc(londonTime(M.updated.play_by_play))}; box scores ${esc(londonTime(M.updated.box_scores))}. Games played overnight arrive about 11:45 UK time.</p>
+  return `<section class="panel"><h2>Sources and definitions</h2><p class="small">${esc(M.source)}. Play-by-play updated ${esc(londonTime(M.updated.play_by_play))}; box scores ${esc(londonTime(M.updated.box_scores))}. Games played overnight arrive about 11:45 UK time; until their play-by-play arrives they are left out of every figure here, so all figures use the same games.</p>
     <details class="small"><summary>Shooting areas</summary><pre class="defs">${esc(M.definitions.zones)}</pre></details>
     <details class="small"><summary>Positions</summary><p>${esc(M.definitions.positions)}</p></details>
     <details class="small"><summary>Fouls, free throws, per 100 possessions and points</summary><p>${esc(M.definitions.fouls)}</p><p>${esc(M.definitions.ft_rate)}</p><p>${esc(M.definitions.per100)}</p><p>${esc(M.definitions.points)}</p></details></section>`;

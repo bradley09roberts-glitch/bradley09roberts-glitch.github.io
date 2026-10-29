@@ -33,7 +33,9 @@ def _team_games() -> pd.DataFrame:
 def team_game_rows(seasons=APP_SEASONS) -> dict:
     S = shots.load()
     tg = _team_games()
-    tg = tg[tg.season.isin(seasons)]
+    # games without play-by-play yet (usually last night's, provisional box scores) are left
+    # out of every figure, so shot areas, positions and fouls all use the same games
+    tg = tg[tg.season.isin(seasons) & tg.game_id.isin(set(S["def_shots"].game_id))]
     pg = canon.load()["player_games"]
     pg = pg[pg.season.isin(seasons) & (pg.participation == "played")]
     # box-score production by opposing position (points, rebounds, assists, minutes, fg)
@@ -189,7 +191,9 @@ def payload() -> dict:
                          "ftm"],
             "rows": team_game_rows(), "reliability": cached_reliability(),
             "updated": {"play_by_play": upd.get("nba_pbp"),
-                        "box_scores": upd.get("nba_player_box")},
+                        "box_scores": upd.get("nba_player_box"),
+                        "note": "Games whose play-by-play is not published yet (usually last "
+                                "night's) are not included until it is."},
             "definitions": {
                 "zones": shots.__doc__.split("\n\n")[1] if shots.__doc__ else "",
                 "positions": __doc__.split("\n\n")[1] if __doc__ else "",
