@@ -401,7 +401,8 @@ def data_status() -> dict:
     fresh = pd.read_sql_query(
         "SELECT dataset, part, MAX(r.retrieved_at) retrieved_at, MAX(o.observed_at) checked_at,"
         " r.upstream_last_modified, r.n_rows FROM raw_files r JOIN raw_observations o ON"
-        " o.raw_file_id=r.id WHERE r.part IN ('all','2026') GROUP BY dataset, part", con)
+        " o.raw_file_id=r.id WHERE r.source='nflverse' AND r.part IN ('all','2026')"
+        " GROUP BY dataset, part", con)  # NFL feeds only: NBA files also have a "2026" part
     jobs = pd.read_sql_query("SELECT job, started_at, finished_at, status FROM job_runs"
                              " ORDER BY id DESC LIMIT 30", con)
     # a job counts as failing only if its most recent run failed (later success supersedes)
