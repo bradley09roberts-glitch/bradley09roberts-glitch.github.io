@@ -145,6 +145,17 @@ def nba_backtests():
     return _j(nba.clean(nba.backtests()))
 
 
+@app.get("/api/visuals/{sport}")
+def visuals(sport: str):
+    """Team colours and cached player photos for one sport (photos as data URIs)."""
+    if sport == "nfl":
+        return _j(appdata.visuals())
+    if sport == "nba":
+        from .nba import appdata as nba
+        return _j(nba.visuals())
+    raise HTTPException(404, "sport must be nfl or nba")
+
+
 @app.get("/api/backtests")
 def backtests():
     return _j(appdata.backtests())

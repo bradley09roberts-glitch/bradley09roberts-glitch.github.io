@@ -310,3 +310,25 @@ def shot_profile(pid: str) -> dict:
     last = g.sort_values("tip_utc").iloc[-1]
     return clean({"player_id": pid, "name": last["name"], "team": last.team,
                   "position": last.pos, "seasons": mu.player_profile(pid)})
+
+
+# ------------------------------------------------------------------ look: colours, photos
+@lru_cache(maxsize=1)
+def _team_colors(sha: str) -> dict:
+    from .. import db
+
+    b, _ = live._latest(db.connect(), "nba_player_box")
+    b = b.drop_duplicates("team_abbreviation")
+    return {r.team_abbreviation: [f"#{r.team_color}", f"#{r.team_alternate_color}"]
+            for r in b.itertuples() if isinstance(r.team_color, str)}
+
+
+def visuals(pids: set | None = None) -> dict:
+    """Team colours and cached player photos (data URIs) for the app's NBA pages."""
+    from .. import db, headshots
+
+    sha = db.connect().execute("SELECT MAX(sha256) FROM raw_files WHERE dataset='nba_player_box'"
+                               ).fetchone()[0] or ""
+    if pids is None:
+        pids = {c["player_id"] for c in props()["cards"]}
+    return {"teams": _team_colors(sha), "photos": headshots.data_uris("nba", set(pids))}

@@ -550,3 +550,16 @@ def defense(season: int | None = None, week: int | None = None) -> dict:
                         "than average on that measure.")
         _DEF_CACHE[key] = _clean(prof)
     return _DEF_CACHE[key]
+
+
+# ------------------------------------------------------------------ look: colours, photos
+def visuals(pids: set | None = None) -> dict:
+    """Team colours and cached player photos (data URIs) for the app's NFL pages."""
+    from . import headshots
+
+    t = lake()["teams"]
+    teams = {r.team_abbr: [r.team_color, r.team_color2] for r in t.itertuples()
+             if isinstance(r.team_color, str)}
+    if pids is None:
+        pids = {c["player_id"] for c in props()["cards"]}
+    return {"teams": teams, "photos": headshots.data_uris("nfl", set(pids))}

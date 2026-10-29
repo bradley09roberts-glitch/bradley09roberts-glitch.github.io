@@ -7,7 +7,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from . import appdata
+from . import appdata, headshots
 from .config import PROJECT_ROOT
 from .util import london, utcnow
 
@@ -42,7 +42,10 @@ def _add_nba(data: dict, min_p_play: float = 0.3) -> None:
         data["/api/nba/matchups"] = nba.matchups()
     except FileNotFoundError:
         pass
-    for pid in sorted({c["player_id"] for c in props["cards"]}):
+    pids = {c["player_id"] for c in props["cards"]}
+    headshots.fetch("nba", pids)
+    data["/api/visuals/nba"] = nba.visuals(pids)
+    for pid in sorted(pids):
         sp = nba.shot_profile(pid)
         if "error" not in sp:
             data[f"/api/nba/shotprofile/{pid}"] = sp
@@ -93,6 +96,8 @@ def build(out: Path, *, min_p_play: float = 0.5, model: str | None = None,
                  "targets", "receptions", "receiving_yards")
         p["game_log"] = [{k: g.get(k) for k in lkeep} for g in p["game_log"]]
         data[f"/api/player/{pid}"] = p
+    headshots.fetch("nfl", set(players))
+    data["/api/visuals/nfl"] = appdata.visuals(set(players))
     _add_nba(data)
     snap = {"built_at": utcnow().isoformat(), "built_london": london(utcnow()), "data": data}
     blob = json.dumps(snap, separators=(",", ":"), default=str).replace("</", "<\\/")
@@ -102,7 +107,7 @@ def build(out: Path, *, min_p_play: float = 0.5, model: str | None = None,
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=JetBrains+Mono:wght@400;600&family=Source+Sans+3:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500..900&family=Figtree:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap">
 <style>
 {css}
 </style>

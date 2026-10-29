@@ -199,3 +199,13 @@ SportsDataverse has a game, its version is used instead. Check on four 27 Oct ga
 in both: same players, starters, positions and statistics (981 values, no real differences).
 Settlement may use provisional rows (they matched exactly); a later settlement run picks up the
 SportsDataverse version once published.
+
+## D-026 (29 Oct 2026) Visual redesign: liquid glass, player photos, drawn sport marks
+Requested by the user. Frosted glass panels over slowly drifting colour fields tinted per
+sport, a sliding sport switch and dock, entrance and gauge animations (all off under reduced
+motion). Player photos: ESPN headshots for NBA players and the nflverse headshot address for
+NFL players, cut to 112 px WebP thumbnails, cached under data/headshots/ (not in git) and
+embedded in the snapshot because the hosted page cannot load other sites' images; players
+without a photo show initials. Team colours come from the same data sources. The NFL and NBA
+logos are trademarks and are not used; each sport is shown with drawn ball artwork instead.
+The line editor no longer uses the browser prompt, which hosted pages block.

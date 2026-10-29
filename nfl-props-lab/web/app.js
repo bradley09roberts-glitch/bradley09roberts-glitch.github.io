@@ -178,6 +178,35 @@ const ICONS = {
   info: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7h.01"/></svg>',
   ok: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg>',
 };
+// Drawn balls for each sport (our own artwork; league marks are trademarks and are not used)
+const BALL = {
+  nfl: '<svg viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="pl-fb" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c27a45"/><stop offset=".55" stop-color="#8a4a22"/><stop offset="1" stop-color="#55290f"/></linearGradient></defs><g transform="rotate(-35 32 32)"><ellipse cx="32" cy="32" rx="27" ry="16" fill="url(#pl-fb)"/><path d="M12.5 22.5c2.2 3 2.2 16 0 19M51.5 22.5c-2.2 3-2.2 16 0 19" stroke="#fff" stroke-width="2.6" fill="none" stroke-linecap="round"/><path d="M22 32h20M25 28.6v6.8M29 28.6v6.8M33 28.6v6.8M37 28.6v6.8M41 28.6v6.8" stroke="#fff" stroke-width="1.9" fill="none" stroke-linecap="round"/><ellipse cx="25" cy="23.5" rx="10" ry="3.4" fill="#fff" opacity=".2"/></g></svg>',
+  nba: '<svg viewBox="0 0 64 64" aria-hidden="true"><defs><radialGradient id="pl-bb" cx=".35" cy=".3" r=".85"><stop offset="0" stop-color="#ffb871"/><stop offset=".55" stop-color="#e8661e"/><stop offset="1" stop-color="#9c3a0a"/></radialGradient></defs><circle cx="32" cy="32" r="27" fill="url(#pl-bb)"/><g fill="none" stroke="#3a1606" stroke-width="2" stroke-linecap="round"><path d="M32 5v54M5 32h54"/><path d="M14.5 11.5c6.5 5.5 10 12.5 10 20.5s-3.5 15-10 20.5M49.5 11.5c-6.5 5.5-10 12.5-10 20.5s3.5 15 10 20.5"/></g><ellipse cx="23" cy="18" rx="9" ry="5" fill="#fff" opacity=".22"/></svg>',
+};
+const GLYPH = {
+  nfl: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><g transform="rotate(-35 12 12)"><ellipse cx="12" cy="12" rx="10" ry="6"/><path d="M8.5 12h7M10 10.5v3M12 10.5v3M14 10.5v3"/></g></svg>',
+  nba: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M12 2.5v19M2.5 12h19M5.6 5.2c2.3 1.9 3.6 4.2 3.6 6.8s-1.3 4.9-3.6 6.8M18.4 5.2c-2.3 1.9-3.6 4.2-3.6 6.8s1.3 4.9 3.6 6.8"/></svg>',
+};
+const THEME_ICON = {
+  auto: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor"/></svg>',
+  light: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>',
+  dark: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>',
+};
+// team colours and player photos (data URIs), loaded once from /api/visuals/<sport>
+const LOOK = { nfl: { teams: {}, photos: {} }, nba: { teams: {}, photos: {} } };
+const HEX = /^#[0-9a-fA-F]{3,8}$/;
+function teamColors(sport, team) {
+  const c = LOOK[sport]?.teams?.[team] || [];
+  const a = HEX.test(c[0] || "") ? c[0] : null; let b = HEX.test(c[1] || "") ? c[1] : null;
+  if (b && /^#0{3,6}$/.test(b)) b = null; // a black second colour reads as a hole in the ring
+  return [a, b];
+}
+function teamVars(sport, team, n1 = "--t1", n2 = "--t2") { const [a, b] = teamColors(sport, team); return a ? `${n1}:${a};${n2}:${b || a}` : ""; }
+const HOST_THEME = document.documentElement.getAttribute("data-theme");
+function applyTheme(t) {
+  const v = t === "auto" ? HOST_THEME : t;
+  if (v) document.documentElement.setAttribute("data-theme", v); else document.documentElement.removeAttribute("data-theme");
+}
 const NAV_NFL = [["today", "Today"], ["props", "Props"], ["shortlist", "Shortlist"], ["lab", "Backtest lab"], ["defense", "Defences"], ["record", "Saved record"], ["data", "Data & method"]];
 const NAV_NBA = [["nba-today", "Tonight"], ["nba-props", "Props"], ["nba-defense", "Defence"], ["nba-lab", "Model lab"], ["nba-about", "Data & method"]];
 let NAV = NAV_NFL;
@@ -185,30 +214,52 @@ const NAV_ICON = { "nba-today": "today", "nba-props": "props", "nba-defense": "d
 const sportOf = (k) => (k.startsWith("nba-") ? "nba" : "nfl");
 
 function shell() {
-  const theme = store.get("theme", "dark") === "light" ? "light" : "dark";
-  document.documentElement.setAttribute("data-theme", theme);
-  document.body.insertAdjacentHTML("afterbegin", `
+  const THEMES = ["auto", "light", "dark"];
+  let theme = store.get("theme", "auto"); if (!THEMES.includes(theme)) theme = "auto";
+  applyTheme(theme);
+  const label = (t) => `${THEME_ICON[t]}<span class="hide-phone">${t === "auto" ? "Auto" : t === "light" ? "Light" : "Dark"}</span>`;
+  document.body.insertAdjacentHTML("afterbegin", `<div class="arena" aria-hidden="true"><i></i><i></i><i></i></div>
     <header class="topbar"><div class="topbar-in">
       <a class="brand" href="#" id="brandLink"><span class="mark" aria-hidden="true"></span><b>Props Lab</b></a>
-      <div class="sport" role="tablist" aria-label="Sport"><a href="#today" data-sport="nfl">NFL</a><a href="#nba-today" data-sport="nba">NBA</a></div>
+      <div class="sport" role="tablist" aria-label="Sport"><span class="lens" aria-hidden="true"></span><a href="#today" data-sport="nfl" role="tab">${GLYPH.nfl}NFL</a><a href="#nba-today" data-sport="nba" role="tab">${GLYPH.nba}NBA</a></div>
       <span class="spacer"></span>
-      <span class="tiny muted hide-phone" id="modeTag">${SNAP ? "Snapshot " + esc(SNAP.built_london) : "Live server"}</span>
-      <button class="chipbtn" id="themeBtn" aria-label="Colour theme">Theme: ${esc(theme)}</button>
+      <span class="stamp hide-phone" id="modeTag">${SNAP ? "Updated " + esc(SNAP.built_london) : "Live server"}</span>
+      <button class="chipbtn" id="themeBtn" aria-label="Colour theme: ${theme}">${label(theme)}</button>
     </div></header>`);
   app.innerHTML = `<div class="layout"><nav class="tabs" aria-label="Sections"></nav><main id="view"></main></div>`;
   $("#themeBtn").addEventListener("click", () => {
-    const next = document.documentElement.getAttribute("data-theme") === "light" ? "dark" : "light";
-    store.set("theme", next); document.documentElement.setAttribute("data-theme", next);
-    $("#themeBtn").textContent = "Theme: " + next;
+    theme = THEMES[(THEMES.indexOf(theme) + 1) % THEMES.length];
+    store.set("theme", theme); applyTheme(theme);
+    $("#themeBtn").innerHTML = label(theme); $("#themeBtn").setAttribute("aria-label", "Colour theme: " + theme);
   });
 }
+// the dock's highlight slides to the open section
+function moveLens() {
+  const nav = $("nav.tabs"); const lens = nav && $(".lens", nav); const a = nav && $("a.on", nav);
+  if (!lens) return;
+  if (!a || a.offsetParent === null) { lens.style.opacity = "0"; return; }
+  lens.style.opacity = "1";
+  if (getComputedStyle(nav).display === "flex") { lens.style.width = ""; lens.style.height = a.offsetHeight + "px"; lens.style.transform = `translateY(${a.offsetTop}px)`; }
+  else { lens.style.height = ""; lens.style.width = a.offsetWidth + "px"; lens.style.transform = `translateX(${a.offsetLeft}px)`; }
+}
+window.addEventListener("resize", moveLens);
+// entrance order for cards and panels, and a sheen that follows the pointer
+function stagger(root) {
+  [...root.children].forEach((el, i) => el.style.setProperty("--i", Math.min(i, 8)));
+  $$(".cards, .games, .grid", root).forEach((g) => [...g.children].forEach((el, i) => el.style.setProperty("--i", Math.min(i, 14))));
+}
+document.addEventListener("pointermove", (e) => {
+  const el = e.target.closest && e.target.closest(".pcard, .panel"); if (!el) return;
+  const r = el.getBoundingClientRect(); el.style.setProperty("--mx", `${e.clientX - r.left}px`); el.style.setProperty("--my", `${e.clientY - r.top}px`);
+}, { passive: true });
 
 function renderNav(sport) {
   NAV = sport === "nba" ? NAV_NBA : NAV_NFL;
   const nav = $("nav.tabs"); if (nav.dataset.sport === sport) return;
   nav.dataset.sport = sport;
   nav.style.gridTemplateColumns = `repeat(${Math.min(NAV.length, 4) + (NAV.length > 4 ? 1 : 0)}, 1fr)`;
-  nav.innerHTML = NAV.map(([k, l], i) => `<a href="#${k}" data-k="${k}" class="${i > 3 ? "more-only" : ""}">${ICONS[NAV_ICON[k] || k]}<span>${l}</span></a>`).join("") +
+  document.documentElement.setAttribute("data-sport", sport);
+  nav.innerHTML = `<span class="lens" aria-hidden="true"></span>` + NAV.map(([k, l], i) => `<a href="#${k}" data-k="${k}" class="${i > 3 ? "more-only" : ""}">${ICONS[NAV_ICON[k] || k]}<span>${l}</span></a>`).join("") +
     (NAV.length > 4 ? `<a href="#more" data-k="more" class="phone-only">${ICONS.more}<span>More</span></a>` : "");
   $$(".sport a").forEach((a) => a.classList.toggle("on", a.dataset.sport === sport));
   $("#brandLink").setAttribute("href", sport === "nba" ? "#nba-today" : "#today");
@@ -220,11 +271,12 @@ function route() {
   const arg = rest.join(".");
   if (k !== "more") { store.set("sport", sportOf(k)); renderNav(sportOf(k)); } else renderNav(store.get("sport", "nfl"));
   $$("nav.tabs a").forEach((a) => a.classList.toggle("on", a.dataset.k === k || (k === "more" && a.dataset.k === "more")));
+  requestAnimationFrame(moveLens);
   const view = $("#view");
   view.innerHTML = `<div class="skeleton">Loading…</div>`;
   const fn = { today: viewToday, props: viewProps, shortlist: viewShortlist, lab: viewLab, record: viewRecord, data: viewData, player: viewPlayer, game: viewGame, defense: viewDefense, more: viewMore,
     "nba-today": viewNbaToday, "nba-props": viewNbaProps, "nba-player": viewNbaPlayer, "nba-game": viewNbaGame, "nba-lab": viewNbaLab, "nba-about": viewNbaAbout, "nba-defense": viewNbaDefense }[k] || viewToday;
-  Promise.resolve(fn(view, arg)).catch((e) => { view.innerHTML = `<div class="banner crit">${ICONS.warn}<div><p><b>Could not load this view.</b></p><p class="small">${esc(e.message)}</p><p class="small">If the server is running, check <code>npl serve</code> output; otherwise this snapshot may not include the page.</p></div></div>`; });
+  Promise.resolve(fn(view, arg)).then(() => stagger(view)).catch((e) => { view.innerHTML = `<div class="banner crit">${ICONS.warn}<div><p><b>Could not load this view.</b></p><p class="small">${esc(e.message)}</p><p class="small">If the server is running, check <code>npl serve</code> output; otherwise this snapshot may not include the page.</p></div></div>`; });
   window.scrollTo(0, 0);
 }
 window.addEventListener("hashchange", route);
@@ -253,7 +305,7 @@ async function viewToday(v) {
   const e = s.edition; const before = s.games.filter((g) => g.published_before_kickoff).length;
   const odds = st.odds || {};
   const stale = (st.stale || []).length, failed = (st.failed_jobs || []).length;
-  v.innerHTML = `<section class="hero fade"><span class="eyebrow">${e.season} ${e.season_type === "REG" ? "regular season" : "postseason"} · Week ${e.week}</span>
+  v.innerHTML = `<section class="hero"><div class="medal">${BALL.nfl}</div><span class="eyebrow">${e.season} ${e.season_type === "REG" ? "regular season" : "postseason"} · Week ${e.week}</span>
       <h1>This week's slate</h1>
       <p>Edition <span class="mono">${esc(e.edition_id)}</span>, published ${esc(e.published_at_london)}. ${before} of ${s.games.length} games were still to kick off when it was saved, so only those count in the pre-match record.</p></section>
     ${banner("info", `<p><b>Model v${esc(e.code.model_version)}.</b> ${esc(e.status_note)}</p><p class="small muted">Headline model ${esc(e.headline_model)}: ${esc(MODEL_NAMES[e.headline_model])}. Code ${esc(e.code.git_commit.slice(0, 10))}.</p>`)}
@@ -269,7 +321,7 @@ function volLine(sim, label) {
 function gameCard(g) {
   const st = g.published_before_kickoff ? `<span class="pill good"><span class="dot"></span>Saved before kickoff</span>` : `<span class="pill"><span class="dot"></span>Kicked off before edition: not in record</span>`;
   const al = (g.alerts || []).filter((a) => a.status !== "Questionable" || true).slice(0, 8);
-  return `<a class="panel game" href="#game.${esc(g.game_id)}" style="color:inherit">
+  return `<a class="panel game lit" href="#game.${esc(g.game_id)}" style="color:inherit;${teamVars("nfl", g.away, "--a1", "--a2")};${teamVars("nfl", g.home, "--h1", "--h2")}">
     <div class="teams">${esc(g.away)}<span class="at">at</span>${esc(g.home)}</div>
     <div class="ko">${esc(g.kickoff_london)}<br><span class="tiny muted">${esc(g.state)}</span></div>
     <div class="vol">${volLine(g.away_sim, g.away)}${volLine(g.home_sim, g.home)}</div>
@@ -284,7 +336,7 @@ function propCard(c, idx, D) {
   const ms = (c.milestones || []).map((m) => `<span title="P(${MARKET_LABELS[c.market]} ≥ ${m.k})">${m.k}+ <b>${pct(m.p)}</b></span>`).join("");
   const u = c.uncertainty || {};
   return `<article class="panel prop">
-    <div class="head"><div class="who"><a href="#player.${esc(c.player_id)}">${esc(c.name)}</a>
+    <div class="head">${avatar(c.team, c.name, c.player_id, "nfl")}<div class="who"><a href="#player.${esc(c.player_id)}">${esc(c.name)}</a>
       <div class="tiny muted">${esc(c.position)} · ${esc(c.team)} ${ha} ${esc(c.opponent)} · ${esc(c.kickoff_london)}</div></div>
       <span class="pill model" title="${esc(MODEL_NAMES[c.model])}">${esc(c.model)}</span></div>
     <div class="row between"><span class="mkt">${esc(c.market_label)}</span>${c.published_before_kickoff ? "" : '<span class="pill"><span class="dot"></span>Saved after kickoff: not in record</span>'}</div>
@@ -306,7 +358,7 @@ async function viewProps(v) {
   const cards = p.cards.filter((c) => c.status === "ok");
   const teams = [...new Set(cards.map((c) => c.team))].sort();
   const f = Object.assign({ q: "", team: "", pos: "", market: "", minp: "0.5", sort: "kickoff" }, store.get("propsFilter", {}));
-  v.innerHTML = `<section class="hero"><span class="eyebrow">${p.season} Week ${p.week} · edition ${esc(p.edition_id)}</span><h1>Props explorer</h1>
+  v.innerHTML = `<section class="hero"><div class="medal">${BALL.nfl}</div><span class="eyebrow">${p.season} Week ${p.week} · edition ${esc(p.edition_id)}</span><h1>Props explorer</h1>
     <p>Forecasts for every eligible offensive player on the week's rosters, starters and reserves. Probabilities are conditional on the player taking part. There are no bookmaker prices: each card shows the model's distribution, and you can test any line yourself.</p></section>
     <div class="filters" role="search">
       <label>Player<input type="search" id="fq" value="${esc(f.q)}" placeholder="Name"></label>
@@ -412,7 +464,7 @@ async function viewPlayer(v, id) {
   const cols = pos === "QB" ? ["attempts", "completions", "passing_yards", "carries", "rushing_yards"] : pos === "RB" || pos === "FB" ? ["carries", "rushing_yards", "targets", "receptions", "receiving_yards"] : ["targets", "receptions", "receiving_yards", "carries", "rushing_yards"];
   const lab = { attempts: "Att", completions: "Cmp", passing_yards: "Pass yds", carries: "Car", rushing_yards: "Rush yds", targets: "Tgt", receptions: "Rec", receiving_yards: "Rec yds" };
   setCopy("gl", toCSV(p.game_log));
-  v.innerHTML = `<section class="hero"><span class="eyebrow">${esc(pos)} · ${esc(p.team)}</span><h1>${esc(p.name)}</h1><p class="small muted">GSIS id <span class="mono">${esc(p.player_id)}</span>${p.rookie_season ? ` · rookie season ${esc(p.rookie_season)}` : ""}</p></section>
+  v.innerHTML = `<section class="hero">${avatar(p.team, p.name, p.player_id, "nfl")}<span class="eyebrow">${esc(pos)} · ${esc(p.team)}</span><h1>${esc(p.name)}</h1><p class="small muted">GSIS id <span class="mono">${esc(p.player_id)}</span>${p.rookie_season ? ` · rookie season ${esc(p.rookie_season)}` : ""}</p></section>
     <section class="panel"><h2>Recent windows</h2><div class="tablewrap"><table><thead><tr><th class="l">Window</th><th>Games</th>${cols.map((c) => `<th>${lab[c]}</th>`).join("")}</tr></thead><tbody>${Object.entries(W).map(([k, w]) => `<tr><td class="l">${esc(k)}</td><td>${w.games}</td>${cols.map((c) => `<td>${dec(w[c], 1)}</td>`).join("")}</tr>`).join("")}</tbody></table></div><p class="tiny muted">Averages over games he played. Inactive, DNP and reserve weeks are excluded and shown in the log.</p></section>
     <section class="panel"><h2>${esc(key[1])} by game</h2>${columnChart(pts, { label: key[1] + " by game" })}<p class="tiny muted">Last ${games.length} team games across ${esc([...new Set(games.map((g) => g.season))].join(" and "))}. INA = inactive, DNP = active but did not play, RES = reserve list, ? = active with no recorded stat and no on-field data yet.</p></section>
     ${Object.keys(p.historical_frequency || {}).length ? `<section class="panel"><h2>Historical frequency this season</h2><p class="small">How often he reached each milestone in games he played. <b>This is a count of past games, not a probability.</b> The forecast cards give model probabilities.</p><div class="tablewrap"><table><thead><tr><th class="l">Market</th><th class="l">Milestones reached</th></tr></thead><tbody>${Object.entries(p.historical_frequency).filter(([m]) => cols.includes(MARKET_STAT[m])).map(([m, rows]) => `<tr><td class="l">${MARKET_LABELS[m]}</td><td class="l">${rows.map((r) => `${r.k}+ in ${r.hits} of ${r.games}`).join(" · ")}</td></tr>`).join("")}</tbody></table></div></section>` : ""}
@@ -543,7 +595,7 @@ function hitChips(log, line, opp) {
   const sets = [["L5", v.slice(-5)], ["L10", v.slice(-10)], ["L20", v.slice(-20)], ["Season", cur], ["H2H", h2h]];
   return `<div class="hits">${sets.map(([k, s]) => { const h = hitRate(s, line);
     const cls = !h ? "na" : h.r >= 0.6 ? "hot" : h.r <= 0.4 ? "cold" : "mid";
-    return `<span class="hit ${cls}" data-tip="${esc(k)}: ${h ? `${h.over} of ${h.n} games over ${line}` : "no games"}"><i>${k}</i><b>${h ? Math.round(h.r * 100) + "%" : "–"}</b><em>${h ? `${h.over}/${h.n}` : ""}</em></span>`; }).join("")}</div>`;
+    return `<span class="hit ${cls}" style="--k:${sets.findIndex((x) => x[0] === k)}" data-tip="${esc(k)}: ${h ? `${h.over} of ${h.n} games over ${line}` : "no games"}"><i>${k}</i><b>${h ? Math.round(h.r * 100) + "%" : "–"}</b><em>${h ? `${h.over}/${h.n}` : ""}</em></span>`; }).join("")}</div>`;
 }
 function miniBars(log, line, n = 10, { width = 300, height = 92, labels = true } = {}) {
   const v = (log.values || []).slice(-n), o = (log.opp || []).slice(-n), d = (log.date || []).slice(-n);
@@ -553,16 +605,17 @@ function miniBars(log, line, n = 10, { width = 300, height = 92, labels = true }
   const Y = (x) => m.t + H - (x / top) * H;
   let s = `<svg class="chart minibars" viewBox="0 0 ${width} ${height}" role="img" aria-label="Last ${v.length} games against the line ${line}">`;
   v.forEach((x, i) => { const cx = slot * (i + 0.5), h = Math.max(1.5, m.t + H - Y(x)), cls = x > line ? "over" : x < line ? "under" : "push";
-    s += `<rect class="${cls}" x="${cx - bw / 2}" y="${m.t + H - h}" width="${bw}" height="${h}" rx="3" data-tip="${esc(x)}|${esc(d[i] || "")} v ${esc(o[i] || "")}"/>`;
+    s += `<rect class="${cls}" style="--j:${i}" x="${cx - bw / 2}" y="${m.t + H - h}" width="${bw}" height="${h}" rx="3" data-tip="${esc(x)}|${esc(d[i] || "")} v ${esc(o[i] || "")}"/>`;
     if (bw >= 14) s += `<text class="bv" x="${cx}" y="${m.t + H - h - 3}" text-anchor="middle">${x}</text>`;
     if (labels) s += `<text class="bl" x="${cx}" y="${height - 4}" text-anchor="middle">${esc((o[i] || "").slice(0, 4))}</text>`; });
   const ly = Y(line);
   s += `<line class="lline" x1="0" x2="${width}" y1="${ly}" y2="${ly}"/><text class="lval" x="${width - 2}" y="${ly - 3}" text-anchor="end">${line}</text>`;
   return s + "</svg>";
 }
-function avatar(team, name) {
+function avatar(team, name, pid, sport) {
   const ini = String(name || "").split(/\s+/).map((w) => w[0]).filter(Boolean).slice(0, 2).join("");
-  return `<span class="ava" aria-hidden="true"><b>${esc(ini)}</b><i>${esc(team)}</i></span>`;
+  const ph = pid && LOOK[sport]?.photos?.[pid];
+  return `<span class="ava" style="${teamVars(sport, team)}" aria-hidden="true">${ph ? `<img src="${ph}" alt="" decoding="async">` : `<b>${esc(ini)}</b>`}<i>${esc(team)}</i></span>`;
 }
 function rankTone(rank, n = 30) { return rank >= n - 7 ? "soft" : rank <= 8 ? "tough" : "avg"; }
 
@@ -581,7 +634,7 @@ function nbaCard(c, idx) {
   const D = new Dist(c.dist); const L = D.line(line);
   const o = c.opp_factor;
   return `<article class="pcard">
-    <header>${avatar(c.team, c.name)}<div class="who"><a href="#nba-player.${esc(c.player_id)}">${esc(c.name)}</a>
+    <header>${avatar(c.team, c.name, c.player_id, "nba")}<div class="who"><a href="#nba-player.${esc(c.player_id)}">${esc(c.name)}</a>
       <div class="sub">${esc(c.position)} · ${esc(c.team)} ${c.is_home ? "v" : "@"} ${esc(c.opponent)} · ${esc(c.tip_london)}</div></div>${nbaInjury(c.injury)}</header>
     <div class="pline"><div><span class="mk">${esc(NBA_MKT[c.market])}</span><button class="linebtn" data-line="${idx}" aria-label="Change the line">${line}<small>${src} ✎</small></button></div>
       <div class="proj"><b>${dec(c.mean, 1)}</b><span>projection</span></div></div>
@@ -599,20 +652,30 @@ function nbaCard(c, idx) {
 function bindLineButtons(root, cards, sport, rerender) {
   root.querySelectorAll("[data-line]").forEach((b) => b.addEventListener("click", () => {
     const c = cards[+b.dataset.line]; const cur = lineFor(sport, c).line;
-    const v = prompt(`Line for ${c.name} (${c.market_label || NBA_MKT[c.market]}). Half points avoid pushes. Leave empty to go back to the model line.`, cur);
-    if (v === null) return;
-    if (v.trim() === "") store.set(lineKey(sport, c), null); else { const x = parseFloat(v); if (!isNaN(x)) store.set(lineKey(sport, c), x); }
-    rerender();
+    const host = b.closest(".pcard, .panel") || b.parentElement;
+    $$(".lineedit").forEach((x) => x.remove());
+    const id = `le-${sport}-${c.player_id}-${c.market}`;
+    const box = document.createElement("form"); box.className = "lineedit";
+    box.innerHTML = `<label class="tiny" for="${esc(id)}">Your bookmaker's line for ${esc(c.name)} · ${esc(c.market_label || NBA_MKT[c.market])}</label>
+      <div class="row"><input id="${esc(id)}" type="number" inputmode="decimal" step="0.5" min="0" value="${cur}"><button class="btn" type="submit">Use line</button></div>
+      <div class="row between"><button class="btn ghost" type="button" data-act="reset">Back to the ${c.market_line ? "market" : "model's"} line</button><button class="btn ghost" type="button" data-act="close">Cancel</button></div>
+      <span class="tiny">Half points avoid pushes.</span>`;
+    host.appendChild(box);
+    const inp = box.querySelector("input"); inp.focus(); inp.select();
+    box.addEventListener("submit", (ev) => { ev.preventDefault(); const x = parseFloat(inp.value); if (!isNaN(x) && x >= 0) store.set(lineKey(sport, c), x); rerender(); });
+    box.querySelector('[data-act="reset"]').addEventListener("click", () => { store.set(lineKey(sport, c), null); rerender(); });
+    box.querySelector('[data-act="close"]').addEventListener("click", () => box.remove());
+    box.addEventListener("keydown", (ev) => { if (ev.key === "Escape") box.remove(); });
   }));
 }
 
 async function viewNbaToday(v) {
   const [s, p] = await Promise.all([api("/api/nba/slate"), api("/api/nba/props")]);
   const outs = {}; p.cards.filter((c) => c.market === "pts" && c.injury).forEach((c) => { (outs[c.team] ||= []).push(c); });
-  v.innerHTML = `<section class="hero"><span class="eyebrow">NBA · ${esc(s.date_et)} (US date) · ${esc(s.kind)} edition</span><h1>Tonight's slate</h1>
+  v.innerHTML = `<section class="hero"><div class="medal">${BALL.nba}</div><span class="eyebrow">NBA · ${esc(s.date_et)} (US date) · ${esc(s.kind)} edition</span><h1>Tonight's slate</h1>
       <p>${s.games.length} games, saved ${esc(s.published_london)} before tip-off. Times are UK time. Every projection comes from the saved edition; tap a game for both teams or open the props board.</p>
       <div class="row"><a class="btn" href="#nba-props">Open the props board</a></div></section>
-    <div class="games">${s.games.map((g) => `<a class="panel game-tile" href="#nba-game.${esc(g.game_id)}">
+    <div class="games">${s.games.map((g) => `<a class="panel game-tile" href="#nba-game.${esc(g.game_id)}" style="${teamVars("nba", g.away, "--a1", "--a2")};${teamVars("nba", g.home, "--h1", "--h2")}">
       <div class="teams"><b>${esc(g.away)}</b><span class="at">@</span><b>${esc(g.home)}</b></div>
       <div class="tiny muted">${esc(g.tip_london)}${g.time_valid ? "" : " (time to be confirmed)"}</div>
       <div class="tiny">${[g.away, g.home].map((t) => { const l = outs[t] || []; const o = l.filter((c) => ["OUT", "OFS"].includes(c.injury.fantasy)).length, q = l.length - o; return `${esc(t)}: ${o} out${q ? `, ${q} questionable` : ""}`; }).join(" · ")}</div></a>`).join("")}</div>
@@ -627,7 +690,7 @@ async function viewNbaProps(v) {
   // hot: over the line in >= 4 of the last 5 and >= 7 of the last 10; cold: the reverse
   const formOf = (c) => { const { line } = lineFor("nba", c); const v = c.log.values; const h5 = hitRate(v.slice(-5), line), h10 = hitRate(v.slice(-10), line);
     if (!h5 || !h10 || h10.n < 10) return "none"; if (h5.over >= 4 && h10.over >= 7) return "hot"; if (h5.over <= 1 && h10.over <= 3) return "cold"; return "none"; };
-  v.innerHTML = `<section class="hero"><span class="eyebrow">NBA props · ${esc(p.date_et)} · saved ${esc(p.published_london)}</span><h1>Props board</h1>
+  v.innerHTML = `<section class="hero"><div class="medal">${BALL.nba}</div><span class="eyebrow">NBA props · ${esc(p.date_et)} · saved ${esc(p.published_london)}</span><h1>Props board</h1>
       <p>Each card shows the model's projection, its over/under chance at a line, and how often the player went over that line recently. The line is, in order: yours (tap it to type your bookmaker's), the US market line where stored (a research reference; US books are not open to UK bettors), or the model's fair 50/50 line.</p></section>
     <div class="mktabs" role="tablist">${Object.entries(NBA_SHORT).map(([k, l]) => `<button role="tab" class="${k === f.market ? "on" : ""}" data-mk="${k}">${l}</button>`).join("")}</div>
     <div class="filters" role="search">
@@ -666,7 +729,7 @@ async function viewNbaPlayer(v, pid) {
   let mk = store.get("nbaPlayerMk", "pts"); if (!cards.find((c) => c.market === mk)) mk = cards[0]?.market || "pts";
   const draw = () => {
     const c = cards.find((x) => x.market === mk);
-    const head = `<section class="hero">${avatar(P.team, P.name)}<span class="eyebrow">${esc(P.position)} · ${esc(P.team)}</span><h1>${esc(P.name)}</h1></section>`;
+    const head = `<section class="hero">${avatar(P.team, P.name, pid, "nba")}<span class="eyebrow">${esc(P.position)} · ${esc(P.team)}</span><h1>${esc(P.name)}</h1></section>`;
     if (!c) { v.innerHTML = head + banner("info", "<p>No forecast for this player in the latest edition (no game tonight, or no previous NBA minutes).</p>") + logTable(P); return; }
     const { line, src } = lineFor("nba", c); const D = new Dist(c.dist); const L = D.line(line);
     v.innerHTML = head + `<div class="mktabs">${cards.map((x) => `<button class="${x.market === mk ? "on" : ""}" data-mk="${x.market}">${NBA_SHORT[x.market]}</button>`).join("")}</div>
@@ -1052,5 +1115,8 @@ async function viewMore(v) {
   v.innerHTML = `<section class="hero"><h1>More</h1></section><div class="grid tight">${NAV.slice(4).map(([k, l]) => `<a class="panel" href="#${k}"><h3>${l}</h3></a>`).join("")}</div>`;
 }
 
+async function loadLook() {
+  for (const s of ["nfl", "nba"]) { try { LOOK[s] = await api(`/api/visuals/${s}`); } catch { /* no photos: initials are shown */ } }
+}
 shell();
-route();
+loadLook().finally(route);
