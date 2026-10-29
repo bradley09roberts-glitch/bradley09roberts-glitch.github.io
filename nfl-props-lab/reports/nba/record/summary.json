@@ -1,0 +1,104 @@
+{
+ "settled_at": "2026-10-29T12:41:07Z",
+ "games": 12,
+ "forecasts": 6570,
+ "scored": 3765,
+ "participation": {
+  "played": 251,
+  "absent": 124,
+  "dnp": 63
+ },
+ "p_play_brier": 0.09152142872146118,
+ "by_model_market": [
+  {
+   "model": "A",
+   "market": "ast",
+   "mean": 0.9222,
+   "size": 251
+  },
+  {
+   "model": "A",
+   "market": "fg3m",
+   "mean": 0.5956,
+   "size": 251
+  },
+  {
+   "model": "A",
+   "market": "pra",
+   "mean": 4.1698,
+   "size": 251
+  },
+  {
+   "model": "A",
+   "market": "pts",
+   "mean": 3.1978,
+   "size": 251
+  },
+  {
+   "model": "A",
+   "market": "reb",
+   "mean": 1.3844,
+   "size": 251
+  },
+  {
+   "model": "C",
+   "market": "ast",
+   "mean": 0.9756,
+   "size": 251
+  },
+  {
+   "model": "C",
+   "market": "fg3m",
+   "mean": 0.6231,
+   "size": 251
+  },
+  {
+   "model": "C",
+   "market": "pra",
+   "mean": 4.3947,
+   "size": 251
+  },
+  {
+   "model": "C",
+   "market": "pts",
+   "mean": 3.3499,
+   "size": 251
+  },
+  {
+   "model": "C",
+   "market": "reb",
+   "mean": 1.4202,
+   "size": 251
+  },
+  {
+   "model": "N1",
+   "market": "ast",
+   "mean": 0.9084,
+   "size": 251
+  },
+  {
+   "model": "N1",
+   "market": "fg3m",
+   "mean": 0.5812,
+   "size": 251
+  },
+  {
+   "model": "N1",
+   "market": "pra",
+   "mean": 4.0309,
+   "size": 251
+  },
+  {
+   "model": "N1",
+   "market": "pts",
+   "mean": 3.128,
+   "size": 251
+  },
+  {
+   "model": "N1",
+   "market": "reb",
+   "mean": 1.3479,
+   "size": 251
+  }
+ ]
+}
