@@ -197,4 +197,5 @@ is built from) for finished games of the last 3 days that SportsDataverse lacks,
 unchanged, and builds those games from it, labelled box_source = espn_provisional. As soon as
 SportsDataverse has a game, its version is used instead. Check on four 27 Oct games present
 in both: same players, starters, positions and statistics (981 values, no real differences).
-Settlement waits for SportsDataverse unless a game stays missing.
+Settlement may use provisional rows (they matched exactly); a later settlement run picks up the
+SportsDataverse version once published.
