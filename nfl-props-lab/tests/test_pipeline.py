@@ -237,3 +237,10 @@ def test_record_uses_last_edition_before_kickoff(tmp_path, monkeypatch):
     write("e3", "2026-10-25T20:00:00Z", [g_late], [f("p1", "rec_yds"), f("p3", "rec_yds")])
     rows = settle.record_rows()
     assert sorted((eid, r["player_id"]) for eid, r in rows) == [("e2", "p1")]
+
+
+def test_ml_cache_for_an_uncached_week_is_empty_not_an_error(tmp_path, monkeypatch):
+    from npl import ml
+
+    monkeypatch.setattr(ml, "FEATURE_DIR", tmp_path)
+    assert ml.load_cache([(2026, 8)]).empty

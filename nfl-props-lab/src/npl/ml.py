@@ -91,7 +91,8 @@ def build_cache(lake: dict, slates: list[tuple[int, int]], force: bool = False) 
 def load_cache(slates: list[tuple[int, int]]) -> pd.DataFrame:
     parts = [pd.read_parquet(FEATURE_DIR / f"ml_{s}_{w:02d}.parquet") for s, w in slates
              if (FEATURE_DIR / f"ml_{s}_{w:02d}.parquet").exists()]
-    return pd.concat(parts, ignore_index=True)
+    # no cached slate (e.g. a new week): empty, so callers compute the rows directly
+    return pd.concat(parts, ignore_index=True) if parts else pd.DataFrame()
 
 
 def attach_outcomes(x: pd.DataFrame, pg: pd.DataFrame) -> pd.DataFrame:
