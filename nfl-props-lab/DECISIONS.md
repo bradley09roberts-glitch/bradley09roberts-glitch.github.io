@@ -178,3 +178,13 @@ alike, so ranks compare like with like (1st = allows the least). Split-half reli
 corner-3 percentage allowed is pure noise (0). These splits are context; none feeds the
 NBA projections.
 
+## D-024 (29 Oct 2026) Blowout (expected-margin) minutes term not adopted
+Suggested by the user: big spreads mean blowouts, and blowouts cut starters' minutes. Tested
+on 2024-2025 validation against frozen nba-0.1 (n04), with the margin estimated from team
+form because historical spreads are not stored. Two versions (a fitted minutes shift; minutes
+error distributions by margin class) both made CRPS slightly worse (points +0.09% to +0.15%,
+PRA +0.11% to +0.17%, intervals excluding zero). Starters on big favourites do lose about 0.7
+minutes more than in close games, but score about 2.5% more per minute, so their totals were
+already forecast without bias. N1 stays nba-0.1, and live builds do not collect spreads. The
+spread remains useful context on the slate, not a model input.
+

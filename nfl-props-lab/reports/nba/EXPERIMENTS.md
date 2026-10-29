@@ -13,8 +13,8 @@ tuned like N1's; C = plain last-10 average ("L10"), the number most prop sites s
 | n00 | tuning (training seasons only) | half-lives, prior strength, dispersions, minutes spread, opponent and pace on/off | minutes half-life 3 games, rate half-life 15, pace and opponent each help slightly |
 | n01 | n01-validation-N1 | first validation of N1 (normal minutes) | beats A on all markets (points -2.2%, PRA -3.2%) but **biased**: points +0.38, PRA +0.54. Cause: opponent and pace factors measured against the 2018-2023 league level (scoring has risen since) and minutes truncated at 1 for low-minute players. Not adopted. |
 | n02 | n02-validation-N1-empirical-minutes | minutes from the empirical error distribution by expected-minutes band (fitted 2018-2023); opponent and pace relative to the league level at the time; dispersions re-tuned on training seasons | **Adopted as nba-0.1** (D-020). Bias points +0.03, PRA +0.00. CRPS v A: points -2.7% [-3.1, -2.3], rebounds -2.2%, assists -1.7%, threes -1.1%, PRA -3.8%; all week-block 95% intervals exclude zero. C (L10 average) is worst on every market. P(plays) from recent appearances: Brier 0.128 v 0.168 for the share of the last 10 games played. |
-
 | n03 | **n03-TEST-frozen-nba-0.1** | single run of the frozen configuration (commit f9c3116, clean) on the untouched 2026 season (2025-26), 28,303 player-games | see below; run once, nothing changed afterwards |
+| n04 | n04-validation-blowout | blowout risk: expected margin from team form (EW point differential, half-life 15, +/-2 home court) moves the minutes forecast. S = shift fitted by least squares; R = minutes error distribution by expected-minutes band and margin class (big underdog / close / big favourite at +/-7). Both fitted 2018-2023, scored against frozen nba-0.1 on the same 56,047 rows | **Not adopted** (D-024). Both slightly worse: S points +0.15% [+0.08, +0.21], PRA +0.17% [+0.09, +0.25], assists +0.07%; R points +0.09% [+0.04, +0.13], PRA +0.11% [+0.05, +0.17]; rebounds and threes unchanged within noise. Worse again in big-margin games (27% of rows). |
 
 ## Test result (2025-26, frozen nba-0.1)
 
@@ -66,22 +66,23 @@ B.run(B.VALIDATION, "n02-validation-N1-empirical-minutes", p=M.load_params(), x=
    expected minutes against 21.7 this season and Jeremiah Fears at 28.8 against 22.7.
    Try down-weighting games from the previous season once a player has 2-3 games in the
    new one.
-2. Blowout risk from the expected margin (suggested by the user, 29 Oct). Quick check on
-   regular seasons 2021-22 to 2025-26, starters expected to play 28+ minutes, expected
-   margin from each team's exponentially weighted point differential (halflife 15 games)
-   plus 2 points for home court:
+2. Blowout risk from the expected margin (suggested by the user, 29 Oct). **Tested as n04 on
+   29 Oct: not adopted** (D-024). The minutes effect is real, but the model already gets
+   these games right in total. On validation (2024-2025, starters expected to play 28+
+   minutes):
 
-   | expected margin | starters | minutes v recent average | games decided by 20+ |
-   |---|---:|---:|---:|
-   | 0-3 | 12,822 | -0.09 | 15% |
-   | 3-6 | 10,821 | -0.14 | 18% |
-   | 6-9 | 7,383 | -0.16 | 17% |
-   | 9-12 | 4,930 | -0.67 | 23% |
-   | 12+ | 4,730 | -1.00 | 31% |
+   | margin class | rows | minutes v forecast | points per minute, actual | model rate |
+   |---|---:|---:|---:|---:|
+   | big favourite (+7 or more) | 3,867 | -0.97 | 0.581 | 0.563 |
+   | close | 12,074 | -0.26 | 0.543 | 0.539 |
+   | big underdog (-7 or less) | 3,525 | -0.67 | 0.514 | 0.506 |
 
-   Big favourites (+9 or more) lost 1.3 minutes on average, big underdogs 0.3. With
-   hindsight a 20+ point game costs starters 4.2 minutes, but a big spread only doubles
-   the chance of one. The model has no such term. Plan: shift expected minutes (and
-   widen the minutes spread) by expected margin, fitted on 2018-2023 with the team-form
-   margin (historical spreads are not stored), checked on 2024-2025; live forecasts would
-   use the bookmaker spread (1 credit per collection for every game).
+   Big favourites' starters lose about 0.7 minutes more than in close games but score
+   about 2.5% more per minute (weaker opponents; the opponent factor is heavily shrunk), so
+   their totals come out as forecast. Bench players gain minutes in lopsided games (+1.1
+   for big underdogs, +0.4 in close games), which the band errors already absorb on
+   average. Cutting minutes alone over-corrects. A joint minutes-and-rate term might not;
+   it would be a new experiment with little room to gain, since N1's bias in big-margin
+   games is already small (points -0.03, PRA -0.10). Script:
+   `reports/nba/experiments/n04_blowout.py`; numbers:
+   `reports/nba/backtests/n04-validation-blowout/summary.json`.
