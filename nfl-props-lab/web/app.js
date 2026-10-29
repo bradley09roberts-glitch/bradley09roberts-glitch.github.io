@@ -191,8 +191,12 @@ const THEME_ICON = {
   dark: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>',
 };
 // team colours and player photos (data URIs), loaded once from /api/visuals/<sport>
-const LOOK = { nfl: { teams: {}, photos: {}, logos: {} }, nba: { teams: {}, photos: {}, logos: {} } };
-function logo(sport, abbr, cls = "tl") { const u = LOOK[sport]?.logos?.[abbr]; return u ? `<span class="${cls}" aria-hidden="true"><img src="${u}" alt=""></span>` : ""; }
+const LOOK = { nfl: { teams: {}, photos: {}, logos: {}, logos_dark: {} }, nba: { teams: {}, photos: {}, logos: {}, logos_dark: {} } };
+// transparent logos in two versions (for light and for dark pages); CSS shows the matching one
+function logo(sport, abbr, cls = "tl") {
+  const u = LOOK[sport]?.logos?.[abbr]; if (!u) return ""; const d = LOOK[sport]?.logos_dark?.[abbr];
+  return `<span class="${cls}" aria-hidden="true">${d ? `<img class="lt" src="${u}" alt=""><img class="dk" src="${d}" alt="">` : `<img src="${u}" alt="">`}</span>`;
+}
 function teamTag(sport, abbr) { return `<span class="tteam">${logo(sport, abbr)}<span>${esc(abbr)}</span></span>`; }
 function leagueMark(sport) { return logo(sport, "_league", "lgm") || GLYPH[sport]; }
 function paintMarks() { $$(".sport a").forEach((a) => { const m = a.querySelector("svg, .lgm"); if (m) m.outerHTML = leagueMark(a.dataset.sport); }); }

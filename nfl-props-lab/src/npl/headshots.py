@@ -118,26 +118,30 @@ def logo_urls(sport: str) -> dict[str, str]:
 
 
 def fetch_logos(sport: str) -> dict:
+    """Each logo in two versions with transparent backgrounds: the standard one for light pages
+    and ESPN's version drawn for dark backgrounds ("500-dark"), saved as <abbr>.dark.webp."""
     d = DIR.parent / "logos" / sport
     d.mkdir(parents=True, exist_ok=True)
     out = {"cached": 0, "new": 0, "failed": 0}
     for abbr, url in logo_urls(sport).items():
-        f = d / f"{abbr}.webp"
-        if f.exists():
-            out["cached"] += 1
-            continue
-        try:
-            f.write_bytes(_logo_thumb(http_get(url, timeout=30, max_tries=2).content))
-            out["new"] += 1
-        except (FetchError, OSError, ValueError) as e:
-            log.info("no logo for %s %s: %s", sport, abbr, e)
-            out["failed"] += 1
+        for f, u in ((d / f"{abbr}.webp", url), (d / f"{abbr}.dark.webp", url.replace("/500/", "/500-dark/"))):
+            if f.exists():
+                out["cached"] += 1
+                continue
+            try:
+                f.write_bytes(_logo_thumb(http_get(u, timeout=30, max_tries=2).content))
+                out["new"] += 1
+            except (FetchError, OSError, ValueError) as e:
+                log.info("no logo for %s %s (%s): %s", sport, abbr, u, e)
+                out["failed"] += 1
     return out
 
 
-def logo_uris(sport: str) -> dict[str, str]:
+def logo_uris(sport: str, dark: bool = False) -> dict[str, str]:
     d = DIR.parent / "logos" / sport
     if not d.exists():
         return {}
-    return {f.stem: "data:image/webp;base64," + base64.b64encode(f.read_bytes()).decode()
-            for f in sorted(d.glob("*.webp"))}
+    files = sorted(d.glob("*.dark.webp")) if dark else [f for f in sorted(d.glob("*.webp"))
+                                                         if not f.name.endswith(".dark.webp")]
+    return {f.name.split(".")[0]: "data:image/webp;base64," + base64.b64encode(f.read_bytes()).decode()
+            for f in files}
