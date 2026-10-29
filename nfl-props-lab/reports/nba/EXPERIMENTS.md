@@ -58,3 +58,30 @@ source.fetch(db.connect()); canon.build()
 x, lg = B.frame(M.load_params())
 B.run(B.VALIDATION, "n02-validation-N1-empirical-minutes", p=M.load_params(), x=x, lg=lg)
 ```
+
+## Queued experiments (not adopted; each must improve 2024-25 validation before use)
+
+1. Season-start minutes. Early in a season the exponentially weighted minutes still carry
+   last season's (and playoff) minutes; on 28 Oct 2026 this put Jaylon Tyson at 16.1
+   expected minutes against 21.7 this season and Jeremiah Fears at 28.8 against 22.7.
+   Try down-weighting games from the previous season once a player has 2-3 games in the
+   new one.
+2. Blowout risk from the expected margin (suggested by the user, 29 Oct). Quick check on
+   regular seasons 2021-22 to 2025-26, starters expected to play 28+ minutes, expected
+   margin from each team's exponentially weighted point differential (halflife 15 games)
+   plus 2 points for home court:
+
+   | expected margin | starters | minutes v recent average | games decided by 20+ |
+   |---|---:|---:|---:|
+   | 0-3 | 12,822 | -0.09 | 15% |
+   | 3-6 | 10,821 | -0.14 | 18% |
+   | 6-9 | 7,383 | -0.16 | 17% |
+   | 9-12 | 4,930 | -0.67 | 23% |
+   | 12+ | 4,730 | -1.00 | 31% |
+
+   Big favourites (+9 or more) lost 1.3 minutes on average, big underdogs 0.3. With
+   hindsight a 20+ point game costs starters 4.2 minutes, but a big spread only doubles
+   the chance of one. The model has no such term. Plan: shift expected minutes (and
+   widen the minutes spread) by expected margin, fitted on 2018-2023 with the team-form
+   margin (historical spreads are not stored), checked on 2024-2025; live forecasts would
+   use the bookmaker spread (1 credit per collection for every game).
