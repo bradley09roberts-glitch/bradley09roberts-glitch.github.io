@@ -562,4 +562,5 @@ def visuals(pids: set | None = None) -> dict:
              if isinstance(r.team_color, str)}
     if pids is None:
         pids = {c["player_id"] for c in props()["cards"]}
-    return {"teams": teams, "photos": headshots.data_uris("nfl", set(pids))}
+    return {"teams": teams, "photos": headshots.data_uris("nfl", set(pids)),
+            "logos": headshots.logo_uris("nfl")}

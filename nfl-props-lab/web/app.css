@@ -28,6 +28,7 @@
   --f-display: "Archivo", "Arial Narrow", "Helvetica Neue", system-ui, sans-serif;
   --f-body: "Figtree", "Segoe UI", system-ui, -apple-system, sans-serif;
   --f-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --logo-bg: rgba(255, 255, 255, 0.94); --logo-edge: rgba(255, 255, 255, 0.6);
   --r: 22px; --r-sm: 14px;
   --spring: cubic-bezier(0.34, 1.56, 0.64, 1); --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
   color-scheme: dark;
@@ -506,11 +507,35 @@ pre.defs { white-space: pre-wrap; font-family: var(--f-mono); font-size: 0.72rem
 .mlist { padding-left: 18px; } .mlist li { margin: 4px 0; }
 .mlist li.adv b { color: var(--hit); } .mlist li.dif b { color: var(--miss); }
 
-/* ---------- sport medals: drawn balls, not league marks ---------- */
-.medal { display: grid; place-items: center; border-radius: 50%; isolation: isolate;
-  background: radial-gradient(circle at 35% 30%, var(--glass-3), var(--glass) 70%); border: 1px solid var(--edge);
-  box-shadow: inset 0 1px 0 var(--edge-hi), 0 14px 30px -14px var(--acc); }
-.medal svg { width: 72%; height: 72%; filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.35)); }
+/* ---------- league and team logos (static: no motion on logos) ---------- */
+.medal { display: grid; place-items: center; border-radius: 50%; isolation: isolate; background: var(--logo-bg);
+  border: 1px solid var(--logo-edge); box-shadow: inset 0 1px 0 var(--edge-hi), 0 14px 30px -14px var(--acc); }
+.medal .lgm { display: grid; place-items: center; width: 74%; height: 74%; background: none; border: 0; box-shadow: none; }
+.medal .lgm img, .medal svg { width: 100%; height: 100%; object-fit: contain; color: var(--acc-ink); }
+.tl, .lgm { display: inline-grid; place-items: center; flex: none; width: 24px; height: 24px; border-radius: 50%;
+  background: var(--logo-bg); border: 1px solid var(--logo-edge); box-shadow: 0 2px 6px -2px rgba(0, 0, 0, 0.35); vertical-align: middle; }
+.tl img, .lgm img { width: 78%; height: 78%; object-fit: contain; display: block; }
+.tl.big { width: 34px; height: 34px; }
+.tl.hero { width: 52px; height: 52px; }
+.tteam { display: inline-flex; align-items: center; gap: 7px; font-weight: 700; }
+h1.withlogo { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.game .teams, .game-tile .teams { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.sport a .lgm { width: 20px; height: 20px; box-shadow: none; }
+.ava i.lg { padding: 0; width: 22px; height: 22px; display: grid; place-items: center; background: var(--logo-bg); border: 1.5px solid var(--logo-edge); bottom: -3px; right: -5px; }
+.ava i.lg .tl, .ava i.lg span { display: contents; }
+.ava i.lg img { width: 80%; height: 80%; object-fit: contain; border-radius: 0; animation: none; }
+.hero .ava i.lg { width: 32px; height: 32px; right: -4px; }
+.linebtn small .pen { width: 11px; height: 11px; vertical-align: -1px; }
+
+/* ---------- defence v position ---------- */
+.dvp td.c { text-align: center; min-width: 74px; }
+.dvp td.c b { font-family: var(--f-display); font-stretch: 78%; font-weight: 800; font-size: 1.02rem; }
+.dvp td.c .tiny { color: var(--ink-2); }
+.dvp th.on, .dvp td.sel { box-shadow: inset 0 0 0 1.5px var(--acc); }
+.dvp td.sel b { color: var(--ink); }
+.dvptabs { flex-wrap: nowrap; }
+.dvpsum { display: grid; gap: 4px 18px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); }
+.dvpsum h3 { font-size: 0.95rem; margin-top: 4px; }
 
 /* ---------- motion: one entrance, live gauges, springy controls ---------- */
 @media (prefers-reduced-motion: no-preference) {
@@ -523,10 +548,6 @@ pre.defs { white-space: pre-wrap; font-family: var(--f-mono); font-size: 0.72rem
   @keyframes grow { from { transform: scaleY(0.05); } }
   .hit { animation: pop 0.5s var(--spring) backwards; animation-delay: calc(var(--k, 0) * 50ms + 100ms); }
   @keyframes pop { from { transform: scale(0.82); opacity: 0.3; } }
-  .hero .medal svg { animation: bob 5.5s ease-in-out infinite; }
-  :root[data-sport="nba"] .hero .medal svg { animation: spin 14s linear infinite, bob 5.5s ease-in-out infinite; }
-  @keyframes bob { 50% { translate: 0 -4px; } }
-  @keyframes spin { to { rotate: 360deg; } }
   .lineedit { animation: rise 0.35s var(--spring) backwards; }
   .sheet { animation: sheetup 0.45s var(--spring) backwards; }
   @keyframes sheetup { from { transform: translateY(40px); opacity: 0.5; } }

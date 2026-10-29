@@ -173,16 +173,14 @@ const ICONS = {
   record: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 2"/><circle cx="12" cy="12" r="9"/></svg>',
   data: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>',
   defense: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6l-8-3z"/></svg>',
+  pen: '<svg class="pen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13.5 6.5 4 4"/></svg>',
+  dvp: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><path d="M14 17.5h7M17.5 14v7"/></svg>',
   more: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>',
   warn: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3 2 20h20L12 3zM12 10v4M12 17h.01"/></svg>',
   info: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7h.01"/></svg>',
   ok: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg>',
 };
-// Drawn balls for each sport (our own artwork; league marks are trademarks and are not used)
-const BALL = {
-  nfl: '<svg viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="pl-fb" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c27a45"/><stop offset=".55" stop-color="#8a4a22"/><stop offset="1" stop-color="#55290f"/></linearGradient></defs><g transform="rotate(-35 32 32)"><ellipse cx="32" cy="32" rx="27" ry="16" fill="url(#pl-fb)"/><path d="M12.5 22.5c2.2 3 2.2 16 0 19M51.5 22.5c-2.2 3-2.2 16 0 19" stroke="#fff" stroke-width="2.6" fill="none" stroke-linecap="round"/><path d="M22 32h20M25 28.6v6.8M29 28.6v6.8M33 28.6v6.8M37 28.6v6.8M41 28.6v6.8" stroke="#fff" stroke-width="1.9" fill="none" stroke-linecap="round"/><ellipse cx="25" cy="23.5" rx="10" ry="3.4" fill="#fff" opacity=".2"/></g></svg>',
-  nba: '<svg viewBox="0 0 64 64" aria-hidden="true"><defs><radialGradient id="pl-bb" cx=".35" cy=".3" r=".85"><stop offset="0" stop-color="#ffb871"/><stop offset=".55" stop-color="#e8661e"/><stop offset="1" stop-color="#9c3a0a"/></radialGradient></defs><circle cx="32" cy="32" r="27" fill="url(#pl-bb)"/><g fill="none" stroke="#3a1606" stroke-width="2" stroke-linecap="round"><path d="M32 5v54M5 32h54"/><path d="M14.5 11.5c6.5 5.5 10 12.5 10 20.5s-3.5 15-10 20.5M49.5 11.5c-6.5 5.5-10 12.5-10 20.5s3.5 15 10 20.5"/></g><ellipse cx="23" cy="18" rx="9" ry="5" fill="#fff" opacity=".22"/></svg>',
-};
+// Fallback marks for the sport switch until the league logos load
 const GLYPH = {
   nfl: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><g transform="rotate(-35 12 12)"><ellipse cx="12" cy="12" rx="10" ry="6"/><path d="M8.5 12h7M10 10.5v3M12 10.5v3M14 10.5v3"/></g></svg>',
   nba: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M12 2.5v19M2.5 12h19M5.6 5.2c2.3 1.9 3.6 4.2 3.6 6.8s-1.3 4.9-3.6 6.8M18.4 5.2c-2.3 1.9-3.6 4.2-3.6 6.8s1.3 4.9 3.6 6.8"/></svg>',
@@ -193,7 +191,11 @@ const THEME_ICON = {
   dark: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>',
 };
 // team colours and player photos (data URIs), loaded once from /api/visuals/<sport>
-const LOOK = { nfl: { teams: {}, photos: {} }, nba: { teams: {}, photos: {} } };
+const LOOK = { nfl: { teams: {}, photos: {}, logos: {} }, nba: { teams: {}, photos: {}, logos: {} } };
+function logo(sport, abbr, cls = "tl") { const u = LOOK[sport]?.logos?.[abbr]; return u ? `<span class="${cls}" aria-hidden="true"><img src="${u}" alt=""></span>` : ""; }
+function teamTag(sport, abbr) { return `<span class="tteam">${logo(sport, abbr)}<span>${esc(abbr)}</span></span>`; }
+function leagueMark(sport) { return logo(sport, "_league", "lgm") || GLYPH[sport]; }
+function paintMarks() { $$(".sport a").forEach((a) => { const m = a.querySelector("svg, .lgm"); if (m) m.outerHTML = leagueMark(a.dataset.sport); }); }
 const HEX = /^#[0-9a-fA-F]{3,8}$/;
 function teamColors(sport, team) {
   const c = LOOK[sport]?.teams?.[team] || [];
@@ -208,9 +210,9 @@ function applyTheme(t) {
   if (v) document.documentElement.setAttribute("data-theme", v); else document.documentElement.removeAttribute("data-theme");
 }
 const NAV_NFL = [["today", "Today"], ["props", "Props"], ["shortlist", "Shortlist"], ["lab", "Backtest lab"], ["defense", "Defences"], ["record", "Saved record"], ["data", "Data & method"]];
-const NAV_NBA = [["nba-today", "Tonight"], ["nba-props", "Props"], ["nba-defense", "Defence"], ["nba-lab", "Model lab"], ["nba-about", "Data & method"]];
+const NAV_NBA = [["nba-today", "Tonight"], ["nba-props", "Props"], ["nba-dvp", "Vs position"], ["nba-defense", "Defence"], ["nba-lab", "Model lab"], ["nba-about", "Data & method"]];
 let NAV = NAV_NFL;
-const NAV_ICON = { "nba-today": "today", "nba-props": "props", "nba-defense": "defense", "nba-lab": "lab", "nba-about": "data" };
+const NAV_ICON = { "nba-today": "today", "nba-props": "props", "nba-dvp": "dvp", "nba-defense": "defense", "nba-lab": "lab", "nba-about": "data" };
 const sportOf = (k) => (k.startsWith("nba-") ? "nba" : "nfl");
 
 function shell() {
@@ -275,7 +277,7 @@ function route() {
   const view = $("#view");
   view.innerHTML = `<div class="skeleton">Loading…</div>`;
   const fn = { today: viewToday, props: viewProps, shortlist: viewShortlist, lab: viewLab, record: viewRecord, data: viewData, player: viewPlayer, game: viewGame, defense: viewDefense, more: viewMore,
-    "nba-today": viewNbaToday, "nba-props": viewNbaProps, "nba-player": viewNbaPlayer, "nba-game": viewNbaGame, "nba-lab": viewNbaLab, "nba-about": viewNbaAbout, "nba-defense": viewNbaDefense }[k] || viewToday;
+    "nba-today": viewNbaToday, "nba-props": viewNbaProps, "nba-player": viewNbaPlayer, "nba-game": viewNbaGame, "nba-lab": viewNbaLab, "nba-about": viewNbaAbout, "nba-defense": viewNbaDefense, "nba-dvp": viewNbaDvp }[k] || viewToday;
   Promise.resolve(fn(view, arg)).then(() => stagger(view)).catch((e) => { view.innerHTML = `<div class="banner crit">${ICONS.warn}<div><p><b>Could not load this view.</b></p><p class="small">${esc(e.message)}</p><p class="small">If the server is running, check <code>npl serve</code> output; otherwise this snapshot may not include the page.</p></div></div>`; });
   window.scrollTo(0, 0);
 }
@@ -305,7 +307,7 @@ async function viewToday(v) {
   const e = s.edition; const before = s.games.filter((g) => g.published_before_kickoff).length;
   const odds = st.odds || {};
   const stale = (st.stale || []).length, failed = (st.failed_jobs || []).length;
-  v.innerHTML = `<section class="hero"><div class="medal">${BALL.nfl}</div><span class="eyebrow">${e.season} ${e.season_type === "REG" ? "regular season" : "postseason"} · Week ${e.week}</span>
+  v.innerHTML = `<section class="hero"><div class="medal">${leagueMark("nfl")}</div><span class="eyebrow">${e.season} ${e.season_type === "REG" ? "regular season" : "postseason"} · Week ${e.week}</span>
       <h1>This week's slate</h1>
       <p>Edition <span class="mono">${esc(e.edition_id)}</span>, published ${esc(e.published_at_london)}. ${before} of ${s.games.length} games were still to kick off when it was saved, so only those count in the pre-match record.</p></section>
     ${banner("info", `<p><b>Model v${esc(e.code.model_version)}.</b> ${esc(e.status_note)}</p><p class="small muted">Headline model ${esc(e.headline_model)}: ${esc(MODEL_NAMES[e.headline_model])}. Code ${esc(e.code.git_commit.slice(0, 10))}.</p>`)}
@@ -322,7 +324,7 @@ function gameCard(g) {
   const st = g.published_before_kickoff ? `<span class="pill good"><span class="dot"></span>Saved before kickoff</span>` : `<span class="pill"><span class="dot"></span>Kicked off before edition: not in record</span>`;
   const al = (g.alerts || []).filter((a) => a.status !== "Questionable" || true).slice(0, 8);
   return `<a class="panel game lit" href="#game.${esc(g.game_id)}" style="color:inherit;${teamVars("nfl", g.away, "--a1", "--a2")};${teamVars("nfl", g.home, "--h1", "--h2")}">
-    <div class="teams">${esc(g.away)}<span class="at">at</span>${esc(g.home)}</div>
+    <div class="teams">${logo("nfl", g.away, "tl big")}${esc(g.away)}<span class="at">at</span>${logo("nfl", g.home, "tl big")}${esc(g.home)}</div>
     <div class="ko">${esc(g.kickoff_london)}<br><span class="tiny muted">${esc(g.state)}</span></div>
     <div class="vol">${volLine(g.away_sim, g.away)}${volLine(g.home_sim, g.home)}</div>
     <div class="row" style="grid-column:1/-1">${st}${al.map((a) => `<span class="pill ${a.status.toLowerCase()}"><span class="dot"></span>${esc(a.name)} (${esc(a.team)}) ${esc(a.status)}</span>`).join("")}${(g.alerts || []).length > 8 ? `<span class="tiny muted">+${g.alerts.length - 8} more</span>` : ""}</div>
@@ -345,7 +347,7 @@ function propCard(c, idx, D) {
       <div><div class="v num" style="font-size:1.3rem">${c.q10}–${c.q90}</div><div class="l">80% range</div></div></div>
     ${rangeBar(c)}
     ${c.log && c.log.values.length ? (() => { const { line, src, fair: isFair } = lineFor("nfl", c); const L = new Dist(c.dist).line(line);
-      return `<div class="pline"><div><span class="mk">Line</span><button class="linebtn" data-line="${idx}">${line}<small>${src} ✎</small></button></div></div>${ouBar(L, isFair)}${hitChips(c.log, line, c.opponent)}${miniBars(c.log, line, 10)}`; })() : ""}
+      return `<div class="pline"><div><span class="mk">Line</span><button class="linebtn" data-line="${idx}">${line}<small>${src} ${ICONS.pen}</small></button></div></div>${ouBar(L, isFair)}${hitChips(c.log, line, c.opponent)}${miniBars(c.log, line, 10)}`; })() : ""}
     <div class="ms">${ms}</div>
     <div class="foot"><span>P(plays) ${pct(c.p_play)}</span><span>Uncertainty ${esc(u.level || "–")}</span><span>History ${c.sample_size ?? 0} games</span>${injuryPill(c.injury_report)}</div>
     ${oppContext(c, D)}
@@ -358,7 +360,7 @@ async function viewProps(v) {
   const cards = p.cards.filter((c) => c.status === "ok");
   const teams = [...new Set(cards.map((c) => c.team))].sort();
   const f = Object.assign({ q: "", team: "", pos: "", market: "", minp: "0.5", sort: "kickoff" }, store.get("propsFilter", {}));
-  v.innerHTML = `<section class="hero"><div class="medal">${BALL.nfl}</div><span class="eyebrow">${p.season} Week ${p.week} · edition ${esc(p.edition_id)}</span><h1>Props explorer</h1>
+  v.innerHTML = `<section class="hero"><div class="medal">${leagueMark("nfl")}</div><span class="eyebrow">${p.season} Week ${p.week} · edition ${esc(p.edition_id)}</span><h1>Props explorer</h1>
     <p>Forecasts for every eligible offensive player on the week's rosters, starters and reserves. Probabilities are conditional on the player taking part. There are no bookmaker prices: each card shows the model's distribution, and you can test any line yourself.</p></section>
     <div class="filters" role="search">
       <label>Player<input type="search" id="fq" value="${esc(f.q)}" placeholder="Name"></label>
@@ -615,7 +617,7 @@ function miniBars(log, line, n = 10, { width = 300, height = 92, labels = true }
 function avatar(team, name, pid, sport) {
   const ini = String(name || "").split(/\s+/).map((w) => w[0]).filter(Boolean).slice(0, 2).join("");
   const ph = pid && LOOK[sport]?.photos?.[pid];
-  return `<span class="ava" style="${teamVars(sport, team)}" aria-hidden="true">${ph ? `<img src="${ph}" alt="" decoding="async">` : `<b>${esc(ini)}</b>`}<i>${esc(team)}</i></span>`;
+  return `<span class="ava" style="${teamVars(sport, team)}" aria-hidden="true">${ph ? `<img src="${ph}" alt="" decoding="async">` : `<b>${esc(ini)}</b>`}${logo(sport, team) ? `<i class="lg">${logo(sport, team, "")}</i>` : `<i>${esc(team)}</i>`}</span>`;
 }
 function rankTone(rank, n = 30) { return rank >= n - 7 ? "soft" : rank <= 8 ? "tough" : "avg"; }
 
@@ -636,7 +638,7 @@ function nbaCard(c, idx) {
   return `<article class="pcard">
     <header>${avatar(c.team, c.name, c.player_id, "nba")}<div class="who"><a href="#nba-player.${esc(c.player_id)}">${esc(c.name)}</a>
       <div class="sub">${esc(c.position)} · ${esc(c.team)} ${c.is_home ? "v" : "@"} ${esc(c.opponent)} · ${esc(c.tip_london)}</div></div>${nbaInjury(c.injury)}</header>
-    <div class="pline"><div><span class="mk">${esc(NBA_MKT[c.market])}</span><button class="linebtn" data-line="${idx}" aria-label="Change the line">${line}<small>${src} ✎</small></button></div>
+    <div class="pline"><div><span class="mk">${esc(NBA_MKT[c.market])}</span><button class="linebtn" data-line="${idx}" aria-label="Change the line">${line}<small>${src} ${ICONS.pen}</small></button></div>
       <div class="proj"><b>${dec(c.mean, 1)}</b><span>projection</span></div></div>
     ${ouBar(L, isFair)}
     ${marketRow(c, L, line)}
@@ -644,11 +646,27 @@ function nbaCard(c, idx) {
     ${miniBars(c.log, line, 10)}
     <div class="facts"><span data-tip="Chance he plays|${c.injury ? "Includes the injury report (assumed effect, not validated)" : "From recent appearances"}">Plays ${pct(c.p_play)}</span><span>Min ${dec(c.minutes_expected, 0)}</span><span>80% range ${c.q10}–${c.q90}</span>
       ${o ? `<span class="mu ${rankTone(o.rank)}" data-tip="${esc(c.opponent)} defence v ${esc(NBA_SHORT[c.market === "pra" ? "pts" : c.market])}|Rank ${o.rank} of 30 (1 = allows least); model factor ${o.factor > 1 ? "+" : ""}${((o.factor - 1) * 100).toFixed(1)}%">Matchup ${o.rank}/30</span>` : ""}
+      ${dvpChip(c)}
       ${c.opp_pace ? `<span data-tip="${esc(c.opponent)} pace|${c.opp_pace.value} possessions per 48 min (rank ${c.opp_pace.rank})">Pace ${c.opp_pace.rank}/30</span>` : ""}</div>
     ${c.teammates_out && c.teammates_out.length ? `<div class="warnline">${ICONS.warn}<span>${c.teammates_out.map((t) => esc(t.name)).join(", ")} ruled out after playing last game: extra minutes and shots are not in this projection yet.</span></div>` : ""}
   </article>`;
 }
 
+let DVPC = null; // current-season defence v position for the props cards
+async function dvpCtx() {
+  if (DVPC) return DVPC;
+  const M = await api("/api/nba/matchups"); const season = Object.keys(M.rows).sort().slice(-1)[0];
+  const f = { season, games: "all", venue: "all", stype: "R", rate: "pg" };
+  return (DVPC = { M, f, B: dvpBoard(M, f) });
+}
+function dvpChip(c) {
+  if (!DVPC || !DVP_POS.includes(c.position)) return "";
+  const s = DVP.find((x) => x[0] === c.market); if (!s) return "";
+  const L = DVPC.B.league(c.position, s[0]); const r = L.rank(c.opponent); if (!r) return "";
+  const g = DVPC.B.agg[c.opponent]?.games || 0; const rel = relWord(dvpRel(DVPC.M, c.position, s[0], g));
+  const tone = r > L.n - 8 ? "soft" : r <= 8 ? "tough" : "";
+  return `<span class="mu ${tone}" data-tip="${esc(c.opponent)} v opposing ${POS_ONE[c.position]} · ${esc(s[2])}|${dvpFmt(s, L.vals[c.opponent])} per game (league ${dvpFmt(s, L.avg)}) · ${r} of ${L.n}, ${L.n} = gives up the most|${g} games this season · signal: ${esc(rel)}">v ${esc(c.position)} ${r}/${L.n}</span>`;
+}
 function bindLineButtons(root, cards, sport, rerender) {
   root.querySelectorAll("[data-line]").forEach((b) => b.addEventListener("click", () => {
     const c = cards[+b.dataset.line]; const cur = lineFor(sport, c).line;
@@ -672,25 +690,25 @@ function bindLineButtons(root, cards, sport, rerender) {
 async function viewNbaToday(v) {
   const [s, p] = await Promise.all([api("/api/nba/slate"), api("/api/nba/props")]);
   const outs = {}; p.cards.filter((c) => c.market === "pts" && c.injury).forEach((c) => { (outs[c.team] ||= []).push(c); });
-  v.innerHTML = `<section class="hero"><div class="medal">${BALL.nba}</div><span class="eyebrow">NBA · ${esc(s.date_et)} (US date) · ${esc(s.kind)} edition</span><h1>Tonight's slate</h1>
+  v.innerHTML = `<section class="hero"><div class="medal">${leagueMark("nba")}</div><span class="eyebrow">NBA · ${esc(s.date_et)} (US date) · ${esc(s.kind)} edition</span><h1>Tonight's slate</h1>
       <p>${s.games.length} games, saved ${esc(s.published_london)} before tip-off. Times are UK time. Every projection comes from the saved edition; tap a game for both teams or open the props board.</p>
       <div class="row"><a class="btn" href="#nba-props">Open the props board</a></div></section>
     <div class="games">${s.games.map((g) => `<a class="panel game-tile" href="#nba-game.${esc(g.game_id)}" style="${teamVars("nba", g.away, "--a1", "--a2")};${teamVars("nba", g.home, "--h1", "--h2")}">
-      <div class="teams"><b>${esc(g.away)}</b><span class="at">@</span><b>${esc(g.home)}</b></div>
+      <div class="teams">${logo("nba", g.away, "tl big")}<b>${esc(g.away)}</b><span class="at">@</span>${logo("nba", g.home, "tl big")}<b>${esc(g.home)}</b></div>
       <div class="tiny muted">${esc(g.tip_london)}${g.time_valid ? "" : " (time to be confirmed)"}</div>
       <div class="tiny">${[g.away, g.home].map((t) => { const l = outs[t] || []; const o = l.filter((c) => ["OUT", "OFS"].includes(c.injury.fantasy)).length, q = l.length - o; return `${esc(t)}: ${o} out${q ? `, ${q} questionable` : ""}`; }).join(" · ")}</div></a>`).join("")}</div>
     ${banner("info", `<p class="small">${(s.notes || []).map(esc).join(" ")}</p><p class="tiny muted">Box scores through ${esc(londonTime(s.inputs.box_last_tip))}; injury snapshot ${esc(s.inputs.injury_snapshot || "none")}. Data: SportsDataverse (CC BY 4.0).</p>`)}`;
 }
 
 async function viewNbaProps(v) {
-  const p = await api("/api/nba/props");
+  const p = await api("/api/nba/props"); await dvpCtx().catch(() => null);
   const all = p.cards;
   const games = [...new Map(all.map((c) => [c.game_id, `${c.is_home ? c.opponent : c.team} @ ${c.is_home ? c.team : c.opponent}`])).entries()];
   const f = Object.assign({ q: "", game: "", market: "pts", minp: "0.6", sort: "proj", form: "all" }, store.get("nbaFilter", {}));
   // hot: over the line in >= 4 of the last 5 and >= 7 of the last 10; cold: the reverse
   const formOf = (c) => { const { line } = lineFor("nba", c); const v = c.log.values; const h5 = hitRate(v.slice(-5), line), h10 = hitRate(v.slice(-10), line);
     if (!h5 || !h10 || h10.n < 10) return "none"; if (h5.over >= 4 && h10.over >= 7) return "hot"; if (h5.over <= 1 && h10.over <= 3) return "cold"; return "none"; };
-  v.innerHTML = `<section class="hero"><div class="medal">${BALL.nba}</div><span class="eyebrow">NBA props · ${esc(p.date_et)} · saved ${esc(p.published_london)}</span><h1>Props board</h1>
+  v.innerHTML = `<section class="hero"><div class="medal">${leagueMark("nba")}</div><span class="eyebrow">NBA props · ${esc(p.date_et)} · saved ${esc(p.published_london)}</span><h1>Props board</h1>
       <p>Each card shows the model's projection, its over/under chance at a line, and how often the player went over that line recently. The line is, in order: yours (tap it to type your bookmaker's), the US market line where stored (a research reference; US books are not open to UK bettors), or the model's fair 50/50 line.</p></section>
     <div class="mktabs" role="tablist">${Object.entries(NBA_SHORT).map(([k, l]) => `<button role="tab" class="${k === f.market ? "on" : ""}" data-mk="${k}">${l}</button>`).join("")}</div>
     <div class="filters" role="search">
@@ -724,7 +742,7 @@ async function viewNbaProps(v) {
 }
 
 async function viewNbaPlayer(v, pid) {
-  const [P, props] = await Promise.all([api(`/api/nba/player/${pid}`), api("/api/nba/props")]);
+  const [P, props] = await Promise.all([api(`/api/nba/player/${pid}`), api("/api/nba/props")]); await dvpCtx().catch(() => null);
   const cards = props.cards.filter((c) => c.player_id === pid);
   let mk = store.get("nbaPlayerMk", "pts"); if (!cards.find((c) => c.market === mk)) mk = cards[0]?.market || "pts";
   const draw = () => {
@@ -734,7 +752,7 @@ async function viewNbaPlayer(v, pid) {
     const { line, src } = lineFor("nba", c); const D = new Dist(c.dist); const L = D.line(line);
     v.innerHTML = head + `<div class="mktabs">${cards.map((x) => `<button class="${x.market === mk ? "on" : ""}" data-mk="${x.market}">${NBA_SHORT[x.market]}</button>`).join("")}</div>
       <section class="panel"><div class="row between"><div><span class="eyebrow">${esc(c.team)} ${c.is_home ? "v" : "@"} ${esc(c.opponent)} · ${esc(c.tip_london)}</span><h2>${esc(NBA_MKT[mk])}</h2></div>${nbaInjury(c.injury)}</div>
-        <div class="pline"><div><span class="mk">Line</span><button class="linebtn" data-line="0">${line}<small>${src} ✎</small></button></div><div class="proj"><b>${dec(c.mean, 1)}</b><span>projection (median ${c.median}, 80% ${c.q10}–${c.q90})</span></div></div>
+        <div class="pline"><div><span class="mk">Line</span><button class="linebtn" data-line="0">${line}<small>${src} ${ICONS.pen}</small></button></div><div class="proj"><b>${dec(c.mean, 1)}</b><span>projection (median ${c.median}, 80% ${c.q10}–${c.q90})</span></div></div>
         ${ouBar(L, lineFor("nba", c).fair)}<p class="tiny muted">Break-even decimal prices at this line: over ${dec(fair(L.over), 2)}, under ${dec(fair(L.under), 2)}.</p>
         ${hitChips(c.log, line, c.opponent)}
         <h3 style="margin-top:12px">Last 20 games</h3>${miniBars(c.log, line, 20, { width: 640, height: 170 })}
@@ -806,7 +824,7 @@ function dmRows(M, team, f) {
 }
 function dmAgg(rows, pos) {
   const pl = pos === "ALL" ? ["G", "F", "C", "U"] : [pos];
-  const a = { games: rows.length, poss: 0, pa: 0, fouls: 0, sf: 0, fn: 0, z: DZ.map(() => [0, 0]), fta: 0, ftm: 0, bx: Array(10).fill(0) };
+  const a = { games: rows.length, poss: 0, pa: 0, fouls: 0, sf: 0, fn: 0, z: DZ.map(() => [0, 0]), fta: 0, ftm: 0, bx: Array(15).fill(0) }; // one slot per box column (matchups.BOX_COLS)
   for (const r of rows) {
     a.poss += r.p; a.pa += r.pa; if (r.f != null) { a.fouls += r.f; a.sf += r.sf; a.fn++; }
     for (const p of pl) {
@@ -861,21 +879,21 @@ function courtMap(cells, { width = 500 } = {}) { // cells[z] = {tone, label, tip
     s += `<text class="zl${small ? " sm" : ""}" x="${lx * S}" y="${Y(ly)}" text-anchor="middle">${esc(c.label)}</text>`; }
   return s + "</svg>";
 }
-function dmFilters(M, f, extra = "") {
+function dmFilters(M, f, extra = "", rates = [["pg", "Per game"], ["p100", "Per 100 possessions"]]) {
   const opt = (id, pairs, cur) => `<select id="${id}">${pairs.map(([k, l]) => `<option value="${k}" ${String(k) === String(cur) ? "selected" : ""}>${l}</option>`).join("")}</select>`;
   return `<div class="filters dmf" role="search">
     <label>Season${opt("dms", Object.entries(M.seasons).reverse(), f.season)}</label>
     <label>Games${opt("dmg", [["all", "Whole season"], ["5", "Last 5"], ["10", "Last 10"], ["20", "Last 20"]], f.games)}</label>
     <label>Venue${opt("dmv", [["all", "Home and away"], ["home", "Home"], ["away", "Away"]], f.venue)}</label>
     <label>Games type${opt("dmt", [["R", "Regular season"], ["P", "Playoffs and play-in"], ["all", "All"]], f.stype)}</label>
-    <label>Scale${opt("dmr", [["pg", "Per game"], ["p100", "Per 100 possessions"]], f.rate)}</label>${extra}</div>`;
+    <label>Scale${opt("dmr", rates, f.rate)}</label>${extra}</div>`;
 }
-function dmBind(v, f) {
-  [["#dms", "season"], ["#dmg", "games"], ["#dmv", "venue"], ["#dmt", "stype"], ["#dmr", "rate"], ["#dmm", "metric"], ["#dmp", "pos"]].forEach(([id, k]) => { const el = $(id, v); if (el) el.addEventListener("change", () => { f[k] = el.value; store.set("dmFilter", f); route(); }); });
+function dmBind(v, f, key = "dmFilter") {
+  [["#dms", "season"], ["#dmg", "games"], ["#dmv", "venue"], ["#dmt", "stype"], ["#dmr", "rate"], ["#dmm", "metric"], ["#dmp", "pos"]].forEach(([id, k]) => { const el = $(id, v); if (el) el.addEventListener("change", () => { f[k] = el.value; store.set(key, f); route(); }); });
   $$("[data-dmpos]", v).forEach((b) => b.addEventListener("click", () => { f.pos = b.dataset.dmpos; store.set("dmFilter", f); route(); }));
   $$("[data-dmmetric]", v).forEach((b) => b.addEventListener("click", () => { f.metric = b.dataset.dmmetric; store.set("dmFilter", f); route(); }));
 }
-const rateLbl = (f) => (f.rate === "p100" ? "per 100 poss." : "per game");
+const rateLbl = (f) => (f.rate === "p100" ? "per 100 poss." : f.rate === "p36" ? "per 36 min at the position" : "per game");
 const ord = (n) => { const s = ["th", "st", "nd", "rd"], v = n % 100; return n + (s[(v - 20) % 10] || s[v] || s[0]); };
 
 async function viewNbaDefense(v, team) {
@@ -894,7 +912,7 @@ async function viewNbaDefense(v, team) {
     ${dmFilters(M, f)}
     ${gmax < 10 ? banner("warn", `<p class="small">Only ${gmin}–${gmax} games per team in this selection. Defence splits this early are mostly noise (see the reliability notes on each team page); switch the season to 2025-26 for a full season of evidence.</p>`) : ""}
     <section class="panel"><div class="tablewrap"><table class="pit dmtab"><thead><tr><th class="l">Team</th><th>Games</th>${cols.map(([s, l], i) => `<th><button class="thbtn ${i === sortK ? "on" : ""}" data-sort="${i}" title="${esc(l)}">${esc(s)}</button></th>`).join("")}</tr></thead><tbody>
-      ${order.map((t) => `<tr><td class="l"><a href="#nba-defense.${esc(t)}">${esc(t)}</a></td><td>${dmRows(M, t, f).length}</td>${cols.map((c, i) => { const val = L[i].vals[t]; const r = L[i].rank(t); return `<td class="c ${r && L[i].n ? (r <= 5 ? "lo2" : r <= 10 ? "lo" : r > L[i].n - 5 ? "hi2" : r > L[i].n - 10 ? "hi" : "") : ""}" data-tip="${esc(c[1])} (${c[3] === "pct" ? "share" : rateLbl(f)})|${dmFmt(c[3] === "pct" ? "pct" : "n", val)} · ${ord(r)} of ${L[i].n} · league ${dmFmt(c[3] === "pct" ? "pct" : "n", L[i].avg)}">${dmFmt(c[3] === "pct" ? "pct" : "n", val)}</td>`; }).join("")}</tr>`).join("")}</tbody></table></div>
+      ${order.map((t) => `<tr><td class="l"><a href="#nba-defense.${esc(t)}">${teamTag("nba", t)}</a></td><td>${dmRows(M, t, f).length}</td>${cols.map((c, i) => { const val = L[i].vals[t]; const r = L[i].rank(t); return `<td class="c ${r && L[i].n ? (r <= 5 ? "lo2" : r <= 10 ? "lo" : r > L[i].n - 5 ? "hi2" : r > L[i].n - 10 ? "hi" : "") : ""}" data-tip="${esc(c[1])} (${c[3] === "pct" ? "share" : rateLbl(f)})|${dmFmt(c[3] === "pct" ? "pct" : "n", val)} · ${ord(r)} of ${L[i].n} · league ${dmFmt(c[3] === "pct" ? "pct" : "n", L[i].avg)}">${dmFmt(c[3] === "pct" ? "pct" : "n", val)}</td>`; }).join("")}</tr>`).join("")}</tbody></table></div>
       <p class="tiny muted">Per game unless "Per 100 possessions" is chosen (fouls are always per game). Blue = among the stingiest, red = among the most generous. Tap a column to sort.</p></section>
     ${dmSources(M)}`;
   dmBind(v, f);
@@ -905,6 +923,96 @@ function dmSources(M) {
     <details class="small"><summary>Shooting areas</summary><pre class="defs">${esc(M.definitions.zones)}</pre></details>
     <details class="small"><summary>Positions</summary><p>${esc(M.definitions.positions)}</p></details>
     <details class="small"><summary>Fouls, free throws, per 100 possessions and points</summary><p>${esc(M.definitions.fouls)}</p><p>${esc(M.definitions.ft_rate)}</p><p>${esc(M.definitions.per100)}</p><p>${esc(M.definitions.points)}</p></details></section>`;
+}
+
+// ---------------------------------------------------------------- NBA defence v position
+// box columns in each team-game row: pts reb ast min fga fgm fg3a fg3m fta ftm oreb dreb stl blk tov
+const DVP = [ // key, short, long, value from the summed box (before scaling), "pct" for rates
+  ["pts", "PTS", "Points", (b) => b[0]],
+  ["reb", "REB", "Rebounds", (b) => b[1]],
+  ["oreb", "OREB", "Offensive rebounds", (b) => b[10]],
+  ["dreb", "DREB", "Defensive rebounds", (b) => b[11]],
+  ["ast", "AST", "Assists", (b) => b[2]],
+  ["pra", "PRA", "Points + rebounds + assists", (b) => b[0] + b[1] + b[2]],
+  ["fg3m", "3PM", "3-pointers made", (b) => b[7]],
+  ["fg3a", "3PA", "3-point attempts", (b) => b[6]],
+  ["fg3p", "3P%", "3-point percentage", (b) => (b[6] ? b[7] / b[6] : null), "pct"],
+  ["fg2m", "2PM", "2-pointers made", (b) => b[5] - b[7]],
+  ["fg2a", "2PA", "2-point attempts", (b) => b[4] - b[6]],
+  ["fg2p", "2P%", "2-point percentage", (b) => (b[4] - b[6] ? (b[5] - b[7]) / (b[4] - b[6]) : null), "pct"],
+  ["fta", "FTA", "Free-throw attempts", (b) => b[8]],
+  ["stl", "STL", "Steals", (b) => b[12]],
+  ["blk", "BLK", "Blocks", (b) => b[13]],
+  ["tov", "TOV", "Turnovers", (b) => b[14]],
+];
+const DVP_POS = ["G", "F", "C"];
+function dvpVal(a, s, f) {
+  const v = s[3](a.bx); if (v == null) return null; if (s[4] === "pct") return v;
+  const k = f.rate === "p36" ? (a.bx[3] ? 36 / a.bx[3] : 0) : dmScale(a, f); return v * k;
+}
+function dvpBoard(M, f) { // one aggregate per team and position; league ranks computed on demand
+  const teams = Object.keys(M.rows[f.season] || {}).sort();
+  const agg = {}; for (const t of teams) { const rows = dmRows(M, t, f); agg[t] = { games: rows.length }; for (const p of DVP_POS) agg[t][p] = dmAgg(rows, p); }
+  const memo = {};
+  const league = (p, key) => { if (memo[p + key]) return memo[p + key]; const s = DVP.find((x) => x[0] === key); const vals = {};
+    for (const t of teams) { const val = dvpVal(agg[t][p], s, f); if (val != null && !isNaN(val) && agg[t].games) vals[t] = val; }
+    const arr = Object.values(vals); const avg = arr.reduce((x, y) => x + y, 0) / (arr.length || 1);
+    const sorted = Object.entries(vals).sort((a, b) => a[1] - b[1]).map((x) => x[0]);
+    return (memo[p + key] = { vals, avg, n: arr.length, rank: (team) => sorted.indexOf(team) + 1 }); };
+  return { teams, agg, league };
+}
+// red = gives up the most (good for that position's overs), blue = gives up the least
+function dvpClass(r, n) { if (!r || !n) return ""; return r > n - 3 ? "hi2" : r > n - 8 ? "hi" : r <= 3 ? "lo2" : r <= 8 ? "lo" : ""; }
+function dvpRel(M, p, key, games) { const k = key === "fg3p" ? "fg3m" : key === "fg2p" ? "fg2m" : key; return relAt(M.reliability[`${p}|box|${k}`], Math.max(games, 1)); }
+const dvpFmt = (s, v) => (v == null || isNaN(v) ? "–" : s[4] === "pct" ? `${(v * 100).toFixed(1)}%` : v.toFixed(1));
+const POS_ONE = { G: "guards", F: "forwards", C: "centres" };
+function dvF() { return Object.assign({ season: "2027", games: "all", venue: "all", stype: "R", rate: "pg", pos: "G", stat: "ast" }, store.get("dvpFilter", {})); }
+
+async function viewNbaDvp(v) {
+  const M = await api("/api/nba/matchups"); const f = dvF();
+  if (!M.rows[f.season]) f.season = Object.keys(M.rows).slice(-1)[0];
+  if (!DVP_POS.includes(f.pos)) f.pos = "G";
+  const B = dvpBoard(M, f); const s = DVP.find((x) => x[0] === f.stat) || DVP[0];
+  const L = Object.fromEntries(DVP_POS.map((p) => [p, B.league(p, s[0])]));
+  const order = B.teams.filter((t) => B.agg[t].games).sort((a, b) => (L[f.pos].vals[b] ?? -1) - (L[f.pos].vals[a] ?? -1));
+  const gs = order.map((t) => B.agg[t].games); const gmin = Math.min(...gs), gmax = Math.max(...gs);
+  const relNow = Object.fromEntries(DVP_POS.map((p) => [p, relWord(dvpRel(M, p, s[0], Math.round((gmin + gmax) / 2)))]));
+  const cell = (t, p) => { const val = L[p].vals[t]; const r = L[p].rank(t); const n = L[p].n;
+    return `<td class="c ${dvpClass(r, n)}${p === f.pos ? " sel" : ""}" data-tip="${esc(t)} v opposing ${POS_ONE[p]} · ${esc(s[2])}|${dvpFmt(s, val)} ${s[4] === "pct" ? "" : rateLbl(f)} · league ${dvpFmt(s, L[p].avg)}|${r} of ${n} (${n} = gives up the most) · ${B.agg[t].games} games · signal: ${esc(relNow[p])}"><b>${dvpFmt(s, val)}</b><div class="tiny">${r}/${n}</div></td>`; };
+  const most = (t) => { const best = DVP_POS.map((p) => [p, L[p].rank(t) / (L[p].n || 1)]).sort((a, b) => b[1] - a[1])[0]; return best && best[1] > 0.7 ? `${POS_NAME[best[0]]} (${L[best[0]].rank(t)}/${L[best[0]].n})` : "No standout"; };
+  v.innerHTML = `<section class="hero"><span class="eyebrow">NBA · defence v position · ${esc(M.seasons[f.season])}</span><h1>Who gives up what, to whom</h1>
+      <p>Every stat each defence allows to opposing guards, forwards and centres. Pick a stat, then a position to sort by. In each cell, <b>30/30 means that defence gives up the most</b> of that stat to that position and 1/30 the least. Red = generous, blue = stingy.</p></section>
+    ${dmFilters(M, f, "", [["pg", "Per game"], ["p100", "Per 100 possessions"], ["p36", "Per 36 minutes at that position"]])}
+    <div class="mktabs dvptabs" role="tablist" aria-label="Stat">${DVP.map(([k, sh, lg]) => `<button role="tab" class="${k === s[0] ? "on" : ""}" data-dvstat="${k}" title="${esc(lg)}">${sh}</button>`).join("")}</div>
+    ${gmax < 15 ? banner("warn", `<p class="small"><b>Only ${gmin}–${gmax} games per team in this selection.</b> Position splits this early are mostly noise: for ${esc(s[2].toLowerCase())} the signal is ${esc(relNow.G)} for guards, ${esc(relNow.F)} for forwards and ${esc(relNow.C)} for centres. Switch the season to 2025-26 to see full-season patterns.</p>`) : ""}
+    <section class="panel"><div class="row between"><h2>${esc(s[2])} allowed ${s[4] === "pct" ? "" : rateLbl(f)}</h2>
+      <div class="mktabs small" role="tablist" aria-label="Sort by position">${DVP_POS.map((p) => `<button class="${p === f.pos ? "on" : ""}" data-dvpos="${p}">${POS_NAME[p]}</button>`).join("")}</div></div>
+      <div class="tablewrap"><table class="pit dmtab dvp"><thead><tr><th class="l">Team</th><th>Games</th>${DVP_POS.map((p) => `<th class="${p === f.pos ? "on" : ""}"><button class="thbtn ${p === f.pos ? "on" : ""}" data-dvpos="${p}">v ${POS_NAME[p]}</button><div class="tiny muted">lg ${dvpFmt(s, L[p].avg)}</div></th>`).join("")}<th class="l">Gives up most to</th></tr></thead><tbody>
+      ${order.map((tm) => `<tr><td class="l"><a href="#nba-defense.${esc(tm)}">${teamTag("nba", tm)}</a></td><td>${B.agg[tm].games}</td>${DVP_POS.map((p) => cell(tm, p)).join("")}<td class="l small">${esc(most(tm))}</td></tr>`).join("")}</tbody></table></div>
+      <p class="tiny muted">Sorted by ${esc(POS_NAME[f.pos].toLowerCase())}, most allowed first. "Gives up most to" is the position where this defence ranks most generous for this stat (shown when it is in the top 30%). Signal after a full season: guards ${esc(relWord(dvpRel(M, "G", s[0], 82)))}, forwards ${esc(relWord(dvpRel(M, "F", s[0], 82)))}, centres ${esc(relWord(dvpRel(M, "C", s[0], 82)))}. Per game totals depend on how many minutes each position plays; per 36 minutes removes that.</p></section>
+    ${dmSources(M)}`;
+  dmBind(v, f, "dvpFilter");
+  $$("[data-dvstat]", v).forEach((b) => b.addEventListener("click", () => { f.stat = b.dataset.dvstat; store.set("dvpFilter", f); route(); }));
+  $$("[data-dvpos]", v).forEach((b) => b.addEventListener("click", () => { f.pos = b.dataset.dvpos; store.set("dvpFilter", f); route(); }));
+}
+
+// one team: every stat it allows to each position, with league ranks
+function dvpMatrix(M, f, team) {
+  const B = dvpBoard(M, { ...f, rate: f.rate === "p100" ? "p100" : "pg" });
+  if (!B.agg[team] || !B.agg[team].games) return "";
+  const g = B.agg[team].games; const give = [], hold = [];
+  const rows = DVP.map((s) => { const cells = DVP_POS.map((p) => { const L = B.league(p, s[0]); const val = L.vals[team]; const r = L.rank(team);
+      const rel = dvpRel(M, p, s[0], g);
+      if (r && r > L.n - 3) give.push([r / L.n, `${s[2]} to ${POS_ONE[p]} (${r}/${L.n})`, rel]);
+      if (r && r <= 3) hold.push([1 - r / L.n, `${s[2]} to ${POS_ONE[p]} (${r}/${L.n})`, rel]);
+      return `<td class="c ${dvpClass(r, L.n)}" data-tip="${esc(team)} v opposing ${POS_ONE[p]} · ${esc(s[2])}|${dvpFmt(s, val)} (league ${dvpFmt(s, L.avg)}) · ${r} of ${L.n}, ${L.n} = gives up the most|signal: ${esc(relWord(rel))}"><b>${dvpFmt(s, val)}</b><div class="tiny">${r}/${L.n}</div></td>`; });
+    return `<tr><td class="l"><b>${s[1]}</b><div class="tiny muted">${esc(s[2])}</div></td>${cells.join("")}</tr>`; }).join("");
+  const li = (arr) => arr.sort((a, b) => b[0] - a[0]).slice(0, 6).map(([, txt, rel]) => `<li>${esc(txt)} <span class="tiny muted">(signal: ${esc(relWord(rel))})</span></li>`).join("");
+  return `<section class="panel"><h2>Every stat by opposing position</h2>
+    <p class="small">What ${esc(team)} allow to opposing guards, forwards and centres (${f.rate === "p100" ? "per 100 possessions" : "per game"}, ${g} games). <b>30/30 = gives up the most</b> of that stat to that position; red = generous, blue = stingy.</p>
+    <div class="dvpsum">${give.length ? `<div><h3>Gives up the most</h3><ul class="small mlist">${li(give)}</ul></div>` : ""}${hold.length ? `<div><h3>Gives up the least</h3><ul class="small mlist">${li(hold)}</ul></div>` : ""}</div>
+    <div class="tablewrap"><table class="pit deft dvp"><thead><tr><th class="l">Stat</th>${DVP_POS.map((p) => `<th>v ${POS_NAME[p]}</th>`).join("")}</tr></thead><tbody>${rows}</tbody></table></div>
+    <p class="tiny muted">${g < 15 ? `With ${g} games these splits are mostly noise; compare the 2025-26 season. ` : ""}Steals, blocks and turnovers are those recorded by the opposing players (a guard's steals against this team). <a href="#nba-dvp">Compare all teams</a>.</p></section>`;
 }
 
 function viewNbaDefenseTeam(v, M, f, team) {
@@ -930,7 +1038,7 @@ function viewNbaDefenseTeam(v, M, f, team) {
     fta: dmLeague(M, { ...f, pos: "ALL" }, (x) => x.fta * dmScale(x, f)), ftr: dmLeague(M, { ...f, pos: "ALL" }, (x) => { const t = x.z.reduce((s, y) => s + y[0], 0); return t ? x.fta / t : null; }) };
   const all = dmAgg(rows, "ALL"); const kAll = dmScale(all, f); const totAll = all.z.reduce((s, x) => s + x[0], 0);
   const relPts = relAt(M.reliability["ALL|pts_per100"], Math.max(a.games, 1));
-  v.innerHTML = `<section class="hero"><span class="eyebrow">${esc(M.seasons[f.season])} · ${a.games} games · ${tot.toLocaleString("en-GB")} opponent shots</span><h1>${esc(team)} defence</h1>
+  v.innerHTML = `<section class="hero"><span class="eyebrow">${esc(M.seasons[f.season])} · ${a.games} games · ${tot.toLocaleString("en-GB")} opponent shots</span><h1 class="withlogo">${logo("nba", team, "tl hero")}${esc(team)} defence</h1>
       <p>Allows <b>${dmFmt("n", all.pa * kAll)}</b> points ${rateLbl(f)} (${ord(dmLeague(M, { ...f, pos: "ALL" }, (x) => x.pa * dmScale(x, f)).rank(team))} of 30, 1st = fewest). How much this sample says about the defence: <b>${relWord(relPts)}</b>.</p>
       <p class="small"><a href="#nba-defense">All teams</a></p></section>
     ${dmFilters(M, f, `<label>Opposing position<select id="dmp">${Object.entries(POS_NAME).map(([k, l]) => `<option value="${k}" ${k === f.pos ? "selected" : ""}>${l}</option>`).join("")}</select></label>`)}
@@ -951,6 +1059,7 @@ function viewNbaDefenseTeam(v, M, f, team) {
       <div class="tablewrap"><table class="deft"><thead><tr><th class="l">Position</th><th>Rim</th><th>Paint</th><th>Mid</th><th>Corner 3</th><th>Wing 3</th><th>Top 3</th><th>3PA</th></tr></thead><tbody>
         ${pm.map(({ p, q, areas }) => `<tr><td class="l">${POS_NAME[p]}</td>${areas.map((s, i) => { const zs = [["RA"], ["PAINT"], ["MID"], ["LC3", "RC3"], ["LW3", "RW3"], ["TOP3"]][i]; const L = dmLeague(M, { ...f, pos: p }, (x) => dmZone(x, zs, f).pts); return `<td class="${dmTone("pts", s.pts, L.avg)}t" data-tip="${esc(POS_NAME[p])} · ${esc(zs.map((z) => M.zone_labels[z]).join(" + "))}|${dmFmt("n", s.pts)} pts (league ${dmFmt("n", L.avg)}) · ${s.fga_n} attempts">${dmFmt("n", s.pts)}</td>`; }).join("")}<td>${dmFmt("n", dmZone(q, DSUM["3PT"], f).att)}</td></tr>`).join("")}</tbody></table></div>
       <p class="tiny muted">Individual positions (PG, SG, SF, PF) are not available: this source lists each player as G, F or C in each game, and every shot and free throw belongs to exactly one of those. Position splits are the noisiest numbers here (about 0.15 reliability after 10 games, 0.55–0.65 after a full season).</p></section>
+    ${dvpMatrix(M, f, team)}
     <section class="panel"><h2>Fouls and free throws</h2><div class="tablewrap"><table class="deft"><thead><tr><th class="l">Measure</th><th>${esc(team)}</th><th>League</th><th>Rank</th></tr></thead><tbody>
       <tr><td class="l">Fouls committed per game</td><td>${dmFmt("n", all.fn ? all.fouls / all.fn : null)}</td><td>${dmFmt("n", LF.fouls.avg)}</td><td>${ord(LF.fouls.rank(team))}</td></tr>
       <tr><td class="l">Shooting fouls per game</td><td>${dmFmt("n", all.fn ? all.sf / all.fn : null)}</td><td>${dmFmt("n", LF.sf.avg)}</td><td>${ord(LF.sf.rank(team))}</td></tr>
@@ -993,6 +1102,11 @@ async function nbaMatchupPanel(card, oppSeason) {
     <p class="small">His shot profile (${esc(M.seasons[pSeason])}, ${pf.games} games) beside what ${esc(opp)} allow to opposing ${esc(POS_NAME[f.pos].toLowerCase())} per 100 possessions (${esc(M.seasons[f.season])}, ${gN} games). Green = the defence allows more than average there, red = less.</p>
     ${lines.length ? `<ul class="small mlist">${lines.map(([k, t, rel]) => `<li class="${k}"><b>${k === "adv" ? "Advantage" : "Difficulty"}:</b> ${esc(t)} <span class="tiny muted">(signal: ${relWord(rel)})</span></li>`).join("")}</ul>` : `<p class="small muted">No clear advantage or difficulty in his main shooting areas at this sample size.</p>`}
     <div class="tablewrap"><table class="deft"><thead><tr><th class="l">Area</th><th>His share</th><th>His FG%</th><th>His pts/g</th><th>${esc(opp)} att. allowed</th><th>${esc(opp)} FG% allowed</th></tr></thead><tbody>${tbl}</tbody></table></div>
+    ${(() => { const B = dvpBoard(M, { ...f, rate: "pg" }); const g = B.agg[opp]?.games || 0; if (!g || !DVP_POS.includes(f.pos)) return "";
+      const keys = ["pts", "reb", "ast", "pra", "fg3m", "fg3a", "fg2m", "fta", "stl", "blk", "tov"];
+      return `<h3 style="margin-top:12px">${esc(opp)} v opposing ${POS_ONE[f.pos]}, every stat</h3><div class="tablewrap"><table class="pit deft dvp"><thead><tr><th class="l">Stat</th><th>Allowed per game</th><th>League</th><th>Rank</th></tr></thead><tbody>${keys.map((k) => { const s = DVP.find((x) => x[0] === k); const L = B.league(f.pos, k); const r = L.rank(opp);
+        return `<tr><td class="l">${esc(s[2])}</td><td>${dvpFmt(s, L.vals[opp])}</td><td>${dvpFmt(s, L.avg)}</td><td class="c ${dvpClass(r, L.n)}" data-tip="signal: ${esc(relWord(dvpRel(M, f.pos, k, g)))}">${r}/${L.n}</td></tr>`; }).join("")}</tbody></table></div>
+        <p class="tiny muted">${g} games; 30/30 = gives up the most to this position. Red = generous, blue = stingy.</p>`; })()}
     <p class="tiny muted">Free throws: he takes ${dmFmt("n", pf.ft[0] / pf.games)} a game (${dmFmt("pct", pf.ft[0] ? pf.ft[1] / pf.ft[0] : null)}). <a href="#nba-defense.${esc(opp)}">Full ${esc(opp)} defence breakdown</a>. Context only: these splits are not inputs to the projection.</p></section>`;
 }
 
@@ -1028,7 +1142,7 @@ async function viewDefense(v, team) {
     <section class="panel"><div class="row between"><h2>Ranks by area</h2><label class="small">Sort by <select id="dsort">${cols.map((c) => `<option value="${c}" ${c === sortKey ? "selected" : ""}>${HEAT_SHORT[c]}</option>`).join("")}</select></label></div>
       <div class="legend"><span><i class="box" style="background:var(--pit-lo2)"></i>Top 4</span><span><i class="box" style="background:var(--pit-lo)"></i>5–10</span><span><i class="box" style="background:var(--pit-hi)"></i>23–28</span><span><i class="box" style="background:var(--pit-hi2)"></i>Bottom 4</span><span><b>Bold</b> = clear evidence</span></div>
       <div class="tablewrap"><table class="pit heatdef"><thead><tr><th class="l">Team</th><th>Games</th>${cols.map((c) => `<th>${HEAT_SHORT[c]}</th>`).join("")}<th class="l">Pattern</th></tr></thead><tbody>
-      ${teams.map((t) => `<tr><td class="l"><a href="#defense.${esc(t.team)}">${esc(t.team)}</a></td><td>${t.games}</td>${cols.map((c) => rankCell(t.metrics[c], t.team)).join("")}<td class="l">${esc(t.summary.tag)}</td></tr>`).join("")}</tbody></table></div>
+      ${teams.map((t) => `<tr><td class="l"><a href="#defense.${esc(t.team)}">${teamTag("nfl", t.team)}</a></td><td>${t.games}</td>${cols.map((c) => rankCell(t.metrics[c], t.team)).join("")}<td class="l">${esc(t.summary.tag)}</td></tr>`).join("")}</tbody></table></div>
       <p class="tiny muted">Measures: Overall = yards per play; Pass = net yards per dropback (sacks and scrambles included); Pass rush = sack rate; Run = yards per designed run by non-quarterbacks; QB runs = quarterback rushing yards per game; v WR / TE / RB = receiving yards to that position per game. ${esc(D.note)}</p></section>
     ${D.reliability && Object.keys(D.reliability).length ? `<section class="panel"><h2>Which of these are real?</h2>
       <p class="small">Most early-season defensive splits are noise. We checked every measure on 2012–2025: how much of a difference seen in a defence's first games carried over into the rest of that season (first fitted on 2012–2021, then checked on 2022–2025). The ranks above already allow for this.</p>
@@ -1046,7 +1160,7 @@ function viewDefenseTeam(v, D, team) {
   const byFacet = {};
   Object.entries(t.metrics).forEach(([k, m]) => { (byFacet[m.facet] ||= []).push([k, m]); });
   const order = ["overall", "pass", "rush", "run", "qb", "vs_WR", "vs_TE", "vs_RB"];
-  v.innerHTML = `<section class="hero"><span class="eyebrow">${D.season} defence · ${t.games} games before week ${D.before_week}</span><h1>${esc(team)} defence</h1>
+  v.innerHTML = `<section class="hero"><span class="eyebrow">${D.season} defence · ${t.games} games before week ${D.before_week}</span><h1 class="withlogo">${logo("nfl", team, "tl hero")}${esc(team)} defence</h1>
       <p><b>${esc(t.summary.tag[0].toUpperCase() + t.summary.tag.slice(1))}.</b> ${t.summary.strong.length ? `Clear strengths: ${esc(t.summary.strong.map(lc1).join("; "))}.` : ""} ${t.summary.weak.length ? `Clear weaknesses: ${esc(t.summary.weak.map(lc1).join("; "))}.` : ""} ${!t.summary.strong.length && !t.summary.weak.length ? "No area is clearly better or worse than average yet; differences so far are within normal game-to-game noise." : ""}</p>
       <p class="small"><a href="#defense">All defences</a></p></section>
     ${order.filter((f) => byFacet[f]).map((f) => `<section class="panel"><h2>${esc(D.facets[f])}</h2><div class="tablewrap"><table class="deft"><thead><tr><th class="l">Measure</th><th>Allowed / usual</th><th>Rank</th><th class="l">Evidence</th></tr></thead><tbody>
@@ -1119,4 +1233,4 @@ async function loadLook() {
   for (const s of ["nfl", "nba"]) { try { LOOK[s] = await api(`/api/visuals/${s}`); } catch { /* no photos: initials are shown */ } }
 }
 shell();
-loadLook().finally(route);
+loadLook().finally(() => { paintMarks(); route(); });

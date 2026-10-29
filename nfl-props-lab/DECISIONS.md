@@ -209,3 +209,17 @@ embedded in the snapshot because the hosted page cannot load other sites' images
 without a photo show initials. Team colours come from the same data sources. The NFL and NBA
 logos are trademarks and are not used; each sport is shown with drawn ball artwork instead.
 The line editor no longer uses the browser prompt, which hosted pages block.
+
+## D-027 (29 Oct 2026) Team and league logos; NBA defence v position for every stat
+The user asked again for NFL and NBA logos and team logos. They are used to identify the sport
+and each team (sport switch, page headers, avatars, game tiles, defence tables), next to the
+app's own name, with no motion; small WebP copies from the same sources as the data (ESPN,
+via the nflverse teams table and SportsDataverse box scores) are cached under data/logos/ and
+embedded in the private snapshot. Supersedes the "logos not used" part of D-026.
+Defence v position now covers points, rebounds (offensive, defensive), assists, PRA, 3PM, 3PA,
+3P%, 2PM, 2PA, 2P%, FTA, steals, blocks and turnovers allowed to opposing guards, forwards and
+centres, per game, per 100 possessions or per 36 minutes at the position, ranked 1-30
+(30 = gives up the most), with split-half reliability for each position and stat
+(full season: guards 0.4-0.7, forwards 0.0-0.6, centres 0.0-0.6; after 10 games mostly
+below 0.25). PG/SG/SF/PF stay unavailable in this source.
+

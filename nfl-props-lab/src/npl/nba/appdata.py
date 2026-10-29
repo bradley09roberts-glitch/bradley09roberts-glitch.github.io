@@ -331,4 +331,5 @@ def visuals(pids: set | None = None) -> dict:
                                ).fetchone()[0] or ""
     if pids is None:
         pids = {c["player_id"] for c in props()["cards"]}
-    return {"teams": _team_colors(sha), "photos": headshots.data_uris("nba", set(pids))}
+    return {"teams": _team_colors(sha), "photos": headshots.data_uris("nba", set(pids)),
+            "logos": headshots.logo_uris("nba")}

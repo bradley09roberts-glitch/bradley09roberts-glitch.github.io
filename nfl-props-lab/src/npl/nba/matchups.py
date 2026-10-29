@@ -20,6 +20,9 @@ APP_SEASONS = (2026, 2027)
 SEASON_LABELS = {2026: "2025-26", 2027: "2026-27"}
 POS_ALL = ("G", "F", "C", "U")
 STYPE = {"REG": "R", "POST": "P", "PLAYIN": "I"}
+# box-score production by opposing position, in this order in each team-game row ("bx")
+BOX_COLS = ["pts", "reb", "ast", "minutes", "fga", "fgm", "fg3a", "fg3m", "fta", "ftm", "oreb",
+            "dreb", "stl", "blk", "tov"]
 
 
 def _team_games() -> pd.DataFrame:
@@ -39,8 +42,7 @@ def team_game_rows(seasons=APP_SEASONS) -> dict:
     pg = canon.load()["player_games"]
     pg = pg[pg.season.isin(seasons) & (pg.participation == "played")]
     # box-score production by opposing position (points, rebounds, assists, minutes, fg)
-    bx = pg.groupby(["game_id", "opp", "pos"])[["pts", "reb", "ast", "minutes", "fga", "fgm",
-                                               "fg3a", "fg3m", "fta", "ftm"]].sum()
+    bx = pg.groupby(["game_id", "opp", "pos"])[BOX_COLS].sum()
     zs = S["def_shots"].set_index(["game_id", "defense", "pos", "zone"])[["fga", "fgm"]]
     ft = S["def_ft"].set_index(["game_id", "defense", "pos"])[["fta", "ftm"]]
     fo = S["def_fouls"].set_index(["game_id", "defense"])[["fouls", "shooting_fouls"]]
@@ -71,9 +73,8 @@ def team_game_rows(seasons=APP_SEASONS) -> dict:
         bb = bx_d.get(key)
         if bb is not None:
             for (_, _, pos), a in bb.iterrows():
-                b[pos] = [int(a.pts), int(a.reb), int(a.ast), round(float(a.minutes), 1),
-                          int(a.fga), int(a.fgm), int(a.fg3a), int(a.fg3m), int(a.fta),
-                          int(a.ftm)]
+                b[pos] = [round(float(a[c]), 1) if c == "minutes" else int(a[c])
+                          for c in BOX_COLS]
         fl = fo.loc[key] if key in fo.index else None
         out.setdefault(str(int(r.season)), {}).setdefault(r.team, []).append({
             "g": r.game_id, "d": r.date.strftime("%Y-%m-%d"), "h": int(bool(r.is_home)),
@@ -83,6 +84,10 @@ def team_game_rows(seasons=APP_SEASONS) -> dict:
             "sf": int(fl.shooting_fouls) if fl is not None else None,
             "z": z, "ft": f, "bx": b})
     return out
+
+
+BOX_STATS = ("pts", "reb", "oreb", "dreb", "ast", "pra", "fg3m", "fg3a", "fg2m", "fg2a", "fta", "stl",
+             "blk", "tov", "minutes")
 
 
 def reliability(seasons=(2023, 2024, 2025, 2026)) -> dict:
@@ -133,10 +138,24 @@ def reliability(seasons=(2023, 2024, 2025, 2026)) -> dict:
             add(f"{pos}|{zn}|pct", pct.xs(0, level="half"), pct.xs(1, level="half"))
     tot = tg.groupby(["season", "team", "half"]).pts_allowed.sum() / poss
     add("ALL|pts_per100", tot.xs(0, level="half"), tot.xs(1, level="half"))
+    # box-score stats allowed to each opposing position, per game
+    pg = canon.load()["player_games"]
+    pg = pg[pg.season.isin(seasons) & (pg.participation == "played")].copy()
+    pg["fg2m"], pg["fg2a"] = pg.fgm - pg.fg3m, pg.fga - pg.fg3a
+    pg["pra"] = pg.pts + pg.reb + pg.ast
+    pg = pg.merge(tg[["game_id", "team", "half"]].rename(columns={"team": "opp"}),
+                  on=["game_id", "opp"])
+    ngames = tg.groupby(["season", "team", "half"]).size()
+    for pos in ("G", "F", "C"):
+        g = pg[pg.pos == pos].groupby(["season", "opp", "half"])[list(BOX_STATS)].sum()
+        g = g.div(ngames.rename_axis(["season", "opp", "half"]).reindex(g.index), axis=0)
+        for s in BOX_STATS:
+            add(f"{pos}|box|{s}", g[s].xs(0, level="half"), g[s].xs(1, level="half"))
     return out
 
 
 RELIABILITY_FILE = shots.SHOTS_LAKE / "def_reliability.json"
+RELIABILITY_VERSION = 2  # 2: adds box-score stats by opposing position
 
 
 def cached_reliability() -> dict:
@@ -146,12 +165,13 @@ def cached_reliability() -> dict:
     src = (shots.SHOTS_LAKE / "def_shots.parquet").stat().st_mtime
     try:
         d = json.loads(RELIABILITY_FILE.read_text())
-        if d.get("source_mtime") == src:
+        if d.get("source_mtime") == src and d.get("version") == RELIABILITY_VERSION:
             return d["reliability"]
     except (OSError, ValueError):
         pass
     r = reliability()
-    RELIABILITY_FILE.write_text(json.dumps({"source_mtime": src, "reliability": r}))
+    RELIABILITY_FILE.write_text(json.dumps({"source_mtime": src, "version": RELIABILITY_VERSION,
+                                            "reliability": r}))
     return r
 
 
@@ -187,8 +207,7 @@ def payload() -> dict:
             "two": list(shots.TWO), "three": list(shots.THREE),
             "positions": {"G": "Guards", "F": "Forwards", "C": "Centres"},
             "unavailable_positions": ["PG", "SG", "SF", "PF"],
-            "box_cols": ["pts", "reb", "ast", "min", "fga", "fgm", "fg3a", "fg3m", "fta",
-                         "ftm"],
+            "box_cols": BOX_COLS,
             "rows": team_game_rows(), "reliability": cached_reliability(),
             "updated": {"play_by_play": upd.get("nba_pbp"),
                         "box_scores": upd.get("nba_player_box"),

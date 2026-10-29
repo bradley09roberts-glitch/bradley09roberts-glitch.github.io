@@ -1,4 +1,4 @@
-"""Player photos for the app: small square WebP thumbnails, cached locally.
+"""Player photos and team and league logos for the app: small WebP thumbnails, cached locally.
 
 NBA photos come from ESPN's headshot path for the player's ESPN id (the same ids as the box
 scores); NFL photos from the headshot address in the nflverse player table. Thumbnails are cut
@@ -78,3 +78,66 @@ def data_uris(sport: str, pids: set[str]) -> dict[str, str]:
     d = DIR / sport
     return {p: "data:image/webp;base64," + base64.b64encode((d / f"{p}.webp").read_bytes()).decode()
             for p in sorted(pids) if (d / f"{p}.webp").exists()}
+
+
+# ------------------------------------------------------------------ team and league logos
+LEAGUE_LOGO = "https://a.espncdn.com/i/teamlogos/leagues/500/{sport}.png"
+LOGO_SIZE = 96
+
+
+def _logo_thumb(raw: bytes) -> bytes:
+    from PIL import Image
+
+    im = Image.open(io.BytesIO(raw)).convert("RGBA")
+    im.thumbnail((LOGO_SIZE, LOGO_SIZE), Image.LANCZOS)
+    out = io.BytesIO()
+    im.save(out, "WEBP", quality=90, method=6)
+    return out.getvalue()
+
+
+def logo_urls(sport: str) -> dict[str, str]:
+    """Team logo addresses from the same sources as the data (nflverse teams table for the
+    NFL, the SportsDataverse box scores for the NBA), plus the league logo under '_league'."""
+    if sport == "nfl":
+        from . import appdata
+
+        L = appdata.lake()
+        cur = set(L["games"].query("season == season.max()")[["home_team", "away_team"]].values.ravel())
+        t = L["teams"]
+        urls = {r.team_abbr: r.team_logo_espn for r in t.itertuples()
+                if r.team_abbr in cur and isinstance(r.team_logo_espn, str)}
+    else:
+        from . import db
+        from .nba import live
+
+        b, _ = live._latest(db.connect(), "nba_player_box")
+        b = b.drop_duplicates("team_abbreviation")
+        urls = {r.team_abbreviation: r.team_logo for r in b.itertuples() if isinstance(r.team_logo, str)}
+    urls["_league"] = LEAGUE_LOGO.format(sport=sport)
+    return urls
+
+
+def fetch_logos(sport: str) -> dict:
+    d = DIR.parent / "logos" / sport
+    d.mkdir(parents=True, exist_ok=True)
+    out = {"cached": 0, "new": 0, "failed": 0}
+    for abbr, url in logo_urls(sport).items():
+        f = d / f"{abbr}.webp"
+        if f.exists():
+            out["cached"] += 1
+            continue
+        try:
+            f.write_bytes(_logo_thumb(http_get(url, timeout=30, max_tries=2).content))
+            out["new"] += 1
+        except (FetchError, OSError, ValueError) as e:
+            log.info("no logo for %s %s: %s", sport, abbr, e)
+            out["failed"] += 1
+    return out
+
+
+def logo_uris(sport: str) -> dict[str, str]:
+    d = DIR.parent / "logos" / sport
+    if not d.exists():
+        return {}
+    return {f.stem: "data:image/webp;base64," + base64.b64encode(f.read_bytes()).decode()
+            for f in sorted(d.glob("*.webp"))}

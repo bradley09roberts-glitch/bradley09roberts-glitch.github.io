@@ -44,6 +44,7 @@ def _add_nba(data: dict, min_p_play: float = 0.3) -> None:
         pass
     pids = {c["player_id"] for c in props["cards"]}
     headshots.fetch("nba", pids)
+    headshots.fetch_logos("nba")
     data["/api/visuals/nba"] = nba.visuals(pids)
     for pid in sorted(pids):
         sp = nba.shot_profile(pid)
@@ -97,6 +98,7 @@ def build(out: Path, *, min_p_play: float = 0.5, model: str | None = None,
         p["game_log"] = [{k: g.get(k) for k in lkeep} for g in p["game_log"]]
         data[f"/api/player/{pid}"] = p
     headshots.fetch("nfl", set(players))
+    headshots.fetch_logos("nfl")
     data["/api/visuals/nfl"] = appdata.visuals(set(players))
     _add_nba(data)
     snap = {"built_at": utcnow().isoformat(), "built_london": london(utcnow()), "data": data}
