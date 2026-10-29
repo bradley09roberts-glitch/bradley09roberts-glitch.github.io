@@ -102,3 +102,11 @@ Not used:
 Odds: The Odds API lists NBA player props (`player_points`, `player_rebounds`,
 `player_assists`, `player_threes`, `player_points_rebounds_assists`, alternates and
 combos) mainly at US books and DFS sites; no UK bookmaker is listed for NBA props.
+
+### ESPN game feeds (provisional box scores, added 29 Oct 2026)
+`site.api.espn.com/apis/site/v2/sports/basketball/nba/summary?event=<game id>`, public, no key.
+Used only for finished games SportsDataverse has not published yet (usually the previous
+night), stored unchanged under raw/espn/nba_summary/ and replaced by SportsDataverse when it
+arrives (D-025). Each fetch stores a new copy because the feed also carries changing extras
+(news, odds); the box score itself is what is read.
+

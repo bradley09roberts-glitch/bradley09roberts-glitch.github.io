@@ -16,7 +16,7 @@ import pandas as pd
 from .. import db
 from ..config import DATA_HOME
 from ..util import iso, utcnow
-from . import source
+from . import espn, source
 
 NBA_LAKE = DATA_HOME / "nba" / "lake"
 SEASON_TYPES = {2: "REG", 3: "POST", 5: "PLAYIN"}
@@ -34,8 +34,23 @@ def _raw_box(con: sqlite3.Connection) -> pd.DataFrame:
         "SELECT part, path FROM raw_files WHERE source=? AND dataset='nba_player_box' AND "
         "is_synthetic=0 ORDER BY retrieved_at, id", (source.SOURCE,)).fetchall()
     latest = {r["part"]: r["path"] for r in rows}  # last stored version per season
-    return pd.concat([pd.read_parquet(DATA_HOME / p) for p in latest.values()],
-                     ignore_index=True)
+    d = pd.concat([pd.read_parquet(DATA_HOME / p) for p in latest.values()],
+                  ignore_index=True).assign(box_source="sportsdataverse")
+    # games SportsDataverse has not published yet, from stored ESPN feeds (espn.py)
+    e = espn.stored_rows(con, exclude=set(d.game_id.dropna().astype("int64").astype(str)))
+    return pd.concat([d, e], ignore_index=True) if len(e) else d
+
+
+def sdv_current_game_ids(con: sqlite3.Connection) -> set[str]:
+    """Games in the latest SportsDataverse box-score file of the current season."""
+    r = con.execute(
+        "SELECT path FROM raw_files WHERE source=? AND dataset='nba_player_box' AND part=? AND "
+        "is_synthetic=0 ORDER BY retrieved_at DESC, id DESC LIMIT 1",
+        (source.SOURCE, str(source.CURRENT_SEASON))).fetchone()
+    if r is None:
+        return set()
+    g = pd.read_parquet(DATA_HOME / r["path"], columns=["game_id"]).game_id
+    return set(g.dropna().astype("int64").astype(str))
 
 
 def build(con: sqlite3.Connection | None = None) -> dict:
@@ -54,7 +69,7 @@ def build(con: sqlite3.Connection | None = None) -> dict:
     # ESPN athlete ids are integers; some season files store them as floats, so normalise to
     # plain integer strings (the same form as the injury snapshots)
     d["player_id"] = d.athlete_id.astype("int64").astype(str)
-    tip = pd.to_datetime(d.game_date_time, utc=True)
+    tip = pd.to_datetime(d.game_date_time, utc=True, format="mixed")
     dnp = d.did_not_play.fillna(False).astype(bool)
     pg = pd.DataFrame({
         "game_id": d.game_id, "season": d.season.astype(int),
@@ -63,6 +78,7 @@ def build(con: sqlite3.Connection | None = None) -> dict:
         "team": d.team_abbreviation, "opp": d.opponent_team_abbreviation,
         "is_home": d.home_away.eq("home"), "starter": d.starter.fillna(False).astype(bool),
         "pos": d.athlete_position_abbreviation.map(POS_GROUP).fillna("F"),
+        "box_source": d.box_source,
     })
     for k, c in STATS.items():
         pg[k] = pd.to_numeric(d[c], errors="coerce")
@@ -94,6 +110,8 @@ def build(con: sqlite3.Connection | None = None) -> dict:
     manifest = {"built_at": iso(utcnow()), "counts": {"games": len(games),
                 "player_games": len(pg), "team_games": len(tg)},
                 "participation": pg.participation.value_counts().to_dict(),
+                "provisional_games": sorted(pg.loc[pg.box_source != "sportsdataverse",
+                                                   "game_id"].unique().tolist()),
                 "seasons": sorted(int(s) for s in games.season.unique())}
     (NBA_LAKE / "build_manifest.json").write_text(json.dumps(manifest, indent=1))
     return manifest

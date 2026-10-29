@@ -106,13 +106,24 @@ def cmd_snapshot(a) -> int:
 
 def cmd_nba(a) -> int:
     """NBA jobs: update (fetch + build), publish (edition for an ET date), settle, quotes."""
+    import pandas as pd
+
     from .nba import canon, live, settle, source
 
     con = db.connect()
     if a.action == "update":
         out = source.fetch(con, seasons=[source.CURRENT_SEASON], max_age_hours=a.max_age_hours,
                            force=a.force)
-        out["build"] = canon.build(con)["counts"]
+        # games finished but not yet in SportsDataverse: provisional rows from ESPN feeds
+        from .nba import espn
+        sched, _ = live._latest(con, "nba_schedule")
+        recent = sched[sched.season_type.isin(canon.SEASON_TYPES) &
+                       (pd.to_datetime(sched.date, utc=True) >
+                        pd.Timestamp.now(tz="UTC") - pd.Timedelta(days=3))]
+        out["espn"] = espn.fetch(con, espn.missing_games(recent, canon.sdv_current_game_ids(con)))
+        manifest = canon.build(con)
+        out["build"] = manifest["counts"]
+        out["provisional_games"] = manifest["provisional_games"]
         from .nba import shots
         out["shots"] = shots.build(con)
     elif a.action == "publish":

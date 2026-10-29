@@ -188,3 +188,13 @@ minutes more than in close games, but score about 2.5% more per minute, so their
 already forecast without bias. N1 stays nba-0.1, and live builds do not collect spreads. The
 spread remains useful context on the slate, not a model input.
 
+
+## D-025 (29 Oct 2026) Provisional NBA box scores from ESPN game feeds
+SportsDataverse publishes box scores about 12 hours after games, so teams on the second night
+of a back-to-back were forecast without their previous game, and early lines could not be
+used. `npl nba update` now also fetches the ESPN game feed (the same feed SportsDataverse
+is built from) for finished games of the last 3 days that SportsDataverse lacks, stores it
+unchanged, and builds those games from it, labelled box_source = espn_provisional. As soon as
+SportsDataverse has a game, its version is used instead. Check on four 27 Oct games present
+in both: same players, starters, positions and statistics (981 values, no real differences).
+Settlement waits for SportsDataverse unless a game stays missing.
