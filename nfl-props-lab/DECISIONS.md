@@ -233,3 +233,13 @@ gap / 3) with the lowest price worth taking. NBA cards flag 15+ point gaps as no
 a selection rule, not a model change, and is reviewed as nights accumulate; two nights are a
 small sample.
 
+## D-029 (30 Oct 2026) Returning-teammate weighting of NFL usage shares not adopted
+After MarShawn Lloyd's 3 carries against a forecast of 7.1 (Josh Jacobs back from reserve), we
+tested giving less weight to a player's past games in which a bigger-role teammate now on the
+roster did not play (exp10). On 2018-2021 and on the 2022-2023 validation seasons it made the
+prediction of who gets each team's carries and targets worse at every weight tried, beyond noise.
+Likely reasons: fill-in roles partly persist, and dropping those games thins the player's
+history so his share is pulled further towards the generic position prior. The option stays in
+features.py switched off (ctx_absent_weight = 1.0) so the experiment can be re-run; live
+editions are unchanged.
+
