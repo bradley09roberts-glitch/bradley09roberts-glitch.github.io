@@ -112,9 +112,10 @@ def build(date_et: str, con: sqlite3.Connection | None = None, now: datetime | N
         return {"error": f"no unplayed games on {date_et}"}
     allg = pd.concat([games[games.tip_utc < now], sg[games.columns.intersection(sg.columns)]],
                      ignore_index=True)
-    cand = M.candidates(pg, allg)
-    cand = cand[cand.game_id.isin(sg.game_id) & ~cand.first_listing.fillna(False)]
-    x = M.assemble(cand, M.player_states(pg, p), M.team_states(tg[tg.tip_utc < now], p))
+    cand_all = M.candidates(pg, allg)
+    cand = cand_all[cand_all.game_id.isin(sg.game_id) & ~cand_all.first_listing.fillna(False)]
+    ps = M.player_states(pg, p)
+    x = M.assemble(cand, ps, M.team_states(tg[tg.tip_utc < now], p))
     x = M.availability_features(x, pg, allg)
     x = x[x.n_played.notna()].reset_index(drop=True)  # no NBA minutes yet: no forecast
     injn = injuries_now(inj, sched, now)
@@ -129,6 +130,19 @@ def build(date_et: str, con: sqlite3.Connection | None = None, now: datetime | N
     st = x.fantasy.fillna("")
     x["p_play"] = np.where(st.isin(["OUT", "OFS"]), INJ_OUT_P,
                            np.where(st.eq("GTD"), base * INJ_GTD_MULT, base))
+    # lineup-aware minutes (nba-0.2): teammates listed out tonight v those missing in the games
+    # behind each player's recent minutes (observed absences in the last 400 days of candidates)
+    recent = cand_all[(cand_all.tip_utc < now) &
+                      (cand_all.tip_utc >= pd.Timestamp(now) - pd.Timedelta(days=400))]
+    hist = _asof_states(recent, ps)
+    # tonight a candidate is missing with chance 1 - P(plays): certain for players listed Out,
+    # the injury-report figure for game-time decisions, and otherwise the availability model's,
+    # calibrated by team games played this season (it over-predicts absences early on; n07)
+    n_team = pg[pg.season == source.CURRENT_SEASON].groupby("team").game_id.nunique()
+    cal = M.lineup_cal_factor(p.lineup_cal, x.team.map(n_team).fillna(0).to_numpy())
+    absent_w = np.where(st.isin(["OUT", "OFS"]), 1.0,
+                        np.where(st.eq("GTD"), 1 - x.p_play, (1 - x.p_play) * cal))
+    x = M.apply_lineup(x, absent_w, hist, p, pg)
     lg = M.league_rates(L["player_games"], L["team_games"], B.FIT_SEASONS)
     pms = {"N1": M.n1_pmfs(x, p, lg), "A": M.baseline_pmfs(x, p, "A"),
            "C": M.baseline_pmfs(x, p, "C")}
@@ -136,6 +150,11 @@ def build(date_et: str, con: sqlite3.Connection | None = None, now: datetime | N
             "inputs": {"schedule": sched_meta, "injuries": inj_meta, "injuries_live": live_meta,
                        "box_last_tip": iso(pg.tip_utc.max()),
                        "injury_snapshot": injn.as_of_date.max() if len(injn) else None}}
+
+
+def _asof_states(cand: pd.DataFrame, ps: pd.DataFrame) -> pd.DataFrame:
+    """Candidate rows of past games with each player's expected minutes before that game."""
+    return M._asof(cand, ps[["player_id", "tip_utc", "min_mu"]], "player_id")
 
 
 def _trim(pm: np.ndarray) -> Dist:
@@ -175,6 +194,7 @@ def publish(date_et: str, kind: str = "early", con: sqlite3.Connection | None = 
                         "status": r.status, "fantasy": r.fantasy, "detail": r.detail,
                         "as_of": r.as_of_date, "source": r.injury_source},
                     "minutes_expected": round(float(r.min_mu), 1),
+                    "minutes_lineup_shift": round(float(r.min_mu - r.min_mu_base), 1),
                     "mean": round(d.mean(), 2), "median": d.median(),
                     "q10": d.quantile(0.1), "q90": d.quantile(0.9), "dist": d.to_json()})
     eid = f"NBA-{date_et}-{kind}-{now.strftime('%Y%m%dT%H%MZ')}"
@@ -185,8 +205,9 @@ def publish(date_et: str, kind: str = "early", con: sqlite3.Connection | None = 
            "notes": ["Distributions are conditional on the player taking part; P(plays) is "
                      "separate. Injury reports: ESPN's game feeds at publish time (see "
                      "inputs.injuries_live). Injury adjustments (Out 1%, game-time decision "
-                     "x0.65) are assumptions, not validated. Minutes do not yet react to teammates "
-                     "ruled out. No bookmaker prices were used."],
+                     "x0.65) are assumptions, not validated. Minutes react to teammates listed out "
+                     "tonight and to teammates back from absences (nba-0.2, D-036); shots per "
+                     "minute do not. No bookmaker prices were used."],
            "games": [{"game_id": g.game_id, "home": g.home, "away": g.away,
                       "tip_utc": iso(g.tip_utc), "time_valid": bool(g.time_valid),
                       "published_before_tip": now < g.tip_utc} for g in sg.itertuples()],

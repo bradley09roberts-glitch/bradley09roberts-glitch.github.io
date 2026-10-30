@@ -34,6 +34,9 @@ def frame(p: M.Params | None = None) -> tuple[pd.DataFrame, dict]:
         columns={s: f"{s}_y" for s in [*M.BASE_STATS, "minutes"]})
     x = x.merge(y, on=["game_id", "player_id"], how="left")
     x = M.availability_features(x, pg, games)
+    if p.lineup:  # lineup-aware minutes, absences as observed (known before tip; n07)
+        x = M.apply_lineup(x.reset_index(drop=True), M.observed_absent(x.reset_index(drop=True)),
+                           x, p, pg)
     # incomplete box scores: team minutes far below regulation
     bad = set(tg.loc[tg.minutes < 235, "game_id"])
     x["box_incomplete"] = x.game_id.isin(bad)

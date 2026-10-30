@@ -648,11 +648,11 @@ function nbaCard(c, idx) {
     ${marketRow(c, L, line)}
     ${hitChips(c.log, line, c.opponent)}
     ${miniBars(c.log, line, 10)}
-    <div class="facts"><span data-tip="Chance he plays|${c.injury ? "Includes the injury report (assumed effect, not validated)" : "From recent appearances"}">Plays ${pct(c.p_play)}</span><span>Min ${dec(c.minutes_expected, 0)}</span><span>80% range ${c.q10}–${c.q90}</span>
+    <div class="facts"><span data-tip="Chance he plays|${c.injury ? "Includes the injury report (assumed effect, not validated)" : "From recent appearances"}">Plays ${pct(c.p_play)}</span><span data-tip="Expected minutes|${c.minutes_lineup_shift ? `Includes ${c.minutes_lineup_shift > 0 ? "+" : ""}${dec(c.minutes_lineup_shift, 1)} for teammates out tonight or back from absences` : "No change for teammates in or out"}">Min ${dec(c.minutes_expected, 0)}${c.minutes_lineup_shift && Math.abs(c.minutes_lineup_shift) >= 1 ? ` <small>(${c.minutes_lineup_shift > 0 ? "+" : "−"}${dec(Math.abs(c.minutes_lineup_shift), 0)})</small>` : ""}</span><span>80% range ${c.q10}–${c.q90}</span>
       ${o ? `<span class="mu ${rankTone(o.rank)}" data-tip="${esc(c.opponent)} defence v ${esc(NBA_SHORT[c.market === "pra" ? "pts" : c.market])}|Rank ${o.rank} of 30 (1 = allows least); model factor ${o.factor > 1 ? "+" : ""}${((o.factor - 1) * 100).toFixed(1)}%">Matchup ${o.rank}/30</span>` : ""}
       ${dvpChip(c)}
       ${c.opp_pace ? `<span data-tip="${esc(c.opponent)} pace|${c.opp_pace.value} possessions per 48 min (rank ${c.opp_pace.rank})">Pace ${c.opp_pace.rank}/30</span>` : ""}</div>
-    ${c.teammates_out && c.teammates_out.length ? `<div class="warnline">${ICONS.warn}<span>${c.teammates_out.map((t) => esc(t.name)).join(", ")} ruled out after playing last game: extra minutes and shots are not in this projection yet.</span></div>` : ""}
+    ${c.teammates_out && c.teammates_out.length ? `<div class="warnline">${ICONS.warn}<span>${c.teammates_out.map((t) => esc(t.name)).join(", ")} ruled out after playing last game: his minutes are shared out in this projection, but extra shots per minute are not.</span></div>` : ""}
     ${wowyBlock(c, line)}
   </article>`;
 }

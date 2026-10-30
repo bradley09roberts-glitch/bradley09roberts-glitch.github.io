@@ -197,6 +197,7 @@ def _props() -> dict:
             **{k: f[k] for k in ("game_id", "player_id", "name", "team", "opponent", "position",
                                  "market", "p_play", "injury", "minutes_expected", "mean",
                                  "median", "q10", "q90", "dist")},
+            "minutes_lineup_shift": f.get("minutes_lineup_shift"),
             "market_label": M.MARKET_LABELS[f["market"]], "model": e["headline_model"],
             "tip_utc": g["tip_utc"], "tip_london": _london(g["tip_utc"]),
             "is_home": g["home"] == f["team"],

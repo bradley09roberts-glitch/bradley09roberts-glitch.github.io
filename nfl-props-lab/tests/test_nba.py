@@ -148,3 +148,43 @@ def test_absence_adjust_counts_only_what_recent_form_has_not_absorbed():
     out = M.absence_adjust(x, np.array([True, False, False, False]), np.ones(4), 1.0, 0.0, M.Params())
     assert out.min_mu.tolist() == pytest.approx([30.0, 30.0, 15.0, 25.0])   # half of 30 freed
     assert (out.rmult_pts == 1.0).all()
+
+
+def test_absent_minutes_counts_teammates_only_and_by_position():
+    import numpy as np
+    import pandas as pd
+
+    from npl.nba import model as M
+    x = pd.DataFrame({"game_id": ["g"] * 4, "team": ["MIN"] * 4, "pos": ["G", "G", "F", "C"],
+                      "min_mu": [34.0, 20.0, 30.0, 25.0]})
+    tot, pos = M.absent_minutes(x, np.array([1.0, 0.0, 0.5, 0.0]))
+    assert tot.tolist() == [15.0, 49.0, 34.0, 49.0]   # 34 (out) + 15 (half of 30), minus own
+    assert pos.tolist() == [0.0, 34.0, 0.0, 0.0]
+
+
+def test_lineup_shift_two_sided():
+    import pandas as pd
+
+    from npl.nba import model as M
+    coef = {"d_tot": 0.1, "d_tot_r": 0.0, "d_tot_r2": 0.0, "d_pos": 0.0, "d_pos_r": 0.0}
+    x = pd.DataFrame({"d_tot": [20.0, -20.0, 0.0], "d_tot_r": 0, "d_tot_r2": 0, "d_pos": 0, "d_pos_r": 0})
+    # more teammate minutes missing than usual -> more minutes; teammates back -> fewer
+    assert M.lineup_shift(x, coef).tolist() == [2.0, -2.0, 0.0]
+
+
+def test_frozen_params_are_nba_0_2_with_lineup():
+    import json
+
+    from npl.nba import model as M
+    d = json.loads(M.frozen_path().read_text())
+    assert d["model_version"] == M.MODEL_VERSION == "nba-0.2"
+    assert set(M.load_params().lineup) == set(M.LINEUP_FEATURES)
+
+
+def test_lineup_cal_factor_by_team_games_played():
+    import numpy as np
+
+    from npl.nba import model as M
+    cal = {"0-5": 0.7, "5-10": 0.9, "10-999": 1.0}
+    assert M.lineup_cal_factor(cal, np.array([0, 4, 5, 12])).tolist() == [0.7, 0.7, 0.9, 1.0]
+    assert M.lineup_cal_factor(None, np.array([3])).tolist() == [1.0]

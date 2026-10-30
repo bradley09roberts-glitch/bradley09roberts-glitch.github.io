@@ -309,3 +309,18 @@ matchup moved points by about 0.2 a game and in the wrong direction (players wit
 matchups scored slightly below N1, the worst slightly above), consistent with field-goal
 percentage allowed by zone being mostly luck. It is not added to the model or the pick rules;
 the shot-zone and defence-by-position pages stay as research views.
+
+## D-036 (30 Oct 2026) NBA model nba-0.2: lineup-aware minutes
+A player's recent-form minutes mix games in which teammates were missing with full-strength
+games, so N1 over-predicted minutes by about 1.4 when everyone played and was roughly right when
+a regular was out (n05). nba-0.2 compares the teammate minutes missing tonight with those
+missing in the games behind his recent minutes (same team, players listed this season; all and
+same position group) and moves his expected minutes by a pooled fit on 2018-2023 (bench players
+absorb most of the change; starters little). On 2024-2025 (n07) every market improved: points
+CRPS -1.7% when absences are known before tip, -0.5% in a pessimistic version where a first
+missed game is a surprise; it adds nothing if absences are only guessed from recent
+appearances, so live editions use ESPN's injury report (D-033): players listed Out count as
+missing, game-time decisions by their chance of sitting, everyone else by the availability
+model, scaled down in a team's first ten games, where that model over-predicts absences (factor
+measured on 2018-2023). Shots per minute are unchanged; the starter-out pick rule (D-032) stays.
+nba-0.1 parameters are kept (reports/nba/model/n1_params_nba-0.1.json) for earlier editions.

@@ -29,7 +29,7 @@ MARKET_LABELS = {"pts": "Points", "reb": "Rebounds", "ast": "Assists", "fg3m": "
                  "pra": "Pts + Reb + Ast"}
 MAX_K = {"pts": 80, "reb": 35, "ast": 30, "fg3m": 15, "pra": 110}
 MIN_GRID = np.arange(1, 49, 1.0)  # minutes grid for the mixture
-MODEL_VERSION = "nba-0.1"
+MODEL_VERSION = "nba-0.2"  # nba-0.2: lineup-aware minutes (n07, D-036)
 
 
 @dataclass
@@ -47,6 +47,10 @@ class Params:
     use_pace: bool = True
     use_opp: bool = True
     min_resid: dict | None = None  # empirical minutes residuals (fit_minutes_residuals)
+    lineup: dict | None = None  # lineup-aware minutes coefficients (n07); None = off
+    # live only: observed / predicted missing minutes by team games played this season, from the
+    # fit seasons; P(plays) over-predicts absences in a team's first games (n07)
+    lineup_cal: dict | None = None
     disp: dict = field(default_factory=lambda: {"pts": 8.0, "reb": 35.0, "ast": 35.0,
                                                 "fg3m": 12.0})
     disp_a: dict = field(default_factory=lambda: {"pts": 5.0, "reb": 12.0, "ast": 12.0,
@@ -232,6 +236,108 @@ def absence_adjust(x: pd.DataFrame, absent: np.ndarray, p_avail: np.ndarray, alp
         lost = np.bincount(inv, weights=w_rate * prod, minlength=G)
         share = np.where(team > 0, lost / np.where(team > 0, team, 1), 0.0)
         x[f"rmult_{s}"] = np.where(rec, 1 + gamma * share[inv], 1.0)
+    return x
+
+
+# --------------------------------------------------------------------------- lineup-aware minutes
+# n07: a player's recent-form minutes (min_mu) mix games in which teammates were missing with
+# games at full strength. The adjustment compares the teammate minutes missing tonight with the
+# teammate minutes missing in the games behind his min_mu (same weights), in total and at his
+# own position group, and moves min_mu by a pooled regression on that difference.
+LINEUP_FEATURES = ("d_tot", "d_tot_r", "d_tot_r2", "d_pos", "d_pos_r")
+
+
+def season_active(x: pd.DataFrame, pg: pd.DataFrame) -> np.ndarray:
+    """Candidate rows whose player has been listed for this team this season at or before the
+    game (players who left in the summer stay candidates for a while but never appear)."""
+    first = (pg.groupby(["player_id", "team", "season"]).tip_utc.min()
+             .rename("first_listed").reset_index())
+    f = x[["player_id", "team", "season", "tip_utc"]].merge(first, how="left",
+                                                           on=["player_id", "team", "season"])
+    return (f.first_listed.notna() & (f.first_listed <= f.tip_utc)).to_numpy()
+
+
+def absent_minutes(x: pd.DataFrame, absent_w: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """Expected minutes of teammates missing from each row's team-game (all, and same position
+    group), excluding the row's own. absent_w in [0, 1]: chance the player is missing; rows with
+    `active` False (if present) are not counted."""
+    w = np.clip(np.nan_to_num(absent_w), 0, 1)
+    if "active" in x:
+        w = w * x.active.to_numpy(bool)
+    mu = x.min_mu.fillna(0).to_numpy(float) * w
+    key = (x.game_id.astype(str) + "|" + x.team.astype(str)).to_numpy()
+    kp = key + "|" + x.pos.astype(str).to_numpy()
+    tot = pd.Series(mu).groupby(key).transform("sum").to_numpy() - mu
+    pos = pd.Series(mu).groupby(kp).transform("sum").to_numpy() - mu
+    return tot, pos
+
+
+def lineup_states(hist: pd.DataFrame, p: Params) -> pd.DataFrame:
+    """Post-game exponentially weighted teammate-minutes-missing for each player, over the games
+    he PLAYED (the same games and half-life as min_mu); hist needs f_tot and f_pos."""
+    h = hist[hist.participation == "played"].sort_values(["player_id", "tip_utc"])
+    h = h.assign(pt=h.player_id.astype(str) + "|" + h.team.astype(str))
+    g = h.groupby("pt", sort=False)  # only his games for the same team
+    out = h[["pt", "tip_utc"]].copy()
+    for c in ("f_tot", "f_pos"):
+        out[f"{c}_hist"] = g[c].transform(lambda v: v.ewm(halflife=p.hl_min).mean())
+    return out
+
+
+def lineup_features(x: pd.DataFrame, states: pd.DataFrame) -> pd.DataFrame:
+    """Tonight (f_tot, f_pos on x) minus history (as of his previous game), and the regression
+    features; rows without history get zeros (no adjustment)."""
+    x = _asof(x.assign(pt=x.player_id.astype(str) + "|" + x.team.astype(str)), states, "pt")
+    x = x.drop(columns="pt")
+    r = (x.min_mu.fillna(0) / 36).to_numpy()
+    d_tot = (x.f_tot - x.f_tot_hist).fillna(0).to_numpy()
+    d_pos = (x.f_pos - x.f_pos_hist).fillna(0).to_numpy()
+    x["d_tot"], x["d_pos"] = d_tot, d_pos
+    x["d_tot_r"], x["d_tot_r2"], x["d_pos_r"] = d_tot * r, d_tot * r * r, d_pos * r
+    return x
+
+
+def lineup_cal_factor(cal: dict | None, n_games: np.ndarray) -> np.ndarray:
+    """Calibration factor for predicted absences by team games played this season."""
+    out = np.ones(len(n_games))
+    for k, v in (cal or {}).items():
+        lo, hi = (int(z) for z in k.split("-"))
+        out[(n_games >= lo) & (n_games < hi)] = v
+    return out
+
+
+def lineup_shift(x: pd.DataFrame, coef: dict) -> np.ndarray:
+    z = np.column_stack([x[f].to_numpy(float) for f in LINEUP_FEATURES])
+    return z @ np.array([coef[f] for f in LINEUP_FEATURES])
+
+
+def observed_absent(h: pd.DataFrame) -> np.ndarray:
+    """Missing from a past game: any candidate who did not play (not listed, or no minutes), so
+    that live editions can use 1 - P(plays), which predicts exactly that."""
+    return (h.participation != "played").to_numpy(float)
+
+
+def apply_lineup(x: pd.DataFrame, absent_w: np.ndarray, hist: pd.DataFrame, p: Params,
+                 pg: pd.DataFrame) -> pd.DataFrame:
+    """Move min_mu by the lineup adjustment (p.lineup). absent_w: chance each row of x misses
+    its game (live: injury report; backtest: observed). hist: candidate rows of earlier games
+    with participation and min_mu, whose absences are the observed ones. pg: box-score rows
+    (who has been listed for which team this season). Keeps x's row order; the unadjusted value
+    stays in min_mu_base."""
+    x = x.copy()
+    if not p.lineup:
+        x["min_mu_base"] = x.min_mu
+        return x
+    x["_row"] = np.arange(len(x))
+    x["active"] = season_active(x, pg)
+    x["f_tot"], x["f_pos"] = absent_minutes(x, absent_w)
+    h = hist[hist.min_mu.notna()].copy()
+    h["active"] = season_active(h, pg)
+    h["f_tot"], h["f_pos"] = absent_minutes(h, observed_absent(h))
+    x = lineup_features(x, lineup_states(h, p)).sort_values("_row").drop(columns="_row")
+    x = x.reset_index(drop=True)
+    x["min_mu_base"] = x.min_mu
+    x["min_mu"] = np.clip(x.min_mu + lineup_shift(x, p.lineup), 1, 46).where(x.min_mu.notna())
     return x
 
 
@@ -438,6 +544,8 @@ def availability_features(x: pd.DataFrame, pg: pd.DataFrame, games: pd.DataFrame
 
 
 def avail_matrix(x: pd.DataFrame) -> np.ndarray:
+    if "min_mu_base" in x:  # P(plays) was fitted on recent-form minutes, before any lineup shift
+        x = x.assign(min_mu=x.min_mu_base)
     z = x[list(AVAIL_FEATURES)].astype(float).fillna(0.0).to_numpy()
     ms = np.minimum(x.missed_streak.to_numpy(float), 15)
     return np.column_stack([z, (ms == 0), (ms == 1), (ms >= 2) & (ms <= 4), ms >= 5,
@@ -457,8 +565,10 @@ def save_params(p: Params) -> None:
                             default=float) + "\n")
 
 
-def load_params() -> Params:
-    d = json.loads(frozen_path().read_text())
+def load_params(version: str | None = None) -> Params:
+    """The frozen parameters (current version), or an earlier version's kept copy."""
+    f = frozen_path() if version is None else frozen_path().with_name(f"n1_params_{version}.json")
+    d = json.loads(f.read_text())
     d.pop("model_version", None)
     if d.get("min_resid"):
         d["min_resid"] = {int(k): v for k, v in d["min_resid"].items()}
