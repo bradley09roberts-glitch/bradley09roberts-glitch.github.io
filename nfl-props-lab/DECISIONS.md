@@ -289,3 +289,15 @@ nba_pregame_summary) and use its injury report for both teams: listed players ta
 status, unlisted players are taken as available. A game whose feed cannot be read keeps the
 snapshot. Each forecast's injury records its source and time; the edition records the feed
 hashes (inputs.injuries_live). The Out / game-time-decision adjustments are unchanged.
+
+## D-034 (30 Oct 2026) NBA absent-teammate hand-out not adopted; with/without splits shown instead
+Handing an absent regular's minutes (and usage) to his teammates was tested on 2021-2023 and
+2024-2025 (n05, n05b). Full hand-outs and usage boosts made forecasts worse; handing out half
+the minutes helped points, assists and threes by about 0.5% in those games but not rebounds, and
+not consistently across both periods. The reason: N1's recent-form minutes already sit between a
+player's full-roster and short-handed roles (over-predicted by 1.8 minutes when everyone plays,
+about right when a regular is out), so a one-sided adjustment overshoots. Live forecasts are
+unchanged (`model.absence_adjust` stays, unused). The pick rule of D-032 remains the protection
+against fresh absences, and NBA cards now show the player's with/without splits for each
+teammate ruled out tonight (15+ expected minutes; this season and last, same team, latest 20
+games each way) so the effect can be judged by eye. A lineup-aware minutes model is queued.
