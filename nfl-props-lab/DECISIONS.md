@@ -243,3 +243,15 @@ history so his share is pulled further towards the generic position prior. The o
 features.py switched off (ctx_absent_weight = 1.0) so the experiment can be re-run; live
 editions are unchanged.
 
+
+## D-030 (30 Oct 2026) NBA picks need a 10-15 point gap; 6-10 point gaps are leans
+Across the first two NBA nights (props with a US line, last collection before tip, margin
+removed), the model's side won 63% of 10-15 point gaps (70 of 112; the model said 62%, the
+market 50%), 51% of 6-10 point gaps (94 of 183; the market said 50%) and 51% of 15+ gaps (72 of
+142). NBA picks are therefore limited to 10-15 points; 6-10 point props that pass the other rules
+are listed as leans (`npl picks` shows both) and NBA cards say so. NFL picks keep 6-15: only two
+NFL games have stored lines (W7 DAL@PHI: model's side 20 of 34, model log loss 0.644 v market
+0.692; W8 CAR@GB: 15 of 46, 0.744 v 0.670), too few to choose a band. The band was chosen after
+looking at these same two nights and the pattern (good in the middle, nothing either side) could
+be luck, so every band keeps being recorded nightly and the rule is reviewed after about ten
+nights.

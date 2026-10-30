@@ -1,9 +1,10 @@
 """Pick rules for both sports (D-028), applied to the latest edition and the stored US lines.
 
 A prop is a pick when the model's side is 6 to 15 points more likely than the market says
-(margin removed). Disagreements of 15 points or more are left out: on the first two NBA nights
-the model's side won about as often as the market implied there (50%, not the 71% claimed),
-while 10-15 point gaps came in close to what the model said. Every pick carries an estimate
+(margin removed); for the NBA 10 to 15 points, with 6-10 point gaps listed as leans (D-030).
+Disagreements of 15 points or more are left out: on the first two NBA nights the model's side
+won about as often as the market implied there (51%, not the 71% claimed), 6-10 point gaps won
+51% (market 50%), while 10-15 point gaps won 63%, close to what the model said. Every pick carries an estimate
 that trusts the model's gap by a third (market + gap / 3) and the lowest price worth taking
 (1 / estimate). Lines are a research reference: US books, not open to UK customers.
 
@@ -22,6 +23,7 @@ import numpy as np
 import pandas as pd
 
 GAP_MIN, GAP_MAX = 0.06, 0.15
+NBA_GAP_MIN = 0.10  # D-030: NBA picks need 10-15 points; 6-10 point gaps are leans
 SHRINK = 1 / 3
 
 
@@ -100,8 +102,10 @@ def nba() -> dict:
                      "market_p": round(kp, 4), "best_price": m["best_over"] if side == "over" else m["best_under"],
                      "books": m["books"], "line_seen": m["observed_at"], "last10": l10,
                      "season": _hits(sv, line, side), "season_avg": round(avg, 2), "strict": bool(strict)})
-    return {"edition_id": P["edition_id"], "picks": _finish(rows), "left_out_15_plus": out_of_range,
-            "rules": __doc__}
+    pk = [r for r in rows if r["model"] - r["market_p"] >= NBA_GAP_MIN]
+    leans = [r for r in rows if r["model"] - r["market_p"] < NBA_GAP_MIN]
+    return {"edition_id": P["edition_id"], "picks": _finish(pk), "leans": _finish(leans),
+            "left_out_15_plus": out_of_range, "rules": __doc__}
 
 
 def nfl(season: int | None = None, week: int | None = None, game_id: str | None = None) -> dict:
@@ -162,9 +166,12 @@ def nfl(season: int | None = None, week: int | None = None, game_id: str | None 
 def table(res: dict) -> str:
     if res.get("error"):
         return res["error"]
-    if not res["picks"]:
-        return f"No picks ({res['left_out_15_plus']} props left out for a 15+ point gap)."
-    d = pd.DataFrame(res["picks"])
-    cols = [c for c in ("player", "team", "opponent", "market", "side", "line", "model_low", "market_p",
-                        "estimate", "min_price", "best_price", "last10", "strict") if c in d]
-    return d[cols].to_string(index=False) + f"\n{res['left_out_15_plus']} props left out for a 15+ point gap."
+    cols = ["player", "team", "opponent", "market", "side", "line", "model_low", "market_p",
+            "estimate", "min_price", "best_price", "last10", "strict"]
+    out = []
+    for key, title in (("picks", "Picks"), ("leans", "Leans (6-10 points, not picks)")):
+        if key not in res:
+            continue
+        d = pd.DataFrame(res[key])
+        out.append(f"{title}: none" if d.empty else f"{title}:\n" + d[[c for c in cols if c in d]].to_string(index=False))
+    return "\n\n".join(out) + f"\n{res['left_out_15_plus']} props left out for a 15+ point gap."
