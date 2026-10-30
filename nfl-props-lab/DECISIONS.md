@@ -255,3 +255,18 @@ NFL games have stored lines (W7 DAL@PHI: model's side 20 of 34, model log loss 0
 looking at these same two nights and the pattern (good in the middle, nothing either side) could
 be luck, so every band keeps being recorded nightly and the rule is reviewed after about ten
 nights.
+
+## D-031 (30 Oct 2026) Model v0.4.2: trim a backup's designed-run share from games a returning starter missed
+Follow-up to D-029. Instead of down-weighting a player's past games in which a bigger-role
+teammate now back on the roster (not listed Out or Doubtful) did not play, those games keep
+their full weight and the player's share of designed runs in them is multiplied by 0.7 (chosen
+on 2018-2021 from 0.9-0.5). On the 2022-2023 validation seasons this improved the prediction of
+who gets each team's designed runs (+0.002 log-likelihood per run, interval excluding zero) and,
+in the full backtest with the same seed, X1 rushing attempts CRPS by 0.19% and rushing yards by
+0.29% (intervals excluding zero), with every tested over/under threshold for both markets
+better. The exact-count log score for rushing attempts was slightly worse (X1 -0.0016 per
+player-game); props settle on over/under thresholds, so the change is adopted. The gain is
+small. The same trim made target shares worse at every level, so targets are not adjusted.
+Live NFL editions from the next publication use v0.4.2; published editions are unchanged.
+Example: MarShawn Lloyd's raw share of Green Bay's designed runs before W8 would have been 0.28
+instead of 0.38 (he had 3 carries; the W8 forecast was 7.1).

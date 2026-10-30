@@ -29,6 +29,12 @@ STATUS_NOTE = {
     "default": ("Probabilities are conditional on the player taking part (most bookmakers "
                 "void a player prop if he does not play). No bookmaker prices were available "
                 "to this edition, so no value claims are made."),
+    "0.4.2": ("Model v0.4.2: v0.4.1 with backups' designed-run shares trimmed (to 70%) in past "
+              "games a bigger-role teammate who is back this week missed, so a back's share "
+              "while the starter was out no longer carries over in full (D-031). Stacking "
+              "weights frozen on 2022-2023 validation. Probabilities are conditional on the "
+              "player taking part (most bookmakers void a player prop if he does not play). No "
+              "bookmaker prices were available to this edition, so no value claims are made."),
     "0.4.1": ("Model v0.4.1: v0.4 with a fix so that a quarterback listed Out or Doubtful "
               "cannot enter a simulated game as the replacement or for a cameo (he previously "
               "could, giving an Out QB a non-zero chance of playing). Stacking weights frozen "

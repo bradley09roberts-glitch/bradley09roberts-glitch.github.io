@@ -36,8 +36,11 @@ def test_starter_listed_out_is_not_coming_back():
     assert out.at["B", "dshare"] == pytest.approx(0.35)
 
 
-def test_defaults_change_nothing():
+def test_live_settings_trim_runs_only():
+    # v0.4.2 (D-031): no down-weighting, designed runs trimmed to 70%, targets untouched
+    assert F.HP["ctx_absent_weight"] == 1.0 and F.HP["ctx_backup_trim_d"] == 0.7 and F.HP["ctx_backup_trim_t"] == 1.0
     played, ph, roster = _case()
     out = F.context_shares(played, ph, roster, F.HP["ctx_absent_weight"], trim_d=F.HP["ctx_backup_trim_d"],
                            trim_t=F.HP["ctx_backup_trim_t"])
-    assert out[["dshare", "tshare"]].equals(ph[["dshare", "tshare"]])
+    assert out.at["B", "dshare"] == pytest.approx((0.1 + 0.1 + 0.42 + 0.42) / 4)
+    assert out.at["B", "_wsum_d"] == pytest.approx(4.0)

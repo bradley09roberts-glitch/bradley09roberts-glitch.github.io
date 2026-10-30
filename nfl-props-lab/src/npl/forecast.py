@@ -12,7 +12,7 @@ from .config import CORE_MARKETS, MARKETS
 from .dist import Dist
 from .features import HP, ROLE_POS, GameIn, Params, build_slate
 
-MODEL_VERSION = "0.4.1"
+MODEL_VERSION = "0.4.2"
 MODELS = {
     "X1": "Stacked J1 + M, same frozen weights (availability-informed; live headline)",
     "X": "Stacked: per-market linear pool of J0 and M (weights fixed on validation)",

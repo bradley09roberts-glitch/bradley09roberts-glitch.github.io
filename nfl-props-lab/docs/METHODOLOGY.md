@@ -99,6 +99,10 @@ prior with explicit weight (3 effective games for shares, 8 for efficiency, 6-10
 and opponent rates). From v0.3, players with fewer than 6 games shrink towards the usage
 of players with the same experience (0, 1-2, 3-5 games) at their position; established
 players shrink towards the position median (experiment 2 showed band means hurt them).
+From v0.4.2, when a running back on this week's roster (not listed Out or Doubtful) with at
+least as big a share of designed runs missed some of a player's past games for his current
+team, the player's designed-run share in those games counts at 70% (the games keep their full
+weight). Targets are not adjusted: the same trim made target shares worse (exp11, D-031).
 
 ### A, C: baselines
 

@@ -35,8 +35,9 @@ HP = {
     # current team in which a key teammate now on the roster did not play. 1.0 = off.
     "ctx_absent_weight": 1.0,
     # exp11: keep those games at full weight but scale the player's share in them, separately
-    # for designed runs and for targets. 1.0 = off.
-    "ctx_backup_trim_d": 1.0,
+    # for designed runs and for targets. 1.0 = off. v0.4.2: designed runs 0.7 (D-031); targets
+    # off (trimming made target shares worse at every level).
+    "ctx_backup_trim_d": 0.7,
     "ctx_backup_trim_t": 1.0,
     "ctx_key_dshare": 0.25,      # a running back with at least this share of designed runs
     "ctx_key_tshare": 0.15,      # a receiver/back with at least this share of targets
