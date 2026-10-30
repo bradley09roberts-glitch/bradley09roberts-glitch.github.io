@@ -280,3 +280,12 @@ game this season) is listed Out or Doubtful and has missed no more than 2 of the
 this season (`picks.stars_out`). Once he has missed more, his teammates' recent games already
 show the team without him. A redistribution of his minutes and shots in the model itself is the
 proper fix and is not built yet.
+
+## D-033 (30 Oct 2026) NBA editions read injury reports from ESPN's game feeds at publish time
+SportsDataverse's injury file is a daily snapshot; on 30 Oct the one available at 14:30 UTC was
+dated the 29th (Haliburton still Out, Schroder and Jaylen Brown not yet listed). Editions now
+fetch each game's ESPN feed when they are published, store it unchanged (raw store, dataset
+nba_pregame_summary) and use its injury report for both teams: listed players take ESPN's
+status, unlisted players are taken as available. A game whose feed cannot be read keeps the
+snapshot. Each forecast's injury records its source and time; the edition records the feed
+hashes (inputs.injuries_live). The Out / game-time-decision adjustments are unchanged.

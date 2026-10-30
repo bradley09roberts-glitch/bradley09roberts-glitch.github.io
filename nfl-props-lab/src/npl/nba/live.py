@@ -1,7 +1,8 @@
 """Live NBA slates and immutable editions.
 
 An edition is built from games that tipped off before the publish time, the day's
-SportsDataverse schedule and the latest injury snapshot. Files go to
+SportsDataverse schedule and the injury reports in ESPN's game feeds at publish time (falling
+back to SportsDataverse's daily snapshot for any game whose feed cannot be read; D-033). Files go to
 records/editions/nba/<ET date>/ with a SHA-256 sidecar, are created exclusively (never
 overwritten) and are registered in the append-only `editions` table. For each game the last
 edition published before tip-off is the one that counts (D-008 applied to the NBA).
@@ -22,7 +23,7 @@ from ..config import DATA_HOME, EDITIONS_DIR, NEW_YORK, PROJECT_ROOT, REPORTS_DI
 from ..dist import Dist
 from ..util import iso, sha256_bytes, sha256_json, utcnow
 from . import backtest as B
-from . import canon, source
+from . import canon, espn, source
 from . import model as M
 
 NBA_EDITIONS = EDITIONS_DIR / "nba"
@@ -95,7 +96,8 @@ def injuries_now(inj: pd.DataFrame, sched: pd.DataFrame, as_of: datetime) -> pd.
 
 
 # --------------------------------------------------------------------------- build
-def build(date_et: str, con: sqlite3.Connection | None = None, now: datetime | None = None) -> dict:
+def build(date_et: str, con: sqlite3.Connection | None = None, now: datetime | None = None,
+          live_injuries: bool = True) -> dict:
     con = con or db.connect()
     now = now or utcnow()
     p = M.load_params()
@@ -117,6 +119,12 @@ def build(date_et: str, con: sqlite3.Connection | None = None, now: datetime | N
     x = x[x.n_played.notna()].reset_index(drop=True)  # no NBA minutes yet: no forecast
     injn = injuries_now(inj, sched, now)
     x = x.merge(injn.drop(columns="team"), on="player_id", how="left")
+    live_meta = None
+    if live_injuries:
+        live, covered, live_meta = espn.fetch_injuries(con, list(sg.game_id))
+        x = espn.apply_injuries(x, live, covered, live_meta["retrieved_at"])
+    else:
+        x["injury_source"] = np.where(x.fantasy.notna(), "sportsdataverse", None)
     base = p_play_base(x)
     st = x.fantasy.fillna("")
     x["p_play"] = np.where(st.isin(["OUT", "OFS"]), INJ_OUT_P,
@@ -125,7 +133,7 @@ def build(date_et: str, con: sqlite3.Connection | None = None, now: datetime | N
     pms = {"N1": M.n1_pmfs(x, p, lg), "A": M.baseline_pmfs(x, p, "A"),
            "C": M.baseline_pmfs(x, p, "C")}
     return {"x": x, "games": sg, "pms": pms, "params": p,
-            "inputs": {"schedule": sched_meta, "injuries": inj_meta,
+            "inputs": {"schedule": sched_meta, "injuries": inj_meta, "injuries_live": live_meta,
                        "box_last_tip": iso(pg.tip_utc.max()),
                        "injury_snapshot": injn.as_of_date.max() if len(injn) else None}}
 
@@ -165,7 +173,7 @@ def publish(date_et: str, kind: str = "early", con: sqlite3.Connection | None = 
                     "market": mk, "p_play": round(float(r.p_play), 4),
                     "injury": None if pd.isna(r.fantasy) else {
                         "status": r.status, "fantasy": r.fantasy, "detail": r.detail,
-                        "as_of": r.as_of_date},
+                        "as_of": r.as_of_date, "source": r.injury_source},
                     "minutes_expected": round(float(r.min_mu), 1),
                     "mean": round(d.mean(), 2), "median": d.median(),
                     "q10": d.quantile(0.1), "q90": d.quantile(0.9), "dist": d.to_json()})
@@ -175,8 +183,9 @@ def publish(date_et: str, kind: str = "early", con: sqlite3.Connection | None = 
            "code": code, "inputs": b["inputs"], "inputs_hash": sha256_json(b["inputs"]),
            "params_sha256": sha256_bytes(M.frozen_path().read_bytes()),
            "notes": ["Distributions are conditional on the player taking part; P(plays) is "
-                     "separate. Injury adjustments (Out 1%, game-time decision x0.65) are "
-                     "assumptions, not validated. Minutes do not yet react to teammates "
+                     "separate. Injury reports: ESPN's game feeds at publish time (see "
+                     "inputs.injuries_live). Injury adjustments (Out 1%, game-time decision "
+                     "x0.65) are assumptions, not validated. Minutes do not yet react to teammates "
                      "ruled out. No bookmaker prices were used."],
            "games": [{"game_id": g.game_id, "home": g.home, "away": g.away,
                       "tip_utc": iso(g.tip_utc), "time_valid": bool(g.time_valid),

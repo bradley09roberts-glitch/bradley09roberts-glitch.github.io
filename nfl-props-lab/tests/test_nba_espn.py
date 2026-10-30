@@ -62,3 +62,40 @@ def test_missing_games_skips_published_and_unfinished(monkeypatch):
                           "date": ["2026-10-28T23:00Z", "2026-10-28T23:30Z",
                                    "2026-10-29T08:00Z"]})
     assert espn.missing_games(sched, have={"1"}) == ["2"]  # 3 started an hour ago
+
+
+def _feed(injuries):
+    return {"header": {"competitions": [{"competitors": [{"team": {"abbreviation": "MIN"}},
+                                                         {"team": {"abbreviation": "LAC"}}]}]},
+            "injuries": injuries}
+
+
+def test_injury_rows_read_status_and_cover_both_teams():
+    from npl.nba import espn
+    feed = _feed([{"team": {"abbreviation": "MIN"}, "injuries": [
+        {"status": "Out", "date": "2026-10-30T02:40Z", "athlete": {"id": "1"},
+         "details": {"fantasyStatus": {"abbreviation": "OUT"}, "type": "Knee"}},
+        {"status": "Day-To-Day", "athlete": {"id": "2"}, "details": {"type": "Ankle"}},
+        {"status": "Probable", "athlete": {"id": "3"}, "details": {}}]}])
+    rows, teams = espn.injury_rows(feed)
+    assert teams == {"MIN", "LAC"}
+    f = rows.set_index("player_id").fantasy
+    assert f["1"] == "OUT" and f["2"] == "GTD" and f.isna()["3"]
+    assert rows.set_index("player_id").detail["1"] == "Knee"
+
+
+def test_apply_injuries_live_report_replaces_snapshot_for_covered_teams():
+    import pandas as pd
+
+    from npl.nba import espn
+    x = pd.DataFrame({"player_id": ["1", "4", "5"], "team": ["MIN", "MIN", "BOS"],
+                      "status": [None, "Out", "Out"], "fantasy": [None, "OUT", "OUT"],
+                      "detail": [None, "Calf", "Hip"], "as_of_date": [None, "2026-10-29", "2026-10-29"],
+                      "news_at": [None, None, None]})
+    live = pd.DataFrame({"player_id": ["1"], "team": ["MIN"], "status": ["Out"], "fantasy": ["OUT"],
+                         "detail": ["Knee"], "news_at": ["2026-10-30T02:40Z"]})
+    out = espn.apply_injuries(x, live, {"MIN", "LAC"}, "2026-10-30T15:00:00Z").set_index("player_id")
+    assert out.fantasy["1"] == "OUT" and out.as_of_date["1"] == "2026-10-30T15:00:00Z"
+    assert pd.isna(out.fantasy["4"])                      # off ESPN's MIN report: available now
+    assert out.fantasy["5"] == "OUT" and out.injury_source["5"] == "sportsdataverse"  # BOS not covered
+    assert out.injury_source["1"] == "espn"
