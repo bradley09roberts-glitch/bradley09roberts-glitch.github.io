@@ -115,3 +115,36 @@ def test_market_line_ignores_lines_a_book_no_longer_offers():
     m = appdata.consensus_lines(pd.DataFrame(rows))[("p", "pra")]
     assert m["line"] == 38.5 and m["books"] == 2  # mgm stopped quoting: not counted
     assert m["best_under"] == 1.83 and m["observed_at"] == late
+
+
+def _absence_case(ms=0):
+    import pandas as pd
+    return pd.DataFrame({
+        "game_id": ["g", "g", "g", "h"], "team": ["MIN", "MIN", "MIN", "LAC"],
+        "min_mu": [30.0, 20.0, 10.0, 25.0], "missed_streak": [ms, 0, 0, 0],
+        "min_sum": [100.0] * 4, "pts_sum": [80.0, 50.0, 30.0, 40.0], "reb_sum": [20.0] * 4,
+        "ast_sum": [10.0] * 4, "fg3m_sum": [5.0] * 4})
+
+
+def test_absence_adjust_hands_minutes_and_usage_to_teammates():
+    import numpy as np
+    import pytest
+
+    from npl.nba import model as M
+    x = _absence_case()
+    absent = np.array([True, False, False, False])
+    out = M.absence_adjust(x, absent, np.ones(4), 1.0, 1.0, M.Params())
+    assert out.min_mu.tolist() == pytest.approx([30.0, 40.0, 20.0, 25.0])   # 30 freed, 2:1
+    share = 24 / (24 + 10 + 3)                                               # his share of points
+    assert out.rmult_pts.tolist() == pytest.approx([1.0, 1 + share, 1 + share, 1.0])
+
+
+def test_absence_adjust_counts_only_what_recent_form_has_not_absorbed():
+    import numpy as np
+    import pytest
+
+    from npl.nba import model as M
+    x = _absence_case(ms=3)                                                  # missed the last 3
+    out = M.absence_adjust(x, np.array([True, False, False, False]), np.ones(4), 1.0, 0.0, M.Params())
+    assert out.min_mu.tolist() == pytest.approx([30.0, 30.0, 15.0, 25.0])   # half of 30 freed
+    assert (out.rmult_pts == 1.0).all()

@@ -174,7 +174,7 @@ def _props() -> dict:
         if f["market"] == "pts" and f.get("injury") and f["injury"]["fantasy"] in ("OUT", "OFS"):
             lg = logs.get(f["player_id"])
             out_by_team.setdefault(f["team"], []).append(
-                {"name": f["name"], "minutes": f["minutes_expected"],
+                {"name": f["name"], "player_id": f["player_id"], "minutes": f["minutes_expected"],
                  "played_last": bool(lg is not None and len(lg) and
                                      lg.tip_utc.iloc[-1] >= _team_last_tip(f["team"], e))})
     cards = []
@@ -210,10 +210,42 @@ def _props() -> dict:
             # only absences that recent minutes cannot reflect yet (he played last game)
             "teammates_out": [t for t in out_by_team.get(f["team"], [])
                               if t["name"] != f["name"] and t["minutes"] >= 20 and
-                              t["played_last"]]})
+                              t["played_last"]],
+            "wowy": _wowy(f, lg, logs, out_by_team.get(f["team"], []), int(season) + 1
+                          if int(e["date_et"][5:7]) >= 8 else int(season))})
     return {"edition_id": e["edition_id"], "date_et": e["date_et"], "cards": cards,
             "markets": {k: M.MARKET_LABELS[k] for k in M.MARKETS},
             "published_london": _london(e["published_at"])}
+
+
+def _wowy(f: dict, lg, logs: dict, out: list, cur_season: int, top: int = 2) -> list:
+    """With/without splits for the player's market against teammates ruled out tonight (15+
+    expected minutes, most minutes first): his games for this team this season and last, in
+    seasons the teammate also played for the team, split by whether the teammate played."""
+    res = []
+    if lg is None or not len(lg):
+        return res
+    for t in sorted(out, key=lambda t: -t["minutes"]):
+        if len(res) >= top or t["player_id"] == f["player_id"] or t["minutes"] < 15:
+            continue
+        tl = logs.get(t["player_id"])
+        if tl is None:
+            continue
+        tl = tl[tl.team == f["team"]]
+        seasons = set(tl.season) & {cur_season, cur_season - 1}
+        mine = lg[(lg.team == f["team"]) & lg.season.isin(seasons)]
+        if mine.empty:
+            continue
+        w = mine.game_id.isin(set(tl.game_id)).to_numpy()
+        v = _values(mine, f["market"]).to_numpy()
+        mins = mine.minutes.to_numpy(float)
+        # the most recent 20 games each way keep the page small
+        vw, vo, mw, mo = v[w][-20:], v[~w][-20:], mins[w][-20:], mins[~w][-20:]
+        res.append({"name": t["name"], "with": [int(z) for z in vw], "without": [int(z) for z in vo],
+                    "min_with": round(float(mw.mean()), 1) if len(mw) else None,
+                    "min_without": round(float(mo.mean()), 1) if len(mo) else None,
+                    "seasons": sorted(int(z) for z in seasons)})
+    return res
 
 
 def _team_last_tip(team: str, e: dict):

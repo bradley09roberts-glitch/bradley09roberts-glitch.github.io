@@ -566,3 +566,10 @@ h1.withlogo { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .glass, .panel, .pcard, .banner, .topbar-in, nav.tabs, .hero, .filters { background: var(--card); }
 }
+
+/* with/without a teammate ruled out tonight */
+.wowy { display: grid; gap: 4px; margin-top: 10px; padding: 8px 10px; border-radius: 10px;
+  background: color-mix(in oklab, var(--acc) 7%, transparent); border: 1px solid color-mix(in oklab, var(--acc) 22%, transparent); }
+.wowy .wrow { display: flex; flex-wrap: wrap; gap: 2px 8px; align-items: baseline; font-size: 13px; font-variant-numeric: tabular-nums; }
+.wowy .wk { min-width: 9.5em; font-weight: 600; }
+.wowy p { margin: 2px 0 0; }

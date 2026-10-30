@@ -180,6 +180,54 @@ def assemble(cand: pd.DataFrame, ps: pd.DataFrame, ts: pd.DataFrame) -> pd.DataF
     return x
 
 
+def absence_adjust(x: pd.DataFrame, absent: np.ndarray, p_avail: np.ndarray, alpha: float,
+                   gamma: float, p: Params, min_regular: float = 15.0, cap: float = 42.0,
+                   ) -> pd.DataFrame:
+    """Hand an absent regular's minutes and part of his usage to his teammates (nba-0.2 candidate).
+
+    Rows of x are the candidates of each team-game. `absent`: known before tip to miss the game
+    (live: listed Out; backtest: not listed or no minutes); regulars have expected minutes of at
+    least `min_regular`. Teammates' recent states already include games he missed: what is still
+    to hand out is his share weighted by 0.5 ** (games missed in a row / half-life), with the
+    minutes and rate half-lives. A fraction `alpha` of those minutes goes to the other
+    candidates in proportion to expected minutes x `p_avail` (chance of playing), capped at
+    `cap`; each stat's per-minute rate of every recipient is multiplied by 1 + gamma x the
+    absent players' (still embedded) share of the team's expected production of that stat.
+    """
+    x = x.copy()
+    for s in BASE_STATS:
+        x[f"rmult_{s}"] = 1.0
+    mu = x.min_mu.fillna(0).to_numpy(float)
+    ms = x.missed_streak.fillna(0).to_numpy(float)
+    reg_out = absent & (mu >= min_regular)
+    if not reg_out.any() or (alpha == 0 and gamma == 0):
+        return x
+    w_min = np.where(reg_out, 0.5 ** (ms / p.hl_min), 0.0)
+    w_rate = np.where(reg_out, 0.5 ** (ms / p.hl_rate), 0.0)
+    rate = {s: (x[f"{s}_sum"].fillna(0) / x.min_sum.replace(0, np.nan)).fillna(0).to_numpy()
+            for s in BASE_STATS}
+    key = x.game_id.astype(str) + "|" + x.team.astype(str)
+    codes, inv = np.unique(key.to_numpy(), return_inverse=True)
+    G = len(codes)
+    has = np.bincount(inv, weights=reg_out.astype(float), minlength=G) > 0
+    rec = ~absent & has[inv]
+    pa = np.clip(np.nan_to_num(p_avail), 0, 1)
+    wt = np.where(rec, mu * pa, 0.0)
+    free = np.bincount(inv, weights=w_min * mu, minlength=G)
+    wsum = np.bincount(inv, weights=wt, minlength=G)
+    add = np.where(rec & (wsum[inv] > 0), alpha * free[inv] * wt / np.where(wsum[inv] > 0, wsum[inv], 1), 0.0)
+    x["min_mu"] = np.where(rec, np.minimum(mu + add, np.maximum(cap, mu)), x.min_mu)
+    x["absence_minutes_added"] = np.where(rec, x.min_mu.fillna(0) - mu, 0.0)
+    for s in BASE_STATS:
+        prod = rate[s] * mu
+        exp_prod = np.where(reg_out, prod, np.where(absent, 0.0, prod * pa))
+        team = np.bincount(inv, weights=exp_prod, minlength=G)
+        lost = np.bincount(inv, weights=w_rate * prod, minlength=G)
+        share = np.where(team > 0, lost / np.where(team > 0, team, 1), 0.0)
+        x[f"rmult_{s}"] = np.where(rec, 1 + gamma * share[inv], 1.0)
+    return x
+
+
 # --------------------------------------------------------------------------- distributions
 def nb_pmf_matrix(mu: np.ndarray, k: float, kmax: int) -> np.ndarray:
     """NegBin pmf rows for means `mu` (shape (n,)) with dispersion k (var = mu + mu^2/k)."""
@@ -266,6 +314,8 @@ def n1_pmfs(x: pd.DataFrame, p: Params, lg: dict,
             raw = (x[f"def_{s}"] / x[f"lg_{s}"]).fillna(1.0).to_numpy()
             nn = x.opp_n.fillna(0).to_numpy()
             m = m * (1 + (raw - 1) * nn / (nn + p.k_def))
+        if f"rmult_{s}" in x:  # absent-teammate usage (absence_adjust)
+            m = m * x[f"rmult_{s}"].fillna(1.0).to_numpy()
         K = MAX_K[s]
         mix = np.zeros((n, K + 1))
         for j, mins in enumerate(MIN_GRID):
@@ -287,6 +337,8 @@ def n1_pmfs(x: pd.DataFrame, p: Params, lg: dict,
             raw = (x[f"def_{s}"] / x[f"lg_{s}"]).fillna(1.0).to_numpy()
             nn = x.opp_n.fillna(0).to_numpy()
             m = m * (1 + (raw - 1) * nn / (nn + p.k_def))
+        if f"rmult_{s}" in x:
+            m = m * x[f"rmult_{s}"].fillna(1.0).to_numpy()
         rates[s] = r.to_numpy() * m
     for j, mins in enumerate(MIN_GRID[::2]):  # every other minute keeps this tractable
         jj = 2 * j

@@ -653,7 +653,19 @@ function nbaCard(c, idx) {
       ${dvpChip(c)}
       ${c.opp_pace ? `<span data-tip="${esc(c.opponent)} pace|${c.opp_pace.value} possessions per 48 min (rank ${c.opp_pace.rank})">Pace ${c.opp_pace.rank}/30</span>` : ""}</div>
     ${c.teammates_out && c.teammates_out.length ? `<div class="warnline">${ICONS.warn}<span>${c.teammates_out.map((t) => esc(t.name)).join(", ")} ruled out after playing last game: extra minutes and shots are not in this projection yet.</span></div>` : ""}
+    ${wowyBlock(c, line)}
   </article>`;
+}
+
+// With/without splits against teammates ruled out tonight (this season and last, same team)
+function wowyBlock(c, line) {
+  if (!c.wowy || !c.wowy.length) return "";
+  const cell = (v, mins) => { if (!v.length) return `<span class="muted">no games</span>`;
+    const avg = v.reduce((a, b) => a + b, 0) / v.length, h = hitRate(v, line);
+    return `<b>${dec(avg, 1)}</b> <span class="muted">· over ${line} ${h.over}/${h.n} · ${dec(mins, 0)} min · ${v.length} g</span>`; };
+  return `<div class="wowy">${c.wowy.map((w) => `<div class="wrow"><span class="wk">Without ${esc(w.name)}</span>${cell(w.without, w.min_without)}</div>
+    <div class="wrow"><span class="wk">With him</span>${cell(w.with, w.min_with)}</div>`).join("")}
+    <p class="tiny muted">${esc(String(c.wowy[0].seasons.map((y) => `${y - 1}-${String(y).slice(2)}`).join(" and ")))} games for ${esc(c.team)}, latest 20 each way. A handful of games without him is a weak guide.</p></div>`;
 }
 
 let DVPC = null; // current-season defence v position for the props cards
