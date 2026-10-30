@@ -155,6 +155,20 @@ def cmd_settle(a) -> int:
     return 0
 
 
+def cmd_picks(a) -> int:
+    """Picks under the D-028 rules (6-15 point gap to the market), saved to data/runs."""
+    from . import picks
+    from .config import DATA_HOME
+    from .util import utcnow
+
+    res = picks.nba() if a.sport == "nba" else picks.nfl(game_id=a.game)
+    print(picks.table(res))
+    out = DATA_HOME / "runs" / f"picks_{a.sport}_{utcnow().strftime('%Y%m%dT%H%MZ')}.json"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(res, indent=1, default=str))
+    return 0
+
+
 def cmd_quotes(a) -> int:
     from .sources import odds_api
 
@@ -294,6 +308,11 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--hours-ahead", type=float, default=48)
     s.add_argument("--sport", choices=["nfl", "nba"], default="nfl")
     s.set_defaults(func=cmd_quotes)
+
+    s = sub.add_parser("picks", help="picks with a 6-15 point gap to the stored market lines")
+    s.add_argument("--sport", choices=["nfl", "nba"], default="nba")
+    s.add_argument("--game", default=None, help="NFL game id, e.g. 2026_08_CAR_GB")
+    s.set_defaults(func=cmd_picks)
 
     s = sub.add_parser("money", help="price-honest money backtest over a ledger")
     s.add_argument("--ledger", required=True)

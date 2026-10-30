@@ -223,3 +223,13 @@ centres, per game, per 100 possessions or per 36 minutes at the position, ranked
 (full season: guards 0.4-0.7, forwards 0.0-0.6, centres 0.0-0.6; after 10 games mostly
 below 0.25). PG/SG/SF/PF stay unavailable in this source.
 
+## D-028 (30 Oct 2026) Picks only where the model is 6-15 points from the market
+Over the first two NBA nights (28-29 Oct, 728 props with US lines), the market's margin-free
+probabilities were more accurate than N1's overall, and where N1 disagreed by 15 points or more
+(141 props) its side won 50% against 71% claimed; at 10-15 points (113 props) it won 63% against
+62% claimed. Picks (src/npl/picks.py, `npl picks`) are therefore limited to gaps of 6 to 15
+points, in both sports, and each carries an estimate that trusts the gap by a third (market +
+gap / 3) with the lowest price worth taking. NBA cards flag 15+ point gaps as not a pick. This is
+a selection rule, not a model change, and is reviewed as nights accumulate; two nights are a
+small sample.
+
