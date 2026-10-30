@@ -21,3 +21,16 @@ def test_finish_adds_estimate_minimum_price_and_sorts_by_gap():
     rows = picks._finish([{"model_low": 0.60, "market_p": 0.50}, {"model_low": 0.64, "market_p": 0.52}])
     assert [r["gap"] for r in rows] == [0.12, 0.1]
     assert rows[0]["estimate"] == pytest.approx(0.56) and rows[0]["min_price"] == pytest.approx(1 / 0.56, abs=0.01)
+
+
+def test_stars_out_flags_a_recently_absent_starter_only():
+    import pandas as pd
+    games = [f"g{i}" for i in range(5)]
+    rows = [("S", "MIN", g, 34, 30) for g in games[:4]] + [("R", "MIN", g, 30, 12) for g in games] + \
+           [("V", "LAC", g, 30, 20) for g in games[:1]] + [("W", "LAC", g, 25, 10) for g in games]
+    cur = pd.DataFrame(rows, columns=["player_id", "team", "game_id", "minutes", "pts"])
+    cards = [{"player_id": "S", "name": "Star", "team": "MIN", "injury": {"status": "Out"}},
+             {"player_id": "V", "name": "Vet", "team": "LAC", "injury": {"status": "Out"}},
+             {"player_id": "R", "name": "Role", "team": "MIN", "injury": None}]
+    # S missed 1 of 5 games: flagged; V has missed 4 of 5, so the model has seen LAC without him
+    assert picks.stars_out(cards, cur) == {"MIN": ["Star"]}

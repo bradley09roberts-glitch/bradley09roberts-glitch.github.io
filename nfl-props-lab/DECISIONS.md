@@ -270,3 +270,13 @@ small. The same trim made target shares worse at every level, so targets are not
 Live NFL editions from the next publication use v0.4.2; published editions are unchanged.
 Example: MarShawn Lloyd's raw share of Green Bay's designed runs before W8 would have been 0.28
 instead of 0.38 (he had 3 carries; the W8 forecast was 7.1).
+
+## D-032 (30 Oct 2026) NBA picks skip teams missing a starter the model has barely seen them without
+N1 has no adjustment for an absent teammate; the existing rule only caught a teammate newly ruled
+out after playing the last game. On 30 Oct Anthony Edwards (Out, missed 1 of Minnesota's 5 games)
+left nine Minnesota unders in the pick list, all because the market had moved for his absence and
+the model had not. Picks now skip a team when a starter-level player (26+ minutes or 15+ points a
+game this season) is listed Out or Doubtful and has missed no more than 2 of the team's games
+this season (`picks.stars_out`). Once he has missed more, his teammates' recent games already
+show the team without him. A redistribution of his minutes and shots in the model itself is the
+proper fix and is not built yet.

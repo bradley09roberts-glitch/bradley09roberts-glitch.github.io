@@ -8,8 +8,10 @@ won about as often as the market implied there (51%, not the 71% claimed), 6-10 
 that trusts the model's gap by a third (market + gap / 3) and the lowest price worth taking
 (1 / estimate). Lines are a research reference: US books, not open to UK customers.
 
-NBA rules: plays >= 85%, no injury flag, no teammate newly ruled out, >= 3 games this season
-for his team, >= 3 books, half-point line, and the gap still >= 6 points with this season's
+NBA rules: plays >= 85%, no injury flag, no teammate newly ruled out, no starter-level
+teammate (26+ minutes or 15+ points a game this season) listed Out or Doubtful who has missed
+no more than 2 of the team's games (the model's minutes and shots do not reflect his absence
+yet; D-032), >= 3 games this season for his team, >= 3 books, half-point line, and the gap still >= 6 points with this season's
 minutes in place of the model's. Strict list adds: not on a new team, season average >= 10%
 beyond the line on the model's side, the model's side in >= 7 of the last 10 games.
 NFL rules: plays >= 85%, no injury flag, >= 3 books, half-point line, the headline model and
@@ -43,6 +45,26 @@ def _hits(values: np.ndarray, line: float, side: str) -> tuple[int, int]:
     return int(((values > line) if side == "over" else (values < line)).sum()), len(values)
 
 
+def stars_out(cards: list[dict], cur: pd.DataFrame, max_missed: int = 2) -> dict[str, list[str]]:
+    """Teams with a starter-level player (26+ minutes or 15+ points a game this season) listed Out
+    or Doubtful who has missed no more than `max_missed` of the team's games this season: his
+    teammates' recent games were mostly played with him, so their forecasts miss his absence."""
+    avg = cur.groupby("player_id").agg(m=("minutes", "mean"), p=("pts", "mean"),
+                                       gp=("game_id", "nunique"))
+    team_games = cur.groupby("team").game_id.nunique()
+    out: dict[str, list[str]] = {}
+    for c in cards:
+        inj = c.get("injury")
+        if not (isinstance(inj, dict) and inj.get("status") in ("Out", "Doubtful")):
+            continue
+        if c["player_id"] not in avg.index or c["name"] in out.get(c["team"], []):
+            continue
+        a = avg.loc[c["player_id"]]
+        if (a.m >= 26 or a.p >= 15) and team_games.get(c["team"], 0) - a.gp <= max_missed:
+            out.setdefault(c["team"], []).append(c["name"])
+    return out
+
+
 def nba() -> dict:
     """Picks from the latest NBA edition and the newest stored lines."""
     from .dist import Dist
@@ -64,11 +86,13 @@ def nba() -> dict:
                 "error": f"{P['date_et']}: {b['error']}; publish the next edition first", "rules": __doc__}
     x, prm = b["x"], b["params"]
     lg = M.league_rates(L["player_games"], L["team_games"], B.FIT_SEASONS)
+    star = stars_out(P["cards"], cur)
     rows, out_of_range = [], 0
     for c in P["cards"]:
         m = c.get("market_line")
         if (not m or c["p_play"] < 0.85 or c["injury"] or c["teammates_out"] or m["books"] < 3
-                or float(m["line"]).is_integer() or gp.get((c["player_id"], c["team"]), 0) < 3):
+                or float(m["line"]).is_integer() or gp.get((c["player_id"], c["team"]), 0) < 3
+                or c["team"] in star):
             continue
         line = m["line"]
         over = Dist.from_json(c["dist"]).line(line)["over"]
@@ -105,7 +129,7 @@ def nba() -> dict:
     pk = [r for r in rows if r["model"] - r["market_p"] >= NBA_GAP_MIN]
     leans = [r for r in rows if r["model"] - r["market_p"] < NBA_GAP_MIN]
     return {"edition_id": P["edition_id"], "picks": _finish(pk), "leans": _finish(leans),
-            "left_out_15_plus": out_of_range, "rules": __doc__}
+            "left_out_15_plus": out_of_range, "teams_left_out": star, "rules": __doc__}
 
 
 def nfl(season: int | None = None, week: int | None = None, game_id: str | None = None) -> dict:
@@ -174,4 +198,8 @@ def table(res: dict) -> str:
             continue
         d = pd.DataFrame(res[key])
         out.append(f"{title}: none" if d.empty else f"{title}:\n" + d[[c for c in cols if c in d]].to_string(index=False))
-    return "\n\n".join(out) + f"\n{res['left_out_15_plus']} props left out for a 15+ point gap."
+    tail = f"\n{res['left_out_15_plus']} props left out for a 15+ point gap."
+    if res.get("teams_left_out"):
+        tail += "\nTeams left out (starter out, not yet in the model): " + "; ".join(
+            f"{t} ({', '.join(n)})" for t, n in res["teams_left_out"].items())
+    return "\n\n".join(out) + tail
