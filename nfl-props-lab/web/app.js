@@ -660,11 +660,11 @@ function nbaCard(c, idx) {
 // With/without splits against teammates ruled out tonight (this season and last, same team)
 function wowyBlock(c, line) {
   if (!c.wowy || !c.wowy.length) return "";
-  const cell = (v, mins) => { if (!v.length) return `<span class="muted">no games</span>`;
+  const cell = (v, mins) => { if (!v.length) return `<span class="muted">no games yet</span>`;
     const avg = v.reduce((a, b) => a + b, 0) / v.length, h = hitRate(v, line);
-    return `<b>${dec(avg, 1)}</b> <span class="muted">· over ${line} ${h.over}/${h.n} · ${dec(mins, 0)} min · ${v.length} g</span>`; };
-  return `<div class="wowy">${c.wowy.map((w) => `<div class="wrow"><span class="wk">Without ${esc(w.name)}</span>${cell(w.without, w.min_without)}</div>
-    <div class="wrow"><span class="wk">With him</span>${cell(w.with, w.min_with)}</div>`).join("")}
+    return `<b>${dec(avg, 1)}</b> avg <span class="muted">· over ${line} in ${h.over} of ${h.n} · ${dec(mins, 0)} min</span>`; };
+  return `<div class="wowy">${c.wowy.map((w) => `<div class="wrow"><span class="wk">Without ${esc(w.name)}</span><span>${cell(w.without, w.min_without)}</span></div>
+    <div class="wrow"><span class="wk">With ${esc(w.name.split(" ").slice(-1)[0])}</span><span>${cell(w.with, w.min_with)}</span></div>`).join("")}
     <p class="tiny muted">${esc(String(c.wowy[0].seasons.map((y) => `${y - 1}-${String(y).slice(2)}`).join(" and ")))} games for ${esc(c.team)}, latest 20 each way. A handful of games without him is a weak guide.</p></div>`;
 }
 
