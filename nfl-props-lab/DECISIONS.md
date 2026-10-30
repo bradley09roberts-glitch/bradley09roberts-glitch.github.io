@@ -301,3 +301,11 @@ unchanged (`model.absence_adjust` stays, unused). The pick rule of D-032 remains
 against fresh absences, and NBA cards now show the player's with/without splits for each
 teammate ruled out tonight (15+ expected minutes; this season and last, same team, latest 20
 games each way) so the effect can be judged by eye. A lineup-aware minutes model is queued.
+
+## D-035 (30 Oct 2026) Zone matchups (where a player scores v how the opponent defends there) not used
+Asked whether a rim scorer against a defence weak at the rim (and so on) should lean the pick
+over or under. Tested on 2024-2025 (n06): beyond N1's overall opponent factor, the zone
+matchup moved points by about 0.2 a game and in the wrong direction (players with the best zone
+matchups scored slightly below N1, the worst slightly above), consistent with field-goal
+percentage allowed by zone being mostly luck. It is not added to the model or the pick rules;
+the shot-zone and defence-by-position pages stay as research views.
