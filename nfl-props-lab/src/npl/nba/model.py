@@ -182,7 +182,7 @@ def assemble(cand: pd.DataFrame, ps: pd.DataFrame, ts: pd.DataFrame) -> pd.DataF
 
 def absence_adjust(x: pd.DataFrame, absent: np.ndarray, p_avail: np.ndarray, alpha: float,
                    gamma: float, p: Params, min_regular: float = 15.0, cap: float = 42.0,
-                   ) -> pd.DataFrame:
+                   shape: str = "minutes", same_pos: float = 0.0) -> pd.DataFrame:
     """Hand an absent regular's minutes and part of his usage to his teammates (nba-0.2 candidate).
 
     Rows of x are the candidates of each team-game. `absent`: known before tip to miss the game
@@ -190,8 +190,9 @@ def absence_adjust(x: pd.DataFrame, absent: np.ndarray, p_avail: np.ndarray, alp
     least `min_regular`. Teammates' recent states already include games he missed: what is still
     to hand out is his share weighted by 0.5 ** (games missed in a row / half-life), with the
     minutes and rate half-lives. A fraction `alpha` of those minutes goes to the other
-    candidates in proportion to expected minutes x `p_avail` (chance of playing), capped at
-    `cap`; each stat's per-minute rate of every recipient is multiplied by 1 + gamma x the
+    candidates in proportion to `p_avail` (chance of playing) x expected minutes (shape
+    "minutes") or x min(minutes, 38 - minutes) (shape "tent": rotation players with room for
+    more), times 1 + `same_pos` for his own position group, capped at `cap`; each stat's per-minute rate of every recipient is multiplied by 1 + gamma x the
     absent players' (still embedded) share of the team's expected production of that stat.
     """
     x = x.copy()
@@ -212,10 +213,16 @@ def absence_adjust(x: pd.DataFrame, absent: np.ndarray, p_avail: np.ndarray, alp
     has = np.bincount(inv, weights=reg_out.astype(float), minlength=G) > 0
     rec = ~absent & has[inv]
     pa = np.clip(np.nan_to_num(p_avail), 0, 1)
-    wt = np.where(rec, mu * pa, 0.0)
-    free = np.bincount(inv, weights=w_min * mu, minlength=G)
-    wsum = np.bincount(inv, weights=wt, minlength=G)
-    add = np.where(rec & (wsum[inv] > 0), alpha * free[inv] * wt / np.where(wsum[inv] > 0, wsum[inv], 1), 0.0)
+    base = mu if shape == "minutes" else np.clip(np.minimum(mu, 38 - mu), 0, None)
+    wt = np.where(rec, base * pa, 0.0)
+    add = np.zeros(len(x))
+    pos = x.pos.astype(str).to_numpy() if "pos" in x else np.full(len(x), "")
+    members = pd.Series(np.arange(len(x))).groupby(inv).apply(np.asarray).to_dict()
+    for j in np.flatnonzero(reg_out):  # each absent regular's minutes, to his own team-game
+        idx = members[inv[j]]
+        wj = wt[idx] * (1 + same_pos * (pos[idx] == pos[j]))
+        if wj.sum() > 0:
+            add[idx] += alpha * w_min[j] * mu[j] * wj / wj.sum()
     x["min_mu"] = np.where(rec, np.minimum(mu + add, np.maximum(cap, mu)), x.min_mu)
     x["absence_minutes_added"] = np.where(rec, x.min_mu.fillna(0) - mu, 0.0)
     for s in BASE_STATS:
