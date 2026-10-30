@@ -34,6 +34,10 @@ HP = {
     # returning-teammate context (experiment exp10): weight of a player's past games for his
     # current team in which a key teammate now on the roster did not play. 1.0 = off.
     "ctx_absent_weight": 1.0,
+    # exp11: keep those games at full weight but scale the player's share in them, separately
+    # for designed runs and for targets. 1.0 = off.
+    "ctx_backup_trim_d": 1.0,
+    "ctx_backup_trim_t": 1.0,
     "ctx_key_dshare": 0.25,      # a running back with at least this share of designed runs
     "ctx_key_tshare": 0.15,      # a receiver/back with at least this share of targets
 }
@@ -406,17 +410,13 @@ def _player_hist(h: History, P: Params, played: pd.DataFrame | None = None) -> p
     return ew
 
 
-def context_shares(played: pd.DataFrame, ph: pd.DataFrame, roster: pd.DataFrame,
-                   lam: float, unavailable: set | frozenset = frozenset()) -> pd.DataFrame:
-    """Re-estimate target and designed-run shares for players on this week's rosters, giving
-    weight `lam` to past games for their current team in which a key teammate who is on the
-    roster now (and not listed out) did not play: a back's share while the starter was out
-    describes a role he will not have once the starter is back (exp10)."""
-    out = ph.copy()
-    out["_wsum_t"] = out["_wsum"]
-    out["_wsum_d"] = out["_wsum"]
-    if lam >= 1 or roster.empty:
-        return out
+def _context_misses(played: pd.DataFrame, ph: pd.DataFrame, roster: pd.DataFrame,
+                    unavailable: set | frozenset = frozenset()) -> dict:
+    """For each player on this week's rosters: his past games (rows of `played`) and, for each,
+    whether a key teammate for designed runs / for targets who is on the roster now (and not
+    listed out) was missing, counting only games for his current team and only teammates who
+    normally get at least as much of the work as he does."""
+    out = {}
     who = played.groupby(["game_id", "team"]).player_id.agg(frozenset)
     for team, R in roster.groupby("team"):
         ids = [p for p in R.player_id if p in ph.index]
@@ -428,7 +428,6 @@ def context_shares(played: pd.DataFrame, ph: pd.DataFrame, roster: pd.DataFrame,
             continue
         rows = played[played.player_id.isin(ids)]
         for pid, g in rows.groupby("player_id", sort=False):
-            # only teammates who normally get at least as much of the work as this player
             kd = [k for k in key_d if k != pid and ph.at[k, "dshare"] >= (ph.at[pid, "dshare"] or 0)]
             kt = [k for k in key_t if k != pid and ph.at[k, "tshare"] >= (ph.at[pid, "tshare"] or 0)]
             if not kd and not kt:
@@ -437,14 +436,34 @@ def context_shares(played: pd.DataFrame, ph: pd.DataFrame, roster: pd.DataFrame,
             present = [who.get((gid, tm), frozenset()) for gid, tm in zip(g.game_id, g.team, strict=True)]
             miss_d = np.array([any(k not in s for k in kd) for s in present]) & mine
             miss_t = np.array([any(k not in s for k in kt) for s in present]) & mine
-            w = g["_w"].to_numpy()
-            wd, wt = w * np.where(miss_d, lam, 1.0), w * np.where(miss_t, lam, 1.0)
-            if miss_d.any() and wd.sum() > 0:
-                out.at[pid, "dshare"] = float((g.dshare.to_numpy() * wd).sum() / wd.sum())
-                out.at[pid, "_wsum_d"] = float(wd.sum())
-            if miss_t.any() and wt.sum() > 0:
-                out.at[pid, "tshare"] = float((g.tshare.to_numpy() * wt).sum() / wt.sum())
-                out.at[pid, "_wsum_t"] = float(wt.sum())
+            if miss_d.any() or miss_t.any():
+                out[pid] = (g, miss_d, miss_t)
+    return out
+
+
+def context_shares(played: pd.DataFrame, ph: pd.DataFrame, roster: pd.DataFrame,
+                   lam: float, unavailable: set | frozenset = frozenset(), trim_d: float = 1.0,
+                   trim_t: float = 1.0, misses: dict | None = None) -> pd.DataFrame:
+    """Re-estimate target and designed-run shares for players on this week's rosters when a key
+    teammate who is back now missed some of their past games (see _context_misses): a back's
+    share while the starter was out describes a role he may not keep once the starter returns.
+    exp10: those games get weight `lam`. exp11: they keep full weight but the player's share in
+    them is scaled by `trim_d` (designed runs) / `trim_t` (targets), so the history (and its
+    pull away from the role prior) is kept."""
+    out = ph.copy()
+    out["_wsum_t"] = out["_wsum"]
+    out["_wsum_d"] = out["_wsum"]
+    if (lam >= 1 and trim_d >= 1 and trim_t >= 1) or roster.empty:
+        return out
+    misses = _context_misses(played, ph, roster, unavailable) if misses is None else misses
+    for pid, (g, miss_d, miss_t) in misses.items():
+        w = g["_w"].to_numpy()
+        for col, miss, trim in (("dshare", miss_d, trim_d), ("tshare", miss_t, trim_t)):
+            wx = w * np.where(miss, lam, 1.0)
+            if not miss.any() or wx.sum() <= 0:
+                continue
+            out.at[pid, col] = float((g[col].to_numpy() * np.where(miss, trim, 1.0) * wx).sum() / wx.sum())
+            out.at[pid, f"_wsum_{col[0]}"] = float(wx.sum())
     return out
 
 
@@ -487,7 +506,8 @@ def build_slate(lake: dict, season: int, week: int, *, variant: str = "J0",
     inj_map = {} if inj is None else inj.set_index("gsis_id")["report_status"].to_dict()
     roster_all = mem[mem.status.isin(["ACT", "INA"]) & mem.position.isin(ROLE_POS)]
     out_listed = {p for p, s in inj_map.items() if s in ("Out", "Doubtful")} if variant == "J1" else set()
-    ph = context_shares(played, ph, roster_all, HP["ctx_absent_weight"], out_listed)
+    ph = context_shares(played, ph, roster_all, HP["ctx_absent_weight"], out_listed,
+                        HP["ctx_backup_trim_d"], HP["ctx_backup_trim_t"])
 
     # per-player per-play pools (most recent first), from plays before the slate
     pl = h.plays

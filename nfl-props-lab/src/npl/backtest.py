@@ -22,7 +22,7 @@ import pandas as pd
 from . import forecast
 from .config import MARKETS, RUNS_DIR
 from .dist import Dist
-from .features import load_lake
+from .features import HP, load_lake
 from .util import iso, sha256_file, sha256_json, utcnow
 
 SPLITS = {
@@ -96,7 +96,7 @@ def run(seasons_weeks: list[tuple[int, int]], *, label: str, models=("J0", "J1",
         "run_id": run_id, "created_at": iso(utcnow()), "label": label, "splits": SPLITS,
         "slates": seasons_weeks, "models": list(models), "n_sims": n_sims, "seed": seed,
         "model_version": forecast.MODEL_VERSION, "code": code, "with_ml": with_ml,
-        "mix_grid": list(mix_grid), "x_weights": forecast.X_WEIGHTS,
+        "mix_grid": list(mix_grid), "x_weights": forecast.X_WEIGHTS, "hp": dict(HP),
         "ml_fits": ml_state["fits"],
         "lake_manifest_sha256": sha256_file(RUNS_DIR.parent / "lake" / "build_manifest.json"),
         "ledger_sha256": sha256_file(led_path), "rows": len(led),
