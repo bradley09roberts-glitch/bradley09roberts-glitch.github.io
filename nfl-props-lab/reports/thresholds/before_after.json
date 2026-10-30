@@ -1,0 +1,188 @@
+{
+ "thresholds_60pct": {
+  "nfl|rush_att|QB": {
+   "over": 0.5,
+   "under": 0.0
+  },
+  "nfl|rush_yds|QB": {
+   "over": 8.5,
+   "under": -2.5
+  },
+  "nfl|rec_yds|WR/TE": {
+   "over": 15.0,
+   "under": 1.0
+  },
+  "nfl|pass_yds|QB": {
+   "over": 19.5,
+   "under": 16.0
+  },
+  "nfl|rec_yds|RB": {
+   "over": 9.5,
+   "under": -1.5
+  },
+  "nfl|receptions|WR/TE": {
+   "over": 0.5,
+   "under": 0.0
+  },
+  "nfl|receptions|RB": {
+   "over": 0.5,
+   "under": 0.0
+  },
+  "nfl|pass_att|QB": {
+   "over": 1.5,
+   "under": 2.0
+  },
+  "nfl|rush_att|RB": {
+   "over": 1.0,
+   "under": 1.0
+  },
+  "nfl|pass_cmp|QB": {
+   "over": 1.0,
+   "under": 1.5
+  },
+  "nfl|rush_yds|RB": {
+   "over": 9.5,
+   "under": 5.0
+  },
+  "nba|pts|": {
+   "over": 2.0,
+   "under": 1.0
+  },
+  "nba|reb|": {
+   "over": 0.5,
+   "under": 0.0
+  },
+  "nba|ast|": {
+   "over": 0.5,
+   "under": 0.0
+  },
+  "nba|fg3m|": {
+   "over": 0.5,
+   "under": 0.0
+  },
+  "nba|pra|": {
+   "over": 2.0,
+   "under": 1.5
+  }
+ },
+ "nba_29oct": {
+  "all": {
+   "props": 103,
+   "won": 62,
+   "win_rate": 0.602,
+   "units": 15.19,
+   "roi": 0.147
+  },
+  "picks": {
+   "props": 12,
+   "won": 9,
+   "win_rate": 0.75,
+   "units": 5.44,
+   "roi": 0.453
+  },
+  "gap": {
+   "props": 54,
+   "won": 39,
+   "win_rate": 0.722,
+   "units": 16.1,
+   "roi": 0.298
+  },
+  "both": {
+   "props": 10,
+   "won": 7,
+   "win_rate": 0.7,
+   "units": 2.83,
+   "roi": 0.283
+  }
+ },
+ "nfl_w8_car_gb": {
+  "all": {
+   "props": 32,
+   "won": 8,
+   "win_rate": 0.25,
+   "units": -16.77,
+   "roi": -0.524
+  },
+  "picks": {
+   "props": 11,
+   "won": 4,
+   "win_rate": 0.364,
+   "units": -3.22,
+   "roi": -0.293
+  },
+  "gap": {
+   "props": 13,
+   "won": 4,
+   "win_rate": 0.308,
+   "units": -6.34,
+   "roi": -0.488
+  },
+  "both": {
+   "props": 6,
+   "won": 1,
+   "win_rate": 0.167,
+   "units": -4.23,
+   "roi": -0.705
+  }
+ },
+ "nba_both_nights": {
+  "all": {
+   "props": 496,
+   "won": 272,
+   "win_rate": 0.548,
+   "units": 24.47,
+   "roi": 0.049
+  },
+  "picks": {
+   "props": 79,
+   "won": 53,
+   "win_rate": 0.671,
+   "units": 22.97,
+   "roi": 0.291
+  },
+  "gap": {
+   "props": 297,
+   "won": 184,
+   "win_rate": 0.62,
+   "units": 40.52,
+   "roi": 0.136
+  },
+  "both": {
+   "props": 66,
+   "won": 45,
+   "win_rate": 0.682,
+   "units": 17.89,
+   "roi": 0.271
+  }
+ },
+ "nfl_both_games": {
+  "all": {
+   "props": 54,
+   "won": 20,
+   "win_rate": 0.37,
+   "units": -15.82,
+   "roi": -0.293
+  },
+  "picks": {
+   "props": 16,
+   "won": 7,
+   "win_rate": 0.438,
+   "units": -2.38,
+   "roi": -0.149
+  },
+  "gap": {
+   "props": 24,
+   "won": 8,
+   "win_rate": 0.333,
+   "units": -9.97,
+   "roi": -0.415
+  },
+  "both": {
+   "props": 10,
+   "won": 3,
+   "win_rate": 0.3,
+   "units": -4.28,
+   "roi": -0.428
+  }
+ }
+}
