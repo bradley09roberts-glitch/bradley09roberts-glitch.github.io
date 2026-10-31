@@ -324,3 +324,15 @@ missing, game-time decisions by their chance of sitting, everyone else by the av
 model, scaled down in a team's first ten games, where that model over-predicts absences (factor
 measured on 2018-2023). Shots per minute are unchanged; the starter-out pick rule (D-032) stays.
 nba-0.1 parameters are kept (reports/nba/model/n1_params_nba-0.1.json) for earlier editions.
+
+## D-037 (31 Oct 2026) Lineup-aware minutes switched off in live NBA editions after one night
+First live night of nba-0.2 (30 Oct, final edition v the nba-0.1 early edition, 229 players who
+played): CRPS worse by 1.4-2.4% on points, rebounds, assists and PRA; minutes error 4.88 v 4.74.
+The 108 players shifted up (+2.1 minutes on average) played what nba-0.1 expected (actual minus
+nba-0.1 +0.07); the 23 shifted down moved the right way. So the live estimate of teammate
+minutes missing (injury report plus the availability model, scaled early in the season) runs
+above the observed absences the adjustment was fitted on, which is the failure n07 warned about
+(no gain when absences are only guessed). Live editions go back to nba-0.1 parameters
+(live.LIVE_PARAMS); nba-0.2 and its code stay for backtests. To switch it back on: build a
+history of the ESPN pre-game injury reports now stored at every publish (D-033), fit and test the
+adjustment on reported absences rather than observed ones, then check it prospectively.

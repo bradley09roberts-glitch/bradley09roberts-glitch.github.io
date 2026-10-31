@@ -652,7 +652,7 @@ function nbaCard(c, idx) {
       ${o ? `<span class="mu ${rankTone(o.rank)}" data-tip="${esc(c.opponent)} defence v ${esc(NBA_SHORT[c.market === "pra" ? "pts" : c.market])}|Rank ${o.rank} of 30 (1 = allows least); model factor ${o.factor > 1 ? "+" : ""}${((o.factor - 1) * 100).toFixed(1)}%">Matchup ${o.rank}/30</span>` : ""}
       ${dvpChip(c)}
       ${c.opp_pace ? `<span data-tip="${esc(c.opponent)} pace|${c.opp_pace.value} possessions per 48 min (rank ${c.opp_pace.rank})">Pace ${c.opp_pace.rank}/30</span>` : ""}</div>
-    ${c.teammates_out && c.teammates_out.length ? `<div class="warnline">${ICONS.warn}<span>${c.teammates_out.map((t) => esc(t.name)).join(", ")} ruled out after playing last game: his minutes are shared out in this projection, but extra shots per minute are not.</span></div>` : ""}
+    ${c.teammates_out && c.teammates_out.length ? `<div class="warnline">${ICONS.warn}<span>${c.teammates_out.map((t) => esc(t.name)).join(", ")} ruled out after playing last game: extra minutes and shots are not in this projection.</span></div>` : ""}
     ${wowyBlock(c, line)}
   </article>`;
 }

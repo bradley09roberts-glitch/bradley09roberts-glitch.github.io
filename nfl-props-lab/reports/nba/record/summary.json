@@ -1,104 +1,104 @@
 {
- "settled_at": "2026-10-30T08:56:39Z",
- "games": 15,
- "forecasts": 8235,
- "scored": 4740,
+ "settled_at": "2026-10-31T12:38:58Z",
+ "games": 25,
+ "forecasts": 13800,
+ "scored": 8175,
  "participation": {
-  "played": 316,
-  "absent": 158,
-  "dnp": 75
+  "played": 545,
+  "absent": 260,
+  "dnp": 115
  },
- "p_play_brier": 0.09695496114754099,
+ "p_play_brier": 0.0969521532826087,
  "by_model_market": [
   {
    "model": "A",
    "market": "ast",
-   "mean": 0.9707,
-   "size": 316
+   "mean": 0.9348,
+   "size": 545
   },
   {
    "model": "A",
    "market": "fg3m",
-   "mean": 0.6164,
-   "size": 316
+   "mean": 0.5996,
+   "size": 545
   },
   {
    "model": "A",
    "market": "pra",
-   "mean": 4.4522,
-   "size": 316
+   "mean": 4.4255,
+   "size": 545
   },
   {
    "model": "A",
    "market": "pts",
-   "mean": 3.3683,
-   "size": 316
+   "mean": 3.3466,
+   "size": 545
   },
   {
    "model": "A",
    "market": "reb",
-   "mean": 1.3814,
-   "size": 316
+   "mean": 1.3186,
+   "size": 545
   },
   {
    "model": "C",
    "market": "ast",
-   "mean": 1.0179,
-   "size": 316
+   "mean": 0.968,
+   "size": 545
   },
   {
    "model": "C",
    "market": "fg3m",
-   "mean": 0.6387,
-   "size": 316
+   "mean": 0.6297,
+   "size": 545
   },
   {
    "model": "C",
    "market": "pra",
-   "mean": 4.6404,
-   "size": 316
+   "mean": 4.5726,
+   "size": 545
   },
   {
    "model": "C",
    "market": "pts",
-   "mean": 3.4957,
-   "size": 316
+   "mean": 3.4637,
+   "size": 545
   },
   {
    "model": "C",
    "market": "reb",
-   "mean": 1.419,
-   "size": 316
+   "mean": 1.3577,
+   "size": 545
   },
   {
    "model": "N1",
    "market": "ast",
-   "mean": 0.958,
-   "size": 316
+   "mean": 0.9261,
+   "size": 545
   },
   {
    "model": "N1",
    "market": "fg3m",
-   "mean": 0.5979,
-   "size": 316
+   "mean": 0.5906,
+   "size": 545
   },
   {
    "model": "N1",
    "market": "pra",
-   "mean": 4.3092,
-   "size": 316
+   "mean": 4.3106,
+   "size": 545
   },
   {
    "model": "N1",
    "market": "pts",
-   "mean": 3.2833,
-   "size": 316
+   "mean": 3.2811,
+   "size": 545
   },
   {
    "model": "N1",
    "market": "reb",
-   "mean": 1.349,
-   "size": 316
+   "mean": 1.296,
+   "size": 545
   }
  ]
 }

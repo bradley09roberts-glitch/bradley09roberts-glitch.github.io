@@ -34,6 +34,11 @@ HEADLINE = "N1"
 # 2026); judged prospectively.
 INJ_OUT_P = 0.01
 INJ_GTD_MULT = 0.65
+# D-037: live editions use nba-0.1 (no lineup-aware minutes). On its first live night (30 Oct)
+# nba-0.2 pushed 108 players up by 2 minutes on average and they played what nba-0.1 expected:
+# the live estimate of teammate minutes missing tonight runs higher than the observed absences
+# the adjustment was fitted on. Back on once live absences are validated against stored reports.
+LIVE_PARAMS = "nba-0.1"
 
 
 # --------------------------------------------------------------------------- availability
@@ -100,7 +105,7 @@ def build(date_et: str, con: sqlite3.Connection | None = None, now: datetime | N
           live_injuries: bool = True) -> dict:
     con = con or db.connect()
     now = now or utcnow()
-    p = M.load_params()
+    p = M.load_params(LIVE_PARAMS)
     L = canon.load()
     pg, tg, games = L["player_games"], L["team_games"], L["games"]
     pg = pg[pg.tip_utc < now]
@@ -167,7 +172,7 @@ def _code_version() -> dict:
     def g(*a):
         return subprocess.run(["git", *a], cwd=PROJECT_ROOT, capture_output=True, text=True,
                               check=False).stdout.strip()
-    return {"git_commit": g("rev-parse", "HEAD"), "model_version": M.MODEL_VERSION,
+    return {"git_commit": g("rev-parse", "HEAD"), "model_version": LIVE_PARAMS or M.MODEL_VERSION,
             "dirty": bool(g("status", "--porcelain", "--", "src"))}
 
 
@@ -201,13 +206,15 @@ def publish(date_et: str, kind: str = "early", con: sqlite3.Connection | None = 
     doc = {"edition_id": eid, "sport": "NBA", "date_et": date_et, "kind": kind,
            "published_at": iso(now), "headline_model": HEADLINE, "models": list(MODELS),
            "code": code, "inputs": b["inputs"], "inputs_hash": sha256_json(b["inputs"]),
-           "params_sha256": sha256_bytes(M.frozen_path().read_bytes()),
+           "params_sha256": sha256_bytes((M.frozen_path() if LIVE_PARAMS is None else
+                                          M.frozen_path().with_name(f"n1_params_{LIVE_PARAMS}.json")
+                                          ).read_bytes()),
            "notes": ["Distributions are conditional on the player taking part; P(plays) is "
                      "separate. Injury reports: ESPN's game feeds at publish time (see "
                      "inputs.injuries_live). Injury adjustments (Out 1%, game-time decision "
-                     "x0.65) are assumptions, not validated. Minutes react to teammates listed out "
-                     "tonight and to teammates back from absences (nba-0.2, D-036); shots per "
-                     "minute do not. No bookmaker prices were used."],
+                     "x0.65) are assumptions, not validated. Minutes do not react to teammates ruled "
+                     "out (lineup-aware minutes are off in live editions, D-037). No bookmaker "
+                     "prices were used."],
            "games": [{"game_id": g.game_id, "home": g.home, "away": g.away,
                       "tip_utc": iso(g.tip_utc), "time_valid": bool(g.time_valid),
                       "published_before_tip": now < g.tip_utc} for g in sg.itertuples()],
