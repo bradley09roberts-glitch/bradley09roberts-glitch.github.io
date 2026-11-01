@@ -188,3 +188,19 @@ def test_lineup_cal_factor_by_team_games_played():
     cal = {"0-5": 0.7, "5-10": 0.9, "10-999": 1.0}
     assert M.lineup_cal_factor(cal, np.array([0, 4, 5, 12])).tolist() == [0.7, 0.7, 0.9, 1.0]
     assert M.lineup_cal_factor(None, np.array([3])).tolist() == [1.0]
+
+
+def test_simple_team_rest_and_projection():
+    import pandas as pd
+    import pytest
+
+    from npl.nba import simple as SM
+    games = pd.DataFrame({"game_id": ["a", "b", "c"], "home": ["BOS", "BOS", "NY"], "away": ["NY", "MIA", "BOS"],
+                          "season": 2027, "date": pd.to_datetime(["2026-10-20", "2026-10-21", "2026-10-25"]),
+                          "tip_utc": pd.to_datetime(["2026-10-20T23:00Z", "2026-10-21T23:00Z", "2026-10-25T23:00Z"])})
+    r = SM.team_rest(games).set_index(["game_id", "team"]).rest
+    assert r[("a", "BOS")] == 3 and r[("b", "BOS")] == 0 and r[("c", "BOS")] == 3  # opener, b2b, 3 days off
+    f = pd.DataFrame({"rest": [0], "min_trend": [1.1], **{f"avg_{s}": [10.0] for s in SM.MARKETS},
+                      **{f"opp_factor_{s}": [1.2] for s in SM.MARKETS}})
+    rest = {s: {0: 0.9, 1: 1.0, 2: 1.0, 3: 1.0} for s in SM.MARKETS}
+    assert SM.project(f, rest).pts[0] == pytest.approx(10 * 1.2 * 0.9 * 1.1)

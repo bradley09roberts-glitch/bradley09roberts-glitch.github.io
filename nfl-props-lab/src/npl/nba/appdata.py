@@ -177,6 +177,7 @@ def _props() -> dict:
                 {"name": f["name"], "player_id": f["player_id"], "minutes": f["minutes_expected"],
                  "played_last": bool(lg is not None and len(lg) and
                                      lg.tip_utc.iloc[-1] >= _team_last_tip(f["team"], e))})
+    simple_s = _simple(fc, games)
     cards = []
     for f in fc:
         lg = logs.get(f["player_id"])
@@ -198,6 +199,7 @@ def _props() -> dict:
                                  "market", "p_play", "injury", "minutes_expected", "mean",
                                  "median", "q10", "q90", "dist")},
             "minutes_lineup_shift": f.get("minutes_lineup_shift"),
+            "simple": simple_s.get((f["player_id"], f["market"])),
             "market_label": M.MARKET_LABELS[f["market"]], "model": e["headline_model"],
             "tip_utc": g["tip_utc"], "tip_london": _london(g["tip_utc"]),
             "is_home": g["home"] == f["team"],
@@ -217,6 +219,25 @@ def _props() -> dict:
     return {"edition_id": e["edition_id"], "date_et": e["date_et"], "cards": cards,
             "markets": {k: M.MARKET_LABELS[k] for k in M.MARKETS},
             "published_london": _london(e["published_at"])}
+
+
+def _simple(fc: list, games: dict) -> dict:
+    """The simple baseline S (season average x opponent x rest x minutes trend; D-038) for each
+    (player, market) of the edition; empty if it cannot be computed."""
+    from . import simple, source
+
+    rows = pd.DataFrame([{"player_id": f["player_id"], "team": f["team"], "opp": f["opponent"],
+                          "game_id": f["game_id"], "season": source.CURRENT_SEASON,
+                          "tip_utc": pd.Timestamp(games[f["game_id"]]["tip_utc"])}
+                         for f in fc if f["market"] == "pts"])
+    if rows.empty:
+        return {}
+    try:
+        sp = simple.tonight(rows)
+    except Exception:  # noqa: BLE001 - a display extra; never block the cards
+        return {}
+    return {(pid, m): round(float(v), 1) for pid, (_, r) in zip(rows.player_id, sp.iterrows(), strict=True)
+            for m, v in r.items() if pd.notna(v)}
 
 
 def _wowy(f: dict, lg, logs: dict, out: list, cur_season: int, top: int = 2) -> list:

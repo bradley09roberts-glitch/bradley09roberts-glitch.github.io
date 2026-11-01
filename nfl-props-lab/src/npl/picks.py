@@ -129,7 +129,33 @@ def nba() -> dict:
     pk = [r for r in rows if r["model"] - r["market_p"] >= NBA_GAP_MIN]
     leans = [r for r in rows if r["model"] - r["market_p"] < NBA_GAP_MIN]
     return {"edition_id": P["edition_id"], "picks": _finish(pk), "leans": _finish(leans),
-            "left_out_15_plus": out_of_range, "teams_left_out": star, "rules": __doc__}
+            "simple_gap": simple_gap(P["cards"]), "left_out_15_plus": out_of_range,
+            "teams_left_out": star, "rules": __doc__}
+
+
+SIMPLE_GAP = 1.0  # D-038: tracked, not picks
+
+
+def simple_gap(cards: list[dict]) -> list[dict]:
+    """Tracking list for the simple baseline: the side S favours when it beats the US line by at
+    least SIMPLE_GAP (eligible props only). Not a pick list: on the first three nights this rule
+    won about half its bets (n08)."""
+    out = []
+    for c in cards:
+        m, s = c.get("market_line"), c.get("simple")
+        if (not m or s is None or c["p_play"] < 0.85 or c["injury"] or m["books"] < 3
+                or float(m["line"]).is_integer()):
+            continue
+        d = s - m["line"]
+        if abs(d) < SIMPLE_GAP:
+            continue
+        side = "over" if d > 0 else "under"
+        out.append({"player": c["name"], "team": c["team"], "opponent": c["opponent"],
+                    "market": c["market"], "line": m["line"], "side": side, "simple": s,
+                    "gap_points": round(abs(d), 1),
+                    "market_p": round(m["fair_over"] if side == "over" else 1 - m["fair_over"], 4),
+                    "best_price": m["best_over"] if side == "over" else m["best_under"]})
+    return sorted(out, key=lambda r: -r["gap_points"])
 
 
 def nfl(season: int | None = None, week: int | None = None, game_id: str | None = None) -> dict:
@@ -190,10 +216,11 @@ def nfl(season: int | None = None, week: int | None = None, game_id: str | None 
 def table(res: dict) -> str:
     if res.get("error"):
         return res["error"]
-    cols = ["player", "team", "opponent", "market", "side", "line", "model_low", "market_p",
-            "estimate", "min_price", "best_price", "last10", "strict"]
+    cols = ["player", "team", "opponent", "market", "side", "line", "simple", "gap_points", "model_low",
+            "market_p", "estimate", "min_price", "best_price", "last10", "strict"]
     out = []
-    for key, title in (("picks", "Picks"), ("leans", "Leans (6-10 points, not picks)")):
+    for key, title in (("picks", "Picks"), ("leans", "Leans (6-10 points, not picks)"),
+                       ("simple_gap", "Simple baseline beats the line by 1+ (tracking only)")):
         if key not in res:
             continue
         d = pd.DataFrame(res[key])

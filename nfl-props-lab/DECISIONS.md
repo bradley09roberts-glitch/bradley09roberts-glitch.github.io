@@ -336,3 +336,15 @@ above the observed absences the adjustment was fitted on, which is the failure n
 (live.LIVE_PARAMS); nba-0.2 and its code stay for backtests. To switch it back on: build a
 history of the ESPN pre-game injury reports now stored at every publish (D-033), fit and test the
 adjustment on reported absences rather than observed ones, then check it prospectively.
+
+## D-038 (1 Nov 2026) Simple baseline S built; its line-gap rule is tracked, not used for picks
+Asked for a simple baseline (season average x opponent factor x rest factor x minutes trend)
+and to bet when it beats the book's line by 1-2 points, tracking 50-100 bets. Built as
+npl.nba.simple (rest factors fitted on 2018-2023) and shown on NBA cards as "Simple". It is
+nearly as accurate as N1 on 2024-2025 (points mean absolute error 4.61 v 4.59) and better than A.
+But against the 957 eligible props with US lines so far, its gap rule won about half its bets at
+every gap from 0.5 to 2 points and lost 10-38 units, because the bookmakers' lines already
+contain everything S knows: a season average, the matchup and rest are public. The tracked pick
+rules won 84 of 144 on the same props. `npl picks --sport nba` now also lists the S gap bets
+(1+ point) as a tracking list so the user's 50-100 bet test runs on its own record; it is
+reviewed with the pick rules after about ten nights.
