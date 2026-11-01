@@ -1,0 +1,344 @@
+{
+ "rows": 420710,
+ "by_source": {
+  "n02": 277155,
+  "n03": 140035,
+  "live": 3520
+ },
+ "residual_by_rank_band": {
+  "pts": {
+   "1-5": {
+    "n": 15195,
+    "n1_resid": -0.114,
+    "vs_season_avg": -0.245
+   },
+   "6-10": {
+    "n": 14188,
+    "n1_resid": -0.091,
+    "vs_season_avg": -0.051
+   },
+   "11-20": {
+    "n": 28044,
+    "n1_resid": 0.037,
+    "vs_season_avg": 0.298
+   },
+   "21-25": {
+    "n": 13490,
+    "n1_resid": 0.081,
+    "vs_season_avg": 0.554
+   },
+   "26-30": {
+    "n": 13225,
+    "n1_resid": 0.21,
+    "vs_season_avg": 0.927
+   }
+  },
+  "reb": {
+   "1-5": {
+    "n": 14404,
+    "n1_resid": -0.065,
+    "vs_season_avg": -0.106
+   },
+   "6-10": {
+    "n": 14727,
+    "n1_resid": -0.017,
+    "vs_season_avg": 0.007
+   },
+   "11-20": {
+    "n": 28057,
+    "n1_resid": 0.013,
+    "vs_season_avg": 0.106
+   },
+   "21-25": {
+    "n": 13720,
+    "n1_resid": -0.022,
+    "vs_season_avg": 0.153
+   },
+   "26-30": {
+    "n": 13234,
+    "n1_resid": 0.038,
+    "vs_season_avg": 0.31
+   }
+  },
+  "ast": {
+   "1-5": {
+    "n": 14894,
+    "n1_resid": 0.009,
+    "vs_season_avg": -0.088
+   },
+   "6-10": {
+    "n": 14773,
+    "n1_resid": -0.005,
+    "vs_season_avg": -0.041
+   },
+   "11-20": {
+    "n": 27753,
+    "n1_resid": 0.042,
+    "vs_season_avg": 0.097
+   },
+   "21-25": {
+    "n": 13378,
+    "n1_resid": 0.045,
+    "vs_season_avg": 0.171
+   },
+   "26-30": {
+    "n": 13344,
+    "n1_resid": 0.097,
+    "vs_season_avg": 0.286
+   }
+  },
+  "fg3m": {
+   "1-5": {
+    "n": 14228,
+    "n1_resid": 0.014,
+    "vs_season_avg": -0.05
+   },
+   "6-10": {
+    "n": 14160,
+    "n1_resid": 0.018,
+    "vs_season_avg": -0.004
+   },
+   "11-20": {
+    "n": 28595,
+    "n1_resid": 0.012,
+    "vs_season_avg": 0.025
+   },
+   "21-25": {
+    "n": 13708,
+    "n1_resid": 0.043,
+    "vs_season_avg": 0.094
+   },
+   "26-30": {
+    "n": 13451,
+    "n1_resid": 0.017,
+    "vs_season_avg": 0.103
+   }
+  },
+  "pra": {
+   "1-5": {
+    "n": 15248,
+    "n1_resid": -0.186,
+    "vs_season_avg": -0.397
+   },
+   "6-10": {
+    "n": 14257,
+    "n1_resid": -0.122,
+    "vs_season_avg": -0.093
+   },
+   "11-20": {
+    "n": 28271,
+    "n1_resid": 0.059,
+    "vs_season_avg": 0.51
+   },
+   "21-25": {
+    "n": 13149,
+    "n1_resid": 0.197,
+    "vs_season_avg": 0.937
+   },
+   "26-30": {
+    "n": 13217,
+    "n1_resid": 0.324,
+    "vs_season_avg": 1.431
+   }
+  }
+ },
+ "persistence": {
+  "pts": {
+   "players_both_seasons": 337,
+   "corr_2024_v_2025": 0.05400735830623232,
+   "player_seasons_split_half": 754,
+   "corr_split_half": 0.0865508113686849
+  },
+  "reb": {
+   "players_both_seasons": 330,
+   "corr_2024_v_2025": 0.03954332240093425,
+   "player_seasons_split_half": 747,
+   "corr_split_half": 0.060202876885174415
+  },
+  "ast": {
+   "players_both_seasons": 340,
+   "corr_2024_v_2025": 0.06331936605063128,
+   "player_seasons_split_half": 761,
+   "corr_split_half": 0.0635415480393741
+  },
+  "fg3m": {
+   "players_both_seasons": 340,
+   "corr_2024_v_2025": 0.03865680418348352,
+   "player_seasons_split_half": 750,
+   "corr_split_half": -0.05533892278658015
+  },
+  "pra": {
+   "players_both_seasons": 336,
+   "corr_2024_v_2025": 0.047969149181330384,
+   "player_seasons_split_half": 763,
+   "corr_split_half": 0.1023144365121351
+  }
+ },
+ "tonight": [
+  {
+   "player": "Jayson Tatum",
+   "market": "pts",
+   "side": "under",
+   "line": 26.5,
+   "opponent": "ORL",
+   "opp_rank_now": 22,
+   "games": 193,
+   "games_v_top10": 62,
+   "resid_v_top10": 1.17,
+   "resid_v_rest": 0.84,
+   "avg_v_top10": 25.6,
+   "side_hit_v_top10": "40/62",
+   "side_hit_all": "111/193"
+  },
+  {
+   "player": "Andrew Nembhard",
+   "market": "pts",
+   "side": "under",
+   "line": 18.5,
+   "opponent": "BKN",
+   "opp_rank_now": 20,
+   "games": 228,
+   "games_v_top10": 84,
+   "resid_v_top10": 0.88,
+   "resid_v_rest": 0.28,
+   "avg_v_top10": 12.6,
+   "side_hit_v_top10": "68/84",
+   "side_hit_all": "189/228"
+  },
+  {
+   "player": "Kris Dunn",
+   "market": "pts",
+   "side": "under",
+   "line": 8.5,
+   "opponent": "GS",
+   "opp_rank_now": 23,
+   "games": 228,
+   "games_v_top10": 88,
+   "resid_v_top10": -0.14,
+   "resid_v_rest": -1.07,
+   "avg_v_top10": 6.9,
+   "side_hit_v_top10": "56/88",
+   "side_hit_all": "160/228"
+  },
+  {
+   "player": "Jakob Poeltl",
+   "market": "reb",
+   "side": "under",
+   "line": 6.5,
+   "opponent": "LAL",
+   "opp_rank_now": 2,
+   "games": 159,
+   "games_v_top10": 61,
+   "resid_v_top10": 0.49,
+   "resid_v_rest": -0.62,
+   "avg_v_top10": 8.9,
+   "side_hit_v_top10": "17/61",
+   "side_hit_all": "48/159"
+  },
+  {
+   "player": "Scottie Barnes",
+   "market": "reb",
+   "side": "under",
+   "line": 7.5,
+   "opponent": "LAL",
+   "opp_rank_now": 2,
+   "games": 211,
+   "games_v_top10": 76,
+   "resid_v_top10": 0.22,
+   "resid_v_rest": 0.28,
+   "avg_v_top10": 7.5,
+   "side_hit_v_top10": "38/76",
+   "side_hit_all": "104/211"
+  },
+  {
+   "player": "Rui Hachimura",
+   "market": "pts",
+   "side": "under",
+   "line": 15.5,
+   "opponent": "GS",
+   "opp_rank_now": 23,
+   "games": 215,
+   "games_v_top10": 87,
+   "resid_v_top10": 0.48,
+   "resid_v_rest": -0.14,
+   "avg_v_top10": 13.2,
+   "side_hit_v_top10": "59/87",
+   "side_hit_all": "150/215"
+  },
+  {
+   "player": "Andrew Nembhard",
+   "market": "reb",
+   "side": "under",
+   "line": 3.5,
+   "opponent": "BKN",
+   "opp_rank_now": 5,
+   "games": 228,
+   "games_v_top10": 79,
+   "resid_v_top10": -0.33,
+   "resid_v_rest": 0.19,
+   "avg_v_top10": 2.5,
+   "side_hit_v_top10": "57/79",
+   "side_hit_all": "154/228"
+  },
+  {
+   "player": "Pascal Siakam",
+   "market": "reb",
+   "side": "under",
+   "line": 7.5,
+   "opponent": "BKN",
+   "opp_rank_now": 5,
+   "games": 259,
+   "games_v_top10": 87,
+   "resid_v_top10": 0.09,
+   "resid_v_rest": 0.16,
+   "avg_v_top10": 6.6,
+   "side_hit_v_top10": "58/87",
+   "side_hit_all": "167/259"
+  },
+  {
+   "player": "Derrick White",
+   "market": "ast",
+   "side": "under",
+   "line": 4.5,
+   "opponent": "ORL",
+   "opp_rank_now": 30,
+   "games": 259,
+   "games_v_top10": 95,
+   "resid_v_top10": 0.29,
+   "resid_v_rest": 0.16,
+   "avg_v_top10": 4.8,
+   "side_hit_v_top10": "42/95",
+   "side_hit_all": "119/259"
+  },
+  {
+   "player": "Walker Kessler",
+   "market": "pts",
+   "side": "under",
+   "line": 12.5,
+   "opponent": "TOR",
+   "opp_rank_now": 4,
+   "games": 126,
+   "games_v_top10": 49,
+   "resid_v_top10": -1.28,
+   "resid_v_rest": 0.24,
+   "avg_v_top10": 8.6,
+   "side_hit_v_top10": "42/49",
+   "side_hit_all": "97/126"
+  },
+  {
+   "player": "Austin Reaves",
+   "market": "pts",
+   "side": "under",
+   "line": 22.5,
+   "opponent": "TOR",
+   "opp_rank_now": 4,
+   "games": 223,
+   "games_v_top10": 90,
+   "resid_v_top10": 1.0,
+   "resid_v_rest": 0.74,
+   "avg_v_top10": 19.1,
+   "side_hit_v_top10": "67/90",
+   "side_hit_all": "161/223"
+  }
+ ]
+}
