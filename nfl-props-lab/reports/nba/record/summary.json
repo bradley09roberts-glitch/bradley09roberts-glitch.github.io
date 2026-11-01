@@ -1,104 +1,104 @@
 {
- "settled_at": "2026-10-31T12:38:58Z",
- "games": 25,
- "forecasts": 13800,
- "scored": 8175,
+ "settled_at": "2026-11-01T03:09:33Z",
+ "games": 32,
+ "forecasts": 17730,
+ "scored": 10560,
  "participation": {
-  "played": 545,
-  "absent": 260,
-  "dnp": 115
+  "played": 704,
+  "absent": 339,
+  "dnp": 139
  },
- "p_play_brier": 0.0969521532826087,
+ "p_play_brier": 0.09784742439932317,
  "by_model_market": [
   {
    "model": "A",
    "market": "ast",
-   "mean": 0.9348,
-   "size": 545
+   "mean": 0.9288,
+   "size": 704
   },
   {
    "model": "A",
    "market": "fg3m",
-   "mean": 0.5996,
-   "size": 545
+   "mean": 0.6155,
+   "size": 704
   },
   {
    "model": "A",
    "market": "pra",
-   "mean": 4.4255,
-   "size": 545
+   "mean": 4.5158,
+   "size": 704
   },
   {
    "model": "A",
+   "market": "pts",
+   "mean": 3.4112,
+   "size": 704
+  },
+  {
+   "model": "A",
+   "market": "reb",
+   "mean": 1.3129,
+   "size": 704
+  },
+  {
+   "model": "C",
+   "market": "ast",
+   "mean": 0.9505,
+   "size": 704
+  },
+  {
+   "model": "C",
+   "market": "fg3m",
+   "mean": 0.641,
+   "size": 704
+  },
+  {
+   "model": "C",
+   "market": "pra",
+   "mean": 4.6834,
+   "size": 704
+  },
+  {
+   "model": "C",
+   "market": "pts",
+   "mean": 3.5354,
+   "size": 704
+  },
+  {
+   "model": "C",
+   "market": "reb",
+   "mean": 1.3566,
+   "size": 704
+  },
+  {
+   "model": "N1",
+   "market": "ast",
+   "mean": 0.92,
+   "size": 704
+  },
+  {
+   "model": "N1",
+   "market": "fg3m",
+   "mean": 0.6063,
+   "size": 704
+  },
+  {
+   "model": "N1",
+   "market": "pra",
+   "mean": 4.3987,
+   "size": 704
+  },
+  {
+   "model": "N1",
    "market": "pts",
    "mean": 3.3466,
-   "size": 545
-  },
-  {
-   "model": "A",
-   "market": "reb",
-   "mean": 1.3186,
-   "size": 545
-  },
-  {
-   "model": "C",
-   "market": "ast",
-   "mean": 0.968,
-   "size": 545
-  },
-  {
-   "model": "C",
-   "market": "fg3m",
-   "mean": 0.6297,
-   "size": 545
-  },
-  {
-   "model": "C",
-   "market": "pra",
-   "mean": 4.5726,
-   "size": 545
-  },
-  {
-   "model": "C",
-   "market": "pts",
-   "mean": 3.4637,
-   "size": 545
-  },
-  {
-   "model": "C",
-   "market": "reb",
-   "mean": 1.3577,
-   "size": 545
-  },
-  {
-   "model": "N1",
-   "market": "ast",
-   "mean": 0.9261,
-   "size": 545
-  },
-  {
-   "model": "N1",
-   "market": "fg3m",
-   "mean": 0.5906,
-   "size": 545
-  },
-  {
-   "model": "N1",
-   "market": "pra",
-   "mean": 4.3106,
-   "size": 545
-  },
-  {
-   "model": "N1",
-   "market": "pts",
-   "mean": 3.2811,
-   "size": 545
+   "size": 704
   },
   {
    "model": "N1",
    "market": "reb",
-   "mean": 1.296,
-   "size": 545
+   "mean": 1.2868,
+   "size": 704
   }
  ]
 }
