@@ -173,17 +173,35 @@
     return (code >> 3) ? PAL.b : PAL.w;
   }
 
-  function svg(code, opts) {
+  let pieceSet = 'creatures';
+  const artFor = t => (pieceSet === 'classic' && global.ClassicArt && global.ClassicArt[t]) ? global.ClassicArt[t] : ART[t];
+  const inkOn = () => !!(global.Ink && global.Ink.enabled);
+
+  // the clean (coloured) drawing; the Ink renderer converts this into a ballpoint sketch
+  function svgClean(code, opts) {
     opts = opts || {};
     const t = code & 7, p = palFor(code, opts.palette);
     const side = (code >> 3) ? 'b' : 'w';
-    return `<svg class="pc-svg pc-t${t} pc-${side}${opts.cls ? ' ' + opts.cls : ''}" viewBox="0 0 100 100" aria-hidden="true">${ART[t](p)}</svg>`;
+    return `<svg class="pc-svg pc-t${t} pc-${side}${opts.cls ? ' ' + opts.cls : ''}" viewBox="0 0 100 100" aria-hidden="true">${artFor(t)(p)}</svg>`;
   }
 
-  function mini(code) { return svg(code, { cls: 'mini' }); }
+  function svg(code, opts) {
+    opts = opts || {};
+    if (inkOn()) return global.Ink.piece(code, { palette: opts.palette, cls: opts.cls, frames: opts.frames });
+    return svgClean(code, opts);
+  }
+
+  function mini(code) {
+    if (inkOn()) return global.Ink.piece(code, { cls: 'mini', frames: 1, weight: 1.8 });
+    return svgClean(code, { cls: 'mini' });
+  }
 
   /* Coach: Sage Bramblewick the hedgehog */
   function coach(expr) {
+    if (inkOn()) return global.Ink.coach(expr || 'happy');
+    return coachClean(expr);
+  }
+  function coachClean(expr) {
     expr = expr || 'happy';
     const L = '#3b2414';
     let spikes = '';
@@ -252,5 +270,10 @@
     blunder: { label: 'Blunder', sym: '??', color: '#e5484d' }
   };
 
-  global.PieceArt = { svg, mini, coach, NAMES, PAL, CLASS_INFO };
+  global.PieceArt = {
+    svg, mini, coach, NAMES, PAL, CLASS_INFO,
+    clean: { svg: svgClean, coach: coachClean },
+    setPieceSet(v) { pieceSet = v === 'classic' ? 'classic' : 'creatures'; },
+    get pieceSet() { return pieceSet; }
+  };
 })(typeof window !== 'undefined' ? window : globalThis);

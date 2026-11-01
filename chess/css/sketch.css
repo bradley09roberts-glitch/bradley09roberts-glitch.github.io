@@ -1,0 +1,1027 @@
+/* =====================================================================
+   Mosswood Chess: "Sketchbook" skin
+   Everything looks doodled in ballpoint pen on notebook paper.
+   Active when <body> has class "style-sketch".
+     body.boil       -> hand-drawn line boil on .ink-svg drawings
+     body.ink-black  -> black ballpoint instead of blue
+   Every rule is scoped under body.style-sketch, except @keyframes and
+   the shared line-boil contract rules.
+   Pen colours: ink #22408f (black #2a2a30), red #d0373b, green #2c8a47,
+   highlighter rgba(255,224,40,.5), pencil #77736b.
+   ===================================================================== */
+
+/* ---------- line boil (shared contract: do not change) ---------- */
+.ink-svg .ink-f1, .ink-svg .ink-f2 { display: none; }
+body.boil .ink-svg .ink-f1, body.boil .ink-svg .ink-f2 { display: inline; }
+body.boil .ink-svg .ink-f { animation: inkBoil .45s step-end infinite; animation-delay: calc(var(--bp, 0s) + var(--fo, 0s)); }
+.ink-f0 { --fo: 0s; } .ink-f1 { --fo: -.15s; } .ink-f2 { --fo: -.3s; }
+@keyframes inkBoil { 0% { visibility: visible; } 33.333% { visibility: hidden; } 100% { visibility: hidden; } }
+@media (prefers-reduced-motion: reduce) {
+  /* style.css shortens every animation; show a single still frame instead */
+  body.boil .ink-svg .ink-f1, body.boil .ink-svg .ink-f2 { display: none; }
+  body.boil .ink-svg .ink-f { animation: none !important; visibility: visible; }
+}
+
+/* ---------- tokens ---------- */
+body.style-sketch {
+  --sk-ink: #22408f;
+  --sk-ink-rgb: 34, 64, 143;
+  --sk-red: #d0373b;
+  --sk-red-rgb: 208, 55, 59;
+  --sk-green: #2c8a47;
+  --sk-green-rgb: 44, 138, 71;
+  --sk-hi: rgba(255, 224, 40, .5);
+  --sk-hi-strong: rgba(255, 221, 30, .7);
+  --sk-pencil: #77736b;
+  --sk-pencil-rgb: 119, 115, 107;
+  --sk-paper: #fbf8ef;
+  --sk-card: #fffdf7;
+  --sk-sticky: #fff3a6;
+  --sk-rule: rgba(96, 144, 214, .27);
+  --sk-margin: rgba(222, 76, 76, .55);
+  --sk-tape: rgba(234, 224, 186, .78);
+  --sk-hand: 'Patrick Hand', 'Comic Neue', 'Segoe Print', 'Bradley Hand', 'Chalkboard SE', 'Comic Sans MS', cursive;
+  --sk-head: 'Caveat', 'Patrick Hand', 'Segoe Print', 'Bradley Hand', 'Chalkboard SE', cursive;
+  /* wobbly hand-drawn box corners */
+  --sk-r1: 255px 15px 225px 15px / 15px 225px 15px 255px;
+  --sk-r2: 15px 225px 15px 255px / 255px 15px 225px 15px;
+  --sk-r3: 225px 20px 255px 12px / 18px 255px 12px 225px;
+  --sk-r4: 12px 245px 20px 235px / 235px 20px 245px 12px;
+  --sk-blob: 58% 42% 55% 45% / 48% 60% 40% 52%;
+  --sk-blob2: 45% 55% 42% 58% / 56% 44% 58% 42%;
+  --sk-ring: 50% 46% 54% 48% / 55% 49% 52% 46%;
+  /* colour emoji -> monochrome ink-ish doodles */
+  --sk-emoji: grayscale(1) sepia(1) saturate(6) hue-rotate(185deg) brightness(.55) contrast(1.35);
+  /* hatching for the "dark" side of things */
+  --sk-hatch: repeating-linear-gradient(-45deg, rgba(var(--sk-ink-rgb), .62) 0 1.1px, transparent 1.1px 4.6px);
+  --sk-hatch-x: repeating-linear-gradient(-45deg, rgba(var(--sk-ink-rgb), .55) 0 1px, transparent 1px 4.4px),
+                repeating-linear-gradient(42deg, rgba(var(--sk-ink-rgb), .32) 0 .9px, transparent .9px 6.2px);
+  /* highlighter swipe (fill) */
+  --sk-hi-fill: linear-gradient(98deg, rgba(255, 224, 40, 0) 0, rgba(255, 224, 40, .55) 3%, rgba(255, 226, 60, .5) 48%, rgba(255, 220, 30, .62) 96%, rgba(255, 224, 40, 0) 100%),
+                repeating-linear-gradient(176deg, rgba(255, 255, 255, .14) 0 3px, transparent 3px 8px);
+  /* mask images (drawn in whatever colour the element's background is) */
+  --sk-m-line: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 12' preserveAspectRatio='none'%3E%3Cpath d='M2 6 C70 3.4 130 8.2 200 5.4 S330 3.8 398 6.6' fill='none' stroke='%23000' stroke-width='2.2' stroke-linecap='round' vector-effect='non-scaling-stroke'/%3E%3Cpath d='M7 8.6 C90 6.6 160 9.6 250 7.4 S350 7 393 9.2' fill='none' stroke='%23000' stroke-opacity='.45' stroke-width='1.1' stroke-linecap='round' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E");
+  --sk-m-scribble: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 24' preserveAspectRatio='none'%3E%3Cpath d='M3 9 C50 5 120 4 197 7 C150 9 90 11 12 15 C70 13 140 13 190 16' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E");
+  --sk-m-loop: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cpath d='M62 8 C84 11 95 30 93 52 C91 76 70 93 46 91 C21 89 5 70 7 46 C9 23 28 7 53 7 C61 7 68 10 74 14' fill='none' stroke='%23000' stroke-width='2.6' stroke-linecap='round' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E");
+  --sk-m-loop2: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cpath d='M28 13 C52 3 86 10 93 40 C99 70 76 94 46 92 C19 90 4 68 8 42 C11 24 26 11 50 9 M50 9 C60 8 70 10 78 15' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E");
+  --sk-m-ast: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 3 L12.4 21 M4.5 7.6 L19.4 16.2 M19.6 7.4 L4.4 16.6' fill='none' stroke='%23000' stroke-width='2.6' stroke-linecap='round'/%3E%3C/svg%3E");
+  --sk-m-spark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2 C12.6 9 14.8 11.4 22 12 C14.8 12.6 12.6 15 12 22 C11.4 15 9.2 12.6 2 12 C9.2 11.4 11.4 9 12 2 Z' fill='none' stroke='%23000' stroke-width='2' stroke-linejoin='round'/%3E%3C/svg%3E");
+  --sk-m-squig: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 16'%3E%3Cpath d='M2 9 C6 1 10 15 14 8 S22 1 26 8 S34 15 38 6' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E");
+  --sk-m-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 24'%3E%3Cpath d='M2.5 13 C9 11.6 17 12.8 28.5 11.6 M20.5 4.5 C23 7.4 26 9.8 29.5 11.4 C26.4 13.6 23.6 16.4 21.4 19.6' fill='none' stroke='%23000' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  --sk-m-tick: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M3.5 13 C6 14.5 8 16.5 9.5 20 C12 12.5 16 7 21.5 3.5' fill='none' stroke='%23000' stroke-width='2.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  --sk-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .38 0 0 0 0 .32 0 0 0 0 .2 0 0 0 .6 -.24'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+  --sk-mottle: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='640' height='640'%3E%3Cfilter id='m'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.006' numOctaves='3' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .62 0 0 0 0 .52 0 0 0 0 .3 0 0 0 .5 -.18'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23m)'/%3E%3C/svg%3E");
+
+  /* re-point the app's own tokens so every un-restyled rule still reads as ink on paper */
+  --text: var(--sk-ink);
+  --muted: var(--sk-pencil);
+  --gold: var(--sk-ink);
+  --gold2: var(--sk-pencil);
+  --moss: var(--sk-green);
+  --teal: var(--sk-ink);
+  --danger: var(--sk-red);
+  --panel: var(--sk-card);
+  --panel2: var(--sk-card);
+  --line: rgba(var(--sk-ink-rgb), .38);
+  --parch: var(--sk-sticky);
+  --parch2: #ffec8c;
+  --ink: var(--sk-ink);
+  --hl: var(--sk-hi);
+  --light: var(--sk-paper);
+  --dark: rgba(var(--sk-ink-rgb), .25);
+  --display: var(--sk-head);
+  --head: var(--sk-head);
+  --body: var(--sk-hand);
+
+  background: var(--sk-paper);
+  color: var(--sk-ink);
+  font-family: var(--sk-hand);
+  font-size: 16px;
+  line-height: 1.4;
+}
+body.style-sketch.ink-black {
+  --sk-ink: #2a2a30;
+  --sk-ink-rgb: 42, 42, 48;
+  --sk-emoji: grayscale(1) brightness(.5) contrast(1.6);
+}
+
+/* ---------- the notebook page ---------- */
+body.style-sketch::before {
+  content: '';
+  position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    var(--sk-grain),
+    /* binder punch holes */
+    radial-gradient(circle at 22px 140px, rgba(120, 108, 80, .16) 0 8.5px, rgba(120, 108, 80, .3) 9px 10px, transparent 10.5px) 0 0 / 44px 280px repeat-y,
+    /* red margin line */
+    linear-gradient(90deg, transparent 0 56px, var(--sk-margin) 56px 57.6px, transparent 57.6px 61px, rgba(222, 76, 76, .22) 61px 62px, transparent 62px),
+    /* faint blue rules */
+    repeating-linear-gradient(180deg, transparent 0 27px, var(--sk-rule) 27px 28px),
+    var(--sk-mottle),
+    radial-gradient(ellipse 120% 90% at 50% 40%, transparent 55%, rgba(176, 150, 96, .14) 100%),
+    var(--sk-paper);
+}
+body.style-sketch #world { display: none; }
+body.style-sketch #doodles { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+body.style-sketch #doodles svg { overflow: visible; }
+/* tape and pen loops may poke past the page edge: clip them without making #app a scroller (keeps the sticky top bar) */
+body.style-sketch #app { position: relative; z-index: 1; overflow-x: clip; }
+
+body.style-sketch ::selection { background: var(--sk-hi-strong); color: var(--sk-ink); }
+body.style-sketch button { color: var(--sk-ink); font-family: var(--sk-hand); }
+body.style-sketch button:focus-visible { outline: 2px dashed var(--sk-red); outline-offset: 3px; }
+body.style-sketch .muted { color: var(--sk-pencil); }
+body.style-sketch .small { font-size: 14px; }
+body.style-sketch b, body.style-sketch strong { font-weight: 700; }
+body.style-sketch h1, body.style-sketch h2, body.style-sketch h3, body.style-sketch h4 { font-family: var(--sk-head); font-weight: 700; color: var(--sk-ink); }
+body.style-sketch p { color: var(--sk-ink); }
+body.style-sketch .muted p, body.style-sketch p.muted { color: var(--sk-pencil); }
+
+/* ===================== Top bar ===================== */
+body.style-sketch .topbar {
+  background: rgba(251, 248, 239, .94);
+  -webkit-backdrop-filter: none; backdrop-filter: none;
+  border-bottom: 0;
+  padding-top: max(6px, env(safe-area-inset-top)); padding-bottom: 8px;
+}
+body.style-sketch .topbar::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: -4px; height: 9px; pointer-events: none;
+  background: var(--sk-ink); opacity: .75;
+  -webkit-mask: var(--sk-m-line) 0 0 / 100% 100% no-repeat; mask: var(--sk-m-line) 0 0 / 100% 100% no-repeat;
+}
+body.style-sketch .brand { gap: 6px; }
+body.style-sketch .brand-ico { transform: rotate(-6deg); }
+body.style-sketch .brand-txt b {
+  position: relative; font-family: var(--sk-head); font-weight: 700; font-size: 31px; line-height: .85;
+  letter-spacing: 0; color: var(--sk-ink);
+}
+body.style-sketch .brand-txt b::after {
+  content: ''; position: absolute; left: -3px; right: -8px; bottom: -8px; height: 10px; pointer-events: none;
+  background: var(--sk-red);
+  -webkit-mask: var(--sk-m-scribble) 0 0 / 100% 100% no-repeat; mask: var(--sk-m-scribble) 0 0 / 100% 100% no-repeat;
+}
+body.style-sketch .brand-txt small {
+  font-family: var(--sk-hand); font-size: 12px; letter-spacing: 6px; color: var(--sk-pencil); margin-top: 10px; padding-left: 2px;
+}
+body.style-sketch .topnav { gap: 2px; }
+body.style-sketch .topnav button {
+  font-family: var(--sk-head); font-weight: 700; font-size: 23px; line-height: 1; color: rgba(var(--sk-ink-rgb), .78);
+  background: none; border: 0; border-radius: var(--sk-r1); padding: 4px 12px 5px;
+}
+body.style-sketch .topnav button:hover { color: var(--sk-ink); animation: skWiggle .35s ease-in-out; }
+body.style-sketch .topnav button.on {
+  color: var(--sk-ink); border-color: transparent;
+  background: linear-gradient(174deg, transparent 22%, rgba(255, 224, 40, .58) 24% 84%, transparent 86%) no-repeat;
+}
+body.style-sketch .topnav .ni { filter: var(--sk-emoji); font-size: 17px; }
+body.style-sketch .icon-btn {
+  border: 2px solid rgba(var(--sk-ink-rgb), .75); border-radius: var(--sk-r2); background: var(--sk-card);
+  box-shadow: 1.5px 2px 0 rgba(var(--sk-ink-rgb), .2); filter: none;
+}
+body.style-sketch .icon-btn:nth-child(2) { border-radius: var(--sk-r1); }
+body.style-sketch .icon-btn:hover { animation: skWiggle .35s ease-in-out; }
+body.style-sketch .icon-btn:active { transform: translate(1px, 2px); box-shadow: none; animation: none; }
+/* the emoji glyph itself */
+body.style-sketch #btn-sound, body.style-sketch #btn-settings { font-size: 18px; color: var(--sk-ink); }
+
+/* ===================== Generic panels: taped index cards ===================== */
+body.style-sketch .panel {
+  position: relative;
+  background: var(--sk-card);
+  border: 2px solid rgba(var(--sk-ink-rgb), .82);
+  border-radius: var(--sk-r1);
+  box-shadow: 0 1px 0 rgba(90, 70, 30, .06), 0 12px 18px -14px rgba(80, 60, 20, .5);
+  -webkit-backdrop-filter: none; backdrop-filter: none;
+  transform: rotate(var(--sk-rot, 0deg));
+}
+/* second, lighter pen stroke so the box looks sketched twice */
+body.style-sketch .panel::after {
+  content: ''; position: absolute; inset: -4px -2px -2px -4px; pointer-events: none;
+  border: 1.2px solid rgba(var(--sk-ink-rgb), .3); border-radius: var(--sk-r2);
+  transform: rotate(-.35deg);
+}
+/* masking tape */
+body.style-sketch .panel::before {
+  content: ''; position: absolute; z-index: 2; pointer-events: none;
+  top: -11px; left: 50%; width: 92px; height: 22px; margin-left: -46px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .25), rgba(255, 255, 255, 0) 60%), var(--sk-tape);
+  clip-path: polygon(0 10%, 4% 0, 9% 8%, 14% 0, 86% 2%, 91% 10%, 96% 0, 100% 9%, 98% 32%, 100% 52%, 97% 74%, 100% 100%, 94% 92%, 88% 100%, 8% 97%, 3% 100%, 0 88%, 3% 66%, 0 44%, 2% 24%);
+  transform: rotate(-2.5deg);
+}
+body.style-sketch .panel:nth-of-type(2n)::before { left: -16px; margin-left: 0; width: 70px; transform: rotate(-36deg); top: 2px; }
+body.style-sketch .panel:nth-of-type(3n)::before { left: auto; right: -16px; margin-left: 0; width: 72px; transform: rotate(34deg); top: 2px; }
+body.style-sketch .panel:nth-of-type(2n) { border-radius: var(--sk-r2); }
+body.style-sketch .panel:nth-of-type(2n)::after { border-radius: var(--sk-r1); transform: rotate(.3deg); }
+body.style-sketch .panel:nth-of-type(3n) { border-radius: var(--sk-r3); }
+body.style-sketch .panel:nth-of-type(3n)::after { border-radius: var(--sk-r4); }
+
+body.style-sketch .ph {
+  font-family: var(--sk-head); font-weight: 700; font-size: 30px; line-height: 1.05; color: var(--sk-ink); letter-spacing: 0; margin: 0 0 6px;
+}
+body.style-sketch .ph::after {
+  content: ''; display: block; width: min(220px, 70%); height: 8px; margin-top: 1px;
+  background: rgba(var(--sk-ink-rgb), .55);
+  -webkit-mask: var(--sk-m-line) 0 0 / 100% 100% no-repeat; mask: var(--sk-m-line) 0 0 / 100% 100% no-repeat;
+}
+
+/* ===================== Buttons: hand-boxed pen rectangles ===================== */
+body.style-sketch .btn, body.style-sketch .btn-big {
+  font-family: var(--sk-head); font-weight: 700; letter-spacing: 0; color: var(--sk-ink);
+  background: var(--sk-hi-fill), var(--sk-card);
+  border: 2px solid var(--sk-ink); border-radius: var(--sk-r1);
+  box-shadow: 2px 3px 0 rgba(var(--sk-ink-rgb), .24);
+  text-shadow: none; filter: none;
+  transform: rotate(var(--sk-rot, 0deg));
+  transition: transform .12s, box-shadow .12s, background-color .2s;
+}
+body.style-sketch .btn { font-size: 20px; line-height: 1.05; padding: 7px 16px 8px; }
+body.style-sketch .btn.small { font-size: 18px; padding: 4px 12px 5px; border-radius: var(--sk-r2); }
+body.style-sketch .btn:hover, body.style-sketch .btn-big:hover { filter: none; animation: skWiggle .38s ease-in-out; }
+body.style-sketch .btn:active, body.style-sketch .btn-big:active {
+  animation: none; transform: translate(2px, 3px) rotate(var(--sk-rot, 0deg)); box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+}
+body.style-sketch .btn.ghost {
+  background: var(--sk-card); color: var(--sk-ink);
+  border: 2px solid rgba(var(--sk-ink-rgb), .8); box-shadow: 2px 3px 0 rgba(var(--sk-ink-rgb), .16);
+}
+body.style-sketch .btn.ghost:hover { background: linear-gradient(176deg, transparent 18%, rgba(255, 224, 40, .32) 20% 86%, transparent 88%), var(--sk-card); }
+body.style-sketch .btn.danger {
+  background: rgba(var(--sk-red-rgb), .07); color: var(--sk-red); border-color: var(--sk-red);
+  box-shadow: 2px 3px 0 rgba(var(--sk-red-rgb), .25);
+}
+body.style-sketch .btn:disabled { opacity: .45; cursor: default; animation: none; }
+body.style-sketch .btn-big {
+  font-size: 34px; line-height: 1; padding: 10px 16px 13px; margin-top: 16px; overflow: visible;
+  border-width: 2.5px; border-radius: var(--sk-r3);
+  background: var(--sk-hi-fill), var(--sk-card);
+  box-shadow: 3px 4px 0 rgba(var(--sk-ink-rgb), .28);
+  --sk-rot: -.6deg;
+}
+body.style-sketch .btn-big::after {
+  /* swap the shiny sweep for two little pen "go!" ticks */
+  content: ''; top: 50%; bottom: auto; left: auto; right: 18px; width: 36px; height: 27px; margin-top: -13px;
+  background: var(--sk-ink); transform: none; animation: skNudge 2.4s ease-in-out infinite;
+  -webkit-mask: var(--sk-m-arrow) center / contain no-repeat; mask: var(--sk-m-arrow) center / contain no-repeat;
+}
+body.style-sketch .btn-big span { position: relative; }
+
+/* ===================== Home ===================== */
+body.style-sketch .hero { padding: 22px 6px 26px; }
+body.style-sketch .kicker {
+  display: block; width: fit-content; font-family: var(--sk-head); font-weight: 600; font-size: 23px; letter-spacing: 0; text-transform: none;
+  color: var(--sk-red); transform: rotate(-2deg); transform-origin: left center;
+}
+body.style-sketch .hero h1 {
+  display: inline-block; position: relative;
+  font-family: var(--sk-head); font-weight: 700; font-size: clamp(50px, 8.4vw, 84px); line-height: .9; letter-spacing: 0;
+  color: var(--sk-ink); text-shadow: none; margin: 4px 0 10px;
+  background: linear-gradient(176deg, transparent 52%, rgba(255, 224, 40, .55) 54% 86%, transparent 88%) no-repeat 6px 0 / calc(100% - 4px) 100%;
+}
+body.style-sketch .hero h1::after {
+  content: ''; position: absolute; right: -30px; top: -4px; width: 30px; height: 30px;
+  background: var(--sk-red); transform: rotate(12deg);
+  -webkit-mask: var(--sk-m-spark) center / contain no-repeat; mask: var(--sk-m-spark) center / contain no-repeat;
+}
+body.style-sketch .hero p { color: var(--sk-ink); font-size: 18px; line-height: 1.45; }
+body.style-sketch .hero p b { color: var(--sk-ink); background: linear-gradient(176deg, transparent 40%, rgba(255, 224, 40, .5) 42% 92%, transparent 94%); }
+body.style-sketch .hero-art::before {
+  /* pencil "ground" line the creatures stand on */
+  content: ''; position: absolute; left: -6%; right: -6%; bottom: -2px; height: 10px;
+  background: rgba(var(--sk-pencil-rgb), .8);
+  -webkit-mask: var(--sk-m-line) 0 0 / 100% 100% no-repeat; mask: var(--sk-m-line) 0 0 / 100% 100% no-repeat;
+}
+
+body.style-sketch .home-grid { gap: 22px 18px; }
+body.style-sketch .home-grid > .profile-card { --sk-rot: .5deg; }
+body.style-sketch .home-grid > #resume-card { --sk-rot: -.6deg; }
+body.style-sketch .home-grid > .pick-panel { --sk-rot: -.25deg; }
+body.style-sketch .home-grid > .setup-panel { --sk-rot: .45deg; }
+body.style-sketch .home-grid > #history-card { --sk-rot: -.5deg; }
+/* hand-placed tape on the home cards so neighbouring strips never cross */
+body.style-sketch .home-grid > .pick-panel::before { left: 50%; right: auto; margin-left: -46px; width: 92px; top: -11px; transform: rotate(-2.5deg); }
+body.style-sketch .home-grid > .setup-panel::before { left: auto; right: -16px; margin-left: 0; width: 72px; top: 2px; transform: rotate(34deg); }
+body.style-sketch .home-grid > #history-card::before { left: -16px; right: auto; margin-left: 0; width: 70px; top: 2px; transform: rotate(-36deg); }
+
+/* profile = index card */
+body.style-sketch .profile-card {
+  background:
+    linear-gradient(180deg, transparent 0 27px, rgba(222, 76, 76, .5) 27px 28.5px, transparent 28.5px) no-repeat,
+    repeating-linear-gradient(180deg, transparent 0 22px, var(--sk-rule) 22px 23px) 0 29px / 100% calc(100% - 29px) no-repeat,
+    var(--sk-card);
+  padding-top: 14px;
+}
+body.style-sketch .prof-av {
+  background: rgba(var(--sk-green-rgb), .16); border: 2px solid var(--sk-ink); border-radius: var(--sk-blob);
+}
+body.style-sketch .prof-main h3 { font-size: 25px; line-height: 1; color: var(--sk-ink); }
+body.style-sketch .prof-rating { font-family: var(--sk-head); font-weight: 700; font-size: 44px; line-height: 1; color: var(--sk-ink); }
+body.style-sketch .prof-rating small { font-family: var(--sk-hand); font-weight: 400; font-size: 14px; color: var(--sk-pencil); margin-left: 8px; }
+body.style-sketch .prof-rec { font-size: 14.5px; color: var(--sk-pencil); }
+
+/* bot cards: scraps of paper with a highlighter blob behind each creature */
+body.style-sketch .bots { gap: 14px 12px; margin-top: 14px; }
+body.style-sketch .bot-card {
+  overflow: visible; color: var(--sk-ink);
+  background: var(--sk-card);
+  border: 1.6px solid rgba(var(--sk-ink-rgb), .6); border-radius: var(--sk-r2);
+  box-shadow: 1px 2px 0 rgba(var(--sk-ink-rgb), .12), 0 8px 12px -10px rgba(80, 60, 20, .5);
+  transform: rotate(var(--sk-rot, 0deg));
+  padding: 12px 8px 10px;
+}
+body.style-sketch .bot-card:nth-child(4n+1) { --sk-rot: -.9deg; border-radius: var(--sk-r1); }
+body.style-sketch .bot-card:nth-child(4n+2) { --sk-rot: .7deg; border-radius: var(--sk-r3); }
+body.style-sketch .bot-card:nth-child(4n+3) { --sk-rot: -.4deg; border-radius: var(--sk-r4); }
+body.style-sketch .bot-card:nth-child(4n+4) { --sk-rot: 1deg; }
+body.style-sketch .bot-card:hover { border-color: var(--sk-ink); transform: rotate(var(--sk-rot, 0deg)) translateY(-3px); animation: skWiggle .4s ease-in-out; }
+body.style-sketch .bot-card.on {
+  border: 2.5px solid var(--sk-ink);
+  background: linear-gradient(180deg, rgba(255, 224, 40, .14), rgba(255, 224, 40, .04)), var(--sk-card);
+  box-shadow: 3px 4px 0 rgba(var(--sk-ink-rgb), .22);
+}
+body.style-sketch .bot-card.on .bc-av::after {
+  /* the chosen creature gets circled in red pen */
+  content: ''; position: absolute; inset: -9px -10px -8px -9px; pointer-events: none;
+  background: var(--sk-red); opacity: .9;
+  -webkit-mask: var(--sk-m-loop2) 0 0 / 100% 100% no-repeat; mask: var(--sk-m-loop2) 0 0 / 100% 100% no-repeat;
+}
+body.style-sketch .bot-card .bc-av {
+  background: transparent;
+  background: color-mix(in srgb, var(--bc) 34%, transparent);
+  border-radius: var(--sk-blob); box-shadow: none;
+}
+body.style-sketch .bot-card:nth-child(2n) .bc-av { border-radius: var(--sk-blob2); }
+body.style-sketch .bc-name { font-family: var(--sk-head); font-weight: 700; font-size: 22px; line-height: 1; color: var(--sk-ink); }
+body.style-sketch .bc-elo { font-family: var(--sk-hand); font-weight: 400; font-size: 15px; color: var(--sk-ink); margin: 3px 0 2px; }
+body.style-sketch .bc-style { font-family: var(--sk-hand); font-size: 12.5px; letter-spacing: 1.6px; color: var(--sk-pencil); }
+body.style-sketch .bc-rec {
+  background: none; color: var(--sk-green); font-family: var(--sk-head); font-weight: 700; font-size: 16px; line-height: 1;
+  border: 1.6px solid var(--sk-green); border-radius: var(--sk-ring); padding: 1px 6px 2px; transform: rotate(6deg);
+}
+body.style-sketch .bc-crown { filter: drop-shadow(1px 1px 0 rgba(var(--sk-ink-rgb), .35)); transform: rotate(-12deg); font-size: 17px; }
+body.style-sketch .bot-detail {
+  background: rgba(255, 224, 40, .1);
+  border: 1.6px dashed rgba(var(--sk-pencil-rgb), .9); border-radius: var(--sk-r3);
+  margin-top: 16px;
+}
+body.style-sketch .bot-detail b { font-family: var(--sk-head); font-size: 22px; }
+body.style-sketch .bot-detail p { color: var(--sk-ink); font-size: 15.5px; }
+
+/* setup */
+body.style-sketch .setup-panel {
+  background: linear-gradient(180deg, rgba(255, 246, 200, .55), rgba(255, 246, 200, .2)), var(--sk-card);
+}
+body.style-sketch .label {
+  font-family: var(--sk-head); font-weight: 700; font-size: 22px; text-transform: none; letter-spacing: 0;
+  color: rgba(var(--sk-ink-rgb), .85); margin-bottom: 4px;
+}
+body.style-sketch .seg { gap: 8px; }
+body.style-sketch .seg button {
+  font-family: var(--sk-head); font-weight: 700; font-size: 21px; line-height: 1; color: var(--sk-ink);
+  background: var(--sk-card); border: 2px solid rgba(var(--sk-ink-rgb), .55); border-radius: var(--sk-r1);
+  padding: 7px 4px 6px; gap: 3px;
+  transform: rotate(var(--sk-rot, 0deg));
+}
+body.style-sketch .seg button:nth-child(2) { border-radius: var(--sk-r2); --sk-rot: .6deg; }
+body.style-sketch .seg button:nth-child(3) { border-radius: var(--sk-r3); --sk-rot: -.5deg; }
+body.style-sketch .seg button:hover { border-color: var(--sk-ink); animation: skWiggle .35s ease-in-out; }
+body.style-sketch .seg button small { font-family: var(--sk-hand); font-weight: 400; font-size: 13px; color: var(--sk-pencil); line-height: 1.15; }
+body.style-sketch .seg button.on {
+  color: var(--sk-ink); border: 2.5px solid var(--sk-ink);
+  background: var(--sk-hi-fill), var(--sk-card);
+  box-shadow: 2px 3px 0 rgba(var(--sk-ink-rgb), .22);
+}
+body.style-sketch .seg button.on small { color: rgba(var(--sk-ink-rgb), .8); }
+body.style-sketch .seg-ico.rnd { font-family: var(--sk-head); font-weight: 700; font-size: 34px; color: var(--sk-red); }
+
+/* resume + history */
+body.style-sketch #resume-card { background: linear-gradient(180deg, rgba(255, 224, 40, .16), rgba(255, 224, 40, .06)), var(--sk-card); }
+body.style-sketch .resume div { font-size: 15px; }
+body.style-sketch .resume b { font-family: var(--sk-head); font-size: 22px; }
+body.style-sketch #history-card {
+  background: repeating-linear-gradient(180deg, transparent 0 25px, var(--sk-rule) 25px 26px) 0 8px, var(--sk-card);
+}
+body.style-sketch .hist-list { gap: 2px; }
+body.style-sketch .hist-item {
+  background: none; border: 0; border-radius: 0; padding: 6px 2px;
+  border-bottom: 1.5px dashed rgba(var(--sk-pencil-rgb), .55); font-size: 15px;
+}
+body.style-sketch .hist-item:last-child { border-bottom: 0; }
+body.style-sketch .hist-item .res { font-family: var(--sk-head); font-weight: 700; font-size: 21px; }
+body.style-sketch .res.win { color: var(--sk-green); }
+body.style-sketch .res.loss { color: var(--sk-red); }
+body.style-sketch .res.draw { color: var(--sk-pencil); }
+
+/* ===================== Game layout ===================== */
+body.style-sketch .pbar {
+  background: rgba(255, 253, 247, .9);
+  border: 1.6px solid rgba(var(--sk-ink-rgb), .45); border-radius: var(--sk-r3);
+  box-shadow: none;
+}
+body.style-sketch #bar-bot, body.style-sketch #rv-bot { border-radius: var(--sk-r4); }
+body.style-sketch .pbar.turn {
+  border: 2px solid var(--sk-ink);
+  background: linear-gradient(100deg, rgba(255, 224, 40, .5) 0, rgba(255, 224, 40, .38) 34%, rgba(255, 224, 40, 0) 62%), rgba(255, 253, 247, .92);
+  box-shadow: 2px 3px 0 rgba(var(--sk-ink-rgb), .16);
+}
+body.style-sketch .pb-av {
+  background: transparent;
+  background: color-mix(in srgb, var(--bc, #2c8a47) 30%, transparent);
+  border-radius: var(--sk-blob); box-shadow: none;
+}
+body.style-sketch .pb-name { font-family: var(--sk-head); font-weight: 700; font-size: 23px; line-height: 1; color: var(--sk-ink); }
+body.style-sketch .pb-sub { font-size: 13.5px; color: var(--sk-pencil); }
+body.style-sketch .pb-caps .adv { font-family: var(--sk-head); font-weight: 700; font-size: 19px; color: var(--sk-green); }
+body.style-sketch .pb-think i { background: var(--sk-ink); }
+body.style-sketch .pb-say {
+  background: var(--sk-card); color: var(--sk-ink);
+  font-family: var(--sk-hand); font-weight: 400; font-size: 15.5px; line-height: 1.3;
+  border: 2px solid var(--sk-ink); border-radius: var(--sk-r1);
+  box-shadow: 2px 3px 0 rgba(var(--sk-ink-rgb), .18);
+}
+body.style-sketch #bar-bot .pb-say { border-radius: var(--sk-r2); }
+
+/* eval bar: pencil outline, hatched dark side */
+body.style-sketch .evalbar {
+  background: var(--sk-hatch), var(--sk-card);
+  border: 2px solid rgba(var(--sk-ink-rgb), .85); border-radius: 10px 6px 12px 7px / 7px 12px 6px 10px;
+  box-shadow: none; overflow: hidden;
+}
+body.style-sketch .eb-fill { background: var(--sk-card); border-top: 2px solid var(--sk-ink); }
+body.style-sketch .evalbar.flipped .eb-fill { border-top: 0; border-bottom: 2px solid var(--sk-ink); }
+body.style-sketch .eb-label {
+  color: var(--sk-ink) !important; font-family: var(--sk-head); font-weight: 700; font-size: 13px;
+  background: var(--sk-card); border-radius: 4px; padding: 3px 0; left: 1px; right: 1px;
+}
+
+/* the board frame: a taped square of paper with a doubled pencil border */
+body.style-sketch .board-frame {
+  background: var(--sk-card);
+  padding: 14px;
+  border: 2px solid rgba(var(--sk-ink-rgb), .7);
+  border-radius: 6px 16px 8px 14px / 14px 8px 16px 6px;
+  outline: 1.2px solid rgba(var(--sk-ink-rgb), .28); outline-offset: 3px;
+  box-shadow: 0 1px 0 rgba(90, 70, 30, .06), 0 16px 24px -16px rgba(80, 60, 20, .55);
+}
+body.style-sketch .board-frame::before, body.style-sketch .board-frame::after {
+  content: ''; z-index: 12; pointer-events: none; width: 86px; height: 24px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .25), rgba(255, 255, 255, 0) 60%), var(--sk-tape);
+  clip-path: polygon(0 10%, 5% 0, 10% 9%, 15% 0, 85% 3%, 90% 10%, 96% 0, 100% 10%, 98% 34%, 100% 55%, 97% 78%, 100% 100%, 92% 93%, 86% 100%, 9% 96%, 3% 100%, 0 86%, 3% 64%, 0 42%, 2% 22%);
+  text-shadow: none; color: transparent; font-size: 0;
+}
+body.style-sketch .board-frame::before { top: -2px; left: -30px; transform: rotate(-40deg); }
+body.style-sketch .board-frame::after { top: auto; left: auto; bottom: -2px; right: -30px; transform: rotate(-40deg); }
+
+/* ===================== Board ===================== */
+body.style-sketch .board { border-radius: 0; box-shadow: none; overflow: visible; }
+body.style-sketch .b-squares .s.l, body.style-sketch .b-squares .s.d { background: transparent; }
+body.style-sketch .b-squares .s::after { content: none; }
+body.style-sketch .b-squares .ink-board {
+  position: absolute; inset: 0; width: 100%; height: 100%; display: block; overflow: visible; pointer-events: none; z-index: 0;
+}
+/* fallback grid until Ink.board() has been dropped in */
+body.style-sketch .b-squares:not(:has(.ink-board)) { box-shadow: inset 0 0 0 2px rgba(var(--sk-ink-rgb), .8); }
+body.style-sketch .b-squares:not(:has(.ink-board)) .s.d {
+  background: repeating-linear-gradient(-45deg, rgba(var(--sk-ink-rgb), .34) 0 1px, transparent 1px 5.5px);
+}
+body.style-sketch .b-coords { font-family: var(--sk-head); font-weight: 700; font-size: clamp(12px, 1.9vw, 16px); line-height: 1; z-index: 7; }
+body.style-sketch .b-coords span { opacity: .78; }
+body.style-sketch .b-coords .on-l, body.style-sketch .b-coords .on-d {
+  color: var(--sk-ink);
+  text-shadow: 0 0 2px var(--sk-card), 0 0 2px var(--sk-card), 0 0 3px var(--sk-card);
+}
+body.style-sketch .b-coords .rk { left: 3px; top: 1px; }
+body.style-sketch .b-coords .fl { bottom: 1px; }
+
+/* marks: Ink.mark() svgs live inside .mk; neutralise the old coloured fills */
+body.style-sketch .mk { background: none; box-shadow: none; border: 0; }
+body.style-sketch .mk::after, body.style-sketch .mk::before { content: none; }
+body.style-sketch .mk.check, body.style-sketch .mk.hint, body.style-sketch .mk.ping { background: none; box-shadow: none; }
+body.style-sketch .mk.check { animation: skPulse 1.1s ease-in-out infinite; }
+body.style-sketch .mk.hint { animation: skPulse 1.3s ease-in-out infinite; }
+body.style-sketch .mk.danger { animation: skPulse 1.2s ease-in-out infinite; }
+body.style-sketch .mk.free { animation: none; }
+body.style-sketch .mk.ping { animation: ping 1.4s ease-out forwards; }
+body.style-sketch .mk .ink-mark { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+/* pen-drawn fallbacks for any mark that arrives without an Ink.mark() svg */
+body.style-sketch .mk.last:not(:has(svg)) {
+  background: linear-gradient(94deg, rgba(255, 224, 40, 0) 2%, rgba(255, 224, 40, .5) 6% 94%, rgba(255, 224, 40, 0) 98%) center / 100% 84% no-repeat;
+}
+body.style-sketch .mk.sel:not(:has(svg))::after,
+body.style-sketch .mk.ring:not(:has(svg))::after,
+body.style-sketch .mk.check:not(:has(svg))::after,
+body.style-sketch .mk.hint:not(:has(svg))::after,
+body.style-sketch .mk.ping:not(:has(svg))::after {
+  content: ''; position: absolute; inset: 5%; border: 0; border-radius: 0; box-shadow: none; animation: none;
+  background: var(--sk-ink);
+  -webkit-mask: var(--sk-m-loop) 0 0 / 100% 100% no-repeat; mask: var(--sk-m-loop) 0 0 / 100% 100% no-repeat;
+}
+body.style-sketch .mk.ring:not(:has(svg))::after { inset: 3%; background: rgba(var(--sk-ink-rgb), .7); -webkit-mask-image: var(--sk-m-loop2); mask-image: var(--sk-m-loop2); }
+body.style-sketch .mk.check:not(:has(svg))::after { inset: 1%; background: var(--sk-red); -webkit-mask-image: var(--sk-m-loop2); mask-image: var(--sk-m-loop2); }
+body.style-sketch .mk.check:not(:has(svg)) { background: radial-gradient(circle, rgba(var(--sk-red-rgb), .16) 0 45%, transparent 65%); }
+body.style-sketch .mk.hint:not(:has(svg))::after { background: var(--sk-green); }
+body.style-sketch .mk.ping:not(:has(svg))::after { background: var(--sk-pencil); }
+body.style-sketch .mk.dot:not(:has(svg))::after {
+  content: ''; position: absolute; left: 39%; top: 39%; width: 22%; height: 22%; border: 0;
+  border-radius: var(--sk-blob); background: rgba(var(--sk-ink-rgb), .55);
+}
+body.style-sketch .mk.danger:not(:has(svg))::after,
+body.style-sketch .mk.free:not(:has(svg))::after {
+  content: ''; position: absolute; inset: 6%; background: none; box-shadow: none; animation: none;
+  border: 2.5px dashed var(--sk-red); border-radius: var(--sk-ring); transform: rotate(-8deg);
+}
+body.style-sketch .mk.free:not(:has(svg))::after { border-color: var(--sk-green); transform: rotate(10deg); }
+/* review badge: Ink.badge() at the square's top-right corner */
+body.style-sketch .mk.badge > svg {
+  position: absolute; right: -10%; top: -10%; width: 44%; height: 44%; min-width: 20px; min-height: 20px;
+  overflow: visible; pointer-events: none; animation: pop .35s cubic-bezier(.3, 1.6, .5, 1) both;
+}
+body.style-sketch .mk.badge > i {
+  /* fallback when the old <i> badge is still used: a hand-circled teacher mark */
+  background: var(--sk-card); color: color-mix(in srgb, var(--c) 56%, #1b1b22);
+  border: 2px solid var(--c); border-radius: var(--sk-ring); box-shadow: 1px 1.5px 0 rgba(var(--sk-ink-rgb), .25);
+  font-family: var(--sk-head); font-weight: 700; font-size: clamp(12px, 2vw, 17px); line-height: 1;
+}
+/* board effects from Ink.fx() */
+body.style-sketch .b-fx .ink-fx { position: absolute; width: 12.5%; height: 12.5%; pointer-events: none; }
+body.style-sketch .b-fx .ink-fx > svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+/* arrows */
+body.style-sketch .b-arrows { overflow: visible; }
+body.style-sketch .b-arrows .ink-arrow { animation: arrowIn .3s ease both; }
+body.style-sketch .b-arrows .arr line { stroke-width: 10; }
+
+/* pieces: no glows or drop shadows on paper */
+body.style-sketch .pc-svg.pc-b { filter: none; }
+body.style-sketch .piece.dragging .pc-inner { filter: none; }
+body.style-sketch .piece.hinted .pc-inner { filter: none; }
+body.style-sketch .piece.in-check .pc-svg { filter: none; }
+body.style-sketch .pc-shadow { fill: rgba(var(--sk-ink-rgb), 1); opacity: .13; }
+body.style-sketch .ink-svg .pc-shadow { fill: none; opacity: .6; }
+body.style-sketch .badge-letter {
+  background: var(--sk-card); color: var(--sk-ink); font-family: var(--sk-head); font-weight: 700;
+  border: 1.2px solid rgba(var(--sk-ink-rgb), .7); border-radius: 4px 6px 3px 5px;
+}
+body.style-sketch .co-av, body.style-sketch .co-av svg { filter: none; }
+
+/* sparks become ink asterisks, specks and squiggles */
+body.style-sketch .spark {
+  width: 18px; height: 18px; margin: -9px 0 0 -9px; border-radius: 0; box-shadow: none;
+  background: var(--sk-ink);
+  -webkit-mask: var(--sk-m-ast) center / contain no-repeat; mask: var(--sk-m-ast) center / contain no-repeat;
+}
+body.style-sketch .spark:nth-child(3n) {
+  width: 7px; height: 7px; margin: -3.5px 0 0 -3.5px; border-radius: 50% 40% 55% 45%;
+  -webkit-mask: none; mask: none;
+}
+body.style-sketch .spark:nth-child(5n+1) { background: var(--sk-red); }
+body.style-sketch .spark.star {
+  clip-path: none; width: 22px; height: 22px; margin: -11px 0 0 -11px; background: var(--sk-ink);
+  -webkit-mask: var(--sk-m-spark) center / contain no-repeat; mask: var(--sk-m-spark) center / contain no-repeat;
+}
+body.style-sketch .spark.star:nth-child(3n) { width: 9px; height: 9px; margin: -4.5px 0 0 -4.5px; -webkit-mask: none; mask: none; background: var(--sk-hi-strong); border-radius: 50%; }
+body.style-sketch .spark.leaf {
+  width: 24px; height: 10px; margin: -5px 0 0 -12px; border-radius: 0; background: var(--sk-green);
+  -webkit-mask: var(--sk-m-squig) center / contain no-repeat; mask: var(--sk-m-squig) center / contain no-repeat;
+}
+body.style-sketch .ring-fx {
+  border: 2px solid rgba(var(--sk-ink-rgb), .6); border-radius: var(--sk-ring); box-shadow: none;
+}
+
+body.style-sketch .mk.berry svg { filter: none; }
+body.style-sketch .promo-pick {
+  background: var(--sk-card); border: 2px solid var(--sk-ink); border-radius: var(--sk-r1);
+  box-shadow: 3px 4px 0 rgba(var(--sk-ink-rgb), .25), 0 12px 24px -12px rgba(60, 45, 15, .5);
+}
+body.style-sketch .promo-pick button:hover { background: var(--sk-hi); }
+
+/* ===================== Coach ===================== */
+body.style-sketch .co-av.talk { animation: coachHop .5s cubic-bezier(.3, 1.5, .5, 1); }
+body.style-sketch .co-feed { gap: 10px; }
+/* the bubble is a yellow sticky note */
+body.style-sketch .bubble {
+  --sk-rot: -.7deg;
+  background:
+    linear-gradient(180deg, rgba(150, 120, 0, .07) 0 15px, rgba(150, 120, 0, 0) 15px),
+    linear-gradient(172deg, #fff6b4 0%, #fff0a0 55%, #fde784 100%);
+  color: var(--sk-ink);
+  border-radius: 2px 3px 3px 18px / 2px 3px 3px 12px;
+  box-shadow: 0 1px 1px rgba(110, 90, 0, .14), 1px 10px 12px -8px rgba(100, 80, 0, .45);
+  font-size: 16.5px; line-height: 1.38;
+  padding: 12px 14px 12px;
+  transform: rotate(var(--sk-rot));
+  animation: skNoteIn .45s cubic-bezier(.3, 1.3, .5, 1) both;
+}
+body.style-sketch .bubble:first-child::before { content: none; }
+body.style-sketch .bubble.old { --sk-rot: .9deg; opacity: .68; font-size: 15px; animation: none; }
+body.style-sketch .bubble p { color: var(--sk-ink); }
+body.style-sketch .bubble .bh { gap: 8px; margin-bottom: 4px; }
+body.style-sketch .bubble .bh b.t { font-family: var(--sk-head); font-weight: 700; font-size: 25px; line-height: 1; }
+/* red pen: the teacher's correction */
+body.style-sketch .bubble.alert {
+  --sk-rot: .6deg;
+  background: linear-gradient(180deg, rgba(var(--sk-red-rgb), .05), rgba(var(--sk-red-rgb), .02)), var(--sk-card);
+  border: 2px solid var(--sk-red); border-radius: var(--sk-r1);
+  box-shadow: 2px 3px 0 rgba(var(--sk-red-rgb), .18), 0 10px 14px -10px rgba(100, 40, 20, .35);
+}
+body.style-sketch .bubble.alert .bh b.t { color: var(--sk-red); }
+body.style-sketch .bubble.alert::after {
+  content: '!'; position: absolute; right: 8px; top: -14px; width: 30px; height: 30px; display: grid; place-items: center;
+  font-family: var(--sk-head); font-weight: 700; font-size: 26px; line-height: 1; color: var(--sk-red);
+  background: var(--sk-card); border: 2px solid var(--sk-red); border-radius: var(--sk-ring); transform: rotate(8deg);
+}
+/* green-tinted note for tips and hints */
+body.style-sketch .bubble.tip {
+  --sk-rot: -.4deg;
+  background:
+    linear-gradient(180deg, rgba(40, 110, 40, .06) 0 15px, rgba(40, 110, 40, 0) 15px),
+    linear-gradient(172deg, #eaf8dc 0%, #ddf2c8 60%, #d2ebba 100%);
+}
+body.style-sketch .bubble.tip .bh b.t { color: var(--sk-green); }
+body.style-sketch .cls-pill {
+  background: rgba(255, 255, 255, .5); color: color-mix(in srgb, var(--c) 56%, #1b1b22); text-shadow: none;
+  font-family: var(--sk-head); font-weight: 700; font-size: 19px; line-height: 1;
+  border: 2px solid var(--c); border-radius: var(--sk-ring); padding: 2px 10px 3px 6px; gap: 3px;
+  transform: rotate(-3deg);
+}
+body.style-sketch .cls-pill i {
+  width: auto; height: auto; background: none; font-size: 19px; font-weight: 700; font-style: normal; line-height: 1;
+}
+body.style-sketch .bubble .better {
+  margin-top: 8px; padding: 6px 10px 7px; background: rgba(var(--sk-green-rgb), .07);
+  border: 2px solid var(--sk-green); border-radius: var(--sk-r2);
+}
+body.style-sketch .bubble .better b:first-child { color: var(--sk-green); }
+body.style-sketch .bubble .lesson {
+  margin-top: 8px; padding: 6px 10px 7px; font-size: 15px; background: rgba(255, 255, 255, .35);
+  border: 1.6px solid rgba(var(--sk-pencil-rgb), .95); border-radius: var(--sk-r3);
+}
+body.style-sketch .bubble .lesson::before {
+  content: 'Remember: '; font-family: var(--sk-head); font-weight: 700; font-size: 20px; color: var(--sk-pencil);
+}
+body.style-sketch .bubble .acts { gap: 8px; margin-top: 10px; }
+body.style-sketch .bubble .acts .btn { font-size: 18px; padding: 4px 12px 5px; }
+body.style-sketch .bubble .acts .btn.ghost {
+  background: rgba(255, 255, 255, .55); color: var(--sk-ink); box-shadow: 2px 2px 0 rgba(var(--sk-ink-rgb), .15);
+  border: 2px solid rgba(var(--sk-ink-rgb), .7);
+}
+body.style-sketch .bubble .legend { color: var(--sk-pencil); }
+body.style-sketch .pn { font-weight: 700; }
+body.style-sketch .pn .cn { font-weight: 400; color: var(--sk-pencil); opacity: 1; }
+body.style-sketch b.sq {
+  background: none; font-family: var(--sk-head); font-weight: 700; font-size: 1.2em; line-height: 1;
+  color: var(--sk-ink); padding: 0 6px 1px;
+  border: 1.5px solid rgba(var(--sk-pencil-rgb), .95); border-radius: var(--sk-ring);
+}
+body.style-sketch b.sq:hover { background: var(--sk-hi); }
+body.style-sketch code.san {
+  font-family: var(--sk-hand); font-size: .95em; background: none; color: var(--sk-pencil); opacity: 1;
+  padding: 0 1px; border-radius: 0; border-bottom: 1.5px dotted rgba(var(--sk-pencil-rgb), .8);
+}
+body.style-sketch .coach-card .dots i { background: var(--sk-ink); }
+
+/* tools */
+body.style-sketch .g-tools { gap: 8px; }
+body.style-sketch .tool {
+  font-family: var(--sk-head); font-weight: 700; font-size: 18px; line-height: 1; color: var(--sk-ink);
+  background: var(--sk-card); border: 2px solid rgba(var(--sk-ink-rgb), .7); border-radius: var(--sk-r1);
+  box-shadow: 1.5px 2.5px 0 rgba(var(--sk-ink-rgb), .18);
+  padding: 6px 2px 6px; gap: 2px;
+  transform: rotate(var(--sk-rot, 0deg));
+}
+body.style-sketch .tool:nth-child(2n) { border-radius: var(--sk-r2); --sk-rot: .8deg; }
+body.style-sketch .tool:nth-child(3n) { border-radius: var(--sk-r3); --sk-rot: -.7deg; }
+body.style-sketch .tool span { filter: var(--sk-emoji); font-size: 19px; line-height: 1.15; }
+body.style-sketch .tool:hover { border-color: var(--sk-ink); animation: skWiggle .35s ease-in-out; }
+body.style-sketch .tool:active { animation: none; transform: translate(1px, 2px) rotate(var(--sk-rot, 0deg)); box-shadow: none; }
+body.style-sketch .tool:disabled { opacity: .4; animation: none; }
+body.style-sketch .tool.toggle.on {
+  color: var(--sk-red); border-color: var(--sk-red);
+  background: linear-gradient(rgba(var(--sk-red-rgb), .07), rgba(var(--sk-red-rgb), .07)), var(--sk-card);
+  box-shadow: 1.5px 2.5px 0 rgba(var(--sk-red-rgb), .22);
+}
+body.style-sketch .tool.toggle.on span { filter: grayscale(1) sepia(1) saturate(8) hue-rotate(-30deg) brightness(.7); }
+body.style-sketch .tool.glow { animation: skHiPulse 1.6s ease-in-out infinite; }
+
+/* move list */
+body.style-sketch .moves-panel { --sk-rot: .3deg; }
+body.style-sketch .mp-head { font-family: var(--sk-head); }
+body.style-sketch .mp-head b { font-size: 25px; line-height: 1; }
+body.style-sketch .mp-head .small { font-family: var(--sk-hand); }
+body.style-sketch .moves { font-size: 16px; font-weight: 400; gap: 1px 4px; scrollbar-color: rgba(var(--sk-ink-rgb), .4) transparent; }
+body.style-sketch .moves .no { color: var(--sk-pencil); font-weight: 400; }
+body.style-sketch .moves .mv { border-radius: 3px 8px 4px 9px / 8px 3px 9px 4px; }
+body.style-sketch .moves .mv.cur { background: var(--sk-hi-fill); }
+body.style-sketch .rv-moves .mv:hover { background: rgba(255, 224, 40, .25); }
+body.style-sketch .mv .ci, body.style-sketch .key .ci, body.style-sketch .ctable .cl i {
+  background: var(--sk-card); color: color-mix(in srgb, var(--c) 56%, #1b1b22);
+  border: 1.6px solid var(--c); border-radius: var(--sk-ring);
+  font-family: var(--sk-head); font-weight: 700; font-style: normal; line-height: 1;
+}
+body.style-sketch .mv .ci { font-size: 12px; width: 19px; height: 19px; }
+
+/* ===================== Review ===================== */
+body.style-sketch .rv-nav { gap: 8px; }
+body.style-sketch .rv-nav button {
+  background: var(--sk-card); color: var(--sk-ink); border: 2px solid rgba(var(--sk-ink-rgb), .75);
+  border-radius: var(--sk-r1); box-shadow: 1.5px 2.5px 0 rgba(var(--sk-ink-rgb), .18); font-size: 17px;
+  transform: rotate(var(--sk-rot, 0deg));
+}
+body.style-sketch .rv-nav button:nth-child(2n) { border-radius: var(--sk-r2); --sk-rot: .8deg; }
+body.style-sketch .rv-nav button:last-child { --sk-rot: -.8deg; }
+body.style-sketch .rv-nav button:hover { border-color: var(--sk-ink); animation: skWiggle .35s ease-in-out; }
+body.style-sketch .rv-nav button:active { animation: none; transform: translate(1px, 2px); box-shadow: none; }
+body.style-sketch .rv-pos { font-family: var(--sk-head); font-weight: 700; font-size: 22px; color: var(--sk-ink); }
+body.style-sketch .rv-loading b { font-family: var(--sk-head); font-size: 22px; line-height: 1.1; }
+body.style-sketch .rv-loading .bar {
+  height: 14px; background: var(--sk-card); border: 2px solid rgba(var(--sk-ink-rgb), .8); border-radius: var(--sk-r1);
+}
+body.style-sketch .rv-loading .bar i { background: var(--sk-hatch-x); }
+body.style-sketch .acc-row { gap: 12px; }
+body.style-sketch .acc {
+  background: var(--sk-card); border: 1.6px solid rgba(var(--sk-ink-rgb), .55); border-radius: var(--sk-r2);
+}
+body.style-sketch .acc:nth-child(2) { border-radius: var(--sk-r3); }
+body.style-sketch .acc .pct {
+  display: inline-block; font-family: var(--sk-head); font-weight: 700; font-size: 38px; line-height: 1; color: var(--sk-red);
+  border: 2px solid var(--sk-red); border-radius: var(--sk-ring); padding: 2px 12px 4px; margin: 4px 0 2px; transform: rotate(-4deg);
+}
+body.style-sketch .acc small { color: var(--sk-pencil); font-size: 13.5px; display: block; }
+body.style-sketch .ctable { font-size: 15px; gap: 3px 14px; }
+body.style-sketch .ctable .cl i { width: 22px; height: 22px; font-size: 13px; }
+body.style-sketch .ctable .n { font-family: var(--sk-head); font-weight: 700; font-size: 20px; line-height: 1; }
+body.style-sketch .ctable .hd { font-family: var(--sk-head); font-weight: 700; font-size: 17px; color: var(--sk-pencil); }
+body.style-sketch .narr { color: var(--sk-ink); font-size: 15.5px; }
+body.style-sketch .key {
+  background: none; color: var(--sk-ink); border: 0; border-radius: 0;
+  border-bottom: 1.5px dashed rgba(var(--sk-pencil-rgb), .55); padding: 9px 4px; margin-top: 2px;
+}
+body.style-sketch .key:hover { background: linear-gradient(176deg, transparent 6%, rgba(255, 224, 40, .28) 8% 92%, transparent 94%); }
+body.style-sketch .key .ci { width: 30px; height: 30px; font-size: 16px; }
+body.style-sketch .key .kt { font-size: 15px; }
+body.style-sketch .key .kt b { font-family: var(--sk-head); font-size: 20px; }
+/* lessons on lined index cards */
+body.style-sketch .lesson-card {
+  background:
+    linear-gradient(180deg, transparent 0 30px, rgba(222, 76, 76, .45) 30px 31.5px, transparent 31.5px) no-repeat,
+    repeating-linear-gradient(180deg, transparent 0 21px, var(--sk-rule) 21px 22px) 0 32px / 100% calc(100% - 32px) no-repeat,
+    var(--sk-card);
+  border: 1.6px solid rgba(var(--sk-ink-rgb), .5); border-radius: var(--sk-r4);
+  box-shadow: 1px 2px 0 rgba(var(--sk-ink-rgb), .1);
+  padding: 6px 12px 10px; margin-top: 12px;
+}
+body.style-sketch .lesson-card:nth-child(2n) { transform: rotate(.6deg); }
+body.style-sketch .lesson-card:nth-child(2n+1) { transform: rotate(-.5deg); }
+body.style-sketch .lesson-card h4 { font-family: var(--sk-head); font-weight: 700; color: var(--sk-ink); font-size: 22px; line-height: 1.1; margin: 0 0 6px; }
+body.style-sketch .lesson-card p { color: var(--sk-ink); font-size: 15px; line-height: 22px; }
+/* the swing graph sits on graph paper */
+body.style-sketch #rv-graph {
+  border: 1.6px solid rgba(var(--sk-ink-rgb), .7); border-radius: 4px 9px 5px 8px / 8px 4px 9px 5px; overflow: hidden;
+  background:
+    repeating-linear-gradient(90deg, rgba(96, 144, 214, .32) 0 1px, transparent 1px 12px),
+    repeating-linear-gradient(180deg, rgba(96, 144, 214, .32) 0 1px, transparent 1px 12px),
+    #fdfcf6;
+}
+body.style-sketch #rv-graph svg { border-radius: 0; background: var(--sk-hatch); }
+body.style-sketch #rv-graph svg > rect { fill: transparent; }
+body.style-sketch #rv-graph svg > polygon { fill: #fdfcf6; fill-opacity: .86; }
+body.style-sketch #rv-graph svg > polyline { stroke: var(--sk-ink); stroke-width: 2.2; stroke-linejoin: round; }
+body.style-sketch #rv-graph svg > line { stroke: var(--sk-pencil); }
+body.style-sketch #rv-graph svg > circle { stroke: var(--sk-ink); }
+body.style-sketch #rv-graph svg > #rv-cursor { stroke: var(--sk-red); stroke-width: 2.5; stroke-dasharray: none; }
+body.style-sketch #rv-graph-wrap { --sk-rot: -.3deg; }
+body.style-sketch #rv-summary { --sk-rot: .35deg; }
+body.style-sketch #rv-keys { --sk-rot: -.35deg; }
+body.style-sketch #rv-lessons { --sk-rot: .3deg; }
+body.style-sketch .rv-actions { gap: 10px; }
+
+/* ===================== Modal / toast / confetti ===================== */
+body.style-sketch .modal { background: rgba(70, 60, 40, .32); -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px); }
+/* a page torn from the notebook */
+body.style-sketch .modal-card {
+  color: var(--sk-ink);
+  background:
+    linear-gradient(90deg, transparent 0 30px, rgba(222, 76, 76, .45) 30px 31.5px, transparent 31.5px) no-repeat,
+    repeating-linear-gradient(180deg, transparent 0 27px, var(--sk-rule) 27px 28px) 0 14px,
+    var(--sk-card);
+  border: 2px solid var(--sk-ink); border-radius: 6px 22px 8px 26px / 26px 8px 22px 6px;
+  box-shadow: 4px 5px 0 rgba(var(--sk-ink-rgb), .16), 0 30px 60px -20px rgba(60, 45, 15, .5);
+  padding: 20px 20px 20px 42px;
+  scrollbar-color: rgba(var(--sk-ink-rgb), .4) transparent;
+}
+body.style-sketch .modal-card h2 { font-family: var(--sk-head); font-weight: 700; font-size: 38px; line-height: 1; color: var(--sk-ink); margin: 0 0 8px; }
+body.style-sketch .modal-card p { color: var(--sk-ink); }
+body.style-sketch .x-btn {
+  background: var(--sk-card); color: var(--sk-ink); border: 2px solid rgba(var(--sk-ink-rgb), .8); border-radius: var(--sk-ring);
+  font-family: var(--sk-head); font-weight: 700; font-size: 26px; line-height: 1; padding: 0 0 3px; transform: rotate(4deg);
+}
+body.style-sketch .x-btn:hover { color: var(--sk-red); border-color: var(--sk-red); }
+body.style-sketch .result-banner .rb-art { animation: heroBob 2.4s ease-in-out infinite; }
+body.style-sketch .result-banner h2 {
+  display: inline-block; font-family: var(--sk-head); font-weight: 700; font-size: 60px; line-height: .95; color: var(--sk-ink); text-shadow: none;
+  padding: 0 10px; background: linear-gradient(176deg, transparent 48%, rgba(255, 224, 40, .58) 50% 88%, transparent 90%) no-repeat;
+}
+body.style-sketch .result-banner.loss h2 { color: var(--sk-red); text-shadow: none; background: none; }
+body.style-sketch .result-banner.draw h2 { color: var(--sk-pencil); background: none; }
+body.style-sketch .result-banner p { color: var(--sk-ink); font-size: 16.5px; }
+body.style-sketch .rating-change {
+  font-family: var(--sk-head); font-weight: 700; font-size: 24px; line-height: 1;
+  background: none; border: 2px solid rgba(var(--sk-ink-rgb), .7); border-radius: var(--sk-r1); padding: 6px 16px 7px;
+}
+body.style-sketch .rating-change .d.up { color: var(--sk-green); }
+body.style-sketch .rating-change .d.down { color: var(--sk-red); }
+body.style-sketch .modal-actions { gap: 10px; }
+body.style-sketch .set-row { border-bottom: 1.5px dashed rgba(var(--sk-pencil-rgb), .45); padding: 9px 0; min-height: 56px; }
+body.style-sketch .set-row label { font-family: var(--sk-head); font-weight: 700; font-size: 21px; line-height: 1.05; }
+body.style-sketch .set-row small { font-family: var(--sk-hand); font-weight: 400; font-size: 14px; color: var(--sk-pencil); line-height: 1.25; margin-top: 2px; }
+body.style-sketch .set-row select {
+  -webkit-appearance: none; appearance: none; cursor: pointer;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3 5.6 C5 7.6 6.6 9.4 8 11 C9.6 9 11 7.2 13.2 4.8' fill='none' stroke='%2322408f' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") right 8px center / 14px no-repeat, var(--sk-card);
+  color: var(--sk-ink); font-family: var(--sk-hand); font-size: 15.5px;
+  border: 2px solid rgba(var(--sk-ink-rgb), .75); border-radius: var(--sk-r2); padding: 5px 30px 6px 10px;
+}
+body.style-sketch.ink-black .set-row select {
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3 5.6 C5 7.6 6.6 9.4 8 11 C9.6 9 11 7.2 13.2 4.8' fill='none' stroke='%232a2a30' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") right 8px center / 14px no-repeat, var(--sk-card);
+}
+/* hand-drawn toggle */
+body.style-sketch .switch { width: 52px; height: 30px; }
+body.style-sketch .switch span {
+  background: var(--sk-card); border: 2px solid rgba(var(--sk-ink-rgb), .75); border-radius: 30px 26px 28px 24px / 24px 28px 26px 30px;
+}
+body.style-sketch .switch span::after {
+  width: 20px; height: 20px; left: 3px; top: 3px; border-radius: var(--sk-ring);
+  background: var(--sk-hatch-x), var(--sk-card); border: 1.8px solid rgba(var(--sk-ink-rgb), .8);
+}
+body.style-sketch .switch input:checked + span { background: var(--sk-hi-fill), var(--sk-card); border-color: var(--sk-ink); }
+body.style-sketch .switch input:checked + span::after { background: var(--sk-ink); border-color: var(--sk-ink); transform: translateX(22px) rotate(20deg); }
+body.style-sketch .switch input:focus-visible + span { outline: 2px dashed var(--sk-red); outline-offset: 2px; }
+
+body.style-sketch .toast {
+  background: var(--sk-card); color: var(--sk-ink); font-family: var(--sk-hand); font-weight: 400; font-size: 16.5px;
+  border: 2px solid var(--sk-ink); border-radius: var(--sk-r2);
+  box-shadow: 3px 4px 0 rgba(var(--sk-ink-rgb), .16), 0 12px 24px -12px rgba(60, 45, 15, .45);
+  padding: 12px 18px; width: max-content; max-width: min(90vw, 480px);
+  transform: translateX(-50%) rotate(-1deg);
+  animation: skToastIn .35s cubic-bezier(.3, 1.4, .5, 1) both;
+}
+body.style-sketch .toast::before {
+  content: ''; position: absolute; top: -11px; left: 50%; width: 70px; height: 20px; margin-left: -35px;
+  background: var(--sk-tape); transform: rotate(3deg);
+  clip-path: polygon(0 10%, 5% 0, 10% 9%, 15% 0, 85% 3%, 90% 10%, 96% 0, 100% 10%, 98% 34%, 100% 55%, 97% 78%, 100% 100%, 92% 93%, 86% 100%, 9% 96%, 3% 100%, 0 86%, 3% 64%, 0 42%, 2% 22%);
+}
+/* confetti: scraps of coloured paper and pen squiggles */
+body.style-sketch .confetti {
+  width: 13px; height: 17px; border-radius: 0 !important; filter: saturate(.8);
+  clip-path: polygon(8% 0, 100% 12%, 88% 100%, 0 84%);
+}
+body.style-sketch .confetti:nth-of-type(3n) { clip-path: polygon(0 18%, 70% 0, 100% 70%, 24% 100%); width: 10px; height: 12px; }
+body.style-sketch .confetti:nth-of-type(4n) {
+  clip-path: none; width: 26px; height: 11px; filter: none;
+  background: var(--sk-ink) !important;
+  -webkit-mask: var(--sk-m-squig) center / contain no-repeat; mask: var(--sk-m-squig) center / contain no-repeat;
+}
+body.style-sketch .confetti:nth-of-type(7n) {
+  clip-path: none; width: 14px; height: 14px; filter: none;
+  background: var(--sk-red) !important;
+  -webkit-mask: var(--sk-m-ast) center / contain no-repeat; mask: var(--sk-m-ast) center / contain no-repeat;
+}
+
+/* ===================== Learn & Trials ===================== */
+body.style-sketch .learn > p, body.style-sketch #learn-body > p { font-size: 17px; }
+body.style-sketch .tabs { gap: 8px; padding: 12px 2px 8px; margin-bottom: 14px; }
+body.style-sketch .tabs button {
+  font-family: var(--sk-head); font-weight: 700; font-size: 21px; line-height: 1; color: rgba(var(--sk-ink-rgb), .8);
+  background: var(--sk-card); border: 2px solid rgba(var(--sk-ink-rgb), .55); border-radius: var(--sk-r1);
+  padding: 6px 14px 7px;
+}
+body.style-sketch .tabs button:nth-child(2n) { border-radius: var(--sk-r2); }
+body.style-sketch .tabs button:hover { color: var(--sk-ink); border-color: var(--sk-ink); }
+body.style-sketch .tabs button.on {
+  color: var(--sk-ink); border: 2.5px solid var(--sk-ink);
+  background: var(--sk-hi-fill), var(--sk-card);
+  box-shadow: 2px 3px 0 rgba(var(--sk-ink-rgb), .2);
+}
+body.style-sketch .army { gap: 22px 16px; padding-top: 8px; }
+body.style-sketch .army-card:nth-child(3n+1) { --sk-rot: -.6deg; }
+body.style-sketch .army-card:nth-child(3n+2) { --sk-rot: .5deg; }
+body.style-sketch .army-card:nth-child(3n) { --sk-rot: -.25deg; }
+body.style-sketch .army-top h3 { font-size: 30px; line-height: 1; color: var(--sk-ink); }
+body.style-sketch .army-top .cn { color: var(--sk-pencil); font-weight: 400; font-size: 14.5px; }
+body.style-sketch .val {
+  background: none; color: var(--sk-red); font-family: var(--sk-head); font-weight: 700; font-size: 18px; line-height: 1;
+  border: 1.8px solid var(--sk-red); border-radius: var(--sk-ring); padding: 2px 9px 3px; margin-top: 4px; transform: rotate(-3deg);
+}
+body.style-sketch .army-card p { color: var(--sk-ink); font-size: 15.5px; }
+body.style-sketch .army-card .sp { color: var(--sk-green); }
+body.style-sketch .minigame { --sk-rot: 0deg; margin-top: 18px; }
+body.style-sketch .minigame .board-frame { transform: none; }
+body.style-sketch .mg-info h3 { font-size: 30px; line-height: 1; color: var(--sk-ink); }
+body.style-sketch .mg-info p { font-size: 16px; }
+body.style-sketch .stars {
+  font-size: 32px; letter-spacing: 4px; text-shadow: none;
+  color: rgba(255, 214, 30, .85); -webkit-text-stroke: 1.2px var(--sk-ink);
+}
+body.style-sketch .berry svg { filter: none; }
+body.style-sketch .rules-grid, body.style-sketch .gold-grid, body.style-sketch .words-grid { gap: 24px 18px; padding-top: 8px; }
+body.style-sketch .rule-card h3, body.style-sketch .gold-card h3, body.style-sketch .word-card h3 { font-size: 28px; line-height: 1.05; color: var(--sk-ink); }
+body.style-sketch .rule-card p, body.style-sketch .gold-card p, body.style-sketch .word-card p { color: var(--sk-ink); font-size: 15.5px; }
+body.style-sketch .rule-card:nth-child(3n+1), body.style-sketch .gold-card:nth-child(3n+1), body.style-sketch .word-card:nth-child(3n+1) { --sk-rot: -.5deg; }
+body.style-sketch .rule-card:nth-child(3n+2), body.style-sketch .gold-card:nth-child(3n+2), body.style-sketch .word-card:nth-child(3n+2) { --sk-rot: .6deg; }
+body.style-sketch .rule-card .board-frame { padding: 8px; border-radius: 4px 10px 5px 9px / 9px 5px 10px 4px; outline-offset: 2px; }
+body.style-sketch .rule-card .board-frame::before, body.style-sketch .rule-card .board-frame::after { content: none; }
+body.style-sketch .gold-card .gi { filter: var(--sk-emoji); font-size: 34px; display: inline-block; transform: rotate(-6deg); }
+body.style-sketch .word-card h3 {
+  display: inline-block;
+  background: linear-gradient(176deg, transparent 50%, rgba(255, 224, 40, .55) 52% 90%, transparent 92%) no-repeat;
+  padding: 0 4px;
+}
+body.style-sketch .trials-grid { gap: 14px 12px; margin-top: 14px; }
+body.style-sketch .trial-btn {
+  color: var(--sk-ink); background: var(--sk-card);
+  border: 1.8px solid rgba(var(--sk-ink-rgb), .6); border-radius: var(--sk-r1);
+  box-shadow: 1.5px 2.5px 0 rgba(var(--sk-ink-rgb), .14);
+  transform: rotate(var(--sk-rot, 0deg));
+}
+body.style-sketch .trial-btn:nth-child(3n+1) { --sk-rot: -.6deg; border-radius: var(--sk-r2); }
+body.style-sketch .trial-btn:nth-child(3n+2) { --sk-rot: .5deg; border-radius: var(--sk-r3); }
+body.style-sketch .trial-btn:hover { border-color: var(--sk-ink); animation: skWiggle .38s ease-in-out; }
+body.style-sketch .trial-btn:active { animation: none; transform: translate(1px, 2px) rotate(var(--sk-rot, 0deg)); box-shadow: none; }
+body.style-sketch .trial-btn .tn {
+  font-family: var(--sk-head); font-weight: 700; font-size: 21px; color: var(--sk-ink); line-height: 1;
+  width: 34px; height: 34px; background: none; border: 2px solid rgba(var(--sk-ink-rgb), .8); border-radius: var(--sk-ring);
+}
+body.style-sketch .trial-btn.done { background: linear-gradient(180deg, rgba(var(--sk-green-rgb), .07), rgba(var(--sk-green-rgb), .03)), var(--sk-card); }
+body.style-sketch .trial-btn.done .tn { background: none; color: var(--sk-green); border-color: var(--sk-green); font-size: 24px; }
+body.style-sketch .trial-btn b { font-family: var(--sk-head); font-weight: 700; font-size: 22px; line-height: 1.05; }
+body.style-sketch .trial-btn small { color: var(--sk-pencil); font-size: 14px; }
+body.style-sketch .trial-play .panel .kicker { font-size: 21px; }
+
+/* ===================== Responsive (restyle only) ===================== */
+@media (max-width: 920px) {
+  body.style-sketch .home-grid > .panel { --sk-rot: 0deg; }
+  body.style-sketch .home-grid > .profile-card { --sk-rot: .4deg; }
+  body.style-sketch .home-grid > #history-card { --sk-rot: -.4deg; }
+}
+@media (max-width: 700px) {
+  body.style-sketch::before {
+    background:
+      var(--sk-grain),
+      repeating-linear-gradient(180deg, transparent 0 27px, var(--sk-rule) 27px 28px),
+      var(--sk-mottle),
+      radial-gradient(ellipse 120% 90% at 50% 40%, transparent 55%, rgba(176, 150, 96, .14) 100%),
+      var(--sk-paper);
+  }
+}
+@media (max-width: 600px) {
+  body.style-sketch .brand-txt b { font-size: 26px; }
+  body.style-sketch .topnav button { font-size: 18px; padding: 3px 7px 4px; gap: 0; }
+  body.style-sketch .topnav .ni { font-size: 15px; }
+  body.style-sketch .hero { padding: 10px 0 16px; }
+  body.style-sketch .hero h1 { font-size: 46px; }
+  body.style-sketch .hero h1::after { width: 20px; height: 20px; right: -14px; top: -10px; }
+  body.style-sketch .kicker { font-size: 19px; }
+  body.style-sketch .hero p { font-size: 15.5px; }
+  body.style-sketch .ph { font-size: 27px; }
+  body.style-sketch .bots { gap: 14px 10px; }
+  body.style-sketch .btn-big { font-size: 30px; }
+  body.style-sketch .board-frame { padding: 7px; }
+  body.style-sketch .board-frame::before, body.style-sketch .board-frame::after { width: 56px; height: 17px; }
+  body.style-sketch .board-frame::before { left: -12px; top: -4px; }
+  body.style-sketch .board-frame::after { right: -12px; bottom: -4px; }
+  body.style-sketch .bubble { font-size: 15.5px; padding: 10px 11px; }
+  body.style-sketch .bubble .bh b.t { font-size: 22px; }
+  body.style-sketch .pb-name { font-size: 20px; }
+  body.style-sketch .g-tools { gap: 6px; }
+  body.style-sketch .g-tools .tool { font-size: 15.5px; }
+  body.style-sketch .tool span { font-size: 17px; }
+  body.style-sketch .modal-card { padding: 18px 14px 16px 34px; background-position: -8px 0, 0 14px, 0 0; }
+  body.style-sketch .modal-card h2 { font-size: 34px; }
+  body.style-sketch .result-banner h2 { font-size: 50px; }
+  body.style-sketch .set-row label { font-size: 19px; }
+  body.style-sketch .rv-nav button { width: 48px; }
+  body.style-sketch .acc .pct { font-size: 32px; }
+}
+@media (max-width: 440px) {
+  body.style-sketch .topnav button { padding: 3px 6px 4px; }
+  body.style-sketch .tabs button { font-size: 19px; padding: 5px 11px 6px; }
+}
+
+/* ===================== keyframes ===================== */
+@keyframes skWiggle {
+  0%, 100% { transform: rotate(var(--sk-rot, 0deg)); }
+  25% { transform: rotate(calc(var(--sk-rot, 0deg) - 1.6deg)) translateY(-1px); }
+  60% { transform: rotate(calc(var(--sk-rot, 0deg) + 1.2deg)); }
+  85% { transform: rotate(calc(var(--sk-rot, 0deg) - .4deg)); }
+}
+@keyframes skNoteIn {
+  from { opacity: 0; transform: translateY(10px) rotate(calc(var(--sk-rot, 0deg) - 4deg)) scale(.94); }
+  to { opacity: 1; transform: rotate(var(--sk-rot, 0deg)); }
+}
+@keyframes skToastIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(10px) rotate(-5deg) scale(.94); }
+  to { opacity: 1; transform: translateX(-50%) rotate(-1deg); }
+}
+@keyframes skPulse { 0%, 100% { opacity: .78; } 50% { opacity: 1; } }
+@keyframes skNudge { 0%, 64%, 100% { transform: translateX(0); } 74% { transform: translateX(7px); } 84% { transform: translateX(-1px); } 92% { transform: translateX(4px); } }
+@keyframes skHiPulse {
+  0%, 100% { box-shadow: 1.5px 2.5px 0 rgba(34, 64, 143, .18), 0 0 0 0 rgba(255, 224, 40, 0); }
+  50% { box-shadow: 1.5px 2.5px 0 rgba(34, 64, 143, .18), 0 0 0 5px rgba(255, 224, 40, .55); }
+}

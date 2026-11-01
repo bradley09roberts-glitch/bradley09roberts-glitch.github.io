@@ -56,6 +56,11 @@
     warn() { tone(330, 0.16, { vol: 0.14, type: 'square' }); tone(262, 0.22, { vol: 0.12, type: 'square', delay: 0.12 }); },
     good() { tone(784, 0.12, { vol: 0.1, type: 'triangle' }); tone(1175, 0.18, { vol: 0.08, type: 'triangle', delay: 0.08 }); },
     illegal() { tone(150, 0.12, { vol: 0.12, type: 'square' }); },
+    pen() { noise(0.05, { freq: 3200, q: 1.4, vol: 0.32, decay: 2.5 }); noise(0.09, { freq: 1500, q: 2.5, vol: 0.38, decay: 3, delay: 0.03 }); tone(240, 0.07, { vol: 0.12, type: 'triangle' }); },
+    scribble() {
+      for (let i = 0; i < 6; i++) noise(0.05, { freq: 2600 + (i % 2) * 1400, sweep: 1800 + (i % 3) * 900, q: 1.8, vol: 0.34, decay: 1.6, delay: i * 0.045 });
+      tone(150, 0.16, { vol: 0.16, type: 'triangle', slide: 80, delay: 0.05 });
+    },
     click() { tone(520, 0.04, { vol: 0.06, type: 'triangle' }); },
     sparkle() { [1568, 2093, 2637].forEach((f, i) => tone(f, 0.12, { vol: 0.05, delay: i * 0.05 })); }
   };

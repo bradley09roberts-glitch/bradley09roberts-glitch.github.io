@@ -13,6 +13,7 @@
     const n = A.NAMES[pc & 7];
     return `<span class="pn">${A.mini(pc)}<span class="fn">${n.f}</span><span class="cn">${n.c}</span></span>`;
   };
+  const endS = s => /[.!?]$/.test(s) ? s : s + '.';
   const cap1 = s => s.replace(/^(\s*)([a-z])/, (_, a, b) => a + b.toUpperCase());
   const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
   let PERSP = WHITE; // the human player's colour, for "your" / "the enemy"
@@ -319,7 +320,7 @@
       r.title = { brilliant: 'Brilliant!', great: 'Great move!', best: 'Best move!', excellent: 'Excellent!', good: 'Good move', book: 'Book move', forced: 'Only move' }[cls];
       r.body.push(praise(pos, facts, cls, ctx));
       if ((cls === 'good' || cls === 'excellent') && bestFacts) {
-        r.better = `Even stronger was ${moveText(pos, ctx.best.move)} — ${bestReason(pos, ctx.best, bestFacts)}.`;
+        r.better = `Even stronger was ${moveText(pos, ctx.best.move)} — ${endS(bestReason(pos, ctx.best, bestFacts))}`;
         r.arrows.push({ m: ctx.best.move, kind: 'best' });
       }
       return r;
@@ -372,7 +373,7 @@
       }
     }
     if (bestFacts) {
-      r.better = `Better was ${moveText(pos, ctx.best.move)} — ${bestReason(pos, ctx.best, bestFacts)}.`;
+      r.better = `Better was ${moveText(pos, ctx.best.move)} — ${endS(bestReason(pos, ctx.best, bestFacts))}`;
       r.arrows.push({ m: ctx.best.move, kind: 'best' });
     }
     const lesson = r.tags.length && LESSONS[r.tags[0]];
@@ -574,7 +575,7 @@
     if (!best) return null;
     const f = moveFacts(pos, best.move);
     if (level >= 3) {
-      return { html: `I'd play ${moveText(pos, best.move)} — ${bestReason(pos, best, f)}.`, arrows: [{ m: best.move, kind: 'hint' }], marks: [] };
+      return { html: `I'd play ${moveText(pos, best.move)} — ${endS(bestReason(pos, best, f))}`, arrows: [{ m: best.move, kind: 'hint' }], marks: [] };
     }
     if (level === 2) {
       return { html: `Look at your ${pn(f.pc)} on ${sqTag(f.from)}. Where could it go?`, marks: [{ sq: f.from, kind: 'hint' }], arrows: [] };

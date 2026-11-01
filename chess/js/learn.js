@@ -59,7 +59,8 @@
     let t = p.t;
     let berries = new Set(p.game.berries.map(E.sqFromName));
     fake.board[sq] = t;
-    const drawBerries = () => huntBoard.setMarks('coach', Array.from(berries).map(s => ({ sq: s, kind: 'berry', html: `<span>${BERRY}</span>` })));
+    const berryArt = s => (window.Ink && window.Ink.enabled) ? window.Ink.convert(BERRY, { frames: 3, seed: (s % 5) + 1, side: 'w' }) : BERRY;
+    const drawBerries = () => huntBoard.setMarks('coach', Array.from(berries).map(s => ({ sq: s, kind: 'berry', html: `<span>${berryArt(s)}</span>` })));
     huntBoard.setPosition(fake, { fade: true });
     drawBerries();
     const arm = () => huntBoard.setInteractive(true, { side: 0, getMoves: from => from === sq ? loneMoves(t, sq) : [] });

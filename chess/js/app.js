@@ -20,12 +20,18 @@
   const reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   /* ---------- settings & profile ---------- */
-  const DEFAULTS = { sound: true, theme: 'glade', coords: true, anim: 'normal', idle: true, names: 'both', evalBar: false, danger: true, freeHL: false, guard: true, coach: 'guide', badges: false, takebacks: true, color: 'w', bot: 'pip' };
+  const DEFAULTS = { art: 'sketch', boil: true, ink: 'blue', pieceSet: 'creatures', sound: true, theme: 'glade', coords: true, anim: 'normal', idle: true, names: 'both', evalBar: false, danger: true, freeHL: false, guard: true, coach: 'guide', badges: false, takebacks: true, color: 'w', bot: 'pip' };
   const settings = Object.assign({}, DEFAULTS, store.get('mw.settings', {}));
   const profile = Object.assign({ rating: 400, games: 0, wins: 0, losses: 0, draws: 0, bots: {}, best: 400 }, store.get('mw.profile', {}));
   const saveSettings = () => { store.set('mw.settings', settings); applySettings(); };
   const saveProfile = () => store.set('mw.profile', profile);
   const animSpeed = () => (reducedMotion || settings.anim === 'off') ? 0 : settings.anim === 'fast' ? 1.8 : 1;
+  const inkOn = () => !!(window.Ink && window.Ink.enabled);
+  function setupArt() {
+    if (A.setPieceSet) A.setPieceSet(settings.pieceSet);
+    if (settings.art === 'sketch' && window.Ink) { window.Ink.init({ ink: settings.ink }); window.Ink.enabled = true; }
+    else if (window.Ink) window.Ink.enabled = false;
+  }
 
   function applySettings() {
     const b = document.body;
@@ -34,6 +40,12 @@
     b.classList.toggle('no-coords', !settings.coords);
     b.classList.toggle('badges', !!settings.badges);
     b.classList.toggle('no-idle', !settings.idle);
+    b.classList.toggle('style-sketch', inkOn());
+    b.classList.toggle('boil', inkOn() && !!settings.boil && !reducedMotion);
+    b.classList.toggle('ink-black', settings.ink === 'black');
+    b.classList.toggle('pieces-classic', settings.pieceSet === 'classic');
+    const tc = document.querySelector('meta[name="theme-color"]');
+    if (tc) tc.setAttribute('content', inkOn() ? '#fbf8ef' : '#0f1d1f');
     Snd.setEnabled(settings.sound);
     $('#btn-sound').textContent = settings.sound ? '🔊' : '🔈';
     if (G && !G.over) { $('#evalbar').hidden = !settings.evalBar; refreshDanger(); }
@@ -134,6 +146,7 @@
 
   /* ---------- board view ---------- */
   const SPORES = { 0: ['#e0473b', '#fff8ea', '#f6c847', '#86c95b'], 1: ['#8a5ad0', '#86f5da', '#cbbcff', '#ffd84a'] };
+  const INK_MARKS = new Set(['last', 'sel', 'dot', 'ring', 'check', 'danger', 'free', 'hint', 'ping']);
   const ARROW_COLORS = { best: '#6fbf3a', hint: '#3fc9bd', threat: '#e5484d', played: '#f6c847' };
 
   class BoardView {
@@ -147,6 +160,7 @@
       let h = '';
       for (let row = 0; row < 8; row++) for (let col = 0; col < 8; col++) h += `<div class="s ${(row + col) % 2 ? 'd' : 'l'}"></div>`;
       this.sqLayer.innerHTML = h;
+      if (inkOn()) this.sqLayer.insertAdjacentHTML('beforeend', window.Ink.board({ seed: 7 + (BoardView.count = (BoardView.count || 0) + 1) }));
       this.renderCoords();
       el.addEventListener('pointerdown', e => this.down(e));
       el.addEventListener('pointermove', e => this.move(e));
@@ -183,6 +197,7 @@
     makePiece(code) {
       const d = document.createElement('div');
       d.className = 'piece'; d.dataset.code = code;
+      d.style.setProperty('--bp', (-Math.random() * 0.45).toFixed(2) + 's');
       d.innerHTML = `<div class="pc-inner" style="--d:${(-Math.random() * 5).toFixed(2)}s;--bob:${(3 + Math.random() * 1.4).toFixed(2)}s">${A.svg(code)}<span class="badge-letter">${A.NAMES[code & 7].letter}</span></div>`;
       return d;
     }
@@ -288,7 +303,11 @@
       el.style.zIndex = 15;
       el.animate([{ transform: T0, opacity: 1 }, { offset: .3, transform: T0 + ' scale(1.2) rotate(-8deg)', opacity: 1, filter: 'brightness(1.8)' }, { transform: T0 + ' scale(0) rotate(40deg)', opacity: 0 }], { duration: 380, easing: 'ease-in' })
         .finished.then(() => el.remove(), () => el.remove());
-      this.burst(sq, SPORES[code >> 3], 16, 'spore');
+      if (inkOn()) {
+        this.inkFx(sq, 'cross', 0, 650);
+        this.inkFx(sq, 'poof', 230, 900);
+        this.burst(sq, [window.Ink.colors.ink, window.Ink.colors.red, window.Ink.colors.ink], 9, 'spore');
+      } else this.burst(sq, SPORES[code >> 3], 16, 'spore');
       const t = code & 7;
       if (t === QUEEN || t === ROOK) this.el.animate([{ transform: 'translate(0,0)' }, { transform: 'translate(-4px,2px)' }, { transform: 'translate(4px,-2px)' }, { transform: 'translate(-2px,1px)' }, { transform: 'translate(0,0)' }], { duration: 320 });
     }
@@ -300,13 +319,27 @@
       this.pieces.set(sq, nw);
       if (old) old.remove();
       if (animate && animSpeed()) {
-        this.burst(sq, ['#f6c847', '#fff4b0', '#86f5da', '#ffffff'], 18, 'star');
+        if (inkOn()) this.inkFx(sq, 'stars', 0, 1100);
+        else this.burst(sq, ['#f6c847', '#fff4b0', '#86f5da', '#ffffff'], 18, 'star');
         return nw.animate([{ transform: this.tf(sq, ' scale(0) rotate(-120deg)') }, { offset: .7, transform: this.tf(sq, ' scale(1.35) rotate(12deg)') }, { transform: this.tf(sq) }], { duration: 650, easing: 'ease-out' }).finished.catch(() => {});
       }
       return Promise.resolve();
     }
+    inkFx(sq, kind, delay, life, color) {
+      if (!inkOn() || !animSpeed()) return;
+      const [c, r] = this.colRow(sq);
+      const d = document.createElement('div');
+      d.className = 'ink-fx ink-fx-' + kind;
+      d.style.left = c * 12.5 + '%'; d.style.top = r * 12.5 + '%';
+      d.innerHTML = window.Ink.fx(kind, sq * 7 + Math.floor(Math.random() * 5), color ? { color } : undefined);
+      setTimeout(() => {
+        this.fx.appendChild(d);
+        d.animate([{ opacity: 1 }, { opacity: 1, offset: .65 }, { opacity: 0 }], { duration: life || 800 }).finished.then(() => d.remove(), () => d.remove());
+      }, delay || 0);
+    }
     burst(sq, colors, n, kind) {
       if (!animSpeed()) return;
+      if (inkOn() && kind === 'star') { this.inkFx(sq, 'stars', 0, 1100, colors && colors[0] === '#2ec4b6' ? 'green' : undefined); return; }
       const [c, r] = this.colRow(sq);
       const W = this.el.clientWidth / 8;
       for (let i = 0; i < n; i++) {
@@ -334,7 +367,12 @@
       for (const k of ['last', 'check', 'danger', 'free', 'coach', 'sel', 'targets', 'hint', 'ping', 'badge']) {
         for (const m of (this.marks[k] || [])) {
           const [c, r] = this.colRow(m.sq);
-          h += `<div class="mk ${m.kind}" style="left:${c * 12.5}%;top:${r * 12.5}%;${m.color ? '--c:' + m.color : ''}">${m.html || ''}</div>`;
+          let inner = m.html || '';
+          if (inkOn()) {
+            if (m.kind === 'badge' && m.sym) inner = window.Ink.badge(m.sym, m.cls || 'ink');
+            else if (!m.html && INK_MARKS.has(m.kind)) inner = window.Ink.mark(m.kind, m.sq + 17 * c);
+          }
+          h += `<div class="mk ${m.kind}" style="left:${c * 12.5}%;top:${r * 12.5}%;${m.color ? '--c:' + m.color : ''}">${inner}</div>`;
         }
       }
       this.mLayer.innerHTML = h;
@@ -347,6 +385,14 @@
     setArrows(list) { this.arrows = list || []; this.renderArrows(); }
     renderArrows() {
       let body = '';
+      if (inkOn()) {
+        for (const a of this.arrows) {
+          const [c0, r0] = this.colRow(a.from), [c1, r1] = this.colRow(a.to);
+          body += window.Ink.arrow(c0 * 100 + 50, r0 * 100 + 50, c1 * 100 + 50, r1 * 100 + 50, { color: a.kind === 'hint' ? 'green' : (a.kind || 'ink'), dashed: !!a.dashed, seed: a.from * 128 + a.to, trim: [22, 12] });
+        }
+        this.aLayer.innerHTML = body;
+        return;
+      }
       for (const a of this.arrows) {
         const color = a.color || ARROW_COLORS[a.kind] || (A.CLASS_INFO[a.kind] && A.CLASS_INFO[a.kind].color) || '#f6c847';
         const [c0, r0] = this.colRow(a.from), [c1, r1] = this.colRow(a.to);
@@ -837,11 +883,12 @@
 
   function playMoveSound(pos, m) {
     const fl = mFlags(m), t = pos.board[mFrom(m)] & 7;
+    const ink = inkOn();
     if (fl & E.F_CASTLE) Snd.play('castle');
     else if (fl & E.F_PROMO) Snd.play('promote');
-    else if (fl & E.F_CAPTURE) Snd.play('capture');
+    else if (fl & E.F_CAPTURE) Snd.play(ink ? 'scribble' : 'capture');
     else if (t === KNIGHT || t === KING) Snd.play('hop');
-    else Snd.play('move');
+    else Snd.play(ink ? 'pen' : 'move');
   }
 
   async function applyMove(m, opts) {
@@ -1266,7 +1313,7 @@
     if (i > 0) {
       const m = R.moves[i - 1], j = R.judges[i - 1], ci = A.CLASS_INFO[j.cls];
       rvBoard.setMarks('last', [{ sq: mFrom(m), kind: 'last' }, { sq: mTo(m), kind: 'last' }]);
-      rvBoard.setMarks('badge', [{ sq: mTo(m), kind: 'badge', color: ci.color, html: `<i>${ci.sym}</i>` }]);
+      rvBoard.setMarks('badge', inkOn() ? [{ sq: mTo(m), kind: 'badge', sym: ci.sym, cls: j.cls }] : [{ sq: mTo(m), kind: 'badge', color: ci.color, html: `<i>${ci.sym}</i>` }]);
       rvBoard.setArrows(judgeArrows(j.arrows));
     } else { rvBoard.setMarks('last', []); rvBoard.setMarks('badge', []); rvBoard.setArrows([]); }
     rvBoard.setMarks('check', pos.inCheck() ? [{ sq: pos.kings[pos.side], kind: 'check' }] : []);
@@ -1397,6 +1444,10 @@
     const sw = (k, label, sub) => `<div class="set-row"><label for="s-${k}">${label}<small>${sub || ''}</small></label><span class="switch"><input type="checkbox" id="s-${k}" data-k="${k}" ${settings[k] ? 'checked' : ''}><span></span></span></div>`;
     const sel = (k, label, opts, sub) => `<div class="set-row"><label for="s-${k}">${label}<small>${sub || ''}</small></label><select id="s-${k}" data-k="${k}">${opts.map(([v, t]) => `<option value="${v}" ${settings[k] === v ? 'selected' : ''}>${t}</option>`).join('')}</select></div>`;
     const md = modal(`<h2>Settings</h2>
+      ${sel('art', 'Art style', [['sketch', 'Sketchbook (ballpoint doodles)'], ['storybook', 'Storybook (colour)']], 'Changing this reloads the page — your game is kept')}
+      ${sel('pieceSet', 'Pieces', [['creatures', 'Mosswood creatures'], ['classic', 'Classic chess pieces']], 'Classic pieces look like the ones on other chess sites')}
+      ${settings.art === 'sketch' ? sw('boil', 'Wobbly ink lines', 'The hand-drawn lines gently shimmer, like a flip-book') : ''}
+      ${settings.art === 'sketch' ? sel('ink', 'Pen colour', [['blue', 'Blue ballpoint'], ['black', 'Black ink']]) : ''}
       ${sw('sound', 'Sound effects')}
       ${sel('coach', 'Coach', [['guide', 'Guide me'], ['light', 'Light touch'], ['off', 'Quiet (review only)']], 'How chatty Sage Bramblewick is during games')}
       ${sw('guard', 'Blunder guard', 'Pause after a mistake and offer a take-back')}
@@ -1416,6 +1467,10 @@
       settings[k] = inp.type === 'checkbox' ? inp.checked : inp.value;
       if (k === 'coach' && G && !G.over) G.coach = settings.coach;
       saveSettings();
+      if (k === 'art' || k === 'pieceSet' || k === 'ink') {
+        try { if (G && !G.over) sessionStorage.setItem('mw.autoresume', '1'); } catch (e) { /* ignore */ }
+        setTimeout(() => location.reload(), 120);
+      }
     }));
     $('#s-reset', md.card).onclick = () => {
       if (!confirm('Reset your rating, records and game history?')) return;
@@ -1428,6 +1483,7 @@
 
   /* ---------- wiring ---------- */
   function init() {
+    setupArt();
     initWorld();
     board = new BoardView($('#board'));
     rvBoard = new BoardView($('#rv-board'));
@@ -1468,8 +1524,13 @@
       }
     });
     renderHome();
-    // reopen the game screen straight away if a battle was in progress
     show('home');
+    if (inkOn() && window.Doodles) { try { window.Doodles.mount($('#doodles')); } catch (e) { /* decoration only */ } }
+    // after a style switch reloads the page, jump straight back into the battle
+    let auto = null;
+    try { auto = sessionStorage.getItem('mw.autoresume'); sessionStorage.removeItem('mw.autoresume'); } catch (e) { /* ignore */ }
+    const cur = store.get('mw.current', null);
+    if (auto && cur && cur.ucis) resumeGame(cur);
   }
 
   window.MW = { debug: () => ({ G, board, R, rvBoard }), BoardView, coachEng, sleep, esc, coachSay, coachBusy, show, settings, store, toast, modal, convertAna, animSpeed, confetti, playMoveSound, judgeArrows, Snd };

@@ -476,6 +476,14 @@ code.san { font-family: ui-monospace, Menlo, monospace; font-size: .8em; backgro
 .trial-play { display: grid; grid-template-columns: minmax(0, 560px) 1fr; gap: 16px; align-items: start; }
 .trial-play .board-frame { width: 100%; }
 
+body:not(.style-sketch) #doodles { display: none; }
+/* single-frame ink drawings (small icons) must never take part in the line-boil cycle */
+body.boil .ink-svg .ink-f0:last-child { animation: none; visibility: visible; }
+body.style-sketch .ink-fx .ink-draw { stroke-dasharray: 1; stroke-dashoffset: 1; animation: inkDraw .32s ease-out forwards; animation-delay: calc(var(--i, 0) * 45ms); }
+@keyframes inkDraw { to { stroke-dashoffset: 0; } }
+@media (prefers-reduced-motion: reduce) { body.style-sketch .ink-fx .ink-draw { stroke-dasharray: none; stroke-dashoffset: 0; } }
+body.pieces-classic .pc-inner { animation: none; }
+
 /* ===================== Responsive ===================== */
 @media (min-width: 921px) {
   .game .g-main { position: sticky; top: 64px; }
