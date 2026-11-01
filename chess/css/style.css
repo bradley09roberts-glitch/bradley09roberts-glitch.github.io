@@ -138,7 +138,7 @@ h1, h2, h3 { font-family: var(--head); }
 .hero h1 { font-family: var(--display); font-size: clamp(32px, 6vw, 54px); line-height: 1.02; margin: 6px 0 8px; color: var(--gold);
   text-shadow: 0 2px 0 #7a4d0e, 0 0 30px rgba(246, 200, 71, .35); }
 .hero p { margin: 0; color: #d9d1b8; max-width: 620px; }
-.home-grid { display: grid; grid-template-columns: 1.6fr 1fr; gap: 14px; align-items: start; }
+.home-grid { display: grid; grid-template-columns: 1.6fr 1fr; grid-auto-flow: row dense; gap: 14px; align-items: start; }
 .pick-panel { grid-column: 1; grid-row: span 3; }
 .profile-card, #resume-card, .setup-panel, #history-card { grid-column: 2; }
 .profile-card { display: flex; gap: 12px; align-items: center; }
@@ -226,7 +226,9 @@ h1, h2, h3 { font-family: var(--head); }
 .eb-label { position: absolute; left: 0; right: 0; bottom: 4px; text-align: center; font-size: 9px; font-weight: 900; color: #2b1a0c; writing-mode: vertical-rl; transform: rotate(180deg); }
 
 /* ===================== Board ===================== */
-.board { position: relative; width: 100%; aspect-ratio: 1; border-radius: 8px; overflow: hidden; user-select: none; touch-action: none; box-shadow: 0 0 0 2px #2a170a; }
+.board { position: relative; width: 100%; aspect-ratio: 1; border-radius: 8px; overflow: hidden; user-select: none; touch-action: pan-y pinch-zoom; box-shadow: 0 0 0 2px #2a170a; }
+/* only boards you can move pieces on capture touch drags; static/review boards let the page scroll */
+.board.interactive { touch-action: none; }
 .b-squares { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(8, 1fr); }
 .b-squares .s { position: relative; }
 .b-squares .s.l { background: var(--light); }
@@ -478,7 +480,7 @@ code.san { font-family: ui-monospace, Menlo, monospace; font-size: .8em; backgro
 
 body:not(.style-sketch) #doodles { display: none; }
 /* single-frame ink drawings (small icons) must never take part in the line-boil cycle */
-body.boil .ink-svg .ink-f0:last-child { animation: none; visibility: visible; }
+body.boil .ink-svg .ink-f0:last-child { animation: none; opacity: 1; }
 body.style-sketch .ink-fx .ink-draw { stroke-dasharray: 1; stroke-dashoffset: 1; animation: inkDraw .32s ease-out forwards; animation-delay: calc(var(--i, 0) * 45ms); }
 @keyframes inkDraw { to { stroke-dashoffset: 0; } }
 @media (prefers-reduced-motion: reduce) { body.style-sketch .ink-fx .ink-draw { stroke-dasharray: none; stroke-dashoffset: 0; } }
@@ -491,11 +493,21 @@ body.pieces-classic .pc-inner { animation: none; }
 @media (max-width: 920px) {
   .game { grid-template-columns: 1fr; }
   .g-side { width: min(100%, 680px); margin: 0 auto; }
-  .board-frame { width: min(100%, 680px); }
+  /* keep the tool row right under the board, above the (sometimes long) coach bubbles */
+  .g-side .g-tools { order: -1; }
+  /* cap by screen height too (360px floor keeps portrait phones unchanged) */
+  .board-frame { width: min(100%, 680px, max(360px, calc(100vh - 400px))); width: min(100%, 680px, max(360px, calc(100svh - 400px))); }
+  .game.review .board-frame { width: min(100%, 680px, max(360px, calc(100vh - 480px))); width: min(100%, 680px, max(360px, calc(100svh - 480px))); }
   .home-grid { grid-template-columns: 1fr; }
   .pick-panel, .profile-card, #resume-card, .setup-panel, #history-card { grid-column: 1; grid-row: auto; }
   .pick-panel { order: 2; } .setup-panel { order: 3; } .profile-card { order: 0; } #resume-card { order: 1; } #history-card { order: 4; }
   .minigame, .trial-play { grid-template-columns: 1fr; }
+}
+/* landscape phones: board beside the side column, sized to the screen height */
+@media (max-width: 920px) and (orientation: landscape) and (max-height: 600px) {
+  .game { grid-template-columns: auto minmax(0, 1fr); }
+  .g-side { width: auto; margin: 0; }
+  .board-frame, .game.review .board-frame { width: calc(100vh - 76px); width: calc(100svh - 76px); }
 }
 @media (max-width: 600px) {
   main { padding: 10px 10px 30px; }

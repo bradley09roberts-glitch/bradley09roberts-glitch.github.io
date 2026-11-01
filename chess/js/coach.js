@@ -478,7 +478,7 @@
   }
 
   function praise(pos, f, cls, ctx) {
-    if (f.mate) return 'Checkmate! The enemy Frog King has nowhere left to hop. 🎉';
+    if (f.mate) return 'Checkmate! The enemy Frog King has nowhere left to hop. <span class="emo">🎉</span>';
     if (cls === 'brilliant') {
       const h = f.newHang[0];
       return h ? `You left ${ownPiece(h.pc, h.sq)} where it can be captured — but taking it would backfire. A bold, brilliant idea!` : `You gave up material on purpose, and it works. That's a sacrifice worthy of a grandmaster!`;

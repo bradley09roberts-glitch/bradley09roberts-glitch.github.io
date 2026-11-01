@@ -39,7 +39,7 @@
         return `<div class="panel army-card"><div class="army-top"><div class="army-art"><div>${A.svg(p.t)}</div><div>${A.svg(8 | p.t)}</div></div>
           <div><h3>${n.f}</h3><div class="cn">plays as the ${n.c} · ${n.letter}</div><span class="val">${p.value}</span></div></div>
           <p>${p.move}</p><p class="sp">✦ ${p.special}</p>
-          <button class="btn small" data-hunt="${i}">🍓 Berry hunt${best ? ' · ' + '★'.repeat(best) : ''}</button></div>`;
+          <button class="btn small" data-hunt="${i}"><span class="emo">🍓</span> Berry hunt${best ? ' · ' + '★'.repeat(best) : ''}</button></div>`;
       }).join('')}</div><div id="hunt"></div>`;
     $$('[data-hunt]', body).forEach(b => b.addEventListener('click', () => startHunt(ARMY[+b.dataset.hunt])));
   }
@@ -52,8 +52,9 @@
       <div class="mg-info"><h3>${n.f} berry hunt</h3><p>Move your ${n.f} (${n.c}) onto every berry. ${p.t === 1 ? 'Sprouts only move forward — and something magical happens on the last row!' : 'Tap the piece, then tap where it should go.'}</p>
       <p><b>Moves:</b> <span id="hunt-moves">0</span> · <b>Target:</b> ${p.game.par}</p><div class="stars" id="hunt-stars"></div>
       <button class="btn small ghost" id="hunt-reset">Start again</button></div></div>`;
-    box.scrollIntoView({ behavior: 'smooth', block: 'start' });
     huntBoard = new BoardView($('#hunt-board'));
+    // scroll after BoardView has given the board its height, or the target is clamped to a too-short page
+    box.scrollIntoView({ behavior: 'smooth', block: 'start' });
     const fake = { board: new Int8Array(128) };
     let sq = E.sqFromName(p.game.start), moves = 0;
     let t = p.t;
@@ -214,7 +215,8 @@
     coachSay({ mood: 'thinking', html: 'Let me study this position for a moment…' }, trialSpot);
     MW.coachBusy && (function () { const av = $('#tr-av'); if (av) av.classList.add('busy'); })();
     T.ana = await analyse(T.pos);
-    if (!T || T.tok !== myTok) return;
+    // the player may have left the trial (or opened another) while the coach was thinking
+    if (!T || T.tok !== myTok || !$('#tr-av')) return;
     $('#tr-av').classList.remove('busy');
     coachSay({ mood: 'happy', title: 'Your move!', html: t.goal === 'mate' ? `Find the checkmate${t.n > 1 ? ` in ${t.n} moves` : ''}. Remember: look at every check first!` : 'Find the strongest move. Tap a piece to see where it can go.' }, trialSpot);
     arm();

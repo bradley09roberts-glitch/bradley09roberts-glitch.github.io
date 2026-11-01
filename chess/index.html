@@ -16,6 +16,8 @@
 <link rel="stylesheet" href="css/sketch.css">
 </head>
 <body class="names-both theme-glade style-sketch boil">
+<!-- apply the saved art style before first paint (mirrors applySettings() in js/app.js, which stays the source of truth) -->
+<script>(function(){try{var s=JSON.parse(localStorage.getItem('mw.settings')||'{}'),b=document.body,sk=(s.art||'sketch')==='sketch';b.classList.toggle('style-sketch',sk);b.classList.toggle('boil',sk&&s.boil!==false&&!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches));b.classList.toggle('ink-black',s.ink==='black');b.classList.toggle('pieces-classic',s.pieceSet==='classic');if(s.theme&&/^\w+$/.test(s.theme)){b.classList.remove('theme-glade');b.classList.add('theme-'+s.theme)}var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute('content',sk?'#fbf8ef':'#0f1d1f')}catch(e){}})()</script>
 <div id="doodles" aria-hidden="true"></div>
 
 <!-- ===== The living world behind everything ===== -->

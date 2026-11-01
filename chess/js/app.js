@@ -29,7 +29,8 @@
   const inkOn = () => !!(window.Ink && window.Ink.enabled);
   function setupArt() {
     if (A.setPieceSet) A.setPieceSet(settings.pieceSet);
-    if (settings.art === 'sketch' && window.Ink) { window.Ink.init({ ink: settings.ink }); window.Ink.enabled = true; }
+    // reduced motion never boils, so one frame per drawing is enough (saves DOM and memory)
+    if (settings.art === 'sketch' && window.Ink) { window.Ink.init({ ink: settings.ink }); window.Ink.defaultFrames = reducedMotion ? 1 : 3; window.Ink.enabled = true; }
     else if (window.Ink) window.Ink.enabled = false;
   }
 
@@ -79,7 +80,8 @@
       say: { hello: ['So. Another challenger climbs my mountain.'], capture: ['Ash and embers.'], check: ['Feel the heat.'], hurt: ['…Interesting.'], win: ['The Wyrm remains undefeated.'], lose: ['Impossible! You are a true champion of Mosswood!'] } }
   ];
   const botById = id => BOTS.find(b => b.id === id) || BOTS[0];
-  const botArt = b => A.svg(b.art, { palette: b.pal });
+  // portraits stay creatures even with classic pieces on the board (otherwise Hoot and Morwen are both bishops)
+  const botArt = b => A.svg(b.art, { palette: b.pal, set: 'creatures' });
 
   /* ---------- engine client ---------- */
   class EngineClient {
@@ -160,7 +162,8 @@
       let h = '';
       for (let row = 0; row < 8; row++) for (let col = 0; col < 8; col++) h += `<div class="s ${(row + col) % 2 ? 'd' : 'l'}"></div>`;
       this.sqLayer.innerHTML = h;
-      if (inkOn()) this.sqLayer.insertAdjacentHTML('beforeend', window.Ink.board({ seed: 7 + (BoardView.count = (BoardView.count || 0) + 1) }));
+      // cycle through 8 hand-drawn variants (#board keeps 8, #rv-board 9) so new boards hit Ink's cache instead of growing it forever
+      if (inkOn()) this.sqLayer.insertAdjacentHTML('beforeend', window.Ink.board({ seed: 8 + ((BoardView.count = (BoardView.count || 0) + 1) - 1) % 8 }));
       this.renderCoords();
       el.addEventListener('pointerdown', e => this.down(e));
       el.addEventListener('pointermove', e => this.move(e));
@@ -408,6 +411,7 @@
     }
     setInteractive(on, opts) {
       this.interactive = !!on;
+      this.el.classList.toggle('interactive', this.interactive);
       if (opts) { this.side = opts.side; this.getMoves = opts.getMoves; }
       this.select(-1);
     }
@@ -540,9 +544,11 @@
     game: { feed: () => $('#coach-feed'), av: () => $('#coach-av'), board: () => board },
     review: { feed: () => $('#rv-coach-feed'), av: () => $('#rv-coach-av'), board: () => rvBoard }
   };
+  // colour emoji get class "emo" so the Sketchbook skin can ink them (★ ✓ → ?! are not pictographic and stay as text)
+  const emo = s => /\p{Extended_Pictographic}/u.test(s) ? `<span class="emo">${s}</span>` : s;
   function clsPill(cls) {
     const ci = A.CLASS_INFO[cls];
-    return ci ? `<span class="cls-pill" style="--c:${ci.color}"><i>${ci.sym}</i>${ci.label}</span>` : '';
+    return ci ? `<span class="cls-pill" style="--c:${ci.color}"><i>${emo(ci.sym)}</i>${ci.label}</span>` : '';
   }
   function coachSay(msg, spot) {
     const S = typeof spot === 'object' ? spot : COACH_SPOTS[spot || 'game'];
@@ -701,6 +707,8 @@
   function resumeGame(cur) {
     const bot = botById(cur.botId);
     G = newGameState(bot, cur.player, cur.ucis);
+    // only the move-list badges need the verdict class; the review recomputes full judgements
+    (cur.cls || []).forEach((c, i) => { if (c && G.plies[i]) G.plies[i].judge = { cls: c }; });
     G.coach = cur.coach || settings.coach;
     G.hintsUsed = cur.hintsUsed || 0; G.takebacks = cur.takebacks || 0;
     setupGameScreen();
@@ -724,7 +732,7 @@
 
   function saveCurrent() {
     if (!G || G.over) { store.del('mw.current'); return; }
-    store.set('mw.current', { botId: G.bot.id, player: G.player, ucis: G.plies.map(p => p.uci), coach: G.coach, hintsUsed: G.hintsUsed, takebacks: G.takebacks });
+    store.set('mw.current', { botId: G.bot.id, player: G.player, ucis: G.plies.map(p => p.uci), cls: G.plies.map(p => p.judge ? p.judge.cls : 0), coach: G.coach, hintsUsed: G.hintsUsed, takebacks: G.takebacks });
   }
 
   function capturedBy(pos) {
@@ -770,7 +778,7 @@
       if (i === 0 && p.color === BLACK) h += '<span class="mv">…</span>';
       const j = p.judge, ci = j && A.CLASS_INFO[j.cls];
       const showCi = ci && G.coach !== 'off' && p.color === G.player && !['good', 'excellent', 'best', 'book', 'forced'].includes(j.cls);
-      h += `<span class="mv ${i === G.plies.length - 1 ? 'cur' : ''}">${figSan(p.san, p.color)}${showCi ? `<span class="ci" style="--c:${ci.color}">${ci.sym}</span>` : ''}</span>`;
+      h += `<span class="mv ${i === G.plies.length - 1 ? 'cur' : ''}">${figSan(p.san, p.color)}${showCi ? `<span class="ci" style="--c:${ci.color}">${emo(ci.sym)}</span>` : ''}</span>`;
     });
     el.innerHTML = h || '<span class="muted small" style="grid-column:1/-1">No moves yet.</span>';
     el.scrollTop = el.scrollHeight;
@@ -851,6 +859,8 @@
 
   async function beginTurn() {
     if (!G || G.over) return;
+    // a new look was chosen while the blunder guard was open: reload now that the player has answered it
+    if (G.reloadAfterGuard) { const reload = G.reloadAfterGuard; G.reloadAfterGuard = null; reload(); return; }
     const tok = G.token;
     const st = G.pos.status();
     if (st.over) return endGame(st);
@@ -976,9 +986,10 @@
         board.setMarks('coach', (v.marks || []).map(x => ({ sq: x.sq, kind: x.kind === 'free' ? 'free' : 'danger' })));
       };
       show();
-      coachSay({
+      // remembered so a style change in Settings can wait until the player answers (see openSettings)
+      G.guardEl = coachSay({
         mood: v.mood, cls: v.cls, title: v.cls === 'miss' ? 'Wait — you missed something!' : 'Hold on! Want to take that back?',
-        html: `<p>${v.body.join(' ')}</p><p class="small legend"><span style="color:#6fbf3a">■</span> green arrow = a better idea${v.arrows.some(a => a.kind === 'threat') ? ' · <span style="color:#e5484d">■</span> red arrow = the danger' : ''}</p>`,
+        html: `<p>${v.body.join(' ')}</p><p class="small legend"><span style="color:${inkOn() ? window.Ink.colors.green : '#6fbf3a'}">■</span> green arrow = a better idea${v.arrows.some(a => a.kind === 'threat') ? ` · <span style="color:${inkOn() ? window.Ink.colors.red : '#e5484d'}">■</span> red arrow = the danger` : ''}</p>`,
         better: v.better, lesson: v.lesson, sound: 'warn', actionsTop: true,
         actions: [
           { label: '↶ Take it back', fn: () => { scrollToBoardOnMobile(); resolve('undo'); } },
@@ -1247,14 +1258,14 @@
       <div class="acc-row"><div class="acc"><div class="av">${A.svg((me << 3) | KING)}</div><div class="pct">${accMe.toFixed(0)}</div><small>Your accuracy</small></div>
       <div class="acc"><div class="av">${botArt(bot)}</div><div class="pct">${accBot.toFixed(0)}</div><small>${esc(bot.short)}'s accuracy</small></div></div>
       <div class="ctable"><span></span><span class="hd">You</span><span class="hd">${esc(bot.short)}</span>
-      ${order.map(k => { const ci = A.CLASS_INFO[k]; return `<span class="cl"><i style="--c:${ci.color}">${ci.sym}</i>${ci.label}</span><span class="n">${S.sides[me].counts[k] || 0}</span><span class="n">${S.sides[me ^ 1].counts[k] || 0}</span>`; }).join('')}</div>
+      ${order.map(k => { const ci = A.CLASS_INFO[k]; return `<span class="cl"><i style="--c:${ci.color}">${emo(ci.sym)}</i>${ci.label}</span><span class="n">${S.sides[me].counts[k] || 0}</span><span class="n">${S.sides[me ^ 1].counts[k] || 0}</span>`; }).join('')}</div>
       `;
     // key moments
     const kms = S.keyMoments, gms = S.goodMoments.slice(0, 2);
     const keyBtn = (p, label) => {
       const j = p.judge, ci = A.CLASS_INFO[j.cls];
       const first = (j.body[0] || '').replace(/<svg[\s\S]*?<\/svg>/g, '');
-      return `<button class="key" data-go="${p.i + 1}"><span class="ci" style="--c:${ci.color}">${ci.sym}</span><span class="kt"><b>Move ${Math.floor(p.i / 2) + 1} · ${ci.label}</b>${label ? ' — ' + label : ''}<br>${first}</span></button>`;
+      return `<button class="key" data-go="${p.i + 1}"><span class="ci" style="--c:${ci.color}">${emo(ci.sym)}</span><span class="kt"><b>Move ${Math.floor(p.i / 2) + 1} · ${ci.label}</b>${label ? ' — ' + label : ''}<br>${first}</span></button>`;
     };
     $('#rv-keys').innerHTML = `<h2 class="ph">Key moments</h2>` + (kms.length ? kms.map(p => keyBtn(p)).join('') : '<p class="muted small">No real mistakes to show — clean game!</p>')
       + (gms.length ? `<h2 class="ph" style="margin-top:12px">Your finest moves</h2>` + gms.map(p => keyBtn(p)).join('') : '');
@@ -1269,10 +1280,10 @@
       if (color === WHITE || i === 0) h += `<span class="no">${R.positions[i].full}.</span>`;
       if (i === 0 && color === BLACK) h += '<span class="mv">…</span>';
       const ci = A.CLASS_INFO[R.judges[i].cls];
-      h += `<span class="mv" data-i="${i + 1}">${figSan(R.sans[i], color)}<span class="ci" style="--c:${ci.color}">${ci.sym}</span></span>`;
+      h += `<span class="mv" data-i="${i + 1}">${figSan(R.sans[i], color)}<span class="ci" style="--c:${ci.color}">${emo(ci.sym)}</span></span>`;
     });
     $('#rv-moves').innerHTML = h;
-    $$('#rv-moves .mv[data-i]').forEach(e => e.addEventListener('click', () => rvGo(+e.dataset.i)));
+    $$('#rv-moves .mv[data-i]').forEach(e => e.addEventListener('click', () => { rvGo(+e.dataset.i); scrollToBoardOnMobile(); }));
   }
 
   function renderGraph() {
@@ -1290,7 +1301,7 @@
       <line x1="0" y1="${H / 2}" x2="${W}" y2="${H / 2}" stroke="#888" stroke-dasharray="4 4" stroke-width="1"/>${dots}
       <line id="rv-cursor" x1="0" y1="0" x2="0" y2="${H}" stroke="#4fd1c5" stroke-width="2.5"/></svg>`;
     const svg = $('#rv-graph svg');
-    svg.addEventListener('click', e => { const r = svg.getBoundingClientRect(); rvGo(Math.round((e.clientX - r.left) / r.width * n)); });
+    svg.addEventListener('click', e => { const r = svg.getBoundingClientRect(); rvGo(Math.round((e.clientX - r.left) / r.width * n)); scrollToBoardOnMobile(); });
   }
 
   function rvGo(i, opts) {
@@ -1339,7 +1350,7 @@
     const j = R.judges[i - 1], before = R.positions[i - 1], m = R.moves[i - 1];
     const mine = before.side === R.rec.player;
     const acts = [];
-    if (mine && !C.GOOD.has(j.cls)) acts.push({ label: '🎯 Try to find a better move', fn: () => rvPractice(i - 1) });
+    if (mine && !C.GOOD.has(j.cls)) acts.push({ label: '<span class="emo">🎯</span> Try to find a better move', fn: () => rvPractice(i - 1) });
     const anaB = R.anas[i - 1];
     const bestPv = anaB.multi ? (anaB.moves[0] && anaB.moves[0].pv) : anaB.pv;
     if (bestPv && bestPv.length && bestPv[0] !== m) acts.push({ label: '▶ Show the best line', ghost: true, fn: () => rvLine(i - 1, bestPv) });
@@ -1431,9 +1442,13 @@
 
   function revealCoach() {
     if (window.innerWidth > 920) return;
-    const el = $('#coach');
-    const r = el.getBoundingClientRect();
-    if (r.top > window.innerHeight - 160) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    // scroll only as far as needed to show the newest bubble's buttons, so the board (arrows, marks) stays in view
+    const b = $('#coach-feed .bubble');
+    if (!b) return;
+    const t = $('.acts', b) || b;
+    // never push the bubble's top under the sticky header
+    const dy = Math.min(t.getBoundingClientRect().bottom - (window.innerHeight - 12), b.getBoundingClientRect().top - 70);
+    if (dy > 0) window.scrollBy({ top: dy, behavior: 'smooth' });
   }
   function scrollToBoardOnMobile() {
     if (window.innerWidth <= 920) { const el = current === 'review' ? $('#rv-board') : $('#board'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
@@ -1444,20 +1459,20 @@
     const sw = (k, label, sub) => `<div class="set-row"><label for="s-${k}">${label}<small>${sub || ''}</small></label><span class="switch"><input type="checkbox" id="s-${k}" data-k="${k}" ${settings[k] ? 'checked' : ''}><span></span></span></div>`;
     const sel = (k, label, opts, sub) => `<div class="set-row"><label for="s-${k}">${label}<small>${sub || ''}</small></label><select id="s-${k}" data-k="${k}">${opts.map(([v, t]) => `<option value="${v}" ${settings[k] === v ? 'selected' : ''}>${t}</option>`).join('')}</select></div>`;
     const md = modal(`<h2>Settings</h2>
-      ${sel('art', 'Art style', [['sketch', 'Sketchbook (ballpoint doodles)'], ['storybook', 'Storybook (colour)']], 'Changing this reloads the page — your game is kept')}
-      ${sel('pieceSet', 'Pieces', [['creatures', 'Mosswood creatures'], ['classic', 'Classic chess pieces']], 'Classic pieces look like the ones on other chess sites')}
+      ${sel('art', 'Art style', [['sketch', 'Sketchbook'], ['storybook', 'Storybook']], 'Changing this reloads the page — your game is kept')}
+      ${sel('pieceSet', 'Pieces', [['creatures', 'Mosswood creatures'], ['classic', 'Classic chess pieces']], 'Classic pieces look like the ones on other chess sites. Reloads the page — your game is kept')}
       ${settings.art === 'sketch' ? sw('boil', 'Wobbly ink lines', 'The hand-drawn lines gently shimmer, like a flip-book') : ''}
-      ${settings.art === 'sketch' ? sel('ink', 'Pen colour', [['blue', 'Blue ballpoint'], ['black', 'Black ink']]) : ''}
+      ${settings.art === 'sketch' ? sel('ink', 'Pen colour', [['blue', 'Blue ballpoint'], ['black', 'Black ink']], 'Reloads the page — your game is kept') : ''}
       ${sw('sound', 'Sound effects')}
       ${sel('coach', 'Coach', [['guide', 'Guide me'], ['light', 'Light touch'], ['off', 'Quiet (review only)']], 'How chatty Sage Bramblewick is during games')}
       ${sw('guard', 'Blunder guard', 'Pause after a mistake and offer a take-back')}
       ${sw('takebacks', 'Allow take-backs')}
       ${sw('danger', 'Show my pieces in danger', 'Red rings around your pieces that can be captured')}
-      ${sw('freeHL', 'Show free enemy pieces', 'Gold rings on enemy pieces you can win (training wheels!)')}
+      ${sw('freeHL', 'Show free enemy pieces', `${settings.art === 'sketch' ? 'Green' : 'Gold'} rings on enemy pieces you can win (training wheels!)`)}
       ${sw('evalBar', 'Show "who\'s winning" bar', 'An evaluation bar beside the board during games')}
       ${sel('names', 'Piece names', [['both', 'Fantasy + chess names'], ['fantasy', 'Fantasy names only'], ['classic', 'Chess names only']])}
       ${sw('badges', 'Letter badges on pieces', 'Small K, Q, R, B, N, P labels')}
-      ${sel('theme', 'Board', [['glade', 'Mossy glade'], ['stone', 'Castle stone'], ['autumn', 'Autumn wood'], ['twilight', 'Twilight']])}
+      ${settings.art !== 'sketch' ? sel('theme', 'Board', [['glade', 'Mossy glade'], ['stone', 'Castle stone'], ['autumn', 'Autumn wood'], ['twilight', 'Twilight']]) : ''}
       ${sw('coords', 'Board coordinates')}
       ${sel('anim', 'Move animations', [['normal', 'Normal'], ['fast', 'Fast'], ['off', 'Off']])}
       ${sw('idle', 'Idle creature animations', 'Breathing, blinking, flapping')}
@@ -1468,8 +1483,16 @@
       if (k === 'coach' && G && !G.over) G.coach = settings.coach;
       saveSettings();
       if (k === 'art' || k === 'pieceSet' || k === 'ink') {
-        try { if (G && !G.over) sessionStorage.setItem('mw.autoresume', '1'); } catch (e) { /* ignore */ }
-        setTimeout(() => location.reload(), 120);
+        const reload = () => {
+          saveCurrent(); // the newest ply's verdict arrives after its move was saved
+          try { if (G && !G.over) sessionStorage.setItem('mw.autoresume', '1'); } catch (e) { /* ignore */ }
+          setTimeout(() => location.reload(), 120);
+        };
+        // reloading during a blunder-guard prompt would lose the take-back offer and let the bot play on
+        if (G && !G.over && G.guardEl && G.guardEl.isConnected) {
+          G.reloadAfterGuard = reload;
+          toast('Your new look will appear once you choose Take it back or Play on.');
+        } else reload();
       }
     }));
     $('#s-reset', md.card).onclick = () => {
@@ -1525,7 +1548,11 @@
     });
     renderHome();
     show('home');
-    if (inkOn() && window.Doodles) { try { window.Doodles.mount($('#doodles')); } catch (e) { /* decoration only */ } }
+    if (inkOn() && window.Doodles) {
+      // decoration only: draw the margin doodles after first paint so they stay off the start-up critical path
+      const mountDoodles = () => { try { window.Doodles.mount($('#doodles')); } catch (e) { /* decoration only */ } };
+      if (window.requestIdleCallback) requestIdleCallback(mountDoodles, { timeout: 1000 }); else setTimeout(mountDoodles, 50);
+    }
     // after a style switch reloads the page, jump straight back into the battle
     let auto = null;
     try { auto = sessionStorage.getItem('mw.autoresume'); sessionStorage.removeItem('mw.autoresume'); } catch (e) { /* ignore */ }

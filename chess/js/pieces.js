@@ -182,12 +182,14 @@
     opts = opts || {};
     const t = code & 7, p = palFor(code, opts.palette);
     const side = (code >> 3) ? 'b' : 'w';
-    return `<svg class="pc-svg pc-t${t} pc-${side}${opts.cls ? ' ' + opts.cls : ''}" viewBox="0 0 100 100" aria-hidden="true">${artFor(t)(p)}</svg>`;
+    // opts.set 'creatures' forces the creature art (bot portraits keep their character whatever the piece set)
+    const art = opts.set === 'creatures' ? ART[t] : artFor(t);
+    return `<svg class="pc-svg pc-t${t} pc-${side}${opts.cls ? ' ' + opts.cls : ''}" viewBox="0 0 100 100" aria-hidden="true">${art(p)}</svg>`;
   }
 
   function svg(code, opts) {
     opts = opts || {};
-    if (inkOn()) return global.Ink.piece(code, { palette: opts.palette, cls: opts.cls, frames: opts.frames });
+    if (inkOn()) return global.Ink.piece(code, { palette: opts.palette, cls: opts.cls, frames: opts.frames, set: opts.set });
     return svgClean(code, opts);
   }
 

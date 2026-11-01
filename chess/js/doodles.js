@@ -369,7 +369,7 @@
     const useInk = opts.ink == null ? inkOn() : !!opts.ink && !!global.Ink;
     if (!useInk) return svgs[id].replace('class="dd-art ', `class="${cls} dd-art `);
     const Ink = global.Ink;
-    const frames = opts.frames == null ? 3 : opts.frames, seed = opts.seed == null ? d.index + 1 : opts.seed;
+    const frames = opts.frames == null ? (Ink.defaultFrames || 3) : opts.frames, seed = opts.seed == null ? d.index + 1 : opts.seed;
     const key = [id, frames, seed, cls, Ink.colors && Ink.colors.ink].join('|');
     let out = inkCache.get(key);
     if (out == null) {

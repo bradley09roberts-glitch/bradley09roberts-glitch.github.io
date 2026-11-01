@@ -15,12 +15,20 @@
 body.boil .ink-svg .ink-f1, body.boil .ink-svg .ink-f2 { display: inline; }
 body.boil .ink-svg .ink-f { animation: inkBoil .45s step-end infinite; animation-delay: calc(var(--bp, 0s) + var(--fo, 0s)); }
 .ink-f0 { --fo: 0s; } .ink-f1 { --fo: -.15s; } .ink-f2 { --fo: -.3s; }
-@keyframes inkBoil { 0% { visibility: visible; } 33.333% { visibility: hidden; } 100% { visibility: hidden; } }
+/* opacity, not visibility: visibility is inherited, so toggling it restyles every path in the frame */
+@keyframes inkBoil { 0% { opacity: 1; } 33.333% { opacity: 0; } 100% { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) {
   /* style.css shortens every animation; show a single still frame instead */
   body.boil .ink-svg .ink-f1, body.boil .ink-svg .ink-f2 { display: none; }
-  body.boil .ink-svg .ink-f { animation: none !important; visibility: visible; }
+  body.boil .ink-svg .ink-f { animation: none !important; opacity: 1; }
 }
+/* The boil already makes inked creatures look alive; running their idle micro-animations
+   (blink, sway, flap...) inside every boil frame triples the work and saturates the main thread.
+   .pc-inner (breathe, in-check, cheer, topple) lives outside the frames and keeps animating.
+   Scoped to .pc-svg so the margin-doodle blinks/twinkles keep running. */
+body.style-sketch.boil .pc-svg.ink-svg .ink-f * { animation: none; }
+/* boil off: frames 1-2 are display:none, so stop the animations running inside them */
+body.style-sketch:not(.boil) .ink-svg .ink-f1 *, body.style-sketch:not(.boil) .ink-svg .ink-f2 * { animation: none; }
 
 /* ---------- tokens ---------- */
 body.style-sketch {
@@ -174,6 +182,8 @@ body.style-sketch .topnav button.on {
   background: linear-gradient(174deg, transparent 22%, rgba(255, 224, 40, .58) 24% 84%, transparent 86%) no-repeat;
 }
 body.style-sketch .topnav .ni { filter: var(--sk-emoji); font-size: 17px; }
+/* colour emoji inside labels, coach text and review symbols (wrapped in .emo by the app) */
+body.style-sketch .emo { filter: var(--sk-emoji); }
 body.style-sketch .icon-btn {
   border: 2px solid rgba(var(--sk-ink-rgb), .75); border-radius: var(--sk-r2); background: var(--sk-card);
   box-shadow: 1.5px 2px 0 rgba(var(--sk-ink-rgb), .2); filter: none;
@@ -305,15 +315,15 @@ body.style-sketch .home-grid > #history-card::before { left: -16px; right: auto;
 /* profile = index card */
 body.style-sketch .profile-card {
   background:
-    linear-gradient(180deg, transparent 0 27px, rgba(222, 76, 76, .5) 27px 28.5px, transparent 28.5px) no-repeat,
-    repeating-linear-gradient(180deg, transparent 0 22px, var(--sk-rule) 22px 23px) 0 29px / 100% calc(100% - 29px) no-repeat,
+    linear-gradient(180deg, transparent 0 45px, rgba(222, 76, 76, .5) 45px 46.5px, transparent 46.5px) no-repeat,
+    repeating-linear-gradient(180deg, transparent 0 22px, var(--sk-rule) 22px 23px) 0 47px / 100% calc(100% - 47px) no-repeat,
     var(--sk-card);
   padding-top: 14px;
 }
 body.style-sketch .prof-av {
   background: rgba(var(--sk-green-rgb), .16); border: 2px solid var(--sk-ink); border-radius: var(--sk-blob);
 }
-body.style-sketch .prof-main h3 { font-size: 25px; line-height: 1; color: var(--sk-ink); }
+body.style-sketch .prof-main h3 { font-size: 25px; line-height: 1; color: var(--sk-ink); margin-bottom: 5px; } /* sits on the red rule */
 body.style-sketch .prof-rating { font-family: var(--sk-head); font-weight: 700; font-size: 44px; line-height: 1; color: var(--sk-ink); }
 body.style-sketch .prof-rating small { font-family: var(--sk-hand); font-weight: 400; font-size: 14px; color: var(--sk-pencil); margin-left: 8px; }
 body.style-sketch .prof-rec { font-size: 14.5px; color: var(--sk-pencil); }
@@ -587,6 +597,9 @@ body.style-sketch .ring-fx {
 }
 
 body.style-sketch .mk.berry svg { filter: none; }
+/* berries are the goal of the hunt: bigger, in red pen, so they outweigh the move dots */
+body.style-sketch .mk.berry .ink-svg { color: var(--sk-red); }
+body.style-sketch .mk.berry span { width: 66%; height: 66%; }
 body.style-sketch .promo-pick {
   background: var(--sk-card); border: 2px solid var(--sk-ink); border-radius: var(--sk-r1);
   box-shadow: 3px 4px 0 rgba(var(--sk-ink-rgb), .25), 0 12px 24px -12px rgba(60, 45, 15, .5);
@@ -911,6 +924,9 @@ body.style-sketch .val {
 }
 body.style-sketch .army-card p { color: var(--sk-ink); font-size: 15.5px; }
 body.style-sketch .army-card .sp { color: var(--sk-green); }
+/* centred tape on every army card: the generic corner strips of neighbouring cards cross in the gutter */
+body.style-sketch .army > .panel.army-card::before { left: 50%; right: auto; margin-left: -46px; width: 92px; top: -11px; transform: rotate(-2.5deg); }
+body.style-sketch .army > .panel.army-card:nth-child(2n)::before { transform: rotate(2deg); }
 body.style-sketch .minigame { --sk-rot: 0deg; margin-top: 18px; }
 body.style-sketch .minigame .board-frame { transform: none; }
 body.style-sketch .mg-info h3 { font-size: 30px; line-height: 1; color: var(--sk-ink); }

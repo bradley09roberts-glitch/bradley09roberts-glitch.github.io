@@ -799,12 +799,12 @@
     const ckey = ['cv', opts.frames, opts.seed, opts.side, opts.weight, opts.cls, colors.ink, markup].join('|');
     const hit = cache.get(ckey);
     if (hit !== undefined) return hit;
-    const out = convertNow(markup, opts);
+    const out = flat(convertNow(markup, opts));
     cache.set(ckey, out);
     return out;
   }
   function convertNow(markup, opts) {
-    const frames = clamp(opts.frames == null ? 3 : opts.frames | 0, 1, 3);
+    const frames = clamp(opts.frames == null ? (Ink.defaultFrames || 3) : opts.frames | 0, 1, 3);
     const tpl = doc.createElement('template');
     tpl.innerHTML = String(markup).trim();
     const root = tpl.content.querySelector('svg');
@@ -831,27 +831,30 @@
 
   /* ---------------------------------------------------------------- caches + public piece / coach */
   const cache = new Map();
+  // markup is built with +=, which leaves V8 rope (cons) strings that cost several times their length on the heap;
+  // a multi-part join always yields one flat string, so copy before caching
+  const flat = s => (typeof s === 'string' && s.length > 1) ? [s.charAt(0), s.slice(1)].join('') : s;
   function cached(key, make) {
     let v = cache.get(key);
-    if (v === undefined) { v = make(); cache.set(key, v); }
+    if (v === undefined) { v = flat(make()); cache.set(key, v); }
     return v;
   }
   function artSource() { return global.PieceArt ? (global.PieceArt.clean || global.PieceArt) : null; }
 
   function piece(code, o) {
     o = o || {};
-    const frames = o.frames == null ? 3 : o.frames, weight = o.weight || 1;
+    const frames = o.frames == null ? (Ink.defaultFrames || 3) : o.frames, weight = o.weight || 1;
     const src = artSource();
     if (!src) return '';
     // keyed by the source markup itself, so a different art set (classic pieces, PieceArt.clean) never hits a stale drawing
-    const markup = src.svg(code, { palette: o.palette });
+    const markup = src.svg(code, { palette: o.palette, set: o.set });
     return convert(markup, { frames, seed: hash('piece', code & 7, code >> 3, o.palette || ''), side: 'auto', weight, cls: o.cls });
   }
 
   function coach(expr, o) {
     o = o || {};
     expr = expr || 'happy';
-    const frames = o.frames == null ? 3 : o.frames, weight = o.weight || 1;
+    const frames = o.frames == null ? (Ink.defaultFrames || 3) : o.frames, weight = o.weight || 1;
     const src = artSource();
     if (!src || !src.coach) return '';
     // one seed for all expressions: the hedgehog's body is drawn identically, only the face changes
@@ -1052,13 +1055,21 @@
       const R = rng(hash('badge', sym, c));
       const pts = loopPts(20, 20.5, 15.2, 14.6, 1.12, -1.9 + (R() - 0.5) * 0.6, -0.05, R, 0);
       const d = penStroke(pts, R, { amp: 0.35, sp: 1.4, k: 0.4 });
-      const chars = Array.from(sym).length;
-      const fs = chars >= 3 ? 14 : chars === 2 ? 18 : 23;
       const rot = r1(-8 + R() * 10);
+      // colour emoji ignore the pen colour (and CSS filters on SVG text are unreliable), so draw them in ink instead
+      let glyph;
+      if (sym === '📖') {
+        glyph = `<path d="M9 14c4-2 8-2 11 0 3-2 7-2 11 0v13c-4-2-8-2-11 0-3-2-7-2-11 0z M20 14v13" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" transform="rotate(${rot} 20 20)"/>`;
+      } else {
+        const txt = sym === '👍' ? '✓✓' : sym;
+        const chars = Array.from(txt).length;
+        const fs = chars >= 3 ? 14 : chars === 2 ? 18 : 23;
+        glyph = `<text x="20" y="21.5" text-anchor="middle" dominant-baseline="central" font-family="${FONT}" font-weight="700" font-size="${fs}" fill="${c}" transform="rotate(${rot} 20 20)">${esc(txt)}</text>`;
+      }
       return `<svg class="ink-badge" viewBox="0 0 40 40" aria-hidden="true" color="${colors.ink}">` +
         `<ellipse cx="20" cy="20.5" rx="15.6" ry="15" fill="${PAPER}"/>` +
         `<path d="${d}" fill="none" stroke="${c}" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/>` +
-        `<text x="20" y="21.5" text-anchor="middle" dominant-baseline="central" font-family="${FONT}" font-weight="700" font-size="${fs}" fill="${c}" transform="rotate(${rot} 20 20)">${esc(sym)}</text></svg>`;
+        glyph + '</svg>';
     });
   }
 
@@ -1208,6 +1219,7 @@
 
   const Ink = {
     enabled: false,
+    defaultFrames: 3, // boil frames when a caller does not ask for a count (the app sets 1 for reduced motion)
     colors,
     init,
     convert,
