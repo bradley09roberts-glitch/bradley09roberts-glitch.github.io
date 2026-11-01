@@ -12,7 +12,13 @@ minus the player's season average before the game.
    with the same in 2024-25; and split-half within a season (odd v even games). A real "plays
    up / plays down to good defences" trait would show a clearly positive correlation.
 2. Does N1 already handle top defences? Mean residual by opponent rank band.
-3. Tonight's picks (1 Nov 2026): each player's record v top-10 defences in that stat.
+3. Tonight's picks (1 Nov 2026): each player's record v top-10 defences in that stat, by season.
+
+Regular-season games only (verification, 1 Nov: N1 runs about 1 point high on points in the
+playoffs and 55% of playoff games are against top-10 defences, which distorted the first run).
+The split-half test correlates the top-minus-rest difference between alternate halves of each
+player-season's games (the first run correlated top-10 games only, which measures a player's
+general bias, not a top-defence effect).
 """
 import json
 import sys
@@ -79,8 +85,10 @@ def main(out_path):
     L = canon.load()
     pg, tg = L["player_games"], L["team_games"]
     pr = projections()
-    meta = pg[pg.participation == "played"][["game_id", "player_id", "name", "team", "opp", "season", "date"]]
+    meta = pg[pg.participation == "played"][["game_id", "player_id", "name", "team", "opp", "season", "date",
+                                              "season_type", "minutes"]]
     d = pr.merge(meta, on=["game_id", "player_id"])
+    d = d[d.season_type == "REG"]
     ranks = defence_ranks(tg)
     d = d.merge(ranks.rename(columns={"team": "opp"}), on=["season", "date", "opp", "market"], how="left")
     d = d[d["rank"].notna()].copy()
@@ -110,12 +118,16 @@ def main(out_path):
         g = g[(g[("size", True)] >= 8) & (g[("size", False)] >= 8)]
         eff = (g[("mean", True)] - g[("mean", False)]).unstack("season").dropna()
         r_season = float(eff[2024].corr(eff[2025])) if len(eff) > 5 else None
-        # split half within season (odd / even top-defence games)
-        y = x[x.top].sort_values("date").copy()
-        y["half"] = y.groupby(["player_id", "season"]).cumcount() % 2
-        h = y.groupby(["player_id", "season", "half"]).resid.agg(["mean", "size"]).unstack("half")
-        h = h[(h[("size", 0)] >= 6) & (h[("size", 1)] >= 6)]
-        r_half = float(h[("mean", 0)].corr(h[("mean", 1)])) if len(h) > 5 else None
+        # split half: alternate games within each player-season and top/rest cell, then
+        # correlate the top-minus-rest difference between the halves
+        y = x.sort_values("date").copy()
+        y["half"] = y.groupby(["player_id", "season", "top"]).cumcount() % 2
+        h = y.groupby(["player_id", "season", "half", "top"]).resid.agg(["mean", "size"]).unstack(["half", "top"])
+        ok = (h["size"] >= 4).all(axis=1)
+        h = h[ok]
+        dh0 = h[("mean", 0, True)] - h[("mean", 0, False)]
+        dh1 = h[("mean", 1, True)] - h[("mean", 1, False)]
+        r_half = float(dh0.corr(dh1)) if len(h) > 5 else None
         pers[s] = {"players_both_seasons": int(len(eff)), "corr_2024_v_2025": r_season,
                    "player_seasons_split_half": int(len(h)), "corr_split_half": r_half}
     res["persistence"] = pers
@@ -132,10 +144,17 @@ def main(out_path):
     for name, mk, side, line, opp in picks:
         x = d[(d.name == name) & (d.market == mk)]
         top = x[x.top]
-        orank = latest[(latest.team == opp) & (latest.market == mk)]
+
         def hit(v, line=line, side=side):
             return int(((v.actual < line) if side == "under" else (v.actual > line)).sum())
+
+        orank = latest[(latest.team == opp) & (latest.market == mk)]
+        by_season = {int(sn): {"games": int(len(v)), "minutes": round(float(v.minutes.mean()), 1),
+                               "avg": round(float(v.actual.mean()), 1), "side_hit": f"{hit(v)}/{len(v)}",
+                               "v_top10_avg": round(float(v[v.top].actual.mean()), 1) if v.top.any() else None}
+                     for sn, v in x.groupby("season")}
         tonight.append({"player": name, "market": mk, "side": side, "line": line, "opponent": opp,
+                        "by_season": by_season,
                         "opp_rank_now": int(orank["rank"].iloc[0]) if len(orank) else None,
                         "games": int(len(x)), "games_v_top10": int(len(top)),
                         "resid_v_top10": round(float(top.resid.mean()), 2) if len(top) else None,

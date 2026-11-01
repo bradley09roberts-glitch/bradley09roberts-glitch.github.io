@@ -348,3 +348,15 @@ contain everything S knows: a season average, the matchup and rest are public. T
 rules won 84 of 144 on the same props. `npl picks --sport nba` now also lists the S gap bets
 (1+ point) as a tracking list so the user's 50-100 bet test runs on its own record; it is
 reviewed with the pick rules after about ten nights.
+
+## D-039 (1 Nov 2026) A player's record against top defences is shown as context, not used to pick
+Asked whether players' history against the best defences (did they beat or miss what was
+projected) should inform picks. n09, independently re-checked by three separate reviews (ranks
+recomputed cell by cell, persistence rebuilt with different definitions, the picks' histories
+rebuilt from raw tables): a player's top-defence effect barely repeats from one season to the
+next (correlations about 0.00-0.03 in the regular season), so after shrinking for noise it is
+worth 0.1-0.3 points at most; N1's opponent factor already removes about 80% of the average
+defence effect. The useful part of a player's history is his role: minutes and team by season,
+which the pick review now checks (old seasons can mislead, e.g. Poeltl's minutes and rebounds
+have fallen from 9.6 a game in 2024-25). Queued: star scorers v top points defences (a
+hypothesis found after the fact) and N1 running about 1 point high on points so far this season.
