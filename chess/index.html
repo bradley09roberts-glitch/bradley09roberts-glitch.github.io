@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#fbf8ef">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Mosswood Chess">
+<meta name="description" content="Play chess against cheeky fantasy creatures of every strength, with a friendly coach who explains every move in plain English.">
+<title>Mosswood Chess</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Patrick+Hand&family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@600;700;800&family=Nunito:wght@500;700;800;900&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M22 60C21 39 35 27 50 27s29 12 28 33C64 65 36 65 22 60Z' fill='%23e0473b' stroke='%233b2414' stroke-width='4'/%3E%3Ccircle cx='38' cy='44' r='5' fill='%23fff'/%3E%3Ccircle cx='60' cy='40' r='4' fill='%23fff'/%3E%3Cpath d='M39 89c-3-10-2-22 3-30h16c5 8 6 20 3 30Z' fill='%23fff4de' stroke='%233b2414' stroke-width='4'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/sketch.css">
+</head>
+<body class="names-both theme-glade style-sketch boil">
+<!-- apply the saved art style before first paint (mirrors applySettings() in js/app.js, which stays the source of truth) -->
+<script>(function(){try{var s=JSON.parse(localStorage.getItem('mw.settings')||'{}'),b=document.body,sk=(s.art||'sketch')==='sketch';b.classList.toggle('style-sketch',sk);b.classList.toggle('boil',sk&&s.boil!==false&&!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches));b.classList.toggle('ink-black',s.ink==='black');b.classList.toggle('pieces-classic',s.pieceSet==='classic');if(s.theme&&/^\w+$/.test(s.theme)){b.classList.remove('theme-glade');b.classList.add('theme-'+s.theme)}var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute('content',sk?'#fbf8ef':'#0f1d1f')}catch(e){}})()</script>
+<div id="doodles" aria-hidden="true"></div>
+
+<!-- ===== The living world behind everything ===== -->
+<div id="world" aria-hidden="true">
+  <div class="w-sky"></div>
+  <div class="w-stars"></div>
+  <div class="w-moon"></div>
+  <svg class="w-land" viewBox="0 0 1600 600" preserveAspectRatio="xMidYMax slice">
+    <path class="w-far" d="M0 360 L120 300 L210 330 L330 250 L430 310 L520 270 L640 330 L760 240 L880 300 L990 260 L1110 320 L1230 250 L1350 300 L1470 260 L1600 310 L1600 600 L0 600Z"/>
+    <g class="w-castle">
+      <path d="M1180 330 L1180 250 L1192 250 L1192 238 L1204 238 L1204 250 L1216 250 L1216 210 L1226 196 L1236 210 L1236 250 L1262 250 L1262 180 L1274 160 L1286 180 L1286 250 L1310 250 L1310 226 L1322 226 L1322 238 L1334 238 L1334 330 Z"/>
+      <rect class="w-win" x="1268" y="196" width="6" height="10" rx="3"/>
+      <rect class="w-win w2" x="1222" y="222" width="5" height="8" rx="2.5"/>
+      <rect class="w-win w3" x="1296" y="262" width="5" height="8" rx="2.5"/>
+      <rect class="w-win" x="1196" y="270" width="5" height="8" rx="2.5"/>
+    </g>
+    <path class="w-mid" d="M0 420 C120 380 220 400 320 370 C430 340 520 390 640 380 C760 370 860 330 980 360 C1100 390 1200 350 1330 360 C1440 368 1520 390 1600 380 L1600 600 L0 600Z"/>
+    <g class="w-trees">
+      <path d="M60 470 L90 380 L120 470Z M130 480 L170 360 L210 480Z M1450 470 L1490 370 L1530 470Z M1510 480 L1545 390 L1580 480Z M300 470 L330 400 L360 470Z M1280 470 L1310 395 L1340 470Z"/>
+    </g>
+    <g class="w-shrooms">
+      <path d="M210 520 C210 470 300 470 300 520 Z M246 520 L246 560 L264 560 L264 520 Z"/>
+      <path d="M1360 515 C1360 455 1470 455 1470 515 Z M1405 515 L1405 565 L1425 565 L1425 515 Z"/>
+      <path d="M80 545 C80 515 130 515 130 545 Z M100 545 L100 570 L110 570 L110 545 Z"/>
+      <circle class="w-glow" cx="236" cy="500" r="5"/><circle class="w-glow g2" cx="270" cy="492" r="4"/><circle class="w-glow g3" cx="1390" cy="490" r="6"/><circle class="w-glow" cx="1440" cy="482" r="4"/><circle class="w-glow g2" cx="100" cy="532" r="3"/>
+    </g>
+    <path class="w-near" d="M0 520 C160 490 300 530 460 515 C640 500 760 540 940 525 C1120 510 1260 540 1420 520 C1500 512 1560 518 1600 522 L1600 600 L0 600Z"/>
+  </svg>
+  <div class="w-fog"></div>
+  <div class="w-flies"></div>
+</div>
+
+<!-- ===== App ===== -->
+<div id="app">
+  <header class="topbar">
+    <button class="brand" data-go="home" aria-label="Mosswood Chess home">
+      <span class="brand-ico"></span>
+      <span class="brand-txt"><b>Mosswood</b><small>Chess</small></span>
+    </button>
+    <nav class="topnav">
+      <button data-go="home" class="on"><span class="ni">⚔</span><span class="nt">Play</span></button>
+      <button data-go="learn"><span class="ni">📜</span><span class="nt">Learn</span></button>
+      <button data-go="trials"><span class="ni">🗝</span><span class="nt">Trials</span></button>
+    </nav>
+    <div class="top-tools">
+      <button id="btn-sound" class="icon-btn" aria-label="Toggle sound" title="Sound">🔊</button>
+      <button id="btn-settings" class="icon-btn" aria-label="Settings" title="Settings">⚙</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- HOME -->
+    <section id="scr-home" class="screen on">
+      <div class="hero">
+        <div class="hero-art" id="hero-art"></div>
+        <div class="hero-txt">
+          <small class="kicker">A chess quest in the toadstool realm</small>
+          <h1>Mosswood Chess</h1>
+          <p>Battle cheeky creatures from beginner to master, while <b>Sage Bramblewick</b> explains every move in plain words — what went wrong, why, and what to try instead.</p>
+        </div>
+      </div>
+
+      <div class="home-grid">
+        <div class="panel profile-card" id="profile-card"></div>
+
+        <div class="panel" id="resume-card" hidden></div>
+
+        <div class="panel pick-panel">
+          <h2 class="ph">Choose your opponent</h2>
+          <p class="muted small">Ratings are rough guesses of human strength — start low and climb the ladder.</p>
+          <div class="bots" id="bots"></div>
+        </div>
+
+        <div class="panel setup-panel">
+          <h2 class="ph">Prepare for battle</h2>
+          <div class="setup-row">
+            <div class="label">Your army</div>
+            <div class="seg" id="seg-color">
+              <button data-v="w" class="on"><span class="seg-ico" data-ico="6"></span>Sunmeadow<small>moves first</small></button>
+              <button data-v="r"><span class="seg-ico rnd">?</span>Random</button>
+              <button data-v="b"><span class="seg-ico" data-ico="14"></span>Duskmire<small>moves second</small></button>
+            </div>
+          </div>
+          <div class="setup-row">
+            <div class="label">Coach</div>
+            <div class="seg" id="seg-coach">
+              <button data-v="guide" class="on">Guide me<small>tips, warnings &amp; take-backs</small></button>
+              <button data-v="light">Light touch<small>only big moments</small></button>
+              <button data-v="off">Quiet<small>review afterwards</small></button>
+            </div>
+          </div>
+          <button class="btn-big" id="btn-start"><span>Begin the battle</span></button>
+        </div>
+
+        <div class="panel" id="history-card"></div>
+      </div>
+    </section>
+
+    <!-- GAME -->
+    <section id="scr-game" class="screen">
+      <div class="game">
+        <div class="g-main">
+          <div class="pbar" id="bar-top"></div>
+          <div class="board-wrap">
+            <div class="evalbar" id="evalbar" hidden><div class="eb-fill"></div><span class="eb-label"></span></div>
+            <div class="board-frame"><div id="board"></div></div>
+          </div>
+          <div class="pbar" id="bar-bot"></div>
+        </div>
+        <aside class="g-side">
+          <div class="coach-card" id="coach">
+            <div class="co-av" id="coach-av"></div>
+            <div class="co-feed" id="coach-feed"></div>
+          </div>
+          <div class="g-tools">
+            <button id="t-hint" class="tool"><span>🏮</span>Hint</button>
+            <button id="t-undo" class="tool"><span>↶</span>Take back</button>
+            <button id="t-danger" class="tool toggle"><span>👁</span>Danger</button>
+            <button id="t-flip" class="tool"><span>⇅</span>Flip</button>
+            <button id="t-resign" class="tool"><span>🏳</span>Resign</button>
+          </div>
+          <div class="panel moves-panel">
+            <div class="mp-head"><b>Moves</b><span id="opening-name" class="muted small"></span></div>
+            <div class="moves" id="moves"></div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- REVIEW -->
+    <section id="scr-review" class="screen">
+      <div class="game review">
+        <div class="g-main">
+          <div class="pbar slim" id="rv-top"></div>
+          <div class="board-wrap">
+            <div class="evalbar" id="rv-evalbar"><div class="eb-fill"></div><span class="eb-label"></span></div>
+            <div class="board-frame"><div id="rv-board"></div></div>
+          </div>
+          <div class="pbar slim" id="rv-bot"></div>
+          <div class="rv-nav">
+            <button id="rv-first" aria-label="First move">⏮</button>
+            <button id="rv-prev" aria-label="Previous move">◀</button>
+            <span id="rv-pos" class="rv-pos">Start</span>
+            <button id="rv-next" aria-label="Next move">▶</button>
+            <button id="rv-last" aria-label="Last move">⏭</button>
+          </div>
+        </div>
+        <aside class="g-side">
+          <div class="panel rv-loading" id="rv-loading">
+            <div class="co-av big" id="rv-load-av"></div>
+            <div><b>Sage Bramblewick is studying your game…</b><div class="bar"><i id="rv-prog"></i></div><small class="muted" id="rv-prog-txt"></small></div>
+          </div>
+          <div class="coach-card rv-coach" id="rv-coach" hidden>
+            <div class="co-av" id="rv-coach-av"></div>
+            <div class="co-feed" id="rv-coach-feed"></div>
+          </div>
+          <div class="panel" id="rv-graph-wrap" hidden><div class="mp-head"><b>How the battle swung</b><span class="muted small">tap to jump</span></div><div id="rv-graph"></div></div>
+          <div class="panel" id="rv-summary" hidden></div>
+          <div class="panel" id="rv-keys" hidden></div>
+          <div class="panel" id="rv-lessons" hidden></div>
+          <div class="panel moves-panel" id="rv-moves-wrap" hidden><div class="mp-head"><b>Every move</b></div><div class="moves rv-moves" id="rv-moves"></div></div>
+          <div class="rv-actions" id="rv-actions" hidden>
+            <button class="btn" id="rv-rematch">Rematch</button>
+            <button class="btn ghost" id="rv-home">Choose opponent</button>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- LEARN -->
+    <section id="scr-learn" class="screen">
+      <div class="learn">
+        <div class="tabs" id="learn-tabs">
+          <button data-t="army" class="on">Meet the army</button>
+          <button data-t="rules">Rules of the realm</button>
+          <button data-t="golden">Golden rules</button>
+          <button data-t="words">Wizard words</button>
+        </div>
+        <div id="learn-body"></div>
+      </div>
+    </section>
+
+    <!-- TRIALS (puzzles) -->
+    <section id="scr-trials" class="screen">
+      <div class="trials" id="trials"></div>
+    </section>
+  </main>
+</div>
+
+<div id="modal" class="modal" hidden><div class="modal-card" id="modal-card"></div></div>
+<div id="toast" class="toast" hidden></div>
+
+<script src="js/engine.js"></script>
+<script src="js/pieces.js"></script>
+<script src="js/classic.js"></script>
+<script src="js/sketch.js"></script>
+<script src="js/doodles.js"></script>
+<script src="js/coach.js"></script>
+<script src="js/sound.js"></script>
+<script src="js/app.js"></script>
+<script src="js/learn.js"></script>
+</body>
+</html>
