@@ -244,3 +244,11 @@ def test_ml_cache_for_an_uncached_week_is_empty_not_an_error(tmp_path, monkeypat
 
     monkeypatch.setattr(ml, "FEATURE_DIR", tmp_path)
     assert ml.load_cache([(2026, 8)]).empty
+
+
+def test_hist_odds_plan_costs():
+    from npl.sources import odds_api as oa
+    from npl.sources import odds_hist as H
+    assert len(oa.core_markets("nba")) == 5 and len(oa.core_markets("nfl")) == 7
+    p = H.plan("nba", 2025)
+    assert p["max_credits"] == p["games"] * 50 + p["dates"]
