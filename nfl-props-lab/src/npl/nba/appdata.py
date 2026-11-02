@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 
 from ..config import LONDON
+from ..dist import Dist
 from . import canon, live
 from . import model as M
 
@@ -107,7 +108,10 @@ def consensus_lines(q: pd.DataFrame) -> dict:
         if y.empty:
             continue
         fair = (1 / y.over) / (1 / y.over + 1 / y.under)
+        mgm = y.loc["betmgm"] if "betmgm" in y.index else None
         out[(pid, mk)] = {"line": float(line), "fair_over": round(float(fair.mean()), 4),
+                          "mgm_over": float(mgm.over) if mgm is not None else None,
+                          "mgm_under": float(mgm.under) if mgm is not None else None,
                           "best_over": float(y.over.max()), "best_under": float(y.under.max()),
                           "books": int(len(y)), "margin": round(float((1 / y.over + 1 / y.under
                                                                         - 1).mean()), 4),
@@ -210,6 +214,7 @@ def _props() -> dict:
                     else season},
             "opp_factor": o.get(stat), "opp_pace": o.get("pace"),
             "market_line": mkt.get((f["player_id"], f["market"])),
+            "p_cal_market": _p_cal(f, mkt.get((f["player_id"], f["market"]))),
             # only absences that recent minutes cannot reflect yet (he played last game)
             "teammates_out": [t for t in out_by_team.get(f["team"], [])
                               if t["name"] != f["name"] and t["minutes"] >= 20 and
@@ -219,6 +224,14 @@ def _props() -> dict:
     return {"edition_id": e["edition_id"], "date_et": e["date_et"], "cards": cards,
             "markets": {k: M.MARKET_LABELS[k] for k in M.MARKETS},
             "published_london": _london(e["published_at"])}
+
+
+def _p_cal(f: dict, m: dict | None) -> float | None:
+    """Calibrated model over chance at the bookmakers' line (D-043); None without a line."""
+    if not m:
+        return None
+    from . import calib
+    return round(calib.calibrated(f["market"], Dist.from_json(f["dist"]).line(m["line"])["over"]), 4)
 
 
 def _simple(fc: list, games: dict) -> dict:

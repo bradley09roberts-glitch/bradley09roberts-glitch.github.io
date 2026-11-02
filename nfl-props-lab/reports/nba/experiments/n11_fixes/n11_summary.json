@@ -1,0 +1,137 @@
+{
+ "families": {
+  "calibration": {
+   "variants_tried": 12,
+   "chosen": "V11, a per-market logistic recalibration. Unpenalized, fit on all of 2024-25 (71,922 props): logit p_fixed = a + b1*logit(p_over) + b2*log(line) + b3*(n1_mean-line)/sqrt(line) + b4*logit(p_over)*log(line) + b5*logit(p_over)^2. Fitted [a; b1..b5] by market: ast [-0.012; 0.339, -0.030, 0.268, -0.130, 0.073]; fg3m [0.329; 1.596, -0.147, -1.065, -0.296, 0.177]; pra [0.243; 0.598, -0.071, -0.361, -0.071, 0.040]; pts [0.084; 0.247, -0.053, 0.152, -0.144, 0.002]; reb [0.178; 1.101, -0.095, -0.642, -0.109, 0.193]. The logit term and the gap term are strongly collinear, so read the coefficients together, not one by one: their combined effect is a slope of about 0.3 on the model's logit plus an upward shift of the intercept. Selection rule: lowest out-of-fold log loss in leave-one-month-out CV on 2024-25 (7 month folds). V11 was also lowest under forward-chaining CV. I added V11 after the first CV pass, and it is counted in the 12. Its edge over V8 is +0.00002 (CI includes zero) and over V4 is +0.0003 (CI includes zero), so a rule that preferred the simplest model would have picked V4 instead. That difference is tiny next to the gap to the market. Only V11 was run on 2025-26.",
+   "test_log_loss": {
+    "fixed": 0.68793,
+    "market": 0.68723,
+    "original_model": 0.70578,
+    "diff_fixed_minus_market_ci": [
+     -0.00053,
+     0.00193
+    ]
+   },
+   "test_calibration": "2025-26 test set: 18,753 props over 42 dates.\n\nMean P(over) against the actual over rate of 0.4845:\n- Fixed: 0.4901\n- Original N1: 0.4589\n- Market: 0.4949\n\nLogistic calibration slope (intercept in brackets):\n- Fixed: 0.973 (-0.024)\n- Original N1: 0.288\n- Market: 0.956\n\nDecile expected calibration error (ECE): fixed 0.0096, original 0.0637, market 0.0122.\n\nBrier score: fixed 0.24743, market 0.24707, original 0.25487.\n- Fixed minus market: CI [-0.00024, +0.00096]\n- Fixed minus original: CI [-0.0098, -0.0052]\n\nLog loss, fixed minus original: -0.0179 (CI [-0.0238, -0.0125]).\n\nBoth problems are fixed: the bias toward unders is gone and the model is no longer overconfident. The top decile is still slightly overconfident (predicted 0.585, actual 0.568). By market, the fixed model's slope ranges from 0.81 (pra) to 1.06 (fg3m). Its log loss is below the market's for fg3m and pts but above it for ast, pra and reb. That is a post-hoc slice and none of it is significant.\n\nEligible props (books >= 3): 15,417 at best price and 12,206 with BetMGM prices.\n\nFor reference, the original N1 under the same betting rule:\n- Best price: 11,619 bets, ROI -1.2% (CI [-3.5%, +1.2%])\n- BetMGM: 7,415 bets, ROI -3.5% (CI [-6.4%, -0.7%])\n\nAll CIs come from 2,000 bootstrap resamples of dates.",
+   "test_bets_best_price": {
+    "bets": 6861,
+    "roi": 0.0106,
+    "roi_ci": [
+     -0.0121,
+     0.0313
+    ],
+    "win_rate": 0.4721
+   },
+   "test_bets_betmgm": {
+    "bets": 3131,
+    "roi": -0.0144,
+    "roi_ci": [
+     -0.0505,
+     0.0213
+    ],
+    "win_rate": 0.4714
+   },
+   "beats_market_out_of_sample": false
+  },
+  "distribution": {
+   "variants_tried": 215,
+   "chosen": "N1 (nba-0.1, dispersions and minutes table unchanged) with three changes. (1) Per-stat rate factors fitted on 2024-25 props by mean matching: pts 1.0301, reb 1.0205, ast 1.0300, fg3m 1.0507. PRA picks these up through its components. (2) A shared lognormal multiplier on a player's pts/reb/ast rates in a game: log-sd 2.4, median 1 (log shift 0). It is shared, so PRA stays consistent with its parts. (3) fg3m gets its own multiplier: log-sd 1.0, log shift -0.05. The mixture is integrated on a log-multiplier grid from -3 to +3 in steps of 0.1, with tail mass folded into the end nodes. Selection was by leave-one-month-out log loss on 2024-25. The month-by-month picks were stable: shared width 2.0-2.4 with shift 0, and fg3m width 1.0-1.2 with shift -0.05. Caveat: a log-sd of 2.4 on the rates is not a realistic box-score distribution. At this width P(over) has become a smooth function of log(model median / line). It works as a recalibration through the distribution and should not replace N1's pmfs for anything else, such as CRPS or the app's distributions.",
+   "test_log_loss": {
+    "fixed": 0.68858,
+    "market": 0.68723,
+    "original_model": 0.70578,
+    "diff_fixed_minus_market_ci": [
+     -0.00022,
+     0.003
+    ]
+   },
+   "test_calibration": "On TEST 2025-26 (18,753 props): mean predicted P(over) is 0.490 fixed, 0.459 original and 0.495 market, against an actual over rate of 0.4845. The logistic slope on each model's own logit is 1.006 fixed, 0.288 original and 0.956 market. Over-confidence and the under-lean are both gone; there is a slight over-lean of +0.6 points, as with the market. The deciles are well calibrated: fixed mean p runs from 0.401 to 0.566, against actual 0.393 to 0.559. Brier: fixed 0.24774, market 0.24707, original 0.25487; the CI of the fixed-minus-market Brier gap is -0.00009 to +0.00148. Fixed minus original log loss: -0.0172 (CI -0.0229 to -0.0126). Log loss by market, fixed v market: pts 0.6930 v 0.6932; reb 0.6907 v 0.6884; ast 0.6881 v 0.6848; fg3m 0.6756 v 0.6760; PRA 0.6942 v 0.6924.",
+   "test_bets_best_price": {
+    "bets": 8343,
+    "roi": 0.0054,
+    "roi_ci": [
+     -0.0205,
+     0.0277
+    ],
+    "win_rate": 0.472
+   },
+   "test_bets_betmgm": {
+    "bets": 3698,
+    "roi": -0.0104,
+    "roi_ci": [
+     -0.0552,
+     0.0327
+    ],
+    "win_rate": 0.4721
+   },
+   "beats_market_out_of_sample": false
+  },
+  "stack": {
+   "variants_tried": 64,
+   "chosen": "S4_blend_pm with lambda = 0.01. Formula: logit P(over) = a_m + c_m*logit(fair_over) + w_m*logit(p_over), with one set of a, c, w per market, fitted on the whole 2024-25 season. Fitted values (intercept a / market-logit coefficient c / model-logit weight w): ast +0.025 / 0.842 / +0.105; fg3m -0.021 / 0.966 / +0.097; pra -0.009 / 1.130 / -0.014; pts -0.013 / 1.247 / +0.005; reb -0.049 / 1.109 / +0.079. The weight on the model term averages 0.053 when weighted by prop count, so the result is about 95% market and 5% N1. For pts and pra the model weight is effectively zero. For reference, a plain unregularised global blend on the fit data gives intercept -0.012, 1.031 on the market logit and 0.052 on the model logit. I picked S4 by a rule fixed before looking at results: the lowest leave-one-month-out CV log loss on the fit season. The betting threshold of 0.02 was not tuned.",
+   "test_log_loss": {
+    "fixed": 0.68695,
+    "market": 0.68723,
+    "original_model": 0.70578,
+    "diff_fixed_minus_market_ci": [
+     -0.00062,
+     6e-05
+    ]
+   },
+   "test_calibration": "All figures are on 2025-26 (18,753 props, 42 dates). The actual over rate was 0.4845. Mean predicted P(over): fixed 0.4894, market 0.4949, original N1 0.4589. Fitting logistic recalibration (outcome on the logit of the prediction) gives intercept and slope: fixed -0.024 and 0.898; market -0.043 and 0.956; original N1 -0.011 and 0.290. The fix removes N1's under bias and most of its overconfidence (slope 0.29 becomes 0.90), but it is not better calibrated than the market. Its deciles track actual rates within about 0.01 to 0.02, and it slightly overstates the top deciles.\n\nBrier scores: fixed 0.24694, market 0.24707, original 0.25487. Fixed minus market is -0.00013 (CI -0.00030 to +0.00003). Fixed minus original log loss is -0.0188 (CI -0.0257 to -0.0130).\n\nPer-market log loss, fixed against market: ast 0.6844 v 0.6848; fg3m 0.6748 v 0.6760; pra 0.6924 v 0.6924; pts 0.6933 v 0.6932; reb 0.6883 v 0.6884.",
+   "test_bets_best_price": {
+    "bets": 1162,
+    "roi": 0.041,
+    "roi_ci": [
+     -0.0275,
+     0.1044
+    ],
+    "win_rate": 0.5112
+   },
+   "test_bets_betmgm": {
+    "bets": 263,
+    "roi": 0.0906,
+    "roi_ci": [
+     -0.044,
+     0.2248
+    ],
+    "win_rate": 0.5627
+   },
+   "beats_market_out_of_sample": false
+  },
+  "nfl": {
+   "variants_tried": 21,
+   "chosen": "Overall winner, picked by cross-validation before any test data was used: approach 3.1, a market-anchored blend. The formula is logit p = logit(fair_over) + w*(logit X1 - logit fair_over), with w = 0.1256 fitted on weeks 1-11 and no intercept. Best variant in each approach, each fitted on weeks 1-11: (1) X1 calibration, global logistic p = expit(0.0081 + 0.1919*logit X1). This means X1's logit has to be shrunk about 5x, so X1 is very overconfident. (2) Ensemble, logistic on the mean of the four model logits (X1, J1, M, A): p = expit(0.013 + 0.1668*mean logit). (3) Market stack: the 3.1 blend above. Model probabilities were clipped to [0.005, 0.995] before taking logits. This clip was fixed in advance and not tuned (A and M contain 0s).",
+   "test_log_loss": {
+    "fixed": 0.69039,
+    "market": 0.68939,
+    "original_model": 0.72894,
+    "diff_fixed_minus_market_ci": [
+     -2e-05,
+     0.00198
+    ]
+   },
+   "test_calibration": "Each chosen variant was evaluated once on weeks 12-22. Actual over rate was 0.4963.\n\nOverall winner, 3.1 blend:\n- Mean predicted 0.4952 v market 0.5012 v raw X1 0.4584.\n- Brier 0.24862 v market 0.24814, difference CI [-0.00001, +0.00095].\n- Logistic slope of the outcome on logit p: 0.78.\n- Slope on its deviation from the market (with the market's logit as an offset): -0.42. On these weeks the remaining X1 signal pointed the wrong way.\n\nRaw X1:\n- Slope 0.046, so it is close to having no information on these weeks.\n- Slope on its deviation from the market: -0.05.\n- Log loss 0.7289.\n\nApproach 1 (X1 global logistic):\n- Log loss 0.69390, difference v market +0.0045, CI [+0.0018, +0.0066].\n- Brier 0.25036.\n- Mean predicted 0.493, slope 0.24 (still overconfident).\n- Betting at the best price: 1,800 bets, ROI -3.3%, CI [-6.4%, -0.05%].\n- BetMGM: 713 bets, ROI -4.6%, CI [-9.5%, +0.8%].\n\nApproach 2 (mean of 4 logits):\n- Log loss 0.69389, difference v market +0.0045, CI [+0.0020, +0.0065].\n- Mean predicted 0.494, slope 0.18.\n- Betting at the best price: 1,732 bets, ROI -4.0%, CI [-7.3%, -0.04%].\n- BetMGM: 692 bets, ROI -0.8%, CI [-6.4%, +5.5%].\n\nAll three fixes improve log loss over raw X1 by 0.035-0.039 (CIs exclude zero). In every case the gain comes from removing X1's under bias and its overconfidence.\n\nReference: the market's own fair_over under the same rule (line shopping only) gave 83 bets at ROI +4.0%, CI [-7.4%, +11.6%].",
+   "test_bets_best_price": {
+    "bets": 537,
+    "roi": -0.0704,
+    "roi_ci": [
+     -0.1281,
+     -0.0235
+    ],
+    "win_rate": 0.4581
+   },
+   "test_bets_betmgm": {
+    "bets": 64,
+    "roi": -0.0978,
+    "roi_ci": [
+     -0.2809,
+     0.135
+    ],
+    "win_rate": 0.4531
+   },
+   "beats_market_out_of_sample": false
+  }
+ },
+ "synthesis": "# Test of the fixes for the under bias and overconfidence, against real bookmaker lines\n\n**Setup.**\n- **NBA:** fitted on 2024-25 (71,922 props) and tested on a 2025-26 sample (18,753 props, 42 dates).\n- **NFL:** fitted on weeks 1-11 of 2023 (6,025 props) and tested on weeks 12-22 (4,290 props).\n- **Selection:** every variant was chosen by cross-validation on the fit data only. The chosen variant was then scored once on the test data.\n- **Betting rule:** declared in advance. It needs at least 3 books, takes the side with the higher expected value (EV), and bets only when EV \u2265 0.02.\n- **CIs:** 95% bootstrap intervals, resampling dates for NBA and weeks for NFL.\n\n## 1. Do the fixes remove the under bias and the overconfidence?\n\n**NBA: yes, all three fixes do. Test season 2025-26, actual over rate 0.4845.**\n\n| Model | Mean P(over) | Calibration slope | Other |\n|---|---|---|---|\n| Original N1 | 0.459 | 0.29 | ECE 0.064 |\n| Calibration (V11) | 0.490 | 0.97 | ECE 0.0096, lower than the market's 0.0122 |\n| Distribution fix | 0.490 | 1.01 | deciles within about 0.01 of actual |\n| Market-anchored stack | 0.489 | 0.90 | about 95% market price |\n| Market | 0.495 | 0.96 | |\n\nECE is the decile expected calibration error. A slope of 1 means no overconfidence.\n\n- **Under bias:** gone in all three. They now lean slightly over, by about 0.5 points, as the market does.\n- **Overconfidence:** almost all gone. Compared with the original N1, log loss improves by 0.017 to 0.019, and every CI excludes zero.\n- **V11 is the only fix that repairs N1 itself.**\n  - It uses no market price as an input.\n  - It is the best calibrated of all on test.\n  - Remaining flaws: the top decile is slightly overconfident (predicted 0.585, actual 0.568), and the slope varies by market from 0.81 (PRA) to 1.06 (3-pointers).\n- **The distribution fix is a recalibration in disguise.** It only works because it widens player rates to a log-sd of 2.4, which is not a realistic box-score distribution. Realistic changes only moved fit log loss from 0.705 to about 0.700-0.703.\n- **The stack borrows the market's price to get its calibration.** With a slope of 0.90 it is a little more overconfident than the market.\n\n**NFL: the bias is fixed, but the overconfidence is only partly fixed.**\n- Raw X1: mean 0.458 against an actual 0.496, slope 0.046. On the test weeks it has almost no information.\n- X1 calibration: mean 0.493, slope 0.24, so still strongly overconfident.\n- Ensemble of four models: mean 0.494, slope 0.18.\n- Market blend: mean 0.495, slope 0.78. Its slope on its own deviation from the market is -0.42, so the X1 signal pointed the wrong way.\n- All three improve log loss over raw X1 by 0.035 to 0.039, with CIs excluding zero. They cannot cure the overconfidence, because X1 has almost no signal to calibrate.\n\n## 2. Does any fixed model beat the market on log loss out of sample?\n\n**No.**\n\n| Fix | Fixed | Market | Fixed minus market | 95% CI |\n|---|---|---|---|---|\n| NBA calibration | 0.68793 | 0.68723 | +0.0007 | \u22120.0005 to +0.0019 |\n| NBA distribution | 0.68858 | 0.68723 | +0.0014 | \u22120.0002 to +0.0030 |\n| NBA stack | 0.68695 | 0.68723 | \u22120.0003 | \u22120.0006 to +0.0001 |\n| NFL blend | 0.69039 | 0.68939 | +0.0010 | \u22120.00002 to +0.0020 |\n| NFL calibration / ensemble | 0.6939 | 0.68939 | +0.0045 | both CIs exclude zero (worse than the market) |\n\n- **The NBA stack is the only fix below the market at face value.**\n  - It was also below the market in fit-season CV: \u22120.00022, CI \u22120.00039 to \u22120.00005.\n  - On test its CI includes zero. Brier score shows the same: \u22120.00013, CI \u22120.00030 to +0.00003.\n  - Even if this is real, it is the market price nudged about 5% toward N1 in three markets: assists, 3-pointers and rebounds. The N1 weight is effectively zero for points and PRA. It is not N1 beating the market.\n- **The NBA calibration gap to the market shrank on test** (from +0.0027 on the fit season to +0.0007). That is mostly because the market itself scored worse on the test sample (0.6872 against 0.6856 on the fit season).\n\n## 3. Does any betting rule make money out of sample?\n\nNone of the four fixes showed an edge with a CI above zero, so the verification step had nothing to check (its list is empty). No test ROI CI is above zero, at the best price or at BetMGM.\n\n| Fix | Best price: bets, ROI [CI] | BetMGM: bets, ROI [CI] | Same rule, fit season out of fold |\n|---|---|---|---|\n| NBA calibration | 6,861, +1.1% [\u22121.2, +3.1] | 3,131, \u22121.4% [\u22125.1, +2.1] | \u22121.6% best / \u22123.1% BetMGM, both CIs below zero |\n| NBA distribution | 8,343, +0.5% [\u22122.1, +2.8] | 3,698, \u22121.0% [\u22125.5, +3.3] | \u22122.6% / \u22123.8%, both CIs below zero |\n| NBA stack | 1,162, +4.1% [\u22122.8, +10.4] | 263, +9.1% [\u22124.4, +22.5] | +1.1% [\u22121.6, +3.8] / +4.7% [\u22122.0, +11.0] |\n| NFL blend | 537, \u22127.0% [\u221212.8, \u22122.4] | 64, \u22129.8% [\u221228.1, +13.5] | +3.1% best [\u22124.8, +11.1] |\n| NFL calibration | 1,800, \u22123.3% [\u22126.4, \u22120.05] | 713, \u22124.6% [\u22129.5, +0.8] | \u22120.2% best |\n| NFL ensemble | 1,732, \u22124.0% [\u22127.3, \u22120.04] | 692, \u22120.8% [\u22126.4, +5.5] | \u22120.7% best |\n| Original NBA N1 (reference) | 11,619, \u22121.2% [\u22123.5, +1.2] | 7,415, \u22123.5% [\u22126.4, \u22120.7] | |\n\n- **BetMGM** is the only regulated book tested on its own. No fix shows a profit there with a CI above zero.\n  - NBA calibration and the distribution fix are negative at face value.\n  - The stack's +9.1% comes from only 263 bets.\n- **The positive best-price figures for NBA are not significant, and line shopping inflates them.**\n  - The average best price taken was 2.15 to 2.16, against about 2.11 at BetMGM.\n  - The market's own price, run through the same rule, bets 554 props at an average price of 2.28.\n  - The best price across all books may not be available at your stake, so the best-price column overstates what is realistic.\n- **NFL loses with every fix at the best price.** All three CIs are entirely below zero.\n- **The NBA stack is the only rule that is positive at face value in both the fit season and the test, at both price sets.** That fits a small edge, but it also fits noise:\n  - Four fixes were tested at two price sets, so one positive point estimate is likely by chance.\n  - Telling a 2% edge apart from zero would take roughly 10,000 bets. This is my approximation, not something the test measured.\n\n## 4. The single fix worth adopting in the live model\n\n**For NBA, adopt V11, the per-market logistic recalibration of N1's P(over).**\n\nWhy V11:\n- It uses no market price, so the model's view stays independent of the market.\n- It is the variant that was scored once on test.\n- It has the best test calibration of everything tested, including the market: slope 0.97, ECE 0.0096, mean 0.490 against an actual 0.4845.\n- It cuts log loss by 0.0179 (CI \u22120.0238 to \u22120.0125), and Brier from 0.2549 to 0.2474.\n\nIt gives honest probabilities. It does not give an edge.\n\nCaveats:\n- V4 (two parameters per market) was within 0.0003 in CV, with a CI including zero, and is simpler. But V4 was never scored on test.\n- Refit V11 each season.\n\n**Do not adopt the distribution fix for the app's distributions.** At a log-sd of 2.4, its distributions are only valid for P(over) at a line.\n\n**Use the stack only if the app should show a \"best estimate\"** rather than the model's own opinion. It is about 95% market and needs a live margin-free price from at least 3 books.\n\n**For NFL, at most apply the global shrink:** p = expit(0.0081 + 0.1919\u00b7logit X1), so the app stops showing wildly overconfident numbers. On test it was still overconfident (slope 0.24) and clearly worse than the market. X1 carries no usable information beyond the market's margin-free price.\n\n## 5. Plain conclusion for a bettor\n\nThe fixes work: the NBA model no longer leans to unders or overstates its confidence, and its probabilities are now about as well calibrated as the bookmaker's. Once the model is honest, though, it shows it knows nothing the market does not:\n- No fixed model beat the market's margin-free price on the 2025-26 NBA sample or on late-2023 NFL.\n- No betting rule made money out of sample with a CI above zero, at BetMGM or at the best price.\n- The NFL bets lost money, with CIs entirely below zero.\n\nTreat any model \"edge\" against these lines as zero. If you want to keep testing, the only candidate is to paper-track the NBA market-anchored stack, at BetMGM prices only, with the rule frozen.\n\nFiles are in /tmp/claude-0/-home-user-bradley09roberts-glitch-github-io/2b6195b5-f4ca-5a10-bf25-00fd6dd2c82a/scratchpad/fixes/:\n- calibration/test_results.json\n- calibration/cv_results.json\n- nba_dist/test_result.json\n- market_anchored/test_results.json\n- market_anchored/frozen.json\n- nfl/test_results.json\n- nfl/choice.json"
+}

@@ -1,8 +1,10 @@
-"""Pick rules for both sports (D-028), applied to the latest edition and the stored US lines.
+"""Paper tracking for both sports against the stored US lines. RESEARCH ONLY.
 
-RESEARCH ONLY (D-041): tested on a full season of real NBA lines (n10), these rules lost about 2%
-at the best US price and the model was less accurate than the market. They are kept to track the
-model, not as betting advice.
+History: the 6-15 and 10-15 point pick rules (D-028, D-030) were tested on a full season of real
+NBA lines (n10) and lost about 2% at the best US price; the NFL rule lost on 2023's lines (D-041).
+They are retired (D-043). What remains: the frozen market-anchored tracking list (NBA) and the
+simple-baseline list, both recorded to build an honest record, neither presented as a bet. The
+text below describes the retired rules for reference.
 
 A prop is a pick when the model's side is 6 to 15 points more likely than the market says
 (margin removed); for the NBA 10 to 15 points, with 6-10 point gaps listed as leans (D-030).
@@ -69,72 +71,53 @@ def stars_out(cards: list[dict], cur: pd.DataFrame, max_missed: int = 2) -> dict
     return out
 
 
+TRACK_EV = 0.02  # D-043: frozen paper-tracking threshold
+
+
 def nba() -> dict:
-    """Picks from the latest NBA edition and the newest stored lines."""
+    """Paper-tracking list for the latest NBA edition and the newest stored lines (D-043).
+
+    The 6-15 / 10-15 point rules are retired: on a full season of real lines they lost (D-041).
+    Each eligible prop (plays >= 85%, no injury flag, >= 3 books, half-point line, not started)
+    gets the frozen market-anchored probability (calib.anchored: about 95% the market's
+    margin-free price, nudged by the model in rebounds, assists and threes) and is tracked when
+    the better side's expected value is at least 2% at BetMGM's price (best US price, flagged,
+    where BetMGM does not quote that line). Tracking only: no edge has been shown.
+    """
     from .dist import Dist
     from .nba import appdata as A
-    from .nba import backtest as B
-    from .nba import canon, live
-    from .nba import model as M
+    from .nba import calib
 
     P = A.props()
-    L = canon.load()
-    played = L["player_games"][L["player_games"].participation == "played"]
-    cur = played[played.season == played.season.max()]
-    gp = cur.groupby(["player_id", "team"]).size()
-    prev = played[played.season == played.season.max() - 1].groupby("player_id").team.agg(
-        lambda s: s.value_counts().index[0])
-    b = live.build(P["date_et"])
-    if "error" in b:  # every game of the edition has tipped off: picks are made before tip only
-        return {"edition_id": P["edition_id"], "picks": [], "left_out_15_plus": 0,
-                "error": f"{P['date_et']}: {b['error']}; publish the next edition first", "rules": __doc__}
-    x, prm = b["x"], b["params"]
-    lg = M.league_rates(L["player_games"], L["team_games"], B.FIT_SEASONS)
-    star = stars_out(P["cards"], cur)
-    rows, out_of_range = [], 0
+    now = pd.Timestamp.now(tz="UTC")
+    rows = []
     for c in P["cards"]:
         m = c.get("market_line")
-        if (not m or c["p_play"] < 0.85 or c["injury"] or c["teammates_out"] or m["books"] < 3
-                or float(m["line"]).is_integer() or gp.get((c["player_id"], c["team"]), 0) < 3
-                or c["team"] in star):
+        if (not m or c["p_play"] < 0.85 or c["injury"] or m["books"] < 3
+                or float(m["line"]).is_integer() or pd.Timestamp(c["tip_utc"]) <= now):
             continue
-        line = m["line"]
-        over = Dist.from_json(c["dist"]).line(line)["over"]
-        side = "over" if over >= m["fair_over"] else "under"
-        mp = over if side == "over" else 1 - over
-        kp = m["fair_over"] if side == "over" else 1 - m["fair_over"]
-        if mp - kp < GAP_MIN:
+        raw = Dist.from_json(c["dist"]).line(m["line"])["over"]
+        pa = calib.anchored(c["market"], m["fair_over"], raw)
+        pc = calib.calibrated(c["market"], raw)
+        evs = {}
+        for side, p in (("over", pa), ("under", 1 - pa)):
+            mgm = m.get(f"mgm_{side}")
+            price = mgm or m[f"best_{side}"]
+            evs[side] = (p * price - 1, price, "betmgm" if mgm else "best US (no BetMGM line)")
+        side = max(evs, key=lambda k: evs[k][0])
+        ev, price, src = evs[side]
+        if ev < TRACK_EV:
             continue
-        if mp - kp >= GAP_MAX:
-            out_of_range += 1
-            continue
-        row = x[x.player_id == c["player_id"]].copy().reset_index(drop=True)
-        row["min_mu"] = float(cur[cur.player_id == c["player_id"]].minutes.mean())
-        pm = M.n1_pmfs(row, prm, lg, only=(c["market"],))[c["market"]][0]
-        o2 = float(pm[int(np.floor(line)) + 1:].sum())
-        mp2 = o2 if side == "over" else 1 - o2
-        low = min(mp, mp2)
-        if low - kp < GAP_MIN:
-            continue
-        lg_ = c["log"]
-        vals = np.array(lg_["values"], float)
-        sv = np.array([v for v, s in zip(lg_["values"], lg_["season"], strict=True)
-                       if s == lg_["current_season"]], float)
-        l10 = _hits(vals[-10:], line, side)
-        avg = float(sv.mean()) if len(sv) else float("nan")
-        margin = (avg - line) / line * (1 if side == "over" else -1) if len(sv) else -1
-        strict = (prev.get(c["player_id"]) in (None, c["team"]) and margin >= 0.10 and l10[0] >= 7)
+        flip = side == "under"
         rows.append({"sport": "nba", "player": c["name"], "team": c["team"], "opponent": c["opponent"],
                      "game_id": c["game_id"], "tip_london": c["tip_london"], "market": c["market"],
-                     "line": line, "side": side, "model": round(mp, 4), "model_low": round(low, 4),
-                     "market_p": round(kp, 4), "best_price": m["best_over"] if side == "over" else m["best_under"],
-                     "books": m["books"], "line_seen": m["observed_at"], "last10": l10,
-                     "season": _hits(sv, line, side), "season_avg": round(avg, 2), "strict": bool(strict)})
-    pk = [r for r in rows if r["model"] - r["market_p"] >= NBA_GAP_MIN]
-    leans = [r for r in rows if r["model"] - r["market_p"] < NBA_GAP_MIN]
-    return {"edition_id": P["edition_id"], "picks": _finish(pk), "leans": _finish(leans),
-            "simple_gap": simple_gap(P["cards"]), "left_out_15_plus": out_of_range,
-            "teams_left_out": star, "rules": __doc__}
+                     "line": m["line"], "side": side,
+                     "p_anchor": round(1 - pa if flip else pa, 4), "p_model_cal": round(1 - pc if flip else pc, 4),
+                     "market_p": round(1 - m["fair_over"] if flip else m["fair_over"], 4),
+                     "price": price, "price_source": src, "ev": round(ev, 4), "books": m["books"],
+                     "line_seen": m["observed_at"]})
+    return {"edition_id": P["edition_id"], "tracking": sorted(rows, key=lambda r: -r["ev"]),
+            "simple_gap": simple_gap(P["cards"]), "rules": nba.__doc__}
 
 
 SIMPLE_GAP = 1.0  # D-038: tracked, not picks
@@ -163,75 +146,26 @@ def simple_gap(cards: list[dict]) -> list[dict]:
 
 
 def nfl(season: int | None = None, week: int | None = None, game_id: str | None = None) -> dict:
-    """Picks for the latest NFL edition (optionally one game) against the newest stored lines."""
+    """NFL picks are retired (D-043): on the 2023 season's real lines the headline model carried
+    no information beyond the market once its overconfidence was removed, and every rule lost."""
     from . import appdata as AP
-    from . import db
-    from .dist import Dist
-    from .sources import odds_api
 
     e = AP.latest_edition(season, week)
-    fc: dict = {}
-    for f in e["forecasts"]:
-        if f["status"] == "ok" and (game_id is None or f["game_id"] == game_id):
-            fc.setdefault((f["game_id"], f["player_id"], f["market"]), {})[f["model"]] = f
-    q = odds_api.quotes_frame(db.connect())
-    games = {k[0] for k in fc}
-    q = q[q.game_id.isin(games) & q.player_id.notna()]
-    if q.empty:
-        return {"edition_id": e["edition_id"], "picks": [], "left_out_15_plus": 0, "rules": __doc__}
-    q = q[q.observed_at == q.groupby(["game_id", "market"]).observed_at.transform("max")]
-    logs = AP._nfl_logs({k[1] for k in fc}, e["season"], e["week"])
-    rows, out_of_range = [], 0
-    for (gid, pid, mk), x in q.groupby(["game_id", "player_id", "market"]):
-        fm = fc.get((gid, pid, mk))
-        if not fm or not {"X1", "J1", "M", "A"} <= set(fm):
-            continue
-        line = float(x.line.mode().iloc[0])
-        y = x[x.line == line].pivot_table(index="bookmaker", columns="selection",
-                                          values="decimal_price", aggfunc="last").dropna()
-        if line.is_integer() or not {"over", "under"} <= set(y.columns) or len(y) < 3:
-            continue
-        h = fm["X1"]
-        if (h.get("p_play") or 0) < 0.85 or h.get("injury_report"):
-            continue
-        fair = float(((1 / y.over) / (1 / y.over + 1 / y.under)).mean())
-        po = {m: Dist.from_json(f["dist"]).line(line)["over"] for m, f in fm.items() if f.get("dist")}
-        side = "over" if po["X1"] >= fair else "under"
-        sp = {m: (v if side == "over" else 1 - v) for m, v in po.items()}
-        kp = fair if side == "over" else 1 - fair
-        low = min(sp["X1"], sp["J1"], sp["M"])
-        if sp["A"] <= 0.5 or low - kp < GAP_MIN:
-            continue
-        if sp["X1"] - kp >= GAP_MAX:
-            out_of_range += 1
-            continue
-        g = logs.get(pid)
-        stat = AP.NFL_STAT.get(mk)
-        vals = g[stat].fillna(0).to_numpy(float) if g is not None and stat else np.array([])
-        rows.append({"sport": "nfl", "player": h["name"], "team": h["team"], "opponent": h["opponent"],
-                     "game_id": gid, "market": mk, "line": line, "side": side,
-                     "model": round(sp["X1"], 4), "model_low": round(low, 4), "market_p": round(kp, 4),
-                     "best_price": float(y[side].max()), "books": int(len(y)),
-                     "line_seen": str(x.observed_at.max()), "last10": _hits(vals[-10:], line, side)})
-    return {"edition_id": e["edition_id"], "picks": _finish(rows), "left_out_15_plus": out_of_range,
-            "rules": __doc__}
+    return {"edition_id": e["edition_id"], "tracking": [], "rules": nfl.__doc__,
+            "error": "NFL picks retired (D-043): no rule beat the market on 2023's real lines."}
 
 
 def table(res: dict) -> str:
     if res.get("error"):
         return res["error"]
-    cols = ["player", "team", "opponent", "market", "side", "line", "simple", "gap_points", "model_low",
-            "market_p", "estimate", "min_price", "best_price", "last10", "strict"]
+    cols = ["player", "team", "opponent", "market", "side", "line", "p_anchor", "p_model_cal", "market_p",
+            "price", "price_source", "ev", "simple", "gap_points", "best_price"]
     out = []
-    for key, title in (("picks", "Picks"), ("leans", "Leans (6-10 points, not picks)"),
+    for key, title in (("tracking", "Paper tracking: market-anchored EV >= 2% (not bets)"),
                        ("simple_gap", "Simple baseline beats the line by 1+ (tracking only)")):
         if key not in res:
             continue
         d = pd.DataFrame(res[key])
         out.append(f"{title}: none" if d.empty else f"{title}:\n" + d[[c for c in cols if c in d]].to_string(index=False))
-    tail = (f"\n{res['left_out_15_plus']} props left out for a 15+ point gap."
-            "\nRESEARCH ONLY: on a full season of real lines these rules lost about 2% (D-041).")
-    if res.get("teams_left_out"):
-        tail += "\nTeams left out (starter out, not yet in the model): " + "; ".join(
-            f"{t} ({', '.join(n)})" for t, n in res["teams_left_out"].items())
-    return "\n\n".join(out) + tail
+    return "\n\n".join(out) + ("\nRESEARCH ONLY: no rule has beaten the market on real past lines "
+                                 "(D-041, D-043). Nothing here is a bet.")

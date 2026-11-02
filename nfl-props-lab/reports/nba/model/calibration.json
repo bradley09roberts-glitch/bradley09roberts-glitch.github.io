@@ -1,0 +1,70 @@
+{
+ "fitted_on": "NBA 2024-25 regular season, 71,922 props with US lines 3 h before tip (n10 rows), frozen nba-0.1 N1",
+ "calibration_v4": {
+  "form": "logit p_cal = a + b * logit(p_model), per market",
+  "coef": {
+   "ast": {
+    "a": 0.04046505184398455,
+    "b": 0.4189959559722539
+   },
+   "fg3m": {
+    "a": 0.07063013242334674,
+    "b": 0.7256951482341082
+   },
+   "pra": {
+    "a": -0.012319645550389682,
+    "b": 0.006746263381543178
+   },
+   "pts": {
+    "a": -0.0021751027294938316,
+    "b": 0.058686290567038835
+   },
+   "reb": {
+    "a": -0.02261938222643781,
+    "b": 0.3932274045573263
+   }
+  },
+  "test_2025_26_log_loss": 0.68815,
+  "market": 0.68723,
+  "raw_model": 0.70578,
+  "note": "V11 (more terms) was the variant chosen and tested once (0.68793); V4 is within 0.0003 in CV and simpler; its test score is a disclosed second look"
+ },
+ "anchored_stack": {
+  "form": "logit p = a + c * logit(market fair_over) + w * logit(p_model), per market",
+  "coef": {
+   "ast": {
+    "a": 0.025,
+    "c": 0.842,
+    "w": 0.105
+   },
+   "fg3m": {
+    "a": -0.021,
+    "c": 0.966,
+    "w": 0.097
+   },
+   "pra": {
+    "a": -0.009,
+    "c": 1.13,
+    "w": -0.014
+   },
+   "pts": {
+    "a": -0.013,
+    "c": 1.247,
+    "w": 0.005
+   },
+   "reb": {
+    "a": -0.049,
+    "c": 1.109,
+    "w": 0.079
+   }
+  },
+  "test_2025_26_log_loss": 0.68695,
+  "market": 0.68723,
+  "tracking_rule": "side with the higher expected value; track when p * price - 1 >= 0.02 (BetMGM price where BetMGM quotes the consensus line, else best price, flagged)",
+  "test_2025_26_roi": {
+   "best_price": "+4.1% [-2.8, +10.4] on 1,162 bets",
+   "betmgm": "+9.1% [-4.4, +22.5] on 263 bets"
+  },
+  "status": "paper tracking only; not shown as bets (D-043)"
+ }
+}

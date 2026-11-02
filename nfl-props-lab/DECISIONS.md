@@ -391,3 +391,20 @@ partly came from the final margin. Refitted on absences knowable before tip and 
 lines (n10 review), nba-0.2 closes about 27% of N1's gap to the market and still loses to it. This
 also helps explain its live failure (D-037). nba-0.2 stays off; any future version is fitted on
 pre-tip absences only (stored ESPN reports, D-033).
+
+## D-043 (2 Nov 2026) Calibrated probabilities live; old pick rules retired; one frozen rule tracked on paper
+n11 tested fixes for N1's two weaknesses on the stored real lines (fit 2024-25, one test on the
+2025-26 sample). A per-market logistic recalibration removes the lean to unders and the
+overconfidence (test calibration slope 0.97, mean over chance 0.490 v 0.485 actual) and cuts log
+loss from 0.706 to 0.688, level with the market (0.687) but not better. Its slopes show the
+model's own view adds almost nothing to the line for points and PRA, a little for rebounds,
+assists and threes. A market-anchored blend (about 95% market) ties the market; its EV >= 2%
+rule was positive at face value in both seasons but not significantly. The NFL model carried no
+usable information beyond the market. So:
+- NBA cards show the calibrated model chance at the bookmakers' line (npl.nba.calib, parameters
+  in reports/nba/model/calibration.json; valid near real lines only, not for any typed line).
+- The 6-15 / 10-15 pick rules and the NFL rule are retired. `npl picks --sport nba` now lists the
+  frozen market-anchored rule (EV >= 2% at BetMGM, else best US price, flagged) and the simple
+  baseline as paper tracking only; the NFL command reports that picks are retired.
+- The anchored rule is judged on its paper record after about 3,000 tracked props (a 2% edge
+  needs that many to show); until then nothing is presented as a bet.
