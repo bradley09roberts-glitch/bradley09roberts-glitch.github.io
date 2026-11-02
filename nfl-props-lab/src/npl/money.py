@@ -265,8 +265,9 @@ def longest_losing_run(statuses: list[str]) -> int:
 
 def block_bootstrap_yield(df: pd.DataFrame, block: str = "week_key", n: int = 2000,
                           seed: int = 0) -> tuple[float, float]:
-    """95% interval for yield resampling whole weeks (props in a week are correlated)."""
-    s = df[df.status.isin(["win", "loss", "push", "void"])]
+    """95% interval for yield resampling whole weeks (props in a week are correlated). Voids and
+    pushes return the stake and carry no profit, so they are not turnover (audit 2026-11)."""
+    s = df[df.status.isin(["win", "loss"])]
     if s.empty:
         return (np.nan, np.nan)
     g = s.groupby(block).agg(p=("profit_units", "sum"), k=("stake_units", "sum"))
@@ -286,7 +287,7 @@ def report(settled: pd.DataFrame, n_eligible_forecasts: int, bank_summary: dict 
     s = settled.sort_values("decision_at")
     counts = s.status.value_counts().to_dict()
     done = s[s.status.isin(["win", "loss", "push", "void"])]
-    staked = done.stake_units.sum()
+    staked = done[done.status.isin(["win", "loss"])].stake_units.sum()  # voids/pushes: no turnover
     profit = done.profit_units.sum()
     dd_u, dd_f = drawdown(done.profit_units.to_numpy())
     lo, hi = block_bootstrap_yield(s)

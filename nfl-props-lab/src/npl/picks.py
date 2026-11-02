@@ -72,6 +72,8 @@ def stars_out(cards: list[dict], cur: pd.DataFrame, max_missed: int = 2) -> dict
 
 
 TRACK_EV = 0.02  # D-043: frozen paper-tracking threshold
+TRACK_RULE = "nba-anchored-ev2@D043"  # rule ids on the paper record (track.py)
+SIMPLE_RULE = "nba-simple-gap1@D038"
 
 
 def nba() -> dict:
@@ -102,20 +104,26 @@ def nba() -> dict:
         evs = {}
         for side, p in (("over", pa), ("under", 1 - pa)):
             mgm = m.get(f"mgm_{side}")
-            price = mgm or m[f"best_{side}"]
-            evs[side] = (p * price - 1, price, "betmgm" if mgm else "best US (no BetMGM line)")
+            price, book = (mgm, "betmgm") if mgm else (m.get(f"best_{side}"), m.get(f"best_{side}_book"))
+            if price:  # BetMGM, else the best regulated US book (never offshore; audit 2026-11)
+                evs[side] = (p * price - 1, price, book)
+        if not evs:
+            continue
         side = max(evs, key=lambda k: evs[k][0])
-        ev, price, src = evs[side]
+        ev, price, book = evs[side]
         if ev < TRACK_EV:
             continue
         flip = side == "under"
-        rows.append({"sport": "nba", "player": c["name"], "team": c["team"], "opponent": c["opponent"],
-                     "game_id": c["game_id"], "tip_london": c["tip_london"], "market": c["market"],
+        rows.append({"sport": "nba", "player": c["name"], "player_id": c["player_id"],
+                     "team": c["team"], "opponent": c["opponent"], "game_id": c["game_id"],
+                     "tip_utc": c["tip_utc"], "tip_london": c["tip_london"], "market": c["market"],
                      "line": m["line"], "side": side,
                      "p_anchor": round(1 - pa if flip else pa, 4), "p_model_cal": round(1 - pc if flip else pc, 4),
+                     "p_rule": round(1 - pa if flip else pa, 4),
                      "market_p": round(1 - m["fair_over"] if flip else m["fair_over"], 4),
-                     "price": price, "price_source": src, "ev": round(ev, 4), "books": m["books"],
-                     "line_seen": m["observed_at"]})
+                     "price": price, "book": book,
+                     "price_source": "betmgm" if book == "betmgm" else f"{book} (no BetMGM line)",
+                     "ev": round(ev, 4), "books": m["books"], "line_seen": m["observed_at"]})
     return {"edition_id": P["edition_id"], "tracking": sorted(rows, key=lambda r: -r["ev"]),
             "simple_gap": simple_gap(P["cards"]), "rules": nba.__doc__}
 
@@ -137,11 +145,13 @@ def simple_gap(cards: list[dict]) -> list[dict]:
         if abs(d) < SIMPLE_GAP:
             continue
         side = "over" if d > 0 else "under"
-        out.append({"player": c["name"], "team": c["team"], "opponent": c["opponent"],
+        out.append({"player": c["name"], "player_id": c["player_id"], "team": c["team"],
+                    "opponent": c["opponent"], "game_id": c["game_id"], "tip_utc": c["tip_utc"],
                     "market": c["market"], "line": m["line"], "side": side, "simple": s,
                     "gap_points": round(abs(d), 1),
                     "market_p": round(m["fair_over"] if side == "over" else 1 - m["fair_over"], 4),
-                    "best_price": m["best_over"] if side == "over" else m["best_under"]})
+                    "best_price": m.get(f"best_{side}"), "price": m.get(f"best_{side}"),
+                    "book": m.get(f"best_{side}_book"), "line_seen": m["observed_at"]})
     return sorted(out, key=lambda r: -r["gap_points"])
 
 
@@ -159,7 +169,7 @@ def table(res: dict) -> str:
     if res.get("error"):
         return res["error"]
     cols = ["player", "team", "opponent", "market", "side", "line", "p_anchor", "p_model_cal", "market_p",
-            "price", "price_source", "ev", "simple", "gap_points", "best_price"]
+            "price", "book", "ev", "simple", "gap_points"]
     out = []
     for key, title in (("tracking", "Paper tracking: market-anchored EV >= 2% (not bets)"),
                        ("simple_gap", "Simple baseline beats the line by 1+ (tracking only)")):

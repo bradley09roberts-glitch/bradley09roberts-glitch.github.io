@@ -26,7 +26,7 @@ def _coef() -> dict:
 
 
 def _logit(p: float) -> float:
-    p = min(max(float(p), 1e-4), 1 - 1e-4)
+    p = min(max(float(p), 1e-6), 1 - 1e-6)  # the clip the coefficients were fitted with
     return float(np.log(p / (1 - p)))
 
 

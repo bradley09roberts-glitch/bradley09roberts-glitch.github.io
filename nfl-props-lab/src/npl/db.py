@@ -153,10 +153,21 @@ CREATE TABLE IF NOT EXISTS paper_bets (
     stake REAL NOT NULL, decided_at TEXT NOT NULL,
     UNIQUE (strategy_id, edition_id, game_id, player_id, market, line, selection)
 );
+
+-- paper-tracking record (track.py, D-044): one row per rule and prop, as first flagged
+CREATE TABLE IF NOT EXISTS tracked_props (
+    id INTEGER PRIMARY KEY,
+    rule TEXT NOT NULL, sport TEXT NOT NULL, edition_id TEXT NOT NULL, flagged_at TEXT NOT NULL,
+    game_id TEXT NOT NULL, player_id TEXT NOT NULL, player TEXT, team TEXT, opponent TEXT,
+    market TEXT NOT NULL, line REAL NOT NULL, side TEXT NOT NULL CHECK (side IN ('over','under')),
+    price REAL NOT NULL CHECK (price > 1.0), book TEXT, p_rule REAL, market_p REAL, ev REAL,
+    tip_utc TEXT NOT NULL, line_seen TEXT,
+    UNIQUE (rule, game_id, player_id, market)
+);
 """
 
 APPEND_ONLY = ("raw_files", "raw_observations", "editions", "edition_games", "quotes",
-               "quote_links", "settlements", "paper_bets", "player_id_map")
+               "quote_links", "settlements", "paper_bets", "player_id_map", "tracked_props")
 
 
 def _triggers() -> str:

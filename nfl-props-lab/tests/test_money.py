@@ -162,5 +162,6 @@ def test_report_counts_from_ledger():
         "week_key": [1, 1, 2, 2]})
     r = money.report(df, n_eligible_forecasts=10)
     assert r["counts"] == {"win": 1, "loss": 1, "push": 1, "void": 1}
-    assert r["profit_units"] == 0 and r["staked_units"] == 4 and r["yield"] == 0
+    # the push and the void return their stakes: only the win and the loss are turnover
+    assert r["profit_units"] == 0 and r["staked_units"] == 2 and r["yield"] == 0
     assert math.isclose(r["odds_coverage"], 0.4)

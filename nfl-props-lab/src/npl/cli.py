@@ -156,16 +156,31 @@ def cmd_settle(a) -> int:
 
 
 def cmd_picks(a) -> int:
-    """Picks under the D-028 rules (6-15 point gap to the market), saved to data/runs."""
-    from . import picks
+    """Paper-tracking lists (D-043), saved to data/runs and added to the paper record (D-044)."""
+    from . import picks, track
     from .config import DATA_HOME
     from .util import utcnow
 
     res = picks.nba() if a.sport == "nba" else picks.nfl(game_id=a.game)
     print(picks.table(res))
+    if a.sport == "nba" and not res.get("error"):
+        con, now = db.connect(), utcnow().isoformat()
+        n = [track.record(con, res[k], rule=r, sport="nba", edition_id=res["edition_id"],
+                          flagged_at=now)
+             for k, r in (("tracking", picks.TRACK_RULE), ("simple_gap", picks.SIMPLE_RULE))]
+        print(f"Paper record: {n[0]} new tracked props, {n[1]} new simple-baseline props "
+              "(first flag only; see `npl track`).")
     out = DATA_HOME / "runs" / f"picks_{a.sport}_{utcnow().strftime('%Y%m%dT%H%MZ')}.json"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(res, indent=1, default=str))
+    return 0
+
+
+def cmd_track(a) -> int:
+    """The paper record: every tracked prop once, settled, with closing-line value (D-044)."""
+    from . import track
+
+    print(track.table(track.report(db.connect()), last=a.last))
     return 0
 
 
@@ -304,15 +319,20 @@ def build_parser() -> argparse.ArgumentParser:
     s.set_defaults(func=cmd_settle)
 
     s = sub.add_parser("quotes", help="snapshot current prop quotes (needs ODDS_API_KEY)")
-    s.add_argument("--regions", default="uk")
+    s.add_argument("--regions", default="us",
+                   help="provider regions; props exist only for US books (uk returns none)")
     s.add_argument("--hours-ahead", type=float, default=48)
     s.add_argument("--sport", choices=["nfl", "nba"], default="nfl")
     s.set_defaults(func=cmd_quotes)
 
-    s = sub.add_parser("picks", help="picks with a 6-15 point gap to the stored market lines")
+    s = sub.add_parser("picks", help="paper-tracking lists against the stored market lines")
     s.add_argument("--sport", choices=["nfl", "nba"], default="nba")
     s.add_argument("--game", default=None, help="NFL game id, e.g. 2026_08_CAR_GB")
     s.set_defaults(func=cmd_picks)
+
+    s = sub.add_parser("track", help="paper record: settled tracked props and closing-line value")
+    s.add_argument("--last", type=int, default=30, help="rows to list")
+    s.set_defaults(func=cmd_track)
 
     s = sub.add_parser("money", help="price-honest money backtest over a ledger")
     s.add_argument("--ledger", required=True)

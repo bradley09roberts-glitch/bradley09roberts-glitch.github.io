@@ -9,6 +9,7 @@ from functools import lru_cache
 import numpy as np
 import pandas as pd
 
+from .. import books
 from ..config import LONDON
 from ..dist import Dist
 from . import canon, live
@@ -57,7 +58,7 @@ def opponent_factors(at: str) -> dict:
     """Model opponent factor per team and stat (shrunk as N1 uses it), with ranks
     (1 = allows least)."""
     L = lake()
-    p = M.load_params()
+    p = M.load_params(live.LIVE_PARAMS)  # the parameters live editions use (audit: was nba-0.2)
     ts = M.team_states(L["team_games"][L["team_games"].tip_utc < pd.Timestamp(at)], p)
     last = ts.sort_values("tip_utc").groupby("team").tail(1).set_index("team")
     out = {}
@@ -109,10 +110,14 @@ def consensus_lines(q: pd.DataFrame) -> dict:
             continue
         fair = (1 / y.over) / (1 / y.over + 1 / y.under)
         mgm = y.loc["betmgm"] if "betmgm" in y.index else None
+        reg = y[[books.regulated(b) for b in y.index]]  # best prices from regulated books only
         out[(pid, mk)] = {"line": float(line), "fair_over": round(float(fair.mean()), 4),
                           "mgm_over": float(mgm.over) if mgm is not None else None,
                           "mgm_under": float(mgm.under) if mgm is not None else None,
-                          "best_over": float(y.over.max()), "best_under": float(y.under.max()),
+                          "best_over": float(reg.over.max()) if len(reg) else None,
+                          "best_under": float(reg.under.max()) if len(reg) else None,
+                          "best_over_book": str(reg.over.idxmax()) if len(reg) else None,
+                          "best_under_book": str(reg.under.idxmax()) if len(reg) else None,
                           "books": int(len(y)), "margin": round(float((1 / y.over + 1 / y.under
                                                                         - 1).mean()), 4),
                           "observed_at": str(x.observed_at.max()),

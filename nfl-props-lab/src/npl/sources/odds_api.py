@@ -135,12 +135,12 @@ def event_odds(con, event_id: str, markets: list[str], regions: str = "uk",
 
 
 def historical_event_odds(con, event_id: str, date_iso: str, markets: list[str],
-                          regions: str = "us", session=None):
+                          regions: str = "us", session=None, sport: str = "nfl"):
     """Paid plans only. Cost = 10 x unique markets returned x regions."""
     params = {"markets": ",".join(markets), "oddsFormat": "decimal", "dateFormat": "iso",
               "regions": regions, "date": date_iso}
     return _get(con, "historical_event_odds", f"{event_id}:{regions}:{date_iso}",
-                f"/historical/sports/{SPORT}/events/{event_id}/odds", params, session)
+                f"/historical/sports/{SPORTS[sport][0]}/events/{event_id}/odds", params, session)
 
 
 # ----------------------------------------------------------------------------- parsing
@@ -386,7 +386,7 @@ def relink_raw(con: sqlite3.Connection, raw_file_id: int, lake_dir=None) -> dict
     return {**_link_summary(q), "matched_rows": len(m), "links_added": len(changed)}
 
 
-def snapshot_upcoming(con, *, regions: str = "uk", hours_ahead: float = 48, session=None,
+def snapshot_upcoming(con, *, regions: str = "us", hours_ahead: float = 48, session=None,
                       max_events: int = 20, markets: list[str] | None = None,
                       event_ids: list[str] | None = None, sport: str = "nfl") -> dict:
     """Collect current prop quotes for events kicking off within `hours_ahead`.
@@ -397,12 +397,10 @@ def snapshot_upcoming(con, *, regions: str = "uk", hours_ahead: float = 48, sess
     events, credits, _ = list_events(con, session, sport)
     now = utcnow()
     done = []
+    # filter first, then cap: a cap applied to the provider's whole list could drop wanted games
+    events = [e for e in events if (not event_ids or e["id"] in event_ids)
+              and now < parse_iso(e["commence_time"]) <= now + pd.Timedelta(hours=hours_ahead)]
     for e in events[:max_events]:
-        if event_ids and e["id"] not in event_ids:
-            continue
-        ko = parse_iso(e["commence_time"])
-        if not (now < ko <= now + pd.Timedelta(hours=hours_ahead)):
-            continue
         mk, credits, _ = event_markets(con, e["id"], regions, session, sport)
         offered = {m["key"] for b in mk.get("bookmakers", []) for m in b.get("markets", [])}
         want = [m for m in markets if m in offered]
