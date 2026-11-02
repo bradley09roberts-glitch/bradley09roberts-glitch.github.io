@@ -378,7 +378,8 @@ the best blend gives N1 a weight of 0.08 and gains essentially nothing, and ever
 at the best US price (pick band 10-15: 51.2%, -2.2%); at BetMGM alone the bands lose 2-5%. The
 2025-26 sample says the same. No rule chosen on the first half of 2024-25 held up on the second.
 So the NBA pick lists have no demonstrated edge: `npl picks` and the app now label them research
-only. The live record (D-028, D-030) was too short to show this. Next steps, if any, are
+only. The live record (D-028, D-030) was too short to show this. The NFL is the same (exp13, 2023,
+10,315 props): market log loss 0.690 v X1 0.721, NFL pick rule 50.2% and -3.8%, overs -12%. Next steps, if any, are
 model-side (N1 is biased low on props and overconfident) and must be tested on these stored
 lines before any pick is presented as a bet again.
 
