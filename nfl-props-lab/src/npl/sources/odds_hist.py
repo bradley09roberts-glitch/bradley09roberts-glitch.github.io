@@ -83,6 +83,10 @@ def team_names(sport: str, con: sqlite3.Connection) -> dict:
         return m
     from .. import appdata
     t = appdata.lake()["teams"]
+    # the teams table lists some franchises twice (Rams: LA and LAR); keep the abbreviations the
+    # schedule uses
+    used = set(appdata.lake()["games"][["home_team", "away_team"]].to_numpy().ravel())
+    t = t[t.team_abbr.isin(used)]
     return dict(zip(t.team_name, t.team_abbr, strict=False))
 
 
