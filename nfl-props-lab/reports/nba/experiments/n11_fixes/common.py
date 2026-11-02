@@ -8,7 +8,6 @@ The market's price is an INPUT to every variant.
 """
 import numpy as np
 import pandas as pd
-from scipy.optimize import minimize
 
 REPO = "/home/user/bradley09roberts-glitch.github.io/nfl-props-lab"
 FIT_PATH = f"{REPO}/data/runs/n10/n10_2025_rows.parquet"

@@ -3,11 +3,11 @@
 Selection on 2024-25 only (leave-one-month-out CV), single evaluation on 2025-26.
 """
 import json
-import sys
+
 import numpy as np
 import pandas as pd
-from sklearn.linear_model import LogisticRegression
 from sklearn.isotonic import IsotonicRegression
+from sklearn.linear_model import LogisticRegression
 
 REPO = "/home/user/bradley09roberts-glitch.github.io/nfl-props-lab"
 OUT = "/tmp/claude-0/-home-user-bradley09roberts-glitch-github-io/2b6195b5-f4ca-5a10-bf25-00fd6dd2c82a/scratchpad/fixes/calibration"
