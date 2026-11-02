@@ -72,7 +72,7 @@ def thresholds():
 
 
 def settle(act, line, side):
-    if act is None or act == line:
+    if act is None or act != act or act == line:  # missing (did not play) or push: void
         return None
     return (act > line) == (side == "over")
 
@@ -186,7 +186,8 @@ def evaluate(d, th):
         x = d[mask]
         res = [settle(a, line, s) for a, line, s in zip(x.actual, x.line, x[side_col], strict=True)]
         price = np.where(x[side_col] == "over", x.best_over, x.best_under)
-        won = np.array([r is True for r in res]); lost = np.array([r is False for r in res])
+        won = np.array([r is True for r in res])
+        lost = np.array([r is False for r in res])
         units = float((won * (price - 1)).sum() - lost.sum())
         n = int(won.sum() + lost.sum())
         out[name] = {"props": n, "won": int(won.sum()), "win_rate": round(won.sum() / n, 3) if n else None,
