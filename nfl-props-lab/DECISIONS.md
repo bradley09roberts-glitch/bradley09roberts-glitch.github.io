@@ -360,3 +360,33 @@ defence effect. The useful part of a player's history is his role: minutes and t
 which the pick review now checks (old seasons can mislead, e.g. Poeltl's minutes and rebounds
 have fallen from 9.6 a game in 2024-25). Queued: star scorers v top points defences (a
 hypothesis found after the fact) and N1 running about 1 point high on points so far this season.
+
+## D-040 (2 Nov 2026) Historical bookmaker lines bought for one month (The Odds API 100K plan)
+The user bought one month of the 100K plan to test the models against real past lines. Fetched
+with npl.sources.odds_hist (hard credit floor, resumable): every 2024-25 NBA regular-season game
+(1,230 games, 905k quotes, 61,450 credits), every fourth game date of 2025-26 (302 games, 324k
+quotes, 15,000 credits) and the 2023 NFL season (284 of 285 games, 251k quotes, about 19,700
+credits), each 3 hours (NBA) or 2 hours (NFL) before tip/kick-off, US books, core markets.
+Raw responses and quotes stay under data/ (git-ignored; the provider's terms forbid
+redistribution); only aggregates are committed. The key is in .env only.
+
+## D-041 (2 Nov 2026) Verdict: the NBA model does not beat the bookmakers; picks are research only
+Against 71,922 real 2024-25 props (n10, re-checked by four independent reviews: bug and fairness
+audit, from-scratch recomputation, a holdout search over 1,182 rules, and the lineup model), the
+market's margin-free probabilities are clearly more accurate than N1 (log loss 0.6856 v 0.7052),
+the best blend gives N1 a weight of 0.08 and gains essentially nothing, and every gap band loses
+at the best US price (pick band 10-15: 51.2%, -2.2%); at BetMGM alone the bands lose 2-5%. The
+2025-26 sample says the same. No rule chosen on the first half of 2024-25 held up on the second.
+So the NBA pick lists have no demonstrated edge: `npl picks` and the app now label them research
+only. The live record (D-028, D-030) was too short to show this. Next steps, if any, are
+model-side (N1 is biased low on props and overconfident) and must be tested on these stored
+lines before any pick is presented as a bet again.
+
+## D-042 (2 Nov 2026) Correction to D-036: the lineup-aware minutes gain was inflated by a leak
+n07 counted every candidate who did not play as known-absent before tip. That includes healthy
+coach's-decision DNPs, which depend on the game itself (deep-bench minutes lost to them average
+about 27 per team in close games and 7 in blowouts), so the validation gains (points CRPS -1.7%)
+partly came from the final margin. Refitted on absences knowable before tip and scored on real
+lines (n10 review), nba-0.2 closes about 27% of N1's gap to the market and still loses to it. This
+also helps explain its live failure (D-037). nba-0.2 stays off; any future version is fitted on
+pre-tip absences only (stored ESPN reports, D-033).

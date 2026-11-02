@@ -1,5 +1,9 @@
 """Pick rules for both sports (D-028), applied to the latest edition and the stored US lines.
 
+RESEARCH ONLY (D-041): tested on a full season of real NBA lines (n10), these rules lost about 2%
+at the best US price and the model was less accurate than the market. They are kept to track the
+model, not as betting advice.
+
 A prop is a pick when the model's side is 6 to 15 points more likely than the market says
 (margin removed); for the NBA 10 to 15 points, with 6-10 point gaps listed as leans (D-030).
 Disagreements of 15 points or more are left out: on the first two NBA nights the model's side
@@ -225,7 +229,8 @@ def table(res: dict) -> str:
             continue
         d = pd.DataFrame(res[key])
         out.append(f"{title}: none" if d.empty else f"{title}:\n" + d[[c for c in cols if c in d]].to_string(index=False))
-    tail = f"\n{res['left_out_15_plus']} props left out for a 15+ point gap."
+    tail = (f"\n{res['left_out_15_plus']} props left out for a 15+ point gap."
+            "\nRESEARCH ONLY: on a full season of real lines these rules lost about 2% (D-041).")
     if res.get("teams_left_out"):
         tail += "\nTeams left out (starter out, not yet in the model): " + "; ".join(
             f"{t} ({', '.join(n)})" for t, n in res["teams_left_out"].items())
