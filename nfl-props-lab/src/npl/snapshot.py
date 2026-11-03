@@ -9,7 +9,7 @@ from pathlib import Path
 
 from . import appdata, headshots
 from .config import PROJECT_ROOT
-from .util import london, utcnow
+from .util import london, parse_iso, utcnow
 
 WEB = PROJECT_ROOT / "web"
 
@@ -42,7 +42,12 @@ def _add_nba(data: dict, min_p_play: float = 0.3) -> None:
         data["/api/nba/matchups"] = nba.matchups()
     except FileNotFoundError:
         pass
-    pids = {c["player_id"] for c in props["cards"]}
+    # player pages, photos and shot charts only for games not yet started: the page must stay
+    # under the host's size limit on a full slate (cards of started games show initials)
+    now = utcnow()
+    started = {g["game_id"] for g in s["games"] if parse_iso(g["tip_utc"]) <= now}
+    pids = {c["player_id"] for c in props["cards"] if c["game_id"] not in started} or \
+        {c["player_id"] for c in props["cards"]}
     headshots.fetch("nba", pids)
     headshots.fetch_logos("nba")
     data["/api/visuals/nba"] = nba.visuals(pids)
