@@ -35,6 +35,15 @@ def test_build_passes_the_nba_threshold_and_reports_the_size(tmp_path, tiny):
     assert tiny["nba"] == 0.5  # build()'s own NBA default
 
 
+def test_the_page_restores_the_shared_lines_before_the_app_runs(tmp_path, tiny):
+    out = tmp_path / "page.html"
+    snapshot.build(out)
+    html = out.read_text(encoding="utf-8")
+    data, back, app = (html.index("<script>window.NPL_SNAPSHOT = "), html.index(snapshot.REHYDRATE),
+                       html.index('<script type="module">'))
+    assert data < back < app  # the data, then the factors' tested lines put back, then the app
+
+
 def test_an_oversize_page_is_refused_and_not_written(tmp_path, tiny, monkeypatch):
     small = snapshot.build(tmp_path / "ok.html")["bytes"]
     monkeypatch.setattr(snapshot, "MAX_BYTES", small - 1)

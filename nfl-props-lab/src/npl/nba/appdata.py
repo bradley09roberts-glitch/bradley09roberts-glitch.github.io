@@ -50,16 +50,34 @@ def _values(pg: pd.DataFrame, mk: str) -> pd.Series:
     return pg.pts + pg.reb + pg.ast if mk == "pra" else pg[STAT_COLS[mk]]
 
 
-def game_logs(pids: set[str], before: str) -> dict[str, pd.DataFrame]:
+def game_logs(cuts: dict, own: dict | None = None) -> dict[str, pd.DataFrame]:
+    """Each player's played games, oldest first, that started strictly before his cut-off
+    (`cuts`: {player_id: time}, the earlier of the edition's publication and his game's start,
+    npl.nba.factors.cutoffs), without his game tonight (`own`: {player_id: game_id}) whatever its
+    stored start. An edition published after a game had started never counts that game, even
+    once its box score is stored."""
     pg = lake()["player_games"]
-    pg = pg[pg.player_id.isin(pids) & (pg.participation == "played") &
-            (pg.tip_utc < pd.Timestamp(before))].sort_values("tip_utc")
+    pg = pg[pg.player_id.isin(set(cuts)) & (pg.participation == "played")]
+    keep = pg.tip_utc < pg.player_id.map(cuts).astype(pg.tip_utc.dtype)
+    if own:
+        keep &= pg.game_id != pg.player_id.map(own)
+    pg = pg[keep].sort_values("tip_utc")
     return {pid: g for pid, g in pg.groupby("player_id")}
 
 
-def opponent_factors(at: str) -> dict:
+def log_cuts(e: dict, fc: list) -> tuple[dict, dict]:
+    """({player_id: cut-off}, {player_id: his game tonight}) for an edition's forecasts `fc`: the
+    cut-off is the earlier of the edition's publication and his game's start (F.cutoffs)."""
+    cuts = F.cutoffs(e)
+    pub = F.utc(e["published_at"])
+    return ({f["player_id"]: cuts.get(f["game_id"], pub) for f in fc},
+            {f["player_id"]: f["game_id"] for f in fc})
+
+
+def opponent_factors(at) -> dict:
     """Model opponent factor per team and stat (shrunk as N1 uses it), with ranks
-    (1 = allows least)."""
+    (1 = allows least), from team-games that started before `at` (the cards and game pages pass
+    F.slate_cutoff: before publication and before any of tonight's games)."""
     L = lake()
     p = M.load_params(live.LIVE_PARAMS)  # the parameters live editions use (audit: was nba-0.2)
     ts = M.team_states(L["team_games"][L["team_games"].tip_utc < pd.Timestamp(at)], p)
@@ -207,9 +225,10 @@ def _props() -> dict:
     fc = [f for f in e["forecasts"] if f["model"] == e["headline_model"]]
     others = {(f["player_id"], f["market"], f["model"]): f for f in e["forecasts"]
               if f["model"] != e["headline_model"]}
-    logs = game_logs({f["player_id"] for f in fc}, e["published_at"])
+    # every box-score input stops at the earlier of publication and his game's start (D-047)
+    logs = game_logs(*log_cuts(e, fc))
     games = {g["game_id"]: g for g in e["games"]}
-    opp = opponent_factors(e["published_at"])
+    opp = opponent_factors(F.slate_cutoff(e))
     mkt = market_lines(set(games))
     season = e["date_et"][:4]
     ex, inj = _extras(e, mkt)
@@ -420,8 +439,12 @@ def _wowy(f: dict, lg, logs: dict, out: list, cur_season: int, top: int = 2) -> 
 
 
 def _team_last_tip(team: str, e: dict):
+    """Start of the team's latest game before its game tonight, as the edition could see it:
+    games that started before the earlier of publication and tonight's start (F.cutoffs)."""
+    gid = next((g["game_id"] for g in e["games"] if team in (g["home"], g["away"])), None)
+    cut = F.cutoffs(e).get(gid, F.utc(e["published_at"]))
     tg = lake()["team_games"]
-    t = tg[(tg.team == team) & (tg.tip_utc < pd.Timestamp(e["published_at"]))]
+    t = tg[(tg.team == team) & (tg.tip_utc < cut) & (tg.game_id != gid)]
     return t.tip_utc.max() if len(t) else pd.Timestamp(0, tz="UTC")
 
 
@@ -474,7 +497,7 @@ def game(gid: str) -> dict:
             "player_id", "name", "team", "position", "p_play", "injury", "minutes_expected")})
         d[f["market"]] = {"median": f["median"], "q10": f["q10"], "q90": f["q90"],
                           "mean": f["mean"]}
-    opp = opponent_factors(e["published_at"])
+    opp = opponent_factors(F.slate_cutoff(e))  # the cards' ranks: none of tonight's games
     gl, dfn = None, {}
     con = _con()
     if con is not None:

@@ -1,10 +1,14 @@
 """NBA factor breakdown (npl.nba.factors, D-047) on small synthetic frames: each frozen rule
-(form T4, matchup MU, game script GS, role RA and RM), the overall count and its wording, the
+(form T4, matchup MU, game script GS, role RA and RM), the overall count and its wording, each
+factor's two-season test lines, the cut-off that keeps tonight's games out of every input, the
 assembled card block, the props payload, the snapshot trim and the parlay route. Every player,
 line, spread and chance below is made up."""
 
+import copy
 import json
 import re
+import shutil
+import subprocess
 
 import pandas as pd
 import pytest
@@ -89,7 +93,8 @@ def _league(sched, *, rosters=None, skip=frozenset(), stat=None, season=2027):
                            "minutes": float(mins[k] if isinstance(mins, list) else mins),
                            "pts": float(pts), "reb": float(reb), "ast": float(ast),
                            "fg3m": 1.0})
-            tg.append({"game_id": gid, "team": team, "season": season, "date": pd.Timestamp(d)})
+            tg.append({"game_id": gid, "team": team, "season": season, "date": pd.Timestamp(d),
+                       "tip_utc": tip})
     return {"games": pd.DataFrame(games), "player_games": pd.DataFrame(pg),
             "team_games": pd.DataFrame(tg)}
 
@@ -257,8 +262,15 @@ def test_overall_counts_and_the_honest_line():
 
 
 def test_reliability_labels_are_the_backtests():
-    assert F.TESTS["T4"]["reliability"] == ("Tested on 2 seasons of real lines: the price already "
-                                            "allows for recent form. No edge.")
+    assert F.TESTS["T4"]["reliability"] == ("Beat the fair chance in one season, not the other; "
+                                            "lost money at the best regulated price in both. "
+                                            "No edge.")
+    # what the form label says holds for the figures shown with it (T4 and T5 alike)
+    for k in ("T4", "T5"):
+        t = F.TESTS[k]
+        assert t["fit"]["won"] < t["fit"]["market"] and t["won"] > t["market"]  # one season only
+        assert t["fit"]["roi"] < 0 and t["roi"] < 0  # lost money in both
+        assert t["reliability"] == F.TESTS["T4"]["reliability"]
     assert F.TESTS["MU"]["reliability"] == ("Real effect, but mostly already in the line. No edge "
                                             "on 2 seasons of real lines.")
     assert F.TESTS["RA"]["reliability"] == ("Real effect, but bookmakers already move the line "
@@ -272,6 +284,50 @@ def test_reliability_labels_are_the_backtests():
     json.dumps(t)
 
 
+def test_every_factor_carries_both_seasons_with_the_backtest_figures():
+    t = F.TESTED
+    assert set(t) == set(F.FACTORS) and all(set(v) == {"fit", "test"} for v in t.values())
+    assert t["form"] == {
+        "fit": "2024-25: on 44,754 props the side it pointed to won 51.3% v a fair chance of "
+               "51.7%; return −5.0% (95% interval −6.0% to −3.9%) at the best regulated price.",
+        "test": "2025-26 sample: on 11,731 props the side it pointed to won 52.7% v a fair "
+                "chance of 51.6%; return −2.4% (95% interval −4.4% to −0.4%) at the best "
+                "regulated price."}
+    assert t["game_script"]["test"] == (
+        "2025-26 sample: on 4,018 props the under won 51.0% v a fair chance of 50.7% (all unders "
+        "51.7%); return −4.1% (95% interval −8.4% to +0.2%) at the best regulated price.")
+    assert t["role"]["fit"] == (
+        "2024-25: with a regular out, the over won 48.9% v a fair chance of 49.3% on 43,020 "
+        "props, return −5.2% (95% interval −6.6% to −3.8%); with his minutes down, the under won "
+        "49.0% v 50.5% on 3,187, return −7.8% (−13.1% to −2.8%); both at the best regulated "
+        "price.")
+    assert t["role"]["test"].startswith("2025-26 sample: with a regular out, the over won 48.0%")
+    # each line holds its own season's figures from the table (fit, then the test sample)
+    for key, rule in (("matchup", "MU"), ("form", "T4"), ("game_script", "GS")):
+        for part, s in (("fit", F.TESTS[rule]["fit"]), ("test", F.TESTS[rule])):
+            line = t[key][part]
+            assert line.startswith(F.SEASON_NAMES[part] + ": on ")
+            for bit in (f"{s['props']:,} props", f"won {F._pc(s['won'])} v a fair chance of "
+                        f"{F._pc(s['market'])}", f"return {F._pc(s['roi'], True)} (95% interval "
+                        f"{F._pc(s['roi_ci'][0], True)} to {F._pc(s['roi_ci'][1], True)})"):
+                assert bit in line, (key, part, bit)
+    # every rule's output carries its factor's lines (a copy), and the payload carries them once
+    outs = {"form": F.form([30] * 4, 22.5), "matchup": F.matchup(None, "GS", "X", "pts"),
+            "game_script": F.game_script("PHX", None),
+            "role": F.role("PHX", "jg", None, F.minutes_trend([]))}
+    for k, f in outs.items():
+        assert f["tested"] == t[k] and f["tested"] is not t[k]
+    assert F.tests_payload()["tested"] == t
+    assert F.tests_payload()["rules"]["T4"]["fit"]["props"] == 44754
+
+
+def test_shares_are_written_half_up_with_a_minus_sign():
+    assert F._pc(0.5155) == "51.6%" and F._pc(0.5) == "50.0%"
+    assert F._pc(-0.0385, True) == "−3.9%" and F._pc(-0.1305, True) == "−13.1%"
+    assert F._pc(0.002, True) == "+0.2%" and F._pc(0.002) == "0.2%"
+    assert F._pc(-0.0004, True) == "0.0%" and F._pc(0.0, True) == "0.0%"  # never −0.0%
+
+
 def test_no_text_calls_anything_a_pick_or_a_signal():
     seen = set()
     for vals, line in (([15, 15, 28, 6], 22.5), ([30] * 4, 22.5), ([1, 2], None)):
@@ -283,35 +339,47 @@ def test_no_text_calls_anything_a_pick_or_a_signal():
                    "role": "unknown"}):
         seen.add(F.overall(combo)["text"])
     seen |= {F.SUMMARY, *F.NOTES.values(), *F.RULES.values(), F.ROLE_RELIABILITY,
-             *(v["reliability"] for v in F.TESTS.values())}
+             *(v["reliability"] for v in F.TESTS.values()),
+             *(line for t in F.TESTED.values() for line in t.values())}
     assert seen and not [s for s in seen if BANNED.search(s)]
     assert "favourites" in F.game_script("GS", -1.5)["headline"]  # British English
 
 
 # --------------------------------------------------------------------------- assembly
-def _scenario():
+TONIGHT = "2026-11-03T03:00:00Z"  # tip-off of tonight's game t1, PHX v GS (US date 2 Nov)
+
+
+def _scenario(tonight=None, published="2026-11-02T22:00:00Z"):
     """PHX v GS on 2 Nov 2026. PHX have played 6 games: a 27-minute regular (mw) missed the
-    last one; jg's last 4 PRA are 15, 15, 28, 6. GS have played 4 games (too few to rank)."""
+    last one; jg's last 4 PRA are 15, 15, 28, 6. GS have played 4 games (too few to rank).
+    tonight: jg's PRA in tonight's game t1 when its box score is already stored (mw played in
+    it), as for an edition published after t1 started once the box scores arrive; published:
+    the edition's publication time."""
     sched = [("p1", "2026-10-21", "PHX", "LAL"), ("p2", "2026-10-23", "BOS", "PHX"),
              ("p3", "2026-10-24", "PHX", "GS"), ("p4", "2026-10-26", "LAL", "PHX"),
              ("p5", "2026-10-28", "PHX", "BOS"), ("p6", "2026-10-30", "GS", "PHX"),
              ("q1", "2026-10-22", "GS", "LAL"), ("q2", "2026-10-25", "BOS", "LAL"),
              ("q3", "2026-10-27", "GS", "BOS")]
-    rosters = {"PHX": [("jg", "G", [30, 30, 30, 30, 30, 30]), ("mw", "C", 27.0),
-                       ("db", "G", 34.0)],
+    if tonight is not None:
+        sched.append(("t1", "2026-11-02", "PHX", "GS"))
+    rosters = {"PHX": [("jg", "G", 30.0), ("mw", "C", 27.0), ("db", "G", 34.0)],
                "GS": [("sc", "G", 33.0), ("dg", "F", 30.0)],
                "LAL": [("lj", "F", 35.0), ("lg", "G", 30.0)],
                "BOS": [("jt", "F", 36.0), ("jb", "G", 34.0)]}
     pra = {"p1": 40, "p2": 40, "p3": 15, "p4": 15, "p5": 28, "p6": 6}
+    if tonight is not None:
+        pra["t1"] = tonight
     L = _league(sched, rosters=rosters, skip={("p6", "mw")})
+    for k in ("games", "player_games", "team_games"):  # t1 starts at its edition time
+        d = L[k]
+        d.loc[d.game_id == "t1", "tip_utc"] = pd.Timestamp(TONIGHT)
     pg = L["player_games"]  # jg's PRA game by game
     for gid, v in pra.items():
         i = (pg.game_id == gid) & (pg.player_id == "jg")
         pg.loc[i, ["pts", "reb", "ast"]] = [v - 6.0, 4.0, 2.0]
     e = {"edition_id": "nba-e1", "date_et": "2026-11-02", "headline_model": "N1",
-         "published_at": "2026-11-02T22:00:00Z",
-         "games": [{"game_id": "t1", "home": "PHX", "away": "GS",
-                    "tip_utc": "2026-11-03T03:00:00Z"}],
+         "published_at": published,
+         "games": [{"game_id": "t1", "home": "PHX", "away": "GS", "tip_utc": TONIGHT}],
          "forecasts": [{"game_id": "t1", "player_id": pid, "name": pid.upper(), "team": tm,
                         "opponent": op, "position": pos, "model": "N1", "market": mk}
                        for pid, tm, op, pos in (("jg", "PHX", "GS", "G"), ("sc", "GS", "PHX", "G"))
@@ -323,6 +391,64 @@ def _scenario():
           "league": {"2027": {"q4": 0.2404}},
           "players": {"jg": {"script": {"q4": {"2027": {"q4": 0.1591}}}}}}
     return e, L, logs, mkt, ex
+
+
+def test_cutoffs_take_the_earlier_of_publication_and_each_games_start():
+    e = {"published_at": "2026-11-03T01:13:49Z",
+         "games": [{"game_id": "a", "tip_utc": "2026-11-03T00:00:00Z"},
+                   {"game_id": "b", "tip_utc": "2026-11-03T02:30:00Z"}]}
+    assert F.cutoffs(e) == {"a": pd.Timestamp("2026-11-03T00:00:00Z"),
+                            "b": pd.Timestamp("2026-11-03T01:13:49Z")}
+    assert F.slate_cutoff(e) == pd.Timestamp("2026-11-03T00:00:00Z")
+    assert F.slate_cutoff({"published_at": "2026-11-02T18:00:00Z", "games": []}) == \
+        pd.Timestamp("2026-11-02T18:00:00Z")
+    # strictly before: a game starting at the cut-off does not count, nor does his game tonight
+    # whatever its stored start
+    lg = pd.DataFrame({"game_id": ["x", "y", "a"], "tip_utc": pd.to_datetime(
+        ["2026-11-01T23:00:00Z", "2026-11-03T00:00:00Z", "2026-11-02T23:30:00Z"], utc=True)})
+    assert F.cut_log(lg, F.cutoffs(e)["a"], "a").game_id.tolist() == ["x"]
+    assert F.cut_log(lg, F.cutoffs(e)["b"]).game_id.tolist() == ["x", "y", "a"]
+    assert F.cut_log(None, F.cutoffs(e)["a"]) is None
+
+
+def test_an_edition_published_after_a_start_never_counts_that_game(monkeypatch):
+    """The 2 Nov final was published at 01:13 UTC, after 9 of its 15 games had started: once
+    their box scores were stored, a player's own game that night entered his card log and the
+    form count. Every input now stops at the earlier of publication and his game's start."""
+    late = "2026-11-03T04:13:00Z"  # 73 minutes after t1 started
+    sc = _scenario(tonight=40, published=late)
+    e, L, logs, mkt, ex = sc
+    pg = L["player_games"]
+    mine = pg[(pg.game_id == "t1") & (pg.player_id == "jg")]
+    assert len(mine) == 1 and (mine.tip_utc < pd.Timestamp(late)).all()  # stored, and started
+    assert F.cutoffs(e) == {"t1": pd.Timestamp(TONIGHT)}
+    # the cards' logs as read live from the lake: tonight's game is in nobody's
+    monkeypatch.setattr(appdata, "lake", lambda: L)
+    got = appdata.game_logs(*appdata.log_cuts(e, e["forecasts"]))
+    assert got["jg"].game_id.tolist() == ["p1", "p2", "p3", "p4", "p5", "p6"]
+    assert "t1" not in set(got["sc"].game_id)
+    assert appdata._team_last_tip("PHX", e) == pd.Timestamp("2026-10-30T23:00:00Z")  # p6
+    seen = []
+    p = _props_with(monkeypatch, sc, real_logs=True, seen=seen)
+    jg = {(x["player_id"], x["market"]): x for x in p["cards"]}[("jg", "pra")]
+    assert jg["log"]["values"] == [40, 40, 15, 15, 28, 6]  # not tonight's 40 at the end
+    assert jg["factors"]["form"]["lean"] == "under"
+    assert jg["factors"]["form"]["headline"] == "Under 22.5 in 3 of his last 4 (15, 15, 28, 6)"
+    # the season behind matchup and role: GS still on 4 games, mw still out of PHX's last game
+    assert jg["factors"]["matchup"]["evidence"]["games"] == 4
+    assert jg["factors"]["role"]["lean"] == "over"
+    assert seen == [pd.Timestamp(TONIGHT)]  # opponent ranks from before tonight's games
+    # the same edition published before the start gives the same card
+    q = _props_with(monkeypatch, _scenario(tonight=40), real_logs=True)
+    early = {(x["player_id"], x["market"]): x for x in q["cards"]}[("jg", "pra")]
+    assert early["log"] == jg["log"] and early["factors"] == jg["factors"]
+    # the rules cut their inputs themselves, even when handed a log that holds tonight's game
+    assert "t1" in set(logs["jg"].game_id)
+    assert F.build(e, e["forecasts"], logs, mkt, ex, L)[("jg", "pra")]["form"] == \
+        jg["factors"]["form"]
+    # the old cut (publication only) let it in, and it would have made the count a 2-2 split
+    leaky = F.form(F._values(logs["jg"], "pra").tolist(), 22.5)
+    assert leaky["lean"] == "neutral" and leaky["evidence"]["last"] == [15, 28, 6, 40]
 
 
 def test_build_gives_every_card_its_four_factors():
@@ -359,19 +485,25 @@ def test_build_without_extras_or_lines_marks_unknowns():
 
 
 # --------------------------------------------------------------------------- payload, snapshot
-def _props_with(monkeypatch, scenario):
+def _props_with(monkeypatch, scenario, real_logs=False, seen=None):
+    """appdata._props() over a scenario. real_logs: the cards' logs come from appdata.game_logs
+    reading the scenario's lake (as live), not from the scenario's own logs; seen collects the
+    time opponent_factors is asked for."""
     e, L, logs, mkt, ex = scenario
     e = {**e, "code": {"model_version": "nba-0.3"},
          "forecasts": [{**f, "p_play": 0.95, "minutes_expected": 30.0, "mean": 20.0,
                         "median": 20, "q10": 12, "q90": 28, "dist": {"lo": 0, "pmf": [1.0]},
                         "injury": None} for f in e["forecasts"]]}
-    for name, value in (("game_logs", logs), ("opponent_factors", {}), ("market_lines", mkt),
-                        ("_simple", {})):
+    patch = [("market_lines", mkt), ("_simple", {})] + ([] if real_logs else [("game_logs", logs)])
+    for name, value in patch:
         monkeypatch.setattr(appdata, name, lambda *a, _v=value, **k: _v)
+    monkeypatch.setattr(appdata, "opponent_factors",
+                        lambda at: (seen if seen is not None else []).append(at) or {})
     monkeypatch.setattr(appdata, "_extras", lambda e, mkt: (ex, {}))
     monkeypatch.setattr(appdata, "latest", lambda: e)
     monkeypatch.setattr(appdata, "lake", lambda: L)
-    monkeypatch.setattr(appdata, "_team_last_tip", lambda team, e: pd.Timestamp(0, tz="UTC"))
+    if not real_logs:
+        monkeypatch.setattr(appdata, "_team_last_tip", lambda team, e: pd.Timestamp(0, tz="UTC"))
     return appdata._props()
 
 
@@ -381,6 +513,8 @@ def test_props_cards_carry_factors_and_the_payload_their_tests(monkeypatch):
     assert c[("jg", "pra")]["factors"]["form"]["lean"] == "under"
     assert all(x["factors"]["overall"]["text"] for x in p["cards"])
     assert p["factor_tests"]["rules"]["T4"]["reliability"] == F.TESTS["T4"]["reliability"]
+    shared = p["factor_tests"]["tested"]
+    assert all(x["factors"][k]["tested"] == shared[k] for x in p["cards"] for k in F.FACTORS)
     monkeypatch.setattr(F, "build", lambda *a: 1 / 0)  # a failure never blocks the cards
     q = appdata._props()
     assert len(q["cards"]) == 4 and all(x["factors"] is None for x in q["cards"])
@@ -408,6 +542,44 @@ def test_snapshot_keeps_factor_tabs_on_cards_with_a_line_only():
     assert a["factors"] is fx and a["log"]["values"] == list(range(10, 30))
     assert "factors" not in b and b["log"]["values"] == [1, 2]
     assert "factors" in bare  # the cached card is not changed
+
+
+def test_snapshot_keeps_the_tested_lines_once():
+    shared = F.tests_payload()["tested"]
+    fx = {**{k: {"lean": "neutral", "tested": dict(shared[k])} for k in F.FACTORS},
+          "overall": {"text": "x"}}
+    fx["role"]["tested"] = {"fit": "own", "test": "own"}  # not the payload's copy: kept
+    card = {"market_line": {"line": 22.5}, "factors": fx, "log": {"values": [1]}}
+    before = copy.deepcopy(card)
+    out = snapshot._nba_card(card, shared)
+    assert all("tested" not in out["factors"][k] for k in ("matchup", "form", "game_script"))
+    assert out["factors"]["role"]["tested"] == {"fit": "own", "test": "own"}
+    assert out["factors"]["overall"] == {"text": "x"} and out["factors"]["form"]["lean"] == "neutral"
+    assert card == before  # the cached card is not changed
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node is not installed")
+def test_the_offline_page_puts_the_tested_lines_back_on_each_card():
+    shared = F.tests_payload()["tested"]
+    lined = {"market_line": {"line": 22.5}, "log": {"values": [1]},
+             "factors": {**{k: {"lean": "under", "tested": dict(shared[k])} for k in F.FACTORS},
+                         "overall": {"text": "x"}}}
+    own = copy.deepcopy(lined)
+    own["factors"]["form"]["tested"] = {"fit": "own", "test": "own"}
+    bare = {"market_line": None, "log": {"values": []}, "factors": None}
+    cards = [snapshot._nba_card(c, shared) for c in (lined, own, bare)]
+    assert "tested" not in cards[0]["factors"]["form"]
+    page = {"data": {"/api/nba/props": {"factor_tests": {"tested": shared}, "cards": cards}}}
+    script = snapshot.REHYDRATE.removeprefix("<script>").removesuffix("</script>")
+    js = (f"const window = {{ NPL_SNAPSHOT: {json.dumps(page)} }};\n{script}\n"
+          "process.stdout.write(JSON.stringify(window.NPL_SNAPSHOT.data['/api/nba/props'].cards));")
+    r = subprocess.run([shutil.which("node"), "-e", js], capture_output=True, text=True,
+                       timeout=60, check=True)
+    got = json.loads(r.stdout)
+    assert got[0]["factors"] == lined["factors"]  # every line back, as the server sends it
+    assert got[1]["factors"]["form"]["tested"] == {"fit": "own", "test": "own"}
+    assert got[1]["factors"]["matchup"]["tested"] == shared["matchup"]
+    assert "factors" not in got[2]
 
 
 def test_parlay_route_resolves_card_legs(monkeypatch):

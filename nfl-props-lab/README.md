@@ -74,8 +74,14 @@ otherwise. The thresholds shown are the defaults: NBA cards, player pages and ph
 at least 60% likely to play (the props board's default filter), NFL player pages and photos for
 players at least 90% likely to play (every NFL card is kept). A page over 16,000,000 bytes, the
 host's limit, is refused unless `--allow-oversize` is given. Measured on 3 Nov 2026 with the
-2 Nov NBA edition (15 games) and the Week 8 NFL edition: 14,919,249 bytes (about 18.2 MB with
-both thresholds at 0.5).
+2 Nov NBA edition (15 games) and the Week 8 NFL edition: 15,439,935 bytes with the NBA factor
+tabs (D-047; 14,919,249 before them, and about 18.2 MB then with both thresholds at 0.5).
+
+The server gzips responses of 1 KB or more. NBA cards carry four factor tabs (D-047: research
+context from rules that did not beat the market when tested), and
+`/api/nba/parlay?legs=PLAYER_ID:MARKET:SIDE,...&price=4.5` combines card legs at their
+margin-free chances, as the app's parlay check does (arithmetic only; legs from one game are
+flagged as not independent).
 
 Backtests and the ML feature cache are run from Python (`npl.backtest.run`,
 `npl.ml.build_cache`, `npl.evaluate.write_report`); `reports/EXPERIMENTS.md` lists the

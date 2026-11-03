@@ -1,5 +1,24 @@
 # Status (Tuesday 3 November 2026)
 
+## Latest (3 Nov, factor tabs and parlay check, D-047)
+
+* **Factor tabs** on NBA cards and player pages: Opponent, Recent form, Minutes & usage and Game
+  outlook. Each lean comes from a simple rule fixed before a backtest on two seasons of stored
+  real lines, and each tab shows that rule's result in both seasons. None beat the bookmakers'
+  margin-free price, and neither did three or more agreeing: research context, not picks.
+* **Parlay check:** card legs at the US line, their margin-free chances multiplied as if
+  independent, the fair odds and the expected value at odds you type; legs from one game or of
+  one player are flagged. The leg list stays in your browser. `/api/nba/parlay` does the same
+  sums on the server; a test runs the page's JavaScript against the Python.
+* **Fixed after review:** every box-score input (card logs, the form count, the season behind the
+  matchup and role rules, the opponent ranks) now stops at the earlier of the edition's
+  publication and the game's start. Before, a game that had started before a late edition (the
+  2 Nov final, 01:13 UTC) entered its players' card logs once its box score arrived (191
+  players). The form label now matches its figures, and the server gzips responses of 1 KB or
+  more (the NBA props body: 14.2 MB, sent as 0.94 MB).
+* **Snapshot:** 15.44 MB on the 2 Nov slate with the README's thresholds; the factors' tested
+  lines are kept once in the page and put back on each card when it opens.
+
 ## Latest (3 Nov, parity build, D-046)
 
 * **ESPN dropped.** Box scores and injury news come from SportsDataverse only (the daily

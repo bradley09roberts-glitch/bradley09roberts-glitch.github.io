@@ -8,6 +8,7 @@ import io
 import json
 
 from fastapi import FastAPI, HTTPException, Query
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 
@@ -15,7 +16,14 @@ from . import appdata
 from .config import PROJECT_ROOT, REPORTS_DIR
 
 WEB = PROJECT_ROOT / "web"
+GZIP_MIN_BYTES = 1000  # smaller responses are sent as they are
+# the NBA props body of the 2 Nov 2026 final: 14.2 MB, 0.94 MB at level 6 in 0.12 s (level 9:
+# 0.92 MB in 0.18 s)
+GZIP_LEVEL = 6
 app = FastAPI(title="NFL Props Lab", docs_url="/api/docs", openapi_url="/api/openapi.json")
+# compressed for clients that accept gzip (every browser): the JSON payloads are large and
+# repetitive (each NBA card repeats its factors' labels and tested lines)
+app.add_middleware(GZipMiddleware, minimum_size=GZIP_MIN_BYTES, compresslevel=GZIP_LEVEL)
 
 
 def _j(obj) -> JSONResponse:
@@ -213,7 +221,8 @@ def export_ledger(run: str):
     p = REPORTS_DIR / "backtests" / run / "ledger.csv.gz"
     if not p.exists() or ".." in run:
         raise HTTPException(404, "no such run")
-    return FileResponse(p, filename=f"{run}_ledger.csv.gz")
+    # already gzip: so typed, the compression middleware leaves it as it is
+    return FileResponse(p, filename=f"{run}_ledger.csv.gz", media_type="application/gzip")
 
 
 def _export(rows: list[dict], fmt: str, name: str) -> Response:
