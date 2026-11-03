@@ -199,6 +199,8 @@ SportsDataverse has a game, its version is used instead. Check on four 27 Oct ga
 in both: same players, starters, positions and statistics (981 values, no real differences).
 Settlement may use provisional rows (they matched exactly); a later settlement run picks up the
 SportsDataverse version once published.
+Superseded by D-046 (3 Nov 2026): nothing is fetched from ESPN; box scores come from
+SportsDataverse only.
 
 ## D-026 (29 Oct 2026) Visual redesign: liquid glass, player photos, drawn sport marks
 Requested by the user. Frosted glass panels over slowly drifting colour fields tinted per
@@ -289,6 +291,7 @@ nba_pregame_summary) and use its injury report for both teams: listed players ta
 status, unlisted players are taken as available. A game whose feed cannot be read keeps the
 snapshot. Each forecast's injury records its source and time; the edition records the feed
 hashes (inputs.injuries_live). The Out / game-time-decision adjustments are unchanged.
+Superseded by D-046 (3 Nov 2026): editions use the SportsDataverse daily injury snapshot only.
 
 ## D-034 (30 Oct 2026) NBA absent-teammate hand-out not adopted; with/without splits shown instead
 Handing an absent regular's minutes (and usage) to his teammates was tested on 2021-2023 and
@@ -481,3 +484,52 @@ props app:
   corrected. Keeping or dropping these fetches is the user's decision; dropping them means
   editions use the SportsDataverse daily injury snapshot (about 18:40 UTC) and box scores
   arrive the next morning.
+The ESPN decision was made in D-046 (3 Nov 2026): the fetches were dropped.
+
+## D-046 (3 Nov 2026) ESPN dropped; game lines, closing snapshots and context stats added
+Follows D-045. Part of a build that gives the app the research context other props apps show,
+from data the project may use.
+- **No ESPN access**, neither its game feeds nor its images. Box scores come from SportsDataverse
+  only, so a game arrives the next morning. Injury news comes only from SportsDataverse's daily
+  snapshot (about 18:40 UTC); each edition records which snapshot it used and when it was
+  published, and says that later news is not included.
+- **Photos and logos are cache-only**, for the NBA and the NFL: the thumbnails saved before
+  3 Nov 2026 are shown and nothing is downloaded (NBA photos and all logos came from ESPN, NFL
+  photos from NFL.com, whose terms sect. 1.3 forbid systematic retrieval). Without one the app
+  shows initials or the team's abbreviation.
+- **Host guard** (util.BLOCKED_HOSTS): the HTTP helper refuses ESPN's hosts (every country
+  site, espncdn.com, espnfc.com, espncricinfo.com, espndeportes.com), NBA.com, nba.net,
+  wnba.com and NFL.com before any request. Redirects are followed by hand and each hop is checked
+  before it is requested; a response whose address or redirect history is on a blocked host is
+  refused too.
+- **Game lines** (moneyline, spread, total) for a whole slate from The Odds API's featured
+  markets: one call, 3 credits a slate for the us region, stored in the append-only game_lines
+  table. The props pull no longer makes the /markets pre-call (event odds cost only the markets
+  returned, and an event without props costs nothing). No paid call may leave fewer credits than
+  the floor (NPL_ODDS_FLOOR, default 400); skipped calls are listed.
+- **Closing snapshots** (`npl close`): shortly before tip-off, event odds for the tracked
+  markets only, of games that have not started by the provider's start time (from the free
+  events call; a start more than 10 minutes from the recorded tip-off is warned about), so
+  closing-line value has a late snapshot. `--rule` limits it to some rules' props.
+- **Complete boards.** The stores keep a row once (quotes are unique on the provider's
+  per-book market update time and the price; game_lines likewise, without our observation time),
+  so a later pull stores nothing for a book whose market did not change. Readers rebuild the
+  board per bookmaker: for each game, market and bookmaker, that book's rows from its own latest
+  observation at or before the reference time, ignored when more than 12 hours older. This
+  applies to the card consensus, the stored lines on cards, the game lines and closing-line
+  value; the duplicate and conflicting-price rules of D-044 apply to the rebuilt board.
+- **Context definitions** (npl.nba.extras; context only, never a forecast input). Usage =
+  (FGA + 0.44 FTA + TOV) x (team minutes / 5) / (minutes x team (FGA + 0.44 FTA + TOV)), the
+  team's TOV being the team box score's total, team turnovers included. Fourth-quarter share =
+  fourth-quarter points / all his points, overtime counted in that total and shown separately. A
+  close game has a final margin (after any overtime) of 5 points or fewer. Ranks: 1 = allows
+  least, or the highest DREB%. A game without a stored line stays blank: lines are never
+  back-filled. Position groups are G, F and C. Displayed figures are rounded half up.
+- **Lean rule** on NBA cards: the calibrated model chance minus the market's margin-free chance
+  at the bookmakers' line. Under 3 percentage points either way is "no lean". No model view
+  where the calibration slope is below 0.2 (points and PRA under nba-0.3; the props payload
+  carries each market's slope for the edition's model). No lean in thin markets: fewer than 3
+  books, or no price from a regulated book.
+- Fewer than 5 games (or player-games) are marked "tiny sample".
+- The offline snapshot embeds US prices, so it is written under data/ (git-ignored) and is
+  refused above the host's 16,000,000-byte limit.

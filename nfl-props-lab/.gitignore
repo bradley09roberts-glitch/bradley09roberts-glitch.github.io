@@ -5,5 +5,10 @@ __pycache__/
 .ruff_cache/
 data/*
 !data/.keep
+# app snapshots embed US bookmaker prices (The Odds API terms forbid redistributing raw data):
+# `npl snapshot` writes them to data/snapshots/; older copies were written to the project root
+data/**/*.html
+/nfl-props-lab.html
+/app.html
 .env
 *.log

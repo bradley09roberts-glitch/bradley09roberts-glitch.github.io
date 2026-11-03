@@ -53,13 +53,26 @@ uv run npl nba settle             # NBA pre-tip record -> reports/nba/record/
 uv run npl quotes --sport nba --regions us --hours-ahead 24   # NBA prop prices + game lines (credits)
 uv run npl close --sport nba --within 30 --dry-run   # plan a closing snapshot of tracked props
 uv run npl serve                  # web app at http://127.0.0.1:8765
-uv run npl snapshot --out app.html  # self-contained offline copy of the app (no server)
+uv run npl snapshot --min-p-play 0.9 --nba-min-p-play 0.6   # offline copy of the app (no server)
 uv run npl verify                 # lint, tests, edition hashes, API smoke test
 ```
 
 Odds calls cost credits. Every pull opens with the provider's free events call, makes no paid
 call that would leave fewer than `NPL_ODDS_FLOOR` credits (default 400) and lists any call it
-skipped. `npl close` without `--dry-run` spends about one credit per tracked market per game.
+skipped. `npl close` without `--dry-run` spends about one credit per tracked market per game;
+`--rule RULE` (repeatable) limits it to the props of some rules. It uses the provider's start
+time from the free events call: a game already under way is skipped and listed (its prices
+would be in-play), and a start more than 10 minutes from the tip-off recorded with the tracked
+props is reported as a warning.
+
+The snapshot embeds US bookmaker prices, so it is written to
+`data/snapshots/nfl-props-lab.html` (git-ignored; never commit it) unless `--out` says
+otherwise. The thresholds shown are the defaults: NBA cards, player pages and photos for players
+at least 60% likely to play (the props board's default filter), NFL player pages and photos for
+players at least 90% likely to play (every NFL card is kept). A page over 16,000,000 bytes, the
+host's limit, is refused unless `--allow-oversize` is given. Measured on 3 Nov 2026 with the
+2 Nov NBA edition (15 games) and the Week 8 NFL edition: 14,919,249 bytes (about 18.2 MB with
+both thresholds at 0.5).
 
 Backtests and the ML feature cache are run from Python (`npl.backtest.run`,
 `npl.ml.build_cache`, `npl.evaluate.write_report`); `reports/EXPERIMENTS.md` lists the

@@ -51,6 +51,50 @@ def test_volume_table_sums_over_games_before_dividing():
     assert t.loc["q"].usage == pytest.approx(X.usage_rate(8, 2, 3, 25, 85, 20, 14, 240))
 
 
+def _store_team_box(con, tmp_path, season, rows):
+    """A team box-score file in the raw store (only the columns extras reads)."""
+    name = f"team_box_{season}.parquet"
+    pd.DataFrame(rows).to_parquet(tmp_path / name)
+    con.execute("INSERT INTO raw_files(source, dataset, part, url, retrieved_at, sha256, bytes, "
+                "path) VALUES ('sportsdataverse','nba_team_box',?,'u','2026-11-02T12:00:00Z',?,1,?)",
+                (str(season), name, name))
+
+
+def _box_row(gid, team, opp, tov, team_tov, ast=25, dreb=33, oreb=10):
+    return {"game_id": gid, "season_type": 2, "game_date": "2026-10-30",
+            "team_abbreviation": team, "opponent_team_abbreviation": opp, "assists": ast,
+            "defensive_rebounds": dreb, "offensive_rebounds": oreb, "turnovers": tov,
+            "team_turnovers": team_tov, "total_turnovers": tov + team_tov}
+
+
+def test_usage_counts_team_turnovers_from_the_team_box(tmp_path, monkeypatch):
+    """The team's TOV is the team box's total (team turnovers credited to no player included),
+    not the sum of the player lines; a game without that total counts for minutes only."""
+    monkeypatch.setattr(X, "DATA_HOME", tmp_path)
+    con = db.connect(tmp_path / "t.sqlite3")
+    _store_team_box(con, tmp_path, 2027, [_box_row(401, "PHX", "GS", 14, 2),
+                                         _box_row(401, "GS", "PHX", 12, 0),
+                                         _box_row(402, "PHX", "LAL", 11, 1)])
+    tov = X.team_turnovers(con, (2027, 2026))  # no 2026 file: nothing from it
+    assert tov.set_index(["game_id", "team"]).t_tov.to_dict() == {
+        ("401", "PHX"): 16, ("401", "GS"): 12, ("402", "PHX"): 12}
+    rows = pd.DataFrame({  # t_tov from the player lines would be 14 and 11
+        "player_id": "p", "game_id": ["401", "402", "403"], "season": 2027,
+        "season_type": "REG", "team": "PHX", "tip_utc": pd.date_range("2026-10-30", periods=3,
+                                                                     tz="UTC"),
+        "minutes": [30.0, 20.0, 10.0], "fga": [10.0, 6.0, 4.0], "fta": [5.0, 0.0, 2.0],
+        "tov": [2.0, 1.0, 1.0], "t_minutes": 240.0, "t_fga": [85.0, 90.0, 80.0],
+        "t_fta": [20.0, 25.0, 22.0], "t_tov": [14.0, 11.0, 15.0]})
+    v = X.volume(rows, {"p"}, 2027, tov)["p"]["season"]
+    used = (10 + 6) + 0.44 * 5 + (2 + 1)  # game 403 has no team-box total: minutes only
+    team = (85 + 90) + 0.44 * (20 + 25) + (16 + 12)
+    assert v["games"] == 3 and v["minutes"] == 20.0
+    assert v["usage"] == X.half_up(used * (480 / 5) / (50 * team), 4)
+    assert X.volume(rows, {"p"}, 2027, X.team_turnovers(con, (2026,)))["p"]["season"][
+        "usage"] is None  # no team box at all: usage missing, never the player-line sum
+    assert "team turnovers" in X.NOTES["volume"]
+
+
 def test_volume_blocks_this_season_last5_and_last_season():
     rows = []
     for i in range(7):  # 7 games this season (one in the play-in), 2 last season
@@ -182,7 +226,8 @@ def test_game_line_consensus_median_regulated_best_moneyline_and_move():
     assert s["books"] == {"spread": 3, "total": 3, "moneyline": 3}
     assert s["moneyline"] == {"home": 1.5, "home_book": "draftkings", "away": 3.16,
                               "away_book": "betmgm"}
-    assert (s["home_points"], s["away_points"]) == (116.2, 110.2)  # (226.5 +/- 6) / 2, rounded
+    # (226.5 +/- 6) / 2 = 116.25 and 110.25, rounded half up (round() would give .2)
+    assert (s["home_points"], s["away_points"]) == (116.3, 110.3)
     assert s["first"]["home_spread"] == -4.5 and s["first"]["total"] == 228.5
     assert s["move"] == {"home_spread": -1.5, "total": -2.0}
     assert s["seen"] == "2026-11-02T20:00:00Z" and s["first_seen"] == "2026-11-02T12:00:00Z"
@@ -410,8 +455,7 @@ def test_build_assembles_the_block_and_leaves_missing_data_missing(tmp_path, mon
     assert ex["seasons"]["current"] == 2027 and ex["seasons"]["last_label"] == "2025-26"
     jg = ex["players"]["jg"]
     assert jg["volume"]["season"]["games"] == 3 and jg["volume"]["season"]["minutes"] == 30.0
-    assert jg["volume"]["season"]["usage"] == pytest.approx(
-        X.usage_rate(45, 12, 6, 90, 255, 60, 42, 720), abs=1e-4)
+    assert jg["volume"]["season"]["usage"] is None  # no team box stored: usage left missing
     assert jg["volume"]["last_season"] is None  # no games last season: missing, not zero
     assert jg["script"]["q4"] == {}  # no play-by-play stored
     assert jg["script"]["close"]["2027"]["close"]["games"] == 2  # margins 2 and 1
@@ -423,6 +467,19 @@ def test_build_assembles_the_block_and_leaves_missing_data_missing(tmp_path, mon
     assert ex["defence"] == {} and ex["game_lines"] == {} and ex["pos_v_opp"] == {}
     assert ex["players"]["sc"]["vs_opp"]["tonight"] == [None] * 5
     json.dumps(ex)  # plain JSON types throughout
+
+
+def test_build_takes_team_turnovers_from_the_team_box(tmp_path, monkeypatch):
+    con = db.connect(tmp_path / "t.sqlite3")
+    monkeypatch.setattr(X, "HIST_LINES", tmp_path / "hist_lines.parquet")
+    L = _league()
+    tov = L["team_games"][["game_id", "team"]].assign(t_tov=15.0)  # 14 by player + 1 team
+    seen = []
+    monkeypatch.setattr(X, "team_turnovers", lambda con, seasons: seen.append(seasons) or tov)
+    ex = X.build(_edition(), {}, L, con)
+    assert seen == [(2027, 2026)]
+    assert ex["players"]["jg"]["volume"]["season"]["usage"] == X.half_up(
+        X.usage_rate(45, 12, 6, 90, 255, 60, 45, 720), 4)
 
 
 def test_player_view_and_snapshot_trim():
@@ -441,6 +498,34 @@ def test_player_view_and_snapshot_trim():
     assert set(cut["players"]) == {"jg"} and set(cut["defence"]) == {"GS"}
     assert set(cut["pos_v_opp"]) == {"GS|G"} and set(cut["game_lines"]) == {"g7"}
     assert ex["players"].keys() == {"jg", "zz"}  # the cached block is not changed
+
+
+def test_displayed_figures_round_half_up():
+    import math
+
+    assert X.half_up(2.25, 1) == 2.3 and X.half_up(-2.25, 1) == -2.3  # round() gives 2.2
+    assert X.half_up(2.675, 2) == 2.68  # as written, not the binary value (round(): 2.67)
+    assert X.half_up(0.5, 0) == 1.0 and X.half_up(30.5, 0) == 31.0  # round(): 0 and 30
+    assert X.half_up(0.123456, 4) == 0.1235
+    z = X.half_up(-0.04, 1)
+    assert z == 0.0 and math.copysign(1, z) == 1.0  # never shown as -0.0
+    assert X._r(None) is None and X._r(np.nan) is None and X._r(10.25) == 10.3
+
+
+def test_position_difference_is_the_shown_result_minus_the_shown_line():
+    p = _played([(pid, "GS", "g1", "2026-10-26", "REG", pts, 2, 2, 1)
+                 for pid, pts in (("a", 10), ("b", 10), ("c", 10), ("d", 11))])
+    lines = pd.DataFrame({"game_id": "g1", "player_id": list("abcd"), "market": "pts",
+                          "line": [12.5, 12.5, 13.0, 13.0], "books": 4, "snapshot": "s"})
+    m = X.pos_v_opp_table(X.lined_results(lines, p))["GS|G"]["2027"]["markets"]["pts"]
+    # mean result 10.25 -> 10.3, mean line 12.75 -> 12.8 (half up); the unrounded mean
+    # difference is -2.5, but the card shows 10.3 v 12.8, so the difference shown is -2.5 too
+    assert (m["result"], m["line"], m["diff"]) == (10.3, 12.8, -2.5)
+    lines2 = lines.assign(line=12.5)
+    m2 = X.pos_v_opp_table(X.lined_results(lines2, p))["GS|G"]["2027"]["markets"]["pts"]
+    # mean difference -2.25 would round to -2.3, but 10.3 - 12.5 = -2.2 is what is shown
+    assert (m2["result"], m2["line"], m2["diff"]) == (10.3, 12.5, -2.2)
+    assert (m2["over"], m2["under"]) == (0, 4)
 
 
 def test_league_games_leave_out_exhibition_sides():

@@ -1,6 +1,6 @@
-"""D-046: no automated access to ESPN (or NBA.com). Box scores and injury reports come from
-SportsDataverse only; photos and logos are never downloaded from ESPN's image server, and the
-thumbnails cached before then are still used."""
+"""D-046: no automated access to ESPN, NBA.com or NFL.com (util.BLOCKED_HOSTS, redirects
+included). Box scores and injury reports come from SportsDataverse only; photos and logos are
+never downloaded, and the thumbnails cached before then are still used."""
 
 import argparse
 import json
@@ -31,11 +31,18 @@ def offline(monkeypatch):
     ("https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary?event=1", True),
     ("https://a.espncdn.com/i/teamlogos/nba/500/bos.png", True),
     ("https://www.espn.com/nba/", True), ("https://espn.com", True),
+    ("https://www.espn.co.uk/nba/", True), ("https://www.espnfc.com/x", True),
+    ("https://www.espncricinfo.com/x", True), ("https://www.espn.com.au/nba/", True),
+    ("https://www.espn.in/x", True), ("https://www.espn.com.br/nba/", True),
+    ("https://www.espndeportes.com/x", True), ("http://ESPN.CO.UK./x", True),
     ("https://stats.nba.com/stats/boxscore", True),
     ("https://ak-static.cms.nba.com/referee/injury/Injury-Report.pdf", True),
+    ("https://cdn.nba.net/x.json", True), ("https://www.wnba.com/x", True),
+    ("https://static.www.nfl.com/image/private/f_auto,q_auto/league/x", True),
+    ("https://www.nfl.com/injuries/", True),
     ("https://github.com/sportsdataverse/sportsdataverse-data/releases/download/x", False),
-    ("https://static.www.nfl.com/image/private/f_auto,q_auto/league/x", False),
-    ("https://api.the-odds-api.com/v4/sports", False), ("https://notespn.com/x", False)])
+    ("https://api.the-odds-api.com/v4/sports", False), ("https://notespn.com/x", False),
+    ("https://espn.co.uk.example.org/x", False), ("https://notnfl.com/x", False)])
 def test_blocked_hosts(url, blocked):
     assert blocked_host(url) is blocked
 
@@ -52,21 +59,74 @@ def test_http_get_refuses_a_blocked_host_before_any_request():
     assert Session.calls == 0
 
 
-def test_no_espn_or_nba_com_address_in_the_code():
+class _Resp:
+    def __init__(self, url, code=200, location=None, history=()):
+        self.url, self.status_code, self.content = url, code, b"ok"
+        self.headers = {"Location": location} if location else {}
+        self.history = list(history)
+
+
+class _Redirecting:
+    """A session answering from a fixed map url -> response, recording what was asked."""
+
+    def __init__(self, answers):
+        self.answers, self.asked = answers, []
+
+    def get(self, url, **kw):
+        self.asked.append((url, kw.get("allow_redirects")))
+        return self.answers[url]
+
+
+def test_http_get_never_follows_a_redirect_to_a_blocked_host():
+    s = _Redirecting({"https://example.org/photo": _Resp(
+        "https://example.org/photo", 302, "https://a.espncdn.com/i/headshots/x.png")})
+    with pytest.raises(FetchError, match="redirects to https://a.espncdn.com"):
+        http_get("https://example.org/photo", session=s, max_tries=1)
+    assert s.asked == [("https://example.org/photo", False)]  # the ESPN hop is never requested
+
+
+def test_http_get_follows_allowed_redirects_by_hand():
+    s = _Redirecting({
+        "https://github.com/x/releases/download/t/f.parquet": _Resp(
+            "https://github.com/x/releases/download/t/f.parquet", 302,
+            "https://objects.githubusercontent.com/f.parquet?sig=1"),
+        "https://objects.githubusercontent.com/f.parquet?sig=1": _Resp(
+            "https://objects.githubusercontent.com/f.parquet?sig=1", 307, "/g.parquet"),
+        "https://objects.githubusercontent.com/g.parquet": _Resp(
+            "https://objects.githubusercontent.com/g.parquet")})
+    r = http_get("https://github.com/x/releases/download/t/f.parquet", session=s)
+    assert r.content == b"ok" and [h.status_code for h in r.history] == [302, 307]
+    assert [a for _, a in s.asked] == [False] * 3  # redirects are never left to the session
+    assert s.asked[-1][0] == "https://objects.githubusercontent.com/g.parquet"
+
+
+@pytest.mark.parametrize("resp", [
+    _Resp("https://www.nfl.com/players/x/"),  # a session that followed a redirect itself
+    _Resp("https://example.org/x", history=[_Resp("https://cdn.nba.net/x", 301)])])
+def test_http_get_refuses_a_response_that_passed_through_a_blocked_host(resp):
+    with pytest.raises(FetchError, match="blocked host"):
+        http_get("https://example.org/x", session=_Redirecting({"https://example.org/x": resp}))
+
+
+def test_no_blocked_address_in_the_code():
     hits = [f"{p.relative_to(SRC)}: {m.group(0)}" for p in SRC.rglob("*.py")
-            for m in re.finditer(r"https?://[\w.-]*(espn|espncdn|nba\.com)[^\s\"']*",
-                                 p.read_text())]
+            for m in re.finditer(r"https?://[\w.-]*(espn|nba\.com|nba\.net|wnba\.com|nfl\.com)"
+                                 r"[^\s\"']*", p.read_text())]
     assert hits == []
 
 
-def test_nba_photos_use_the_cache_only(tmp_path, monkeypatch):
+@pytest.mark.parametrize("sport", ["nba", "nfl"])
+def test_player_photos_use_the_cache_only(tmp_path, monkeypatch, sport):
+    """NBA photos came from ESPN, NFL photos from NFL.com (static.www.nfl.com): neither is
+    downloaded any more (the offline fixture fails any request)."""
     monkeypatch.setattr(headshots, "DIR", tmp_path / "headshots")
-    d = tmp_path / "headshots" / "nba"
+    d = tmp_path / "headshots" / sport
     d.mkdir(parents=True)
     (d / "1.webp").write_bytes(b"cached")
-    out = headshots.fetch("nba", {"1", "2"})  # no request at all (offline fixture)
+    out = headshots.fetch(sport, {"1", "2"})
     assert out == {"cached": 1, "new": 0, "missing": 1}
-    assert set(headshots.data_uris("nba", {"1", "2"})) == {"1"}  # player 2 shows initials
+    assert set(headshots.data_uris(sport, {"1", "2"})) == {"1"}  # player 2 shows initials
+    assert sorted(f.name for f in d.iterdir()) == ["1.webp"]  # nothing written either
 
 
 def test_espn_logo_addresses_are_never_fetched(tmp_path, monkeypatch):

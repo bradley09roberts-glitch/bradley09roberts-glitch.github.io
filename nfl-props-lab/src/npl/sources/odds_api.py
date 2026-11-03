@@ -23,7 +23,10 @@ Design rules
 * Game lines (moneyline, spread, total) for a whole slate come from one featured-markets call
   (3 credits for one region) into the append-only `game_lines` table (snapshot_game_lines).
 * Closing snapshots (snapshot_close) re-price, shortly before tip-off, only the games and
-  markets with props on the paper record, so track.clv has a late snapshot to compare with.
+  markets with props on the paper record (optionally only some rules' props), so track.clv has
+  a late snapshot to compare with. The free events call gives each game's start time: a game
+  the provider shows as started is skipped and listed (its prices would be in-play), and a start
+  time more than 10 minutes from the tip-off recorded with the tracked props is warned about.
 """
 
 from __future__ import annotations
@@ -675,15 +678,21 @@ def snapshot_game_lines(con, sport: str = "nba", regions: str = "us", *, session
 
 
 # ----------------------------------------------------------------------- closing snapshots
+TIP_TOLERANCE_MIN = 10  # provider start v recorded tip-off: a larger gap is warned about
+
+
 def plan_close(con: sqlite3.Connection, sport: str = "nba", within_minutes: float = 30,
-               now=None) -> list[dict]:
+               now=None, rules: list[str] | None = None) -> list[dict]:
     """Games that tip off within the next `within_minutes` and have not started, with props on
-    the paper record (tracked_props, any rule), and for each the provider markets to request:
-    only the markets tracked in that game, main lines only (alternates cost extra). Tip-off is
-    the time recorded with the tracked props, the same cut-off track.clv uses."""
+    the paper record (tracked_props; any rule, or only `rules`), and for each the provider
+    markets to request: only the markets tracked in that game, main lines only (alternates cost
+    extra). Tip-off here is the time recorded with the tracked props, the same cut-off track.clv
+    uses; snapshot_close then checks it against the provider's start time."""
     now = pd.Timestamp(now or utcnow())
-    t = pd.read_sql_query("SELECT game_id, market, tip_utc FROM tracked_props WHERE sport = ? "
-                          "ORDER BY id", con, params=(sport,))
+    sql = "SELECT game_id, market, tip_utc FROM tracked_props WHERE sport = ?"
+    if rules:
+        sql += f" AND rule IN ({', '.join('?' * len(rules))})"
+    t = pd.read_sql_query(sql + " ORDER BY id", con, params=(sport, *(rules or [])))
     if t.empty:
         return []
     t["tip"] = pd.to_datetime(t.tip_utc, utc=True, format="ISO8601")
@@ -704,7 +713,8 @@ def plan_close(con: sqlite3.Connection, sport: str = "nba", within_minutes: floa
 
 def _event_ids(events: list[dict], con: sqlite3.Connection, sport: str,
                lake_dir=None) -> dict[str, dict]:
-    """Our game id -> the provider's event id and a short label, matched as quotes are."""
+    """Our game id -> the provider's event id, start time and a short label, matched as quotes
+    are."""
     rows = [{"event_id": e.get("id"), "home_team": e.get("home_team"),
              "away_team": e.get("away_team"), "commence_time": e.get("commence_time")}
             for e in events]
@@ -714,43 +724,87 @@ def _event_ids(events: list[dict], con: sqlite3.Connection, sport: str,
         if isinstance(r.game_id, str) and r.game_id:
             short = isinstance(r.away, str) and isinstance(r.home, str)
             out.setdefault(r.game_id, {"event_id": r.event_id,
+                                       "commence_time": r.commence_time
+                                       if isinstance(r.commence_time, str) else None,
                                        "label": f"{r.away} @ {r.home}" if short
                                        else f"{r.away_team} @ {r.home_team}"})
     return out
 
 
+def _hm(ts: pd.Timestamp) -> str:
+    return ts.strftime("%H:%M UTC")
+
+
+def _check_start(p: dict, start: str | None, now: pd.Timestamp) -> str | None:
+    """Use the provider's start time for a planned game: tip_utc and minutes_to_tip follow it
+    (the recorded tip-off is kept as recorded_tip_utc), `started` is set when it is at or before
+    now, and a warning is returned when it is more than TIP_TOLERANCE_MIN minutes from the
+    recorded tip-off."""
+    p["started"] = False
+    if not start:
+        return None
+    st, rec = pd.Timestamp(start), pd.Timestamp(p["tip_utc"])
+    st = st.tz_localize("UTC") if st.tzinfo is None else st.tz_convert("UTC")
+    p |= {"recorded_tip_utc": p["tip_utc"], "tip_utc": iso(st.to_pydatetime()),
+          "minutes_to_tip": round((st - now).total_seconds() / 60, 1), "started": st <= now}
+    gap = (st - rec).total_seconds() / 60
+    if abs(gap) <= TIP_TOLERANCE_MIN:
+        return None
+    return (f"{p.get('label') or p['game_id']}: the provider's start time ({_hm(st)}) is "
+            f"{abs(gap):.0f} min {'later' if gap > 0 else 'earlier'} than the tip-off recorded "
+            f"with the tracked props ({_hm(rec)}), which closing-line value uses as its cut-off")
+
+
 def snapshot_close(con: sqlite3.Connection, sport: str = "nba", within_minutes: float = 30, *,
                    regions: str = "us", dry_run: bool = False, session=None, now=None,
-                   budget: Budget | None = None, lake_dir=None) -> dict:
-    """Closing snapshot for closing-line value: event odds for the games in `plan_close`, for
-    their tracked markets only, stored through the normal quote pipeline, so track.clv (the last
-    stored snapshot before tip-off) uses them. Estimated cost per game = markets x regions.
-    With nothing planned no call is made at all; a dry run makes only the free events call
-    (credits left, current event ids) and no paid call."""
-    plan = plan_close(con, sport, within_minutes, now)
+                   budget: Budget | None = None, lake_dir=None,
+                   rules: list[str] | None = None) -> dict:
+    """Closing snapshot for closing-line value: event odds for the games in `plan_close` (props
+    of `rules` only, when given), for their tracked markets only, stored through the normal
+    quote pipeline, so track.clv (the last stored snapshot before tip-off) uses them. Estimated
+    cost per game = markets x regions. With nothing planned no call is made at all. The free
+    events call that opens the pull gives each game's event id and the provider's start time: a
+    game that has started by it is skipped and listed under `started` (its prices would be
+    in-play), and a start more than TIP_TOLERANCE_MIN minutes from the recorded tip-off is listed
+    under `warnings`. A dry run makes only that free call and no paid call."""
+    plan = plan_close(con, sport, within_minutes, now, rules=rules)
     per_region = n_regions(regions)
     for p in plan:
         p["estimated_credits"] = len(p["markets"]) * per_region
     out = {"sport": sport, "within_minutes": within_minutes, "regions": regions,
-           "dry_run": dry_run, "planned": plan,
+           "rules": list(rules) if rules else None, "dry_run": dry_run, "planned": plan,
            "estimated_credits": sum(p["estimated_credits"] for p in plan), "results": [],
-           "skipped": []}
+           "skipped": [], "started": [], "warnings": []}
     if not plan:
         return out
     budget = budget or Budget()
     first_skip = len(budget.skipped)
     events, credits = _start(con, budget, session, sport)
     ids = _event_ids(events, con, sport, lake_dir)
+    now = pd.Timestamp(now or utcnow())
     for p in plan:
         ev = ids.get(p["game_id"], {})
         p["event_id"], p["label"] = ev.get("event_id"), ev.get("label")
-    out |= {"credits_left": budget.remaining, "floor": budget.floor}
+        if warn := _check_start(p, ev.get("commence_time"), now):
+            out["warnings"].append(warn)
+            log.warning("npl close: %s", warn)
+        if p["started"]:
+            out["started"].append({"game_id": p["game_id"], "label": p["label"],
+                                   "start_utc": p["tip_utc"]})
+    callable_ = [p for p in plan if p["event_id"] and p["markets"] and not p["started"]]
+    out |= {"credits_left": budget.remaining, "floor": budget.floor,
+            "estimated_credits": sum(p["estimated_credits"] for p in callable_)}
     if dry_run:
         return out
     for p in plan:
         what = f"{p['label'] or p['game_id']} closing props"
         if not p["event_id"]:
             out["skipped"].append({"call": what, "reason": "not in the provider's event list"})
+            continue
+        if p["started"]:
+            out["skipped"].append({"call": what, "reason": f"already started at "
+                                   f"{_hm(pd.Timestamp(p['tip_utc']))} by the provider's start "
+                                   "time (prices would be in-play)"})
             continue
         if not p["markets"]:
             out["skipped"].append({"call": what, "reason": "no tracked market the provider prices"})

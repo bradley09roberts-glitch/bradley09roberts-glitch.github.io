@@ -24,6 +24,10 @@
   --line-to-gain: var(--acc); --bar: #8fb4ff; --bar-soft: rgba(143, 180, 255, 0.28); --hist: var(--ink);
   --m-J1: #6ea8ff; --m-J0: #ff8a55; --m-M: #3ad29a; --m-A: #f2b632; --m-C: #f07aa8; --m-X: #a896ff; --m-X1: #3ef0b4;
   --pit-hi: rgba(255, 107, 129, 0.22); --pit-hi2: rgba(255, 107, 129, 0.45); --pit-lo: rgba(99, 160, 255, 0.22); --pit-lo2: rgba(99, 160, 255, 0.45);
+  /* small text in the NBA research blocks (US prices, lean, context): at least 4.5:1 on their
+     opaque backgrounds; light mode darkens them below */
+  --muted-2: var(--muted); --hit-text: var(--hit); --miss-text: #ff8597; --warn-text: var(--warning); --acc-text: var(--acc);
+  --btn-edge: var(--edge); --btn-fill: var(--glass-2);
   /* type */
   --f-display: "Archivo", "Arial Narrow", "Helvetica Neue", system-ui, sans-serif;
   --f-body: "Figtree", "Segoe UI", system-ui, -apple-system, sans-serif;
@@ -52,10 +56,12 @@
     --bar: #3d6fe0; --bar-soft: rgba(61, 111, 224, 0.22);
     --m-J1: #2a78d6; --m-J0: #eb6834; --m-M: #1baf7a; --m-A: #c98a00; --m-C: #d9628e; --m-X: #6250d6; --m-X1: #078a5c;
     --pit-hi: rgba(214, 48, 75, 0.14); --pit-hi2: rgba(214, 48, 75, 0.32); --pit-lo: rgba(42, 120, 214, 0.14); --pit-lo2: rgba(42, 120, 214, 0.32);
+    --muted-2: #545e76; --hit-text: #04704c; --miss-text: #b0243f; --warn-text: #8a5a00; --acc-text: #0a5cc0;
+    --btn-edge: rgba(20, 30, 60, 0.6); --btn-fill: rgba(20, 30, 60, 0.05);
     color-scheme: light;
   }
   :root:not([data-theme="dark"])[data-sport="nba"] {
-    --acc: #cf500c; --acc-ink: #ffffff; --acc-wash: rgba(207, 80, 12, 0.12);
+    --acc: #cf500c; --acc-ink: #ffffff; --acc-wash: rgba(207, 80, 12, 0.12); --acc-text: #a84006;
     --glow-1: #ffae7a; --glow-2: #b49bff; --glow-3: #ffd9c2; --art: rgba(140, 60, 10, 0.08);
   }
 }
@@ -74,10 +80,12 @@
   --bar: #3d6fe0; --bar-soft: rgba(61, 111, 224, 0.22);
   --m-J1: #2a78d6; --m-J0: #eb6834; --m-M: #1baf7a; --m-A: #c98a00; --m-C: #d9628e; --m-X: #6250d6; --m-X1: #078a5c;
   --pit-hi: rgba(214, 48, 75, 0.14); --pit-hi2: rgba(214, 48, 75, 0.32); --pit-lo: rgba(42, 120, 214, 0.14); --pit-lo2: rgba(42, 120, 214, 0.32);
+  --muted-2: #545e76; --hit-text: #04704c; --miss-text: #b0243f; --warn-text: #8a5a00; --acc-text: #0a5cc0;
+  --btn-edge: rgba(20, 30, 60, 0.6); --btn-fill: rgba(20, 30, 60, 0.05);
   color-scheme: light;
 }
 :root[data-theme="light"][data-sport="nba"] {
-  --acc: #cf500c; --acc-ink: #ffffff; --acc-wash: rgba(207, 80, 12, 0.12);
+  --acc: #cf500c; --acc-ink: #ffffff; --acc-wash: rgba(207, 80, 12, 0.12); --acc-text: #a84006;
   --glow-1: #ffae7a; --glow-2: #b49bff; --glow-3: #ffd9c2; --art: rgba(140, 60, 10, 0.08);
 }
 
@@ -380,10 +388,11 @@ td .sw { display: inline-block; width: 14px; height: 3px; border-radius: 2px; ve
 .pcard { border-radius: var(--r); padding: 15px; display: flex; flex-direction: column; gap: 11px; min-width: 0;
   transition: transform 0.4s var(--spring); }
 .pcard:hover { transform: translateY(-2px); }
-.pcard header { display: flex; align-items: center; gap: 11px; }
-.pcard .who { flex: 1; min-width: 0; }
+.pcard header { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 11px; }
+.pcard .who { flex: 1 1 170px; min-width: 0; }
+.pcard header > .pill { margin-left: auto; }
 .pcard .who a { color: var(--ink); font-weight: 750; font-size: 1.06rem; }
-.pcard .sub { font-size: 0.76rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pcard .sub { font-size: 0.76rem; color: var(--muted); }
 
 /* avatar: photo in a glass bubble ringed in the team's colours */
 .ava { --t1: var(--acc); --t2: var(--glow-2); flex: none; width: 50px; height: 50px; border-radius: 50%; position: relative;
@@ -419,9 +428,18 @@ td .sw { display: inline-block; width: 14px; height: 3px; border-radius: 2px; ve
 .ou .bar2 .o { display: block; height: 100%; border-radius: 999px; position: relative;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0) 55%), var(--hit); box-shadow: 0 0 14px -2px var(--hit); }
 .ou .bar2::after { content: ""; position: absolute; inset: 0 0 0 auto; width: 0; }
-.ou .row { margin-top: 5px; color: var(--ink-2); }
+.ou .row { margin-top: 5px; color: var(--ink); }
 .lean { font-weight: 750; color: var(--muted); }
-.lean.over { color: var(--hit); } .lean.under { color: var(--miss); }
+.lean.over { color: var(--hit-text); } .lean.under { color: var(--miss-text); }
+/* NBA: the lean on its own line, in an opaque pill so it reads over the glow; a neutral
+   (uncoloured) pill when there is no lean or no model view */
+.ou .leanrow { margin-top: 5px; }
+.ou .leanrow .lean { display: inline-block; font-size: 0.75rem; line-height: 1.45; padding: 1px 9px; border-radius: 999px;
+  color: var(--ink-2); border: 1px solid var(--rule-2); background: linear-gradient(var(--card), var(--card)), var(--base); }
+.ou .leanrow .lean.over { color: var(--hit-text); border-color: color-mix(in oklab, var(--hit) 55%, transparent); }
+.ou .leanrow .lean.under { color: var(--miss-text); border-color: color-mix(in oklab, var(--miss) 55%, transparent); }
+/* no model chance at this line: an empty, neutral tube (never a red one that reads as 0% over) */
+.ou.nil .bar2 { background: var(--glass-2); border-style: dashed; box-shadow: none; }
 
 /* hit-rate chips */
 .hits { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
@@ -573,39 +591,51 @@ h1.withlogo { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .wowy p { margin: 2px 0 0; }
 
 /* ---------- NBA research context: US prices, calibrated lean, context block ---------- */
+/* An opaque ground (the card colour laid over the page base) under the US prices, the context
+   block and the sheet, so their small grey text keeps its contrast over the arena glow. */
 /* US prices on the card face: a research reference, never a UK price */
-.usp { display: grid; gap: 4px; font-size: 0.74rem; color: var(--ink-2); background: var(--glass);
+.usp { display: grid; gap: 4px; font-size: 0.74rem; color: var(--ink-2); background: linear-gradient(var(--card), var(--card)), var(--base);
   border: 1px dashed var(--rule-2); border-radius: 12px; padding: 7px 10px; min-width: 0; }
 .usp-h { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0 8px; }
 .usp-h b { color: var(--ink); font-weight: 750; }
-.usp-h span, .usp-f, .usp .bk { color: var(--muted); }
+.usp-h span, .usp-f, .usp .bk { color: var(--muted-2); }
 .usp-g { display: grid; grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr); gap: 1px 10px; align-items: baseline; }
-.usp-g .hd { font-size: 0.62rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
-.usp-g .k { font-weight: 700; color: var(--muted); }
+.usp-g .hd { font-size: 0.62rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted-2); }
+.usp-g .k { font-weight: 700; color: var(--muted-2); }
 .usp-g b { font-family: var(--f-display); font-stretch: 80%; font-size: 1.02rem; font-weight: 850; color: var(--ink); font-variant-numeric: tabular-nums; }
 .usp-g .bk { overflow-wrap: anywhere; }
 .usp-g .wide { grid-column: span 2; }
-.ou .cal { margin-top: 2px; }
+.usp-n { margin-top: 1px; padding-top: 4px; border-top: 1px dashed var(--rule-2); color: var(--ink-2); font-weight: 650; }
+.ou .cal { margin-top: 3px; color: var(--ink-2); } /* on the card's glass, so not grey */
 .ctxbtn { align-self: flex-start; max-width: 100%; }
+/* ghost buttons on near-white grounds need a visible edge in light mode */
+.btn.ghost.ctxbtn, .sheet .btn.ghost { border-color: var(--btn-edge); background: var(--btn-fill); }
 /* the context block (card sheet and player page) */
-.ctx { display: grid; gap: 16px; min-width: 0; }
+.sheet { background: linear-gradient(var(--card), var(--card)), var(--base); }
+.sheet .eyebrow { color: var(--acc-text); }
+.ctx { display: grid; gap: 16px; min-width: 0; background: linear-gradient(var(--card), var(--card)), var(--base); }
+.panel .ctx { padding: 12px; border: 1px solid var(--edge); border-radius: var(--r-sm); }
+.ctx .muted { color: var(--muted-2); }
 .cx { min-width: 0; }
 .cx > * + * { margin-top: 6px; }
 .cx h4 { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font-family: var(--f-display); font-stretch: 100%;
-  font-weight: 800; font-size: 0.7rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--acc); }
+  font-weight: 800; font-size: 0.7rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--acc-text); }
 .cxkv { display: grid; grid-template-columns: minmax(72px, 32%) minmax(0, 1fr); gap: 5px 10px; margin: 0; font-size: 0.82rem; }
-.cxkv dt { color: var(--muted); }
+.cxkv dt { color: var(--muted-2); }
 .cxkv dd { margin: 0; min-width: 0; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
-.cxkv .upc { color: var(--hit); font-weight: 700; } .cxkv .dnc { color: var(--miss); font-weight: 700; }
+.cxkv .upc { color: var(--hit-text); font-weight: 700; } .cxkv .dnc { color: var(--miss-text); font-weight: 700; }
 .tinys { display: inline-block; margin-left: 4px; padding: 0 6px; border: 1px solid currentColor; border-radius: 999px; font-family: var(--f-body);
-  font-size: 0.62rem; font-weight: 800; letter-spacing: 0.02em; line-height: 1.5; text-transform: none; color: var(--warning); white-space: nowrap; vertical-align: 1px; }
-.cxnotes summary { cursor: pointer; color: var(--link); }
+  font-size: 0.62rem; font-weight: 800; letter-spacing: 0.02em; line-height: 1.5; text-transform: none; color: var(--warn-text); white-space: nowrap; vertical-align: 1px; }
+/* tap targets at least 32px tall: the notes toggle and the sheet's link to the player page */
+.cxnotes summary { cursor: pointer; color: var(--link); padding: 8px 0; }
 .cxnotes p { margin: 6px 0 0; }
+.sheetlink { margin: 0; }
+.sheetlink a { display: inline-flex; align-items: center; min-height: 36px; }
 /* fixed-width tables: they fit a 390px screen without scrolling sideways */
 .cxt, .vog { table-layout: fixed; font-size: 0.8rem; }
 .cxt th, .cxt td, .vog th, .vog td { padding: 5px 4px; white-space: normal; }
 .cxt th small, .vog td small, .vog td em, .vog td:first-child small { display: block; }
-.cxt th small { font-weight: 600; letter-spacing: 0; text-transform: none; color: var(--muted); }
+.cxt th small { font-weight: 600; letter-spacing: 0; text-transform: none; color: var(--muted-2); }
 .cxt th .tinys { margin: 2px 0 0; padding: 0 4px; font-size: 0.56rem; }
 .nw { white-space: nowrap; }
 .cxt th:first-child, .cxt td:first-child { width: 30%; }
@@ -613,10 +643,11 @@ h1.withlogo { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .vog th:first-child, .vog td:first-child { width: 25%; text-align: left; }
 .vog td b { display: block; font-weight: 750; }
 .vog td small { font-size: 0.68rem; font-weight: 700; }
-.vog td:first-child small { font-size: 0.64rem; font-weight: 600; color: var(--muted); }
-.vog td em { font-style: normal; font-size: 0.64rem; color: var(--muted); }
-.vog td.ov { background: var(--hit-wash); } .vog td.ov small { color: var(--hit); }
-.vog td.un { background: var(--miss-wash); } .vog td.un small { color: var(--miss); }
-.vog th.on { color: var(--acc); box-shadow: inset 0 -2px 0 var(--acc); }
+.vog td:first-child small { font-size: 0.64rem; font-weight: 600; color: var(--muted-2); }
+/* that night's line sits on the green or red wash: ink, not grey */
+.vog td em { font-style: normal; font-size: 0.64rem; color: var(--ink-2); }
+.vog td.ov { background: var(--hit-wash); } .vog td.ov small { color: var(--hit-text); }
+.vog td.un { background: var(--miss-wash); } .vog td.un small { color: var(--miss-text); }
+.vog th.on { color: var(--acc-text); box-shadow: inset 0 -2px 0 var(--acc); }
 .vog tr.tn td { font-weight: 700; color: var(--ink-2); background: var(--glass-2); }
 @media (max-width: 400px) { .cxt, .vog { font-size: 0.76rem; } .cxt th, .cxt td, .vog th, .vog td { padding: 4px 2px; } }

@@ -100,7 +100,10 @@ def test_latest_edition_is_by_publish_time_not_label(tmp_path, monkeypatch):
     assert [p.stem.split("-")[4] for p in live.edition_files()] == ["preview", "early", "final"]
 
 
-def test_market_line_ignores_lines_a_book_no_longer_offers():
+def test_market_line_uses_each_books_own_latest_rows():
+    """dk and fd moved 39.5 -> 38.5: their earlier line no longer counts. BetMGM has no later
+    rows (the store keeps an unchanged market's rows once), so its 39.5 still votes, until its
+    rows are more than 12 hours older than the latest observation (books.complete_board)."""
     from npl.nba import appdata
 
     def q(t, book, line, over, under):
@@ -109,12 +112,16 @@ def test_market_line_ignores_lines_a_book_no_longer_offers():
                  "availability": "research_reference"}
                 for s, d in (("over", over), ("under", under))]
     early, late = "2026-10-28T12:27:49Z", "2026-10-28T21:40:02Z"
+    moved = q(late, "dk", 38.5, 1.92, 1.83) + q(late, "fd", 38.5, 1.96, 1.82)
     rows = (q(early, "dk", 39.5, 1.9, 1.9) + q(early, "fd", 39.5, 1.9, 1.9) +
-            q(early, "mgm", 39.5, 1.9, 1.9) + q(late, "dk", 38.5, 1.92, 1.83) +
-            q(late, "fd", 38.5, 1.96, 1.82))
+            q(early, "betmgm", 39.5, 1.9, 1.9) + moved)
     m = appdata.consensus_lines(pd.DataFrame(rows))[("p", "pra")]
-    assert m["line"] == 38.5 and m["books"] == 2  # mgm stopped quoting: not counted
+    assert m["line"] == 38.5 and m["books"] == 2  # two votes for 38.5, BetMGM's for 39.5
+    assert m["mgm_line"] == 39.5 and m["mgm_over"] is None  # not priced off its own main line
     assert m["best_under"] == 1.83 and m["observed_at"] == late
+    stale = q("2026-10-28T08:40:01Z", "betmgm", 39.5, 1.9, 1.9)  # 13 hours before the latest
+    m = appdata.consensus_lines(pd.DataFrame(stale + moved))[("p", "pra")]
+    assert m["line"] == 38.5 and m["books"] == 2 and m["mgm_line"] is None
 
 
 def _absence_case(ms=0):

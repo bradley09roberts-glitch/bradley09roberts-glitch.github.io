@@ -22,6 +22,15 @@ rows exactly wherever the two definitions coincide):
   6. best prices come from regulated books' main lines at that line; BetMGM is priced only
      when its own main line is the consensus line; `arb` marks a pair of best prices that
      sum to less than 1 (an arbitrage, usually one stale price).
+
+Complete boards (complete_board, D-046): the stores keep each row once (quotes are unique on the
+provider's per bookmaker-market last_update and the price; game_lines likewise, without the time
+we observed them), so a later pull adds rows only for bookmaker-markets that changed and a book
+whose market did not change is absent from it. A board as of a reference time is therefore
+rebuilt per bookmaker: for each (game, market, bookmaker), that book's rows from its own latest
+observation at or before the reference, ignoring observations more than 12 hours older than the
+reference (a book unchanged for that long, or no longer quoting, drops out). The rules above then
+apply to the rebuilt board as to a single snapshot.
 """
 
 from __future__ import annotations
@@ -30,10 +39,35 @@ import pandas as pd
 
 OFFSHORE = frozenset({"betonlineag", "betus", "bovada", "lowvig", "mybookieag", "betanysports",
                       "fliff", "rebet"})
+STALE_AFTER = pd.Timedelta(hours=12)  # a book's rows older than this before the reference drop out
 
 
 def regulated(book: str) -> bool:
     return book not in OFFSHORE
+
+
+def complete_board(q: pd.DataFrame, keys: tuple[str, ...] = ("game_id", "market"), ref=None,
+                   max_age: pd.Timedelta = STALE_AFTER) -> pd.DataFrame:
+    """The rows of the board as of a reference time, from a deduplicated store (see above): for
+    each (keys..., bookmaker), that bookmaker's rows from its own latest `observed_at` at or
+    before the reference, unless that observation is more than `max_age` older than the
+    reference. ref: None = each `keys` group's own latest observation; a time = the same
+    reference for every row. Rows with a missing key are left out."""
+    if q.empty:
+        return q
+    k = list(keys)
+    obs = pd.to_datetime(q.observed_at, utc=True, format="ISO8601")
+    if ref is None:
+        r = obs.groupby([q[c] for c in k]).transform("max")
+    else:
+        r = pd.Timestamp(ref)
+        r = r.tz_localize("UTC") if r.tzinfo is None else r.tz_convert("UTC")
+    ok = (obs <= r) & (obs >= r - max_age)
+    x, o = q[ok], obs[ok]
+    if x.empty:
+        return x
+    last = o.groupby([x[c] for c in k] + [x.bookmaker]).transform("max")
+    return x[o == last]
 
 
 def pairs(q: pd.DataFrame, keys: tuple[str, ...] = ("player_id", "market")) -> pd.DataFrame:

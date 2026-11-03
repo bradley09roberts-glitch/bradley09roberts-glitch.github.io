@@ -8,8 +8,10 @@ take). A missing figure or line stays missing; nothing is filled in.
              type); field-goal attempts, shot volume (FGA + 0.44 x FTA) and usage, this season,
              last 5 and last season
   usage      (FGA + 0.44 FTA + TOV) x (team minutes / 5) / (minutes x team (FGA + 0.44 FTA +
-             TOV)), each term summed over his games, as a fraction. Team totals are the sums
-             of the player box lines, so team turnovers credited to no player are left out
+             TOV)), each term summed over his games, as a fraction. The team's FGA, FTA and
+             minutes are the sums of its player box lines; its TOV is the team box score's total,
+             team turnovers (credited to no player) included. A game without that total counts
+             for minutes only
   script     share of his regular-season points scored in fourth quarters, of all his points
              (overtime counted in the total and shown separately), v the league's, from
              play-by-play; PRA and minutes in games decided by 5 points or fewer (final score,
@@ -25,18 +27,25 @@ take). A missing figure or line stays missing; nothing is filled in.
              line: mean result minus line per stat, with the number of player-games
   game lines median spread and total across regulated books, best regulated moneyline per
              side, implied team points ((total -/+ spread) / 2), books, when seen, and the move
-             since the first stored observation
+             since the first stored observation; each board rebuilt per bookmaker
+             (books.complete_board)
 
 Stored lines are the npl.books consensus of the snapshot nearest before tip-off: hist_quotes
-(one snapshot 3 hours before tip) for 2024-25 and the 2025-26 sample, quotes (the last pull
-before tip for each game and market) for 2026-27. Per-stat arrays follow STATS.
+(one snapshot 3 hours before tip) for 2024-25 and the 2025-26 sample, quotes (the board at the
+last pull before tip for each game and market, rebuilt per bookmaker) for 2026-27. Per-stat
+arrays follow STATS.
+
+Displayed figures are rounded half up (halves away from zero: 2.25 -> 2.3, -2.25 -> -2.3), not
+with Python's round(), which rounds the binary value half to even (round(2.25, 1) = 2.2).
 """
 
 from __future__ import annotations
 
 import json
 import sqlite3
+from decimal import ROUND_HALF_UP, Decimal
 
+import numpy as np
 import pandas as pd
 
 from .. import books
@@ -58,7 +67,8 @@ UNSPECIFIED = {"", "nan", "none", "not specified", "unknown"}
 NOTES = {
     "volume": "Regular-season averages; last 5 = his last 5 games this season. Shot volume = "
               "FGA + 0.44 x FTA. Usage = share of his team's plays he ends with a shot, free "
-              "throws or a turnover while on court, estimated from box scores.",
+              "throws or a turnover while on court, estimated from box scores; the team's plays "
+              "include its team turnovers (credited to no player).",
     "script": "Fourth-quarter share = his fourth-quarter points / all his points, regular "
               "season, from play-by-play; overtime is counted in the total and shown "
               "separately. Close games: final margin 5 points or fewer.",
@@ -92,8 +102,21 @@ def _memo(name: str, key, fn):
     return val
 
 
+def half_up(x: float, n: int = 1) -> float:
+    """x to n decimals, halves away from zero, as written (the shortest decimal form of the
+    float, so 2.675 -> 2.68 where round() gives 2.67); never -0.0."""
+    q = Decimal(repr(float(x))).quantize(Decimal(1).scaleb(-n), rounding=ROUND_HALF_UP)
+    return float(q) + 0.0
+
+
 def _r(x, n: int = 1):
-    return None if x is None or pd.isna(x) else round(float(x), n)
+    return None if x is None or pd.isna(x) else half_up(x, n)
+
+
+def _minus(a: float | None, b: float | None) -> float | None:
+    """a - b exactly in decimal (both already rounded for display), so the result is what the
+    two shown figures give."""
+    return None if a is None or b is None else float(Decimal(repr(a)) - Decimal(repr(b))) + 0.0
 
 
 def season_of(date_et: str) -> int:
@@ -121,12 +144,13 @@ def league_games(games: pd.DataFrame) -> set:
 
 
 def played_frame(L: dict) -> pd.DataFrame:
-    """Played player-games between league teams with PRA, his team's totals in that game (t_*)
-    and the final margin (absolute, NaN when the game is not final)."""
+    """Played player-games between league teams with PRA, his team's minutes, FGA and FTA in
+    that game (t_*, summed from the player rows) and the final margin (absolute, NaN when the
+    game is not final). The team's turnovers come from the team box score (with_team_tov)."""
     pg, tg, games = L["player_games"], L["team_games"], L["games"]
     p = pg[(pg.participation == "played") & pg.game_id.isin(league_games(games))].copy()
     p["pra"] = p.pts + p.reb + p.ast
-    tcols = ["minutes", "fga", "fta", "tov"]
+    tcols = ["minutes", "fga", "fta"]
     t = tg[["game_id", "team", *tcols]].rename(columns={c: f"t_{c}" for c in tcols})
     p = p.merge(t, on=["game_id", "team"], how="left")
     fin = games[games.is_final.astype(bool)]
@@ -173,9 +197,22 @@ def _vol_block(t: pd.DataFrame, pid: str) -> dict | None:
             "shot_volume": _r(r.shot_volume), "usage": _r(r.usage, 4)}
 
 
-def volume(p: pd.DataFrame, pids: set, cur: int) -> dict:
-    """{pid: {season, last5, last_season}}; `p` is played_frame cut to games before tonight."""
+def with_team_tov(p: pd.DataFrame, tov: pd.DataFrame | None) -> pd.DataFrame:
+    """`p` with t_tov = his team's total turnovers in that game from the team box score (players'
+    and team turnovers; team_turnovers); NaN where the team box has no figure."""
+    p = p.drop(columns="t_tov", errors="ignore")
+    if tov is None or tov.empty:
+        return p.assign(t_tov=np.nan)
+    return p.merge(tov[["game_id", "team", "t_tov"]], on=["game_id", "team"], how="left")
+
+
+def volume(p: pd.DataFrame, pids: set, cur: int, tov: pd.DataFrame | None = None) -> dict:
+    """{pid: {season, last5, last_season}}; `p` is played_frame cut to games before tonight.
+    `tov`: the team box's total turnovers per (game_id, team), for usage; without it `p` must
+    already carry t_tov."""
     p = p[p.player_id.isin(pids)]
+    if tov is not None or "t_tov" not in p:
+        p = with_team_tov(p, tov)
     reg = p[p.season_type == "REG"]
     this = p[p.season == cur].sort_values("tip_utc")
     t_cur = volume_table(reg[reg.season == cur])
@@ -275,19 +312,36 @@ def script(p: pd.DataFrame, pp: pd.DataFrame, pids: set, cur: int) -> tuple[dict
 
 # --------------------------------------------------------------------------- (c) defence
 def _team_box(con: sqlite3.Connection, season: int) -> pd.DataFrame | None:
+    """One season's team box scores (the newest stored file), one row per team and game."""
     r = con.execute("SELECT path FROM raw_files WHERE source=? AND dataset='nba_team_box' AND "
                     "part=? AND is_synthetic=0 ORDER BY retrieved_at DESC, id DESC LIMIT 1",
                     (source.SOURCE, str(season))).fetchone()
     if r is None:
         return None
-    b = pd.read_parquet(DATA_HOME / r[0], columns=[
-        "game_id", "season_type", "game_date", "team_abbreviation", "opponent_team_abbreviation",
-        "assists", "defensive_rebounds", "offensive_rebounds"])
-    return pd.DataFrame({"game_id": b.game_id.astype("int64").astype(str),
-                         "season_type": b.season_type, "date": pd.to_datetime(b.game_date),
-                         "team": b.team_abbreviation, "opp": b.opponent_team_abbreviation,
-                         "ast": b.assists, "dreb": b.defensive_rebounds,
-                         "oreb": b.offensive_rebounds})
+
+    def read():
+        b = pd.read_parquet(DATA_HOME / r[0], columns=[
+            "game_id", "season_type", "game_date", "team_abbreviation",
+            "opponent_team_abbreviation", "assists", "defensive_rebounds", "offensive_rebounds",
+            "total_turnovers"])
+        return pd.DataFrame({"game_id": b.game_id.astype("int64").astype(str),
+                             "season_type": b.season_type, "date": pd.to_datetime(b.game_date),
+                             "team": b.team_abbreviation, "opp": b.opponent_team_abbreviation,
+                             "ast": b.assists, "dreb": b.defensive_rebounds,
+                             "oreb": b.offensive_rebounds,
+                             "tov_total": pd.to_numeric(b.total_turnovers, errors="coerce")})
+
+    return _memo(f"team_box:{season}", r[0], read)
+
+
+def team_turnovers(con: sqlite3.Connection, seasons) -> pd.DataFrame:
+    """(game_id, team, t_tov): each team's total turnovers per game from the team box scores of
+    these seasons (every season type), team turnovers credited to no player included."""
+    parts = [b[["game_id", "team", "tov_total"]].rename(columns={"tov_total": "t_tov"})
+             for b in (_team_box(con, s) for s in seasons) if b is not None]
+    if not parts:
+        return pd.DataFrame(columns=["game_id", "team", "t_tov"])
+    return pd.concat(parts, ignore_index=True).drop_duplicates(["game_id", "team"])
 
 
 def dreb_pct(dreb: float, opp_oreb: float) -> float | None:
@@ -413,16 +467,17 @@ def consensus_by_game(q: pd.DataFrame) -> pd.DataFrame:
 
 
 def live_lines(q: pd.DataFrame, tips: pd.Series) -> pd.DataFrame:
-    """2026-27 lines from stored quotes: per game and market, the last collection before tip
-    (`tips`: game_id -> tip-off). Games not in the box scores yet are skipped."""
-    q = q[q.player_id.notna() & q.game_id.notna() & q.market.isin(M.MARKETS)]
+    """2026-27 lines from stored quotes: per game and market, the board at the last collection
+    before tip (`tips`: game_id -> tip-off), rebuilt per bookmaker (books.complete_board).
+    Games not in the box scores yet are skipped."""
+    q = q[q.game_id.notna() & q.market.isin(M.MARKETS)]
     if q.empty:
         return pd.DataFrame(columns=LINE_COLS)
     q = q.assign(game_id=q.game_id.astype(str),
                  obs=pd.to_datetime(q.observed_at, utc=True, format="ISO8601"))
     q = q.assign(tip=q.game_id.map(tips))
-    q = q[q.tip.notna() & (q.obs < q.tip)]
-    q = q[q.obs == q.groupby(["game_id", "market"]).obs.transform("max")]
+    q = books.complete_board(q[q.tip.notna() & (q.obs < q.tip)], keys=("game_id", "market"))
+    q = q[q.player_id.notna()]
     return consensus_by_game(q.assign(snapshot=q.observed_at))
 
 
@@ -503,12 +558,12 @@ def grid_row(r: dict, tonight: list) -> dict:
     stat minus tonight's consensus line, line that night's stored consensus line. Arrays follow
     STATS with None where a line is missing; diff or line is None when no stat has one."""
     vals = [None if pd.isna(r[s]) else float(r[s]) for s in STATS]
-    diff = [None if t is None or v is None else round(v - t, 1)
+    diff = [None if t is None or v is None else half_up(v - t, 1)
             for v, t in zip(vals, tonight, strict=True)]
     line = [_r(r.get(f"line_{s}")) for s in STATS]
     return {"d": pd.Timestamp(r["date"]).strftime("%Y-%m-%d"), "s": int(r["season"]),
             "t": STYPE.get(r["season_type"], "R"), "tm": r["team"], "h": int(bool(r["is_home"])),
-            "min": None if pd.isna(r["minutes"]) else int(round(r["minutes"])),
+            "min": None if pd.isna(r["minutes"]) else int(half_up(r["minutes"], 0)),
             "v": [None if v is None else int(v) for v in vals],
             "diff": diff if any(x is not None for x in diff) else None,
             "line": line if any(x is not None for x in line) else None}
@@ -552,7 +607,9 @@ def lined_results(lines: pd.DataFrame, p: pd.DataFrame) -> pd.DataFrame:
 
 def pos_v_opp_table(d: pd.DataFrame) -> dict:
     """{"OPP|POS": {season: {player_games, markets: {stat: {n, result, line, diff, over,
-    under}}}}} from lined results: players of each position group against each opponent."""
+    under}}}}} from lined results: players of each position group against each opponent.
+    `result` and `line` are means rounded to one decimal; `diff` is the shown result minus the
+    shown line, so it always equals what the two figures give."""
     out: dict = {}
     if d.empty:
         return out
@@ -560,13 +617,13 @@ def pos_v_opp_table(d: pd.DataFrame) -> dict:
     pg_n = d.groupby(["opp", "pos", "season"]).pgk.nunique()
     a = d.groupby(["opp", "pos", "season", "market"]).agg(
         n=("line", "size"), result=("actual", "mean"), line=("line", "mean"),
-        diff=("diff", "mean"), over=("diff", lambda s: int((s > 0).sum())),
-        under=("diff", lambda s: int((s < 0).sum())))
+        over=("diff", lambda s: int((s > 0).sum())), under=("diff", lambda s: int((s < 0).sum())))
     for (opp, pos, season, mk), r in a.iterrows():
         e = out.setdefault(f"{opp}|{pos}", {}).setdefault(
             str(int(season)), {"player_games": int(pg_n[(opp, pos, season)]), "markets": {}})
-        e["markets"][mk] = {"n": int(r.n), "result": _r(r.result), "line": _r(r.line),
-                            "diff": _r(r["diff"]), "over": int(r.over), "under": int(r.under)}
+        res, line = _r(r.result), _r(r.line)
+        e["markets"][mk] = {"n": int(r.n), "result": res, "line": line, "diff": _minus(res, line),
+                            "over": int(r.over), "under": int(r.under)}
     return out
 
 
@@ -608,14 +665,18 @@ def board(x: pd.DataFrame) -> dict:
 
 
 def game_line_summary(x: pd.DataFrame) -> dict:
-    """Latest pre-game consensus for one game, the first stored one and the move between."""
+    """Latest pre-game consensus for one game, the first stored one and the move between. Each
+    board is rebuilt per bookmaker as of its observation (books.complete_board: a book whose
+    lines did not change since an earlier pull counts with those rows, unless they are more than
+    12 hours older)."""
     obs = sorted(x.observed_at.unique())
-    last, first = board(x[x.observed_at == obs[-1]]), board(x[x.observed_at == obs[0]])
+    last = board(books.complete_board(x, keys=("game_id", "market"), ref=obs[-1]))
+    first = board(books.complete_board(x, keys=("game_id", "market"), ref=obs[0]))
     hp, ap = implied_points(last["total"], last["home_spread"])
 
     def move(k):
         a, b = first[k], last[k]
-        return None if len(obs) < 2 or a is None or b is None else round(b - a, 2)
+        return None if len(obs) < 2 else _minus(b, a)  # of the shown figures
 
     return {"seen": obs[-1], "first_seen": obs[0], "observations": len(obs),
             "home_spread": last["home_spread"], "total": last["total"],
@@ -694,7 +755,7 @@ def build(e: dict, mkt: dict, L: dict, con: sqlite3.Connection, *, lake_key=None
     pids = set(sp.player_id)
     p, pp, ok = _base(con, L, k, cur, cutoff)
     sc, league = script(p, pp, pids, cur)
-    vol = volume(p, pids, cur)
+    vol = volume(p, pids, cur, team_turnovers(con, (cur, cur - 1)))
     lines = prop_lines(con, L["games"], key=k.get("lines"))
     lines = lines[lines.game_id.isin(ok)]
     tonight = {(pid, s): (mkt.get((pid, s)) or {}).get("line") for pid in pids for s in STATS}
@@ -745,7 +806,8 @@ def for_player(pid: str, L: dict, con: sqlite3.Connection, *, lake_key=None,
     cur = season_of(date_et)
     p, pp, _ = _base(con, L, _keys(con, lake_key), cur, pd.Timestamp(date_et))
     sc, league = script(p, pp, {pid}, cur)
-    return {"volume": volume(p, {pid}, cur)[pid], "script": sc[pid], "league": league,
+    vol = volume(p, {pid}, cur, team_turnovers(con, (cur, cur - 1)))
+    return {"volume": vol[pid], "script": sc[pid], "league": league,
             "seasons": _seasons(cur), "stats": list(STATS),
             "notes": {n: NOTES[n] for n in ("volume", "script")}}
 

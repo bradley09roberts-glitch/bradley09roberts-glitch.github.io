@@ -71,12 +71,12 @@ labelled CC BY 4.0 (credit: SportsDataverse). Content originates from ESPN game 
 | Dataset | Tag / file | Coverage | Use |
 |---|---|---|---|
 | Player box scores | `espn_nba_player_boxscores/player_box_{s}.parquet` | 1994-2027 | outcomes, minutes, starters, did-not-play with reason |
-| Team box scores | `espn_nba_team_boxscores/team_box_{s}.parquet` | 1994-2027 | card extras only (`npl.nba.extras`, 3 Nov 2026): the opponent's assists allowed and defensive rebound % this regular season; team totals for usage and the model are summed from player rows |
+| Team box scores | `espn_nba_team_boxscores/team_box_{s}.parquet` | 1994-2027 | card extras only (`npl.nba.extras`, 3 Nov 2026): the opponent's assists allowed and defensive rebound % this regular season, and each team's total turnovers (team turnovers credited to no player included) for usage; the other team totals for usage (FGA, FTA, minutes) and the model's are summed from player rows |
 | Schedules | `espn_nba_schedules/nba_schedule_{s}.parquet` | 1994-2027, includes future games with UTC tip-off times | live slates |
 | Injuries | `espn_nba_injuries/injuries_{s}.parquet` | 2027 only, one snapshot a day (about 18:40 UTC) since 8 Sep 2026 | live P(plays) only; no history, so not backtested. Since D-046 the only injury source for editions: each edition records the snapshot's date and published time (the file's Last-Modified) and says that later injury news is not included. Cards show the structured fields of the snapshot the edition used (body part or reason, area, detail, side, expected return date) |
 | Depth charts | `espn_nba_depthcharts/depthcharts_{s}.parquet` | 2027 only | not used |
 | Play-by-play | `espn_nba_pbp/play_by_play_{s}.parquet` | 2002-2027 (2023-2027 ingested) | shot locations (raw coordinates, basket at (25, 0)), free throws, fouls by type and fouler; points by quarter (scorer = athlete 1) for the cards' fourth-quarter share |
-| Team box scores | `espn_nba_team_boxscores/team_box_{s}.parquet` | 1994-2027 (2016-2027 ingested) | see above: assists allowed and DREB% on cards; other totals are summed from player rows |
+| Team box scores | `espn_nba_team_boxscores/team_box_{s}.parquet` | 1994-2027 (2016-2027 ingested) | see above: assists allowed, DREB% and total turnovers on cards; other totals are summed from player rows |
 
 Play-by-play checks (28 Oct 2026): field-goal attempts per team-game equal the box score in
 80% of team-games and are within 2 in 99.5% (5,430 team-games, 2023-2027); shooter position
@@ -97,14 +97,18 @@ Not used:
   fetched ESPN's public game feeds for provisional box scores (D-025) and publish-time injury
   reports (D-033), against D-019 (D-045). Since D-046 (3 Nov 2026) nothing is fetched from any
   ESPN host: box scores come only from SportsDataverse, editions use its daily injury snapshot,
-  and the HTTP helper refuses ESPN and NBA.com addresses outright (`util.BLOCKED_HOSTS`). The
-  feeds already stored stay in the raw store (source `espn`), unused.
+  and the HTTP helper refuses ESPN (every country site, espncdn.com, espnfc.com,
+  espncricinfo.com, espndeportes.com), NBA.com, nba.net, wnba.com and NFL.com addresses
+  outright (`util.BLOCKED_HOSTS`), including a redirect to one: redirects are followed by hand
+  and each hop is checked before it is requested. The feeds already stored stay in the raw store
+  (source `espn`), unused.
 * **Photos and logos**: NBA player photos and every team and league logo (NFL and NBA) came from
   ESPN's image server (`a.espncdn.com`, the addresses listed in the nflverse teams table and the
-  SportsDataverse box scores). Since D-046 they are not downloaded: the thumbnails cached before
-  3 Nov 2026 under `data/headshots/` and `data/logos/` are still shown, and a player or team
-  without one shows initials or the team's abbreviation. NFL player photos come from the
-  nflverse headshot address (`static.www.nfl.com`).
+  SportsDataverse box scores), and NFL player photos from NFL.com's image server
+  (`static.www.nfl.com`, the nflverse headshot address; NFL.com terms sect. 1.3 forbid
+  systematic retrieval). Since D-046 none is downloaded: the thumbnails cached before 3 Nov 2026
+  under `data/headshots/` and `data/logos/` are still shown, and a player or team without one
+  shows initials or the team's abbreviation.
 * **stats.nba.com-derived releases** (`nba_stats_*`): same NBA.com gambling clause.
 * **Basketball-Reference**: Sports Reference terms (as for the NFL).
 * Injury-snapshot comment text (`short_comment`, `long_comment`) is third-party news copy:
@@ -123,10 +127,18 @@ combos) mainly at US books and DFS sites; no UK bookmaker is listed for NBA prop
   game ids like prop quotes). Validated on a real response on 3 Nov 2026: 10 games, 7 US
   books, 246 rows, all linked. The call also returns games already under way; their lines are
   in-play (`game_lines_frame(pregame=True)` leaves them out).
-* Closing snapshots (`npl close --sport nba --within MINUTES [--dry-run]`): for games with props
-  on the paper record that tip off within the window, one event-odds call per game for the
-  tracked markets only, stored like any quote, so closing-line value uses a snapshot taken
-  minutes before tip-off.
+* Closing snapshots (`npl close --sport nba --within MINUTES [--rule RULE] [--dry-run]`): for
+  games with props on the paper record (optionally only some rules') that tip off within the
+  window, one event-odds call per game for the tracked markets only, stored like any quote, so
+  closing-line value uses a snapshot taken minutes before tip-off. The start time comes from the
+  provider's free events call: a game it shows as started is skipped and listed (its prices
+  would be in-play), and a start more than 10 minutes from the recorded tip-off is warned about.
+* Complete boards: quotes are stored once per bookmaker, event, player, market, line, side,
+  provider update time and price, and game lines likewise, so a pull stores nothing again for a
+  book whose market has not changed. Every reader (card consensus, the stored lines on cards,
+  game lines, closing-line value) rebuilds the board per bookmaker: that book's rows from its own
+  latest observation at or before the reference time, ignored when more than 12 hours older
+  (`npl.books.complete_board`, D-046).
 * Card extras (`npl.nba.extras`, 3 Nov 2026) read stored lines only, never fill one in: the
   consensus line (`npl.books`) of each past game's snapshot nearest before tip-off, from
   `hist_quotes` for 2024-25 and the 2025-26 sample and from `quotes` for 2026-27, and the

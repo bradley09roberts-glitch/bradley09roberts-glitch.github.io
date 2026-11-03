@@ -94,12 +94,16 @@ def market_lines(game_ids: set[str]) -> dict:
 def consensus_lines(q: pd.DataFrame) -> dict:
     """Consensus line, fair price and best regulated prices per (player, market) (books.py).
 
-    Only the most recent collection for each game and market counts: a line a bookmaker
-    offered earlier but no longer shows (it moved 39.5 -> 38.5) must not stay in the mix."""
-    q = q[q.player_id.notna() & q.market.isin(M.MARKETS)]
+    The board is the one at each game and market's latest observation, rebuilt per bookmaker
+    (books.complete_board): each book counts with its own latest rows, so a line it offered
+    earlier but has since moved (39.5 -> 38.5) does not stay in the mix, while a book whose
+    market did not change since an earlier pull (the store keeps such rows once) still counts,
+    unless its rows are more than 12 hours older than that observation."""
+    q = q[q.game_id.notna() & q.market.isin(M.MARKETS)]
+    q = books.complete_board(q, keys=("game_id", "market"))
+    q = q[q.player_id.notna()]
     if q.empty:
         return {}
-    q = q[q.observed_at == q.groupby(["game_id", "market"]).observed_at.transform("max")]
     meta = q.assign(uk=q.availability == "verified_uk").groupby(["player_id", "market"]).agg(
         seen=("observed_at", "max"), uk=("uk", "all"))
     out = books.records(books.consensus_frame(books.pairs(q)))
@@ -236,8 +240,21 @@ def _props() -> dict:
                           if int(e["date_et"][5:7]) >= 8 else int(season))})
     return {"edition_id": e["edition_id"], "date_et": e["date_et"], "cards": cards,
             "model_version": e["code"]["model_version"],
+            "calibration": calibration(e["code"]["model_version"]),
             "markets": {k: M.MARKET_LABELS[k] for k in M.MARKETS},
             "published_london": _london(e["published_at"]), "extras": ex}
+
+
+def calibration(version: str | None) -> dict | None:
+    """The props payload's `calibration` field: the V4 slope per market for the edition's model
+    version (npl.nba.calib, from calibration.json) and the slope below which a market has no
+    model view at the bookmakers' line; None when that version has no fitted calibration."""
+    from . import calib
+
+    slopes = calib.v4_slopes(version) if version else None
+    if slopes is None:
+        return None
+    return {"version": version, "slope": slopes, "flat_below": calib.FLAT_BELOW}
 
 
 def _extras(e: dict, mkt: dict) -> tuple[dict, dict]:

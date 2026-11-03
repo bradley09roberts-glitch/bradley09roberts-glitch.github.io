@@ -108,7 +108,7 @@ class FakeOddsAPI:
         self.header_paths = header_paths  # None = credit headers on every response
         self.calls = []
 
-    def get(self, url, params=None, timeout=None, headers=None):
+    def get(self, url, params=None, timeout=None, headers=None, allow_redirects=True):
         path, params = urlsplit(url).path, dict(params or {})
         assert params.pop("apiKey") == "test-key"
         self.calls.append((path, params))
@@ -379,6 +379,71 @@ def test_close_skips_below_the_floor_and_unlisted_events(con):
     out = oa.snapshot_close(con, "nba", 30, session=gone)
     assert out["skipped"][0]["reason"] == "not in the provider's event list"
     assert gone.paths() == ["/v4/sports/basketball_nba/events"]
+
+
+def _ev1(commence):
+    return [{"id": "ev1", "home_team": "Detroit Pistons", "away_team": "Philadelphia 76ers",
+             "commence_time": commence}]
+
+
+def test_close_skips_a_game_the_provider_shows_as_started(con):
+    """The tip-off recorded with the tracked props says 20 minutes from now; the free events
+    call says the game started 5 minutes ago: no call (its prices would be in-play)."""
+    _track(con)
+    fake = FakeOddsAPI(remaining=1000, events=_ev1(t(-5)), event_odds={"ev1": CLOSE_ODDS})
+    out = oa.snapshot_close(con, "nba", 30, session=fake)
+    assert fake.paths() == ["/v4/sports/basketball_nba/events"] and fake.remaining == 1000
+    assert out["started"] == [{"game_id": "401909922", "label": "PHI @ DET", "start_utc": t(-5)}]
+    assert "already started" in out["skipped"][0]["reason"] and out["results"] == []
+    p = out["planned"][0]
+    assert (p["tip_utc"], p["recorded_tip_utc"], p["minutes_to_tip"]) == (t(-5), t(20), -5.0)
+    assert len(out["warnings"]) == 1 and "25 min earlier" in out["warnings"][0]
+    assert out["estimated_credits"] == 0
+    text = "\n".join(cli.close_lines(out))
+    assert "started at" in text and "WARNING PHI @ DET" in text and "Planned: 0 calls" in text
+    assert con.execute("SELECT COUNT(*) FROM quotes").fetchone()[0] == 0
+    dry = oa.snapshot_close(con, "nba", 30, dry_run=True,
+                            session=FakeOddsAPI(events=_ev1(t(0))))  # at "now" counts as started
+    assert [g["game_id"] for g in dry["started"]] == ["401909922"]
+
+
+@pytest.mark.parametrize("start,warned", [(t(35), True), (t(28), False), (t(10), False)])
+def test_close_warns_when_the_provider_start_is_over_10_minutes_off(con, start, warned):
+    _track(con)
+    fake = FakeOddsAPI(remaining=1000, events=_ev1(start), event_odds={"ev1": CLOSE_ODDS})
+    out = oa.snapshot_close(con, "nba", 30, session=fake)
+    assert fake.paths()[-1] == "/v4/sports/basketball_nba/events/ev1/odds"  # still taken
+    assert out["results"][0]["stored"] == 8 and out["started"] == []
+    assert bool(out["warnings"]) is warned
+    if warned:
+        assert "15 min later" in out["warnings"][0] and "(00:20 UTC)" in out["warnings"][0]
+    p = out["planned"][0]
+    assert p["tip_utc"] == start and p["recorded_tip_utc"] == t(20)
+
+
+def test_close_can_be_limited_to_some_rules(con, monkeypatch):
+    _track(con)
+    a = oa.plan_close(con, "nba", 30, rules=["rule-a"])
+    assert [(p["game_id"], p["markets"], p["tracked_props"]) for p in a] == [
+        ("401909922", ["player_points"], 1)]
+    b = oa.plan_close(con, "nba", 30, rules=["rule-b", "rule-a"])
+    assert b[0]["markets"] == ["player_points", "player_rebounds"] and b[0]["tracked_props"] == 3
+    assert oa.plan_close(con, "nba", 30, rules=["no-such-rule"]) == []
+    fake = FakeOddsAPI(remaining=1000, events=FEATURED, event_odds={"ev1": CLOSE_ODDS})
+    out = oa.snapshot_close(con, "nba", 30, session=fake, rules=["rule-a"])
+    assert fake.calls[-1][1]["markets"] == "player_points" and out["rules"] == ["rule-a"]
+    none = oa.snapshot_close(con, "nba", 30, session=FakeOddsAPI(), rules=["no-such-rule"])
+    assert "Nothing planned: no game with props tracked under no-such-rule" in "\n".join(
+        cli.close_lines(none))
+    args = cli.build_parser().parse_args(["close", "--within", "30", "--rule", "rule-a",
+                                          "--rule", "rule-b"])
+    assert args.rules == ["rule-a", "rule-b"]
+    assert cli.build_parser().parse_args(["close", "--within", "30"]).rules is None
+    seen = {}
+    monkeypatch.setattr(db, "connect", lambda *a, **k: con)
+    monkeypatch.setattr(oa, "snapshot_close", lambda con, **kw: seen.update(kw) or none)
+    cli.cmd_close(args)
+    assert seen["rules"] == ["rule-a", "rule-b"]
 
 
 def test_close_with_nothing_planned_makes_no_call(con):

@@ -19,6 +19,10 @@ import numpy as np
 from ..config import REPORTS_DIR
 
 PATH = REPORTS_DIR / "nba" / "model" / "calibration.json"
+# a market whose V4 slope is below this has no model view at the bookmakers' line: the calibrated
+# chance barely moves with the model's (points and PRA under nba-0.3), so a gap to the market there
+# mostly shows the price, not the model (D-043, D-046)
+FLAT_BELOW = 0.2
 
 
 @lru_cache(maxsize=4)
@@ -32,6 +36,18 @@ def _coef(version: str | None = None) -> dict:
     if v not in by:
         raise KeyError(f"no calibration fitted for N1 {v}; refit calibration.json first")
     return by[v]
+
+
+def v4_slopes(version: str | None = None) -> dict[str, float] | None:
+    """The V4 recalibration slope b per market for an N1 parameter version (default: the live
+    one), in the model's market order; None when no calibration was fitted for that version."""
+    from .model import MARKETS
+
+    try:
+        coef = _coef(version)["calibration_v4"]["coef"]
+    except KeyError:
+        return None
+    return {m: float(coef[m]["b"]) for m in MARKETS if m in coef}
 
 
 def _logit(p: float, clip: float) -> float:

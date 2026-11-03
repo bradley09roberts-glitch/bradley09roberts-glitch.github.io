@@ -75,10 +75,17 @@ class FetchError(RuntimeError):
 
 RETRYABLE = {429, 500, 502, 503, 504}
 
-# Hosts the project never reaches by script: ESPN (Disney Terms of Use sect. 2.B.x forbid
-# automated access; D-019, D-046) and NBA.com, including its statistics and injury-report PDFs
-# (NBA.com terms sect. 9(iv): no use in connection with gambling; D-019, D-045).
-BLOCKED_HOSTS = ("espn.com", "espncdn.com", "espn.go.com", "espn.net", "nba.com")
+# Hosts the project never reaches by script, each with its subdomains (D-046): ESPN's sites, APIs
+# and image servers in every country (Disney Terms of Use sect. 2.B.x forbid automated access;
+# D-019); NBA.com and the league's other domains, including its statistics and injury-report PDFs
+# (NBA.com terms sect. 9(iv): no use in connection with gambling; D-019, D-045); NFL.com,
+# including its image server static.www.nfl.com (NFL.com terms sect. 1.3: no systematic
+# retrieval; D-009).
+BLOCKED_HOSTS = ("espn.com", "espn.co.uk", "espn.com.au", "espn.in", "espn.com.br",
+                 "espndeportes.com", "espnfc.com", "espncricinfo.com", "espncdn.com",
+                 "espn.go.com", "espn.net", "nba.com", "nba.net", "wnba.com", "nfl.com")
+REDIRECTS = {301, 302, 303, 307, 308}
+MAX_REDIRECTS = 10
 
 
 def blocked_host(url: str) -> bool:
@@ -87,6 +94,50 @@ def blocked_host(url: str) -> bool:
 
     host = (urlsplit(url).hostname or "").lower().rstrip(".")
     return any(host == d or host.endswith("." + d) for d in BLOCKED_HOSTS)
+
+
+def _refuse(url: str, how: str = "") -> FetchError:
+    return FetchError(f"refused: {how}{url} is on a blocked host (D-019, D-045, D-046)")
+
+
+def _landed(r) -> str | None:
+    """The first blocked address a response passed through: any redirect hop in its history, or
+    the address it finally came from (a session that follows redirects itself)."""
+    for u in [getattr(h, "url", None) for h in (getattr(r, "history", None) or [])] + [
+            getattr(r, "url", None)]:
+        if isinstance(u, str) and blocked_host(u):
+            return u
+    return None
+
+
+def _get_checked(s, url: str, params: dict | None, timeout: float):
+    """One GET with redirects followed by hand: every hop is checked against BLOCKED_HOSTS before
+    it is requested, and each response's own address and history after it arrives."""
+    from urllib.parse import urljoin
+
+    hops: list = []
+    r = s.get(url, params=params, timeout=timeout, headers={"User-Agent": USER_AGENT},
+              allow_redirects=False)
+    while True:
+        if bad := _landed(r):
+            raise _refuse(bad, "the response came from ")
+        loc = r.headers.get("Location") if r.status_code in REDIRECTS else None
+        if not loc:
+            break
+        if len(hops) >= MAX_REDIRECTS:
+            raise FetchError(f"more than {MAX_REDIRECTS} redirects fetching {url}")
+        nxt = urljoin(getattr(r, "url", None) or url, loc)
+        if blocked_host(nxt):
+            raise _refuse(nxt, f"{url} redirects to ")
+        hops.append(r)
+        r = s.get(nxt, timeout=timeout, headers={"User-Agent": USER_AGENT},
+                  allow_redirects=False)
+    if hops:
+        try:
+            r.history = hops
+        except AttributeError:  # a response object that does not take attributes
+            pass
+    return r
 
 
 def http_get(
@@ -104,16 +155,18 @@ def http_get(
 
     Retries connection errors and 429/5xx; honours Retry-After (capped). Non-retryable
     4xx responses raise immediately. Secrets in the URL never reach logs or errors.
-    Addresses on BLOCKED_HOSTS are refused before any request is made.
+    Addresses on BLOCKED_HOSTS are refused before any request is made, and so is a redirect to
+    one (redirects are followed by hand, each hop checked first); a response whose address or
+    redirect history is on a blocked host is refused too.
     """
     if blocked_host(url):
-        raise FetchError(f"refused: {url} is on a blocked host (D-019, D-045, D-046)")
+        raise _refuse(url)
     s = session or requests
     last: Exception | None = None
     for attempt in range(1, max_tries + 1):
         retry_after = None
         try:
-            r = s.get(url, params=params, timeout=timeout, headers={"User-Agent": USER_AGENT})
+            r = _get_checked(s, url, params, timeout)
         except requests.RequestException as e:  # connection reset, DNS, timeout
             last = FetchError(f"{type(e).__name__} fetching {url}")
         else:

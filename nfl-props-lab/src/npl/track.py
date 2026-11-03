@@ -11,10 +11,13 @@ ways:
   profit  flat 1 unit at the recorded price; ROI with a 95% interval that resamples whole
           slates, because props on the same night are correlated
   CLV     closing-line value: the recorded price x the margin-free consensus probability of
-          the same side at the same line in the last stored snapshot before tip-off, minus 1.
-          Missing when no later snapshot was stored, or fewer than two books still quote that
-          line then. The snapshot's lead time is shown: a "close" taken hours before tip-off
-          is only a later price, not the closing one.
+          the same side at the same line on the closing board, minus 1. The closing board is
+          the one at the last stored observation of the game and market before tip-off, rebuilt
+          per bookmaker (books.complete_board: a book whose prices did not change since an
+          earlier pull counts with those rows, unless they are more than 12 hours older).
+          Missing when no later snapshot was stored, or fewer than two books quote that line
+          on the closing board. The snapshot's lead time is shown: a "close" taken hours before
+          tip-off is only a later price, not the closing one.
 
 Why CLV first: at about evens, a true 2% edge needs roughly 14,000 independent bets (more with
 same-night correlation) before profit alone shows it with 80% power, while closing-line value
@@ -29,6 +32,7 @@ import sqlite3
 import numpy as np
 import pandas as pd
 
+from . import books
 from .config import NEW_YORK
 
 COLS = ["rule", "sport", "edition_id", "flagged_at", "game_id", "player_id", "player", "team",
@@ -105,20 +109,22 @@ def clv(t: pd.DataFrame, q: pd.DataFrame) -> pd.DataFrame:
         out[c] = np.nan if c != "close_at" else None
     if out.empty or q.empty:
         return out
-    q = q[q.player_id.notna()].assign(obs=pd.to_datetime(q.observed_at, utc=True, format="ISO8601"))
+    q = q[q.game_id.notna()].assign(game_id=q.game_id.astype(str),
+                                    obs=pd.to_datetime(q.observed_at, utc=True, format="ISO8601"))
     for i, r in out.iterrows():
         tip = pd.Timestamp(r.tip_utc)
         tip = tip.tz_localize("UTC") if tip.tzinfo is None else tip
         seen = pd.Timestamp(r.line_seen) if r.line_seen else None
         seen = seen.tz_localize("UTC") if seen is not None and seen.tzinfo is None else seen
-        x = q[(q.game_id.astype(str) == str(r.game_id)) & (q.player_id.astype(str) == str(r.player_id))
-              & (q.market == r.market) & (q.obs < tip)]
-        if x.empty:
-            continue
-        last = x.obs.max()
+        gm = q[(q.game_id == str(r.game_id)) & (q.market == r.market) & (q.obs < tip)]
+        if not (gm.player_id.astype(str) == str(r.player_id)).any():
+            continue  # never quoted before tip
+        last = gm.obs.max()  # the last stored observation of this game and market before tip
         if seen is not None and last <= seen:
             continue  # nothing stored after the flag
-        fair, nb = _fair_at(x[x.obs == last], float(r.line))
+        board = books.complete_board(gm, keys=("game_id", "market"), ref=last)
+        x = board[board.player_id.notna() & (board.player_id.astype(str) == str(r.player_id))]
+        fair, nb = _fair_at(x, float(r.line))
         out.at[i, "close_at"] = last.isoformat()
         out.at[i, "close_lead_min"] = round((tip - last).total_seconds() / 60, 1)
         out.at[i, "close_books"] = nb

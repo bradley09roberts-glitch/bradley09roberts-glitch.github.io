@@ -95,12 +95,19 @@ def cmd_serve(a) -> int:
 
 
 def cmd_snapshot(a) -> int:
-    """Self-contained HTML copy of the app (saved outputs embedded; opens offline)."""
+    """Self-contained HTML copy of the app (saved outputs embedded; opens offline). It embeds
+    US prices, so the default path is under data/ (git-ignored)."""
     from pathlib import Path
 
     from . import snapshot
 
-    print(json.dumps(snapshot.build(Path(a.out), standalone=not a.fragment), indent=1))
+    try:
+        res = snapshot.build(Path(a.out), standalone=not a.fragment, min_p_play=a.min_p_play,
+                             nba_min_p_play=a.nba_min_p_play, allow_oversize=a.allow_oversize)
+    except snapshot.SnapshotTooLarge as e:
+        print(f"REFUSED: {e}")
+        return 4
+    print(json.dumps(res, indent=1))
     return 0
 
 
@@ -221,16 +228,24 @@ def _uk_time(ts: str) -> str:
 
 def close_lines(d: dict) -> list[str]:
     """What `npl close` prints: the planned calls with estimated credits, then what happened."""
-    out = [f"Closing snapshot, {d['sport'].upper()}: tracked games tipping off within "
+    rules = d.get("rules")
+    which = f"props tracked under {', '.join(rules)}" if rules else "tracked props"
+    out = [f"Closing snapshot, {d['sport'].upper()}: games with {which} tipping off within "
            f"{d['within_minutes']:g} min."]
     if not d["planned"]:
-        return out + ["Nothing planned: no game with tracked props tips off in that window."]
+        return out + [f"Nothing planned: no game with {which} tips off in that window."]
     for p in d["planned"]:
         mk = ", ".join(p["markets"]) or "no market the provider prices"
+        if p.get("started"):
+            out.append(f"  {p.get('label') or p['game_id']}: started at "
+                       f"{_uk_time(p['tip_utc'])} by the provider's start time; skipped")
+            continue
         out.append(f"  {p.get('label') or p['game_id']}, tip {_uk_time(p['tip_utc'])} "
                    f"(in {p['minutes_to_tip']:g} min): {mk}; up to {p['estimated_credits']} "
                    "credits")
-    calls = sum(1 for p in d["planned"] if p["markets"])
+    out += [f"WARNING {w}." for w in d.get("warnings", [])]
+    calls = sum(1 for p in d["planned"] if p["markets"] and not p.get("started")
+                and p.get("event_id", True))
     left = d.get("credits_left")
     out.append(f"Planned: {calls} call{'' if calls == 1 else 's'}, up to "
                f"{d['estimated_credits']} credits. Credits left: "
@@ -257,11 +272,13 @@ def cmd_close(a) -> int:
     except (odds_api.MissingKey, ValueError) as e:
         print(f"BLOCKED: {e}")
         return 3
+    rules = getattr(a, "rules", None)
     with rawstore.job(con, "quotes.close", {"sport": a.sport, "within": a.within,
-                                            "regions": a.regions, "dry_run": a.dry_run}) as st:
+                                            "regions": a.regions, "dry_run": a.dry_run,
+                                            "rules": rules}) as st:
         st["detail"] = odds_api.snapshot_close(con, sport=a.sport, within_minutes=a.within,
                                                regions=a.regions, dry_run=a.dry_run,
-                                               budget=budget)
+                                               budget=budget, rules=rules)
     print("\n".join(close_lines(st["detail"])))
     return 0
 
@@ -368,9 +385,21 @@ def build_parser() -> argparse.ArgumentParser:
     s.set_defaults(func=cmd_nba)
 
     s = sub.add_parser("snapshot", help="write a self-contained offline HTML copy of the app")
-    s.add_argument("--out", default="nfl-props-lab.html")
+    s.add_argument("--out", default=str(config.DATA_HOME / "snapshots" / "nfl-props-lab.html"),
+                   help="default data/snapshots/nfl-props-lab.html (git-ignored: the page "
+                        "embeds US prices)")
     s.add_argument("--fragment", action="store_true",
                    help="omit the HTML document skeleton (for hosts that add their own)")
+    # defaults chosen so a full slate stays under the host's limit: on the 2 Nov 2026 NBA slate
+    # (15 games) with the Week 8 NFL edition the page measured 14.9 MB (18.2 MB at 0.5 / 0.5)
+    s.add_argument("--min-p-play", type=float, default=0.9,
+                   help="NFL: play probability a player needs for his player page and photo "
+                        "(every NFL card is kept; default 0.9)")
+    s.add_argument("--nba-min-p-play", type=float, default=0.6,
+                   help="NBA: play probability a player needs for his cards, page and photo "
+                        "(default 0.6, the props board's default filter)")
+    s.add_argument("--allow-oversize", action="store_true",
+                   help="write the page even above the host's 16,000,000-byte limit")
     s.set_defaults(func=cmd_snapshot)
 
     s = sub.add_parser("update", help="daily: ingest current season, audit, rebuild lake")
@@ -399,6 +428,8 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--regions", default="us")
     s.add_argument("--dry-run", action="store_true",
                    help="show the planned calls and credits; make no paid call")
+    s.add_argument("--rule", action="append", dest="rules", metavar="RULE",
+                   help="only props tracked under this rule (repeat for several; default: all)")
     s.set_defaults(func=cmd_close)
 
     s = sub.add_parser("picks", help="paper-tracking lists against the stored market lines")

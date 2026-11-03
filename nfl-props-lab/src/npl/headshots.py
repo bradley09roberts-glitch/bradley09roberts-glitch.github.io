@@ -1,80 +1,33 @@
 """Player photos and team and league logos for the app: small WebP thumbnails, cached locally.
 
-NFL photos come from the headshot address in the nflverse player table (static.www.nfl.com).
-Nothing is downloaded from ESPN (D-046: its terms forbid automated access): NBA photos and
-every team and league logo used to come from ESPN's image server, so only the thumbnails
-cached before 3 Nov 2026 are shown, and players or teams without one show initials or the
-team's abbreviation. Thumbnails are cut to a square around the head and shoulders, stored
-under data/headshots/<sport>/ and data/logos/<sport>/ (never in git) and embedded in the
-snapshot as data URIs, because the hosted page may not load images from other sites.
+Photos are cache-only (D-046): nothing is downloaded. NBA photos and every team and league logo
+came from ESPN's image server (its terms forbid automated access) and NFL photos from NFL.com's
+image server, static.www.nfl.com, the address the nflverse player table lists (NFL.com terms
+sect. 1.3 forbid systematic retrieval). The thumbnails cached before 3 Nov 2026 are still shown;
+a player or team without one shows initials or the team's abbreviation. Thumbnails are 112 px
+squares around the head and shoulders, stored under data/headshots/<sport>/ and
+data/logos/<sport>/ (never in git) and embedded in the snapshot as data URIs, because the hosted
+page may not load images from other sites.
 """
 
 from __future__ import annotations
 
 import base64
 import io
-import json
 
 from .config import DATA_HOME
 from .util import FetchError, blocked_host, http_get, log
 
 DIR = DATA_HOME / "headshots"
-SIZE = 112
-
-
-def _nfl_urls(pids: set[str]) -> dict[str, str]:
-    from . import appdata
-
-    pl = appdata.lake()["players"]
-    pl = pl[pl.gsis_id.isin(pids) & pl.headshot.notna()]
-    # a smaller rendition from the same image service (the full image is about 400 KB)
-    return {r.gsis_id: r.headshot.replace("f_auto,q_auto", "f_png,q_auto,w_240")
-            for r in pl.itertuples()}
-
-
-def _thumb(raw: bytes) -> bytes:
-    from PIL import Image
-
-    im = Image.open(io.BytesIO(raw)).convert("RGBA")
-    w, h = im.size
-    side = min(w, h)
-    left = (w - side) // 2
-    im = im.crop((left, 0, left + side, side))  # heads sit at the top centre of both sources
-    im = im.resize((SIZE, SIZE), Image.LANCZOS)
-    out = io.BytesIO()
-    im.save(out, "WEBP", quality=72, method=6)
-    return out.getvalue()
 
 
 def fetch(sport: str, pids: set[str]) -> dict:
-    """Download and cache thumbnails that are not cached yet; misses are remembered so a
-    player without a photo is not requested on every build. NBA photos have no permitted
-    source (they came from ESPN; D-046), so for the NBA only cached thumbnails are counted."""
+    """Cached thumbnails for these players. Cache-only for both sports (D-046): nothing is
+    requested, so a player without a cached thumbnail is counted as missing and shows his
+    initials."""
     d = DIR / sport
-    d.mkdir(parents=True, exist_ok=True)
-    miss_f = d / "_missing.json"
-    missing = set(json.loads(miss_f.read_text())) if miss_f.exists() else set()
-    urls = _nfl_urls(pids) if sport == "nfl" else {}
-    urls = {p: u for p, u in urls.items() if not blocked_host(u)}  # never an ESPN address
-    out = {"cached": 0, "new": 0, "missing": 0}
-    for pid in sorted(pids):
-        f = d / f"{pid}.webp"
-        if f.exists():
-            out["cached"] += 1
-            continue
-        if pid in missing or pid not in urls:
-            out["missing"] += 1
-            continue
-        try:
-            r = http_get(urls[pid], timeout=30, max_tries=2)
-            f.write_bytes(_thumb(r.content))
-            out["new"] += 1
-        except (FetchError, OSError, ValueError) as e:
-            log.info("no headshot for %s %s: %s", sport, pid, e)
-            missing.add(pid)
-            out["missing"] += 1
-    miss_f.write_text(json.dumps(sorted(missing)))
-    return out
+    cached = {p for p in pids if (d / f"{p}.webp").exists()}
+    return {"cached": len(cached), "new": 0, "missing": len(set(pids) - cached)}
 
 
 def data_uris(sport: str, pids: set[str]) -> dict[str, str]:
