@@ -92,8 +92,10 @@ Not used:
   "the NBA Statistics may not be used in connection with any gambling activity (including
   legal gambling activity)".
 * **ESPN site or APIs directly**: Disney Terms of Use sect. 2.B.x forbid access "using a
-  robot, spider, script, or other automated means". This project only downloads the
-  SportsDataverse releases; it never accesses ESPN.
+  robot, spider, script, or other automated means". The original plan (D-019) was to use only
+  the SportsDataverse releases. In practice, since 29-30 Oct the app has fetched ESPN's public
+  game feeds for provisional box scores (D-025) and publish-time injury reports (D-033), which
+  conflicts with that clause; D-045 records the conflict and leaves the decision to the user.
 * **stats.nba.com-derived releases** (`nba_stats_*`): same NBA.com gambling clause.
 * **Basketball-Reference**: Sports Reference terms (as for the NFL).
 * Injury-snapshot comment text (`short_comment`, `long_comment`) is third-party news copy:

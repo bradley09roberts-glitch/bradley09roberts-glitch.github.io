@@ -463,3 +463,21 @@ market definitions and the tracked rule loose. Changes:
 - Smaller fixes: voids and pushes are no longer counted as turnover (money.py); the calibration
   logit clip matches its fit; opponent factors use the live parameter set; the odds puller
   defaults to the us region (UK requests return no props and cost credits).
+
+## D-045 (3 Nov 2026) Data-source conflicts found by the audit
+Two conflicts with D-019's source rules came to light while comparing the app with another
+props app:
+- **NBA official injury reports.** The stage-2 audit (D-044) and a news check on 3 Nov
+  downloaded the NBA's injury-report PDFs (about 780 files) to test absences known before the
+  odds snapshot. D-019 excludes that source (NBA.com terms sect. 9(iv): no use of NBA
+  statistics in connection with gambling). The instruction came from the assistant running
+  the audit and broke the project's own rule. All copies and derived tables were deleted on
+  3 Nov; the app never used them; the absence model they fed (L25) was not adopted. Not to be
+  used again.
+- **ESPN game feeds.** D-019 says the project never accesses ESPN (Disney Terms of Use sect.
+  2.B.x forbid access "using a robot, spider, script, or other automated means"), yet D-025
+  (provisional box scores) and D-033 (publish-time injury reports) fetch ESPN's public game
+  feeds, about 220 so far. The docs and the app's Data and method page said otherwise and are
+  corrected. Keeping or dropping these fetches is the user's decision; dropping them means
+  editions use the SportsDataverse daily injury snapshot (about 18:40 UTC) and box scores
+  arrive the next morning.
