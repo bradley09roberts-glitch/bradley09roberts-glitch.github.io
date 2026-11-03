@@ -1,11 +1,12 @@
 """Live NBA slates and immutable editions.
 
 An edition is built from games that tipped off before the publish time, the day's
-SportsDataverse schedule and the injury reports in ESPN's game feeds at publish time (falling
-back to SportsDataverse's daily snapshot for any game whose feed cannot be read; D-033). Files go to
-records/editions/nba/<ET date>/ with a SHA-256 sidecar, are created exclusively (never
-overwritten) and are registered in the append-only `editions` table. For each game the last
-edition published before tip-off is the one that counts (D-008 applied to the NBA).
+SportsDataverse schedule and SportsDataverse's daily injury snapshot (about 18:40 UTC; the
+edition records which snapshot and when it was published, and says that later injury news is
+not included). ESPN's game feeds are no longer read at publish time (D-046; they were, D-033).
+Files go to records/editions/nba/<ET date>/ with a SHA-256 sidecar, are created exclusively
+(never overwritten) and are registered in the append-only `editions` table. For each game the
+last edition published before tip-off is the one that counts (D-008 applied to the NBA).
 """
 
 from __future__ import annotations
@@ -13,7 +14,8 @@ from __future__ import annotations
 import json
 import sqlite3
 import subprocess
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
+from email.utils import parsedate_to_datetime
 
 import numpy as np
 import pandas as pd
@@ -23,7 +25,7 @@ from ..config import DATA_HOME, EDITIONS_DIR, NEW_YORK, PROJECT_ROOT, REPORTS_DI
 from ..dist import Dist
 from ..util import iso, sha256_bytes, sha256_json, utcnow
 from . import backtest as B
-from . import canon, espn, source
+from . import canon, source
 from . import model as M
 
 NBA_EDITIONS = EDITIONS_DIR / "nba"
@@ -63,11 +65,13 @@ def p_play_base(x: pd.DataFrame) -> np.ndarray:
 
 # --------------------------------------------------------------------------- inputs
 def _latest(con: sqlite3.Connection, dataset: str) -> tuple[pd.DataFrame, dict]:
-    r = con.execute("SELECT id, path, sha256, retrieved_at FROM raw_files WHERE source=? AND "
-                    "dataset=? AND part=? AND is_synthetic=0 ORDER BY retrieved_at DESC, id "
-                    "DESC LIMIT 1", (source.SOURCE, dataset, str(source.CURRENT_SEASON))).fetchone()
-    return pd.read_parquet(DATA_HOME / r["path"]), {"dataset": dataset, "sha256": r["sha256"],
-                                                    "retrieved_at": r["retrieved_at"]}
+    r = con.execute("SELECT id, path, sha256, retrieved_at, upstream_last_modified FROM raw_files"
+                    " WHERE source=? AND dataset=? AND part=? AND is_synthetic=0 ORDER BY "
+                    "retrieved_at DESC, id DESC LIMIT 1",
+                    (source.SOURCE, dataset, str(source.CURRENT_SEASON))).fetchone()
+    return pd.read_parquet(DATA_HOME / r["path"]), {
+        "dataset": dataset, "sha256": r["sha256"], "retrieved_at": r["retrieved_at"],
+        "upstream_last_modified": r["upstream_last_modified"]}
 
 
 def et_date(ts: pd.Timestamp) -> str:
@@ -103,9 +107,38 @@ def injuries_now(inj: pd.DataFrame, sched: pd.DataFrame, as_of: datetime) -> pd.
                          "news_at": i.injury_date.astype(str)}).drop_duplicates("player_id")
 
 
+def injury_snapshot(inj: pd.DataFrame, injn: pd.DataFrame, meta: dict) -> dict:
+    """Which daily SportsDataverse injury snapshot an edition used (its date) and when it was
+    published: the file's Last-Modified time, which belongs to the newest day in the file only,
+    so for an older day the time is unknown and left as None rather than guessed."""
+    day = str(injn.as_of_date.max()) if len(injn) else None
+    newest = str(inj.as_of_date.astype(str).max()) if len(inj) else None
+    at = None
+    if day is not None and day == newest and meta.get("upstream_last_modified"):
+        try:
+            at = iso(parsedate_to_datetime(meta["upstream_last_modified"]))
+        except (TypeError, ValueError):
+            at = None
+    return {**meta, "source": "sportsdataverse", "as_of_date": day, "snapshot_at": at}
+
+
+def injury_note(snap: dict) -> str:
+    """The edition note on injury reports (D-046: the daily snapshot is the only source)."""
+    if not snap.get("as_of_date"):
+        return ("Injury reports: no SportsDataverse injury snapshot was available, so nobody "
+                "is marked out or doubtful.")
+    d = date.fromisoformat(snap["as_of_date"][:10])
+    when = ""
+    if snap.get("snapshot_at"):
+        t = pd.Timestamp(snap["snapshot_at"])
+        when = f" (published {t:%H:%M} UTC on {t.day} {t:%b})"
+    return (f"Injury reports: SportsDataverse's daily snapshot of {d.day} {d:%b %Y}{when}. "
+            "Injury news after that snapshot is not included.")
+
+
 # --------------------------------------------------------------------------- build
-def build(date_et: str, con: sqlite3.Connection | None = None, now: datetime | None = None,
-          live_injuries: bool = True) -> dict:
+def build(date_et: str, con: sqlite3.Connection | None = None, now: datetime | None = None
+          ) -> dict:
     con = con or db.connect()
     now = now or utcnow()
     p = M.load_params(LIVE_PARAMS)
@@ -128,12 +161,9 @@ def build(date_et: str, con: sqlite3.Connection | None = None, now: datetime | N
     x = x[x.n_played.notna()].reset_index(drop=True)  # no NBA minutes yet: no forecast
     injn = injuries_now(inj, sched, now)
     x = x.merge(injn.drop(columns="team"), on="player_id", how="left")
-    live_meta = None
-    if live_injuries:
-        live, covered, live_meta = espn.fetch_injuries(con, list(sg.game_id))
-        x = espn.apply_injuries(x, live, covered, live_meta["retrieved_at"])
-    else:
-        x["injury_source"] = np.where(x.fantasy.notna(), "sportsdataverse", None)
+    # the daily snapshot is the only injury source (D-046: no ESPN game feeds)
+    x["injury_source"] = np.where(x.fantasy.notna(), "sportsdataverse", None)
+    snap = injury_snapshot(inj, injn, inj_meta)
     base = p_play_base(x)
     st = x.fantasy.fillna("")
     x["p_play"] = np.where(st.isin(["OUT", "OFS"]), INJ_OUT_P,
@@ -156,11 +186,12 @@ def build(date_et: str, con: sqlite3.Connection | None = None, now: datetime | N
     pms = {"N1": M.n1_pmfs(x, p, lg), "A": M.baseline_pmfs(x, p, "A"),
            "C": M.baseline_pmfs(x, p, "C")}
     return {"x": x, "games": sg, "pms": pms, "params": p,
-            "inputs": {"schedule": sched_meta, "injuries": inj_meta, "injuries_live": live_meta,
+            "inputs": {"schedule": sched_meta, "injuries": snap,
                        "box_last_tip": iso(pg.tip_utc.max()),
                        "lines": {"players_with_a_line": int(x.has_line.sum()),
                                  "quotes_seen_at": lines_seen},
-                       "injury_snapshot": injn.as_of_date.max() if len(injn) else None}}
+                       "injury_snapshot": snap["as_of_date"],
+                       "injury_snapshot_at": snap["snapshot_at"]}}
 
 
 def posted_lines(con: sqlite3.Connection, x: pd.DataFrame) -> tuple[pd.Series, str | None]:
@@ -236,11 +267,10 @@ def publish(date_et: str, kind: str = "early", con: sqlite3.Connection | None = 
                                           M.frozen_path().with_name(f"n1_params_{LIVE_PARAMS}.json")
                                           ).read_bytes()),
            "notes": ["Distributions are conditional on the player taking part; P(plays) is "
-                     "separate. Injury reports: ESPN's game feeds at publish time (see "
-                     "inputs.injuries_live). Injury adjustments (Out 1%, game-time decision "
-                     "x0.65) are assumptions, not validated. Minutes do not react to teammates ruled "
-                     "out (lineup-aware minutes are off in live editions, D-037). No bookmaker "
-                     "prices were used."],
+                     "separate. Injury adjustments (Out 1%, game-time decision x0.65) are "
+                     "assumptions, not validated. Minutes do not react to teammates ruled out "
+                     "(lineup-aware minutes are off in live editions, D-037). No bookmaker "
+                     "prices were used.", injury_note(b["inputs"]["injuries"])],
            "games": [{"game_id": g.game_id, "home": g.home, "away": g.away,
                       "tip_utc": iso(g.tip_utc), "time_valid": bool(g.time_valid),
                       "published_before_tip": now < g.tip_utc} for g in sg.itertuples()],

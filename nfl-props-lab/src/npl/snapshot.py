@@ -21,19 +21,36 @@ def _slim_card(c: dict, keep_dist: bool) -> dict:
     return c
 
 
+def _nba_extras(ex: dict, cards: list) -> dict:
+    """The props `extras` block cut to what the kept cards look up: their players, their
+    opponents' and teams' defence, their (opponent, position) pairs and their games."""
+    if not ex or "players" not in ex:
+        return ex
+    pids = {c["player_id"] for c in cards}
+    teams = {c["opponent"] for c in cards} | {c["team"] for c in cards}
+    pvo = {f"{c['opponent']}|{c['position']}" for c in cards}
+    gids = {c["game_id"] for c in cards}
+    return {**ex, "players": {k: v for k, v in ex["players"].items() if k in pids},
+            "defence": {k: v for k, v in ex.get("defence", {}).items() if k in teams},
+            "pos_v_opp": {k: v for k, v in ex.get("pos_v_opp", {}).items() if k in pvo},
+            "game_lines": {k: v for k, v in ex.get("game_lines", {}).items() if k in gids}}
+
+
 def _add_nba(data: dict, min_p_play: float = 0.3) -> None:
     """NBA pages for the latest NBA edition (if any), trimmed: 20-game logs on cards and the
-    last 15 games on player pages."""
+    last 15 games on player pages. Card extras stay in the props payload only: player pages
+    here carry none (each one is a slate player whose extras are in props `extras`)."""
     from .nba import appdata as nba
 
     s = nba.slate()
     if "error" in s:
         return
     data["/api/nba/slate"] = nba.clean(s)
-    props = nba.props()
-    for c in props["cards"]:
-        c["log"] = {k: (v[-20:] if isinstance(v, list) else v) for k, v in c["log"].items()}
-    props["cards"] = [c for c in props["cards"] if c["p_play"] >= min_p_play]
+    props = dict(nba.props())  # a copy: the cached payload itself is never trimmed
+    props["cards"] = [{**c, "log": {k: (v[-20:] if isinstance(v, list) else v)
+                                    for k, v in c["log"].items()}}
+                      for c in props["cards"] if c["p_play"] >= min_p_play]
+    props["extras"] = _nba_extras(props.get("extras") or {}, props["cards"])
     data["/api/nba/props"] = nba.clean(props)
     data["/api/nba/backtests"] = nba.clean(nba.backtests())
     for g in s["games"]:
@@ -60,6 +77,7 @@ def _add_nba(data: dict, min_p_play: float = 0.3) -> None:
             continue
         p["game_log"] = p["game_log"][-15:]
         p.pop("forecasts", None)
+        p.pop("extras", None)  # the same figures are in /api/nba/props extras (size limit)
         data[f"/api/nba/player/{pid}"] = nba.clean(p)
 
 

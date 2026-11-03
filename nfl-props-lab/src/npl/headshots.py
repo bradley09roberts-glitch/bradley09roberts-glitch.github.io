@@ -1,10 +1,12 @@
 """Player photos and team and league logos for the app: small WebP thumbnails, cached locally.
 
-NBA photos come from ESPN's headshot path for the player's ESPN id (the same ids as the box
-scores); NFL photos from the headshot address in the nflverse player table. Thumbnails are cut
-to a square around the head and shoulders, stored under data/headshots/<sport>/ (never in git)
-and embedded in the snapshot as data URIs, because the hosted page may not load images from
-other sites. Players without a photo show their initials instead.
+NFL photos come from the headshot address in the nflverse player table (static.www.nfl.com).
+Nothing is downloaded from ESPN (D-046: its terms forbid automated access): NBA photos and
+every team and league logo used to come from ESPN's image server, so only the thumbnails
+cached before 3 Nov 2026 are shown, and players or teams without one show initials or the
+team's abbreviation. Thumbnails are cut to a square around the head and shoulders, stored
+under data/headshots/<sport>/ and data/logos/<sport>/ (never in git) and embedded in the
+snapshot as data URIs, because the hosted page may not load images from other sites.
 """
 
 from __future__ import annotations
@@ -14,11 +16,10 @@ import io
 import json
 
 from .config import DATA_HOME
-from .util import FetchError, http_get, log
+from .util import FetchError, blocked_host, http_get, log
 
 DIR = DATA_HOME / "headshots"
 SIZE = 112
-NBA_URL = "https://a.espncdn.com/combiner/i?img=/i/headshots/nba/players/full/{pid}.png&w=350&h=254"
 
 
 def _nfl_urls(pids: set[str]) -> dict[str, str]:
@@ -47,12 +48,14 @@ def _thumb(raw: bytes) -> bytes:
 
 def fetch(sport: str, pids: set[str]) -> dict:
     """Download and cache thumbnails that are not cached yet; misses are remembered so a
-    player without a photo is not requested on every build."""
+    player without a photo is not requested on every build. NBA photos have no permitted
+    source (they came from ESPN; D-046), so for the NBA only cached thumbnails are counted."""
     d = DIR / sport
     d.mkdir(parents=True, exist_ok=True)
     miss_f = d / "_missing.json"
     missing = set(json.loads(miss_f.read_text())) if miss_f.exists() else set()
-    urls = (_nfl_urls(pids) if sport == "nfl" else {p: NBA_URL.format(pid=p) for p in pids})
+    urls = _nfl_urls(pids) if sport == "nfl" else {}
+    urls = {p: u for p, u in urls.items() if not blocked_host(u)}  # never an ESPN address
     out = {"cached": 0, "new": 0, "missing": 0}
     for pid in sorted(pids):
         f = d / f"{pid}.webp"
@@ -81,7 +84,6 @@ def data_uris(sport: str, pids: set[str]) -> dict[str, str]:
 
 
 # ------------------------------------------------------------------ team and league logos
-LEAGUE_LOGO = "https://a.espncdn.com/i/teamlogos/leagues/500/{sport}.png"
 LOGO_SIZE = 96
 
 
@@ -96,8 +98,9 @@ def _logo_thumb(raw: bytes) -> bytes:
 
 
 def logo_urls(sport: str) -> dict[str, str]:
-    """Team logo addresses from the same sources as the data (nflverse teams table for the
-    NFL, the SportsDataverse box scores for the NBA), plus the league logo under '_league'."""
+    """Team logo addresses listed in the data (nflverse teams table for the NFL, the
+    SportsDataverse box scores for the NBA). Both list ESPN image addresses, which are never
+    fetched (fetch_logos skips them); the league logo has no permitted source at all."""
     if sport == "nfl":
         from . import appdata
 
@@ -113,20 +116,23 @@ def logo_urls(sport: str) -> dict[str, str]:
         b, _ = live._latest(db.connect(), "nba_player_box")
         b = b.drop_duplicates("team_abbreviation")
         urls = {r.team_abbreviation: r.team_logo for r in b.itertuples() if isinstance(r.team_logo, str)}
-    urls["_league"] = LEAGUE_LOGO.format(sport=sport)
     return urls
 
 
 def fetch_logos(sport: str) -> dict:
-    """Each logo in two versions with transparent backgrounds: the standard one for light pages
-    and ESPN's version drawn for dark backgrounds ("500-dark"), saved as <abbr>.dark.webp."""
+    """Each logo in two versions with transparent backgrounds, for light and dark pages
+    (<abbr>.webp and <abbr>.dark.webp). Cached copies are kept and used; an address on an ESPN
+    host is never requested (D-046), so a team without a cached logo shows its abbreviation."""
     d = DIR.parent / "logos" / sport
     d.mkdir(parents=True, exist_ok=True)
-    out = {"cached": 0, "new": 0, "failed": 0}
+    out = {"cached": 0, "new": 0, "failed": 0, "not_fetched": 0}
     for abbr, url in logo_urls(sport).items():
         for f, u in ((d / f"{abbr}.webp", url), (d / f"{abbr}.dark.webp", url.replace("/500/", "/500-dark/"))):
             if f.exists():
                 out["cached"] += 1
+                continue
+            if blocked_host(u):
+                out["not_fetched"] += 1
                 continue
             try:
                 f.write_bytes(_logo_thumb(http_get(u, timeout=30, max_tries=2).content))

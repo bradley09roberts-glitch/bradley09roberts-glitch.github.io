@@ -471,8 +471,6 @@ span.mu { border: 1px solid var(--edge); border-radius: 999px; padding: 1px 8px;
 .game-tile .at { color: var(--muted); font-size: 1rem; font-weight: 600; }
 .prop .pline { margin-top: 2px; }
 .prop .linebtn { font-size: 1.6rem; }
-.mkline { display: flex; justify-content: space-between; gap: 8px; font-size: 0.74rem; color: var(--ink-2);
-  background: var(--glass); border: 1px dashed var(--rule-2); border-radius: 12px; padding: 5px 9px; }
 
 /* ---------- NBA defensive matchups ---------- */
 .dmf label { min-width: 0; }
@@ -573,3 +571,52 @@ h1.withlogo { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .wowy .wrow { display: grid; gap: 1px; font-size: 13.5px; font-variant-numeric: tabular-nums; }
 .wowy .wk { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; opacity: .75; }
 .wowy p { margin: 2px 0 0; }
+
+/* ---------- NBA research context: US prices, calibrated lean, context block ---------- */
+/* US prices on the card face: a research reference, never a UK price */
+.usp { display: grid; gap: 4px; font-size: 0.74rem; color: var(--ink-2); background: var(--glass);
+  border: 1px dashed var(--rule-2); border-radius: 12px; padding: 7px 10px; min-width: 0; }
+.usp-h { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0 8px; }
+.usp-h b { color: var(--ink); font-weight: 750; }
+.usp-h span, .usp-f, .usp .bk { color: var(--muted); }
+.usp-g { display: grid; grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr); gap: 1px 10px; align-items: baseline; }
+.usp-g .hd { font-size: 0.62rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.usp-g .k { font-weight: 700; color: var(--muted); }
+.usp-g b { font-family: var(--f-display); font-stretch: 80%; font-size: 1.02rem; font-weight: 850; color: var(--ink); font-variant-numeric: tabular-nums; }
+.usp-g .bk { overflow-wrap: anywhere; }
+.usp-g .wide { grid-column: span 2; }
+.ou .cal { margin-top: 2px; }
+.ctxbtn { align-self: flex-start; max-width: 100%; }
+/* the context block (card sheet and player page) */
+.ctx { display: grid; gap: 16px; min-width: 0; }
+.cx { min-width: 0; }
+.cx > * + * { margin-top: 6px; }
+.cx h4 { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font-family: var(--f-display); font-stretch: 100%;
+  font-weight: 800; font-size: 0.7rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--acc); }
+.cxkv { display: grid; grid-template-columns: minmax(72px, 32%) minmax(0, 1fr); gap: 5px 10px; margin: 0; font-size: 0.82rem; }
+.cxkv dt { color: var(--muted); }
+.cxkv dd { margin: 0; min-width: 0; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.cxkv .upc { color: var(--hit); font-weight: 700; } .cxkv .dnc { color: var(--miss); font-weight: 700; }
+.tinys { display: inline-block; margin-left: 4px; padding: 0 6px; border: 1px solid currentColor; border-radius: 999px; font-family: var(--f-body);
+  font-size: 0.62rem; font-weight: 800; letter-spacing: 0.02em; line-height: 1.5; text-transform: none; color: var(--warning); white-space: nowrap; vertical-align: 1px; }
+.cxnotes summary { cursor: pointer; color: var(--link); }
+.cxnotes p { margin: 6px 0 0; }
+/* fixed-width tables: they fit a 390px screen without scrolling sideways */
+.cxt, .vog { table-layout: fixed; font-size: 0.8rem; }
+.cxt th, .cxt td, .vog th, .vog td { padding: 5px 4px; white-space: normal; }
+.cxt th small, .vog td small, .vog td em, .vog td:first-child small { display: block; }
+.cxt th small { font-weight: 600; letter-spacing: 0; text-transform: none; color: var(--muted); }
+.cxt th .tinys { margin: 2px 0 0; padding: 0 4px; font-size: 0.56rem; }
+.nw { white-space: nowrap; }
+.cxt th:first-child, .cxt td:first-child { width: 30%; }
+.vog th, .vog td { text-align: center; }
+.vog th:first-child, .vog td:first-child { width: 25%; text-align: left; }
+.vog td b { display: block; font-weight: 750; }
+.vog td small { font-size: 0.68rem; font-weight: 700; }
+.vog td:first-child small { font-size: 0.64rem; font-weight: 600; color: var(--muted); }
+.vog td em { font-style: normal; font-size: 0.64rem; color: var(--muted); }
+.vog td.ov { background: var(--hit-wash); } .vog td.ov small { color: var(--hit); }
+.vog td.un { background: var(--miss-wash); } .vog td.un small { color: var(--miss); }
+.vog th.on { color: var(--acc); box-shadow: inset 0 -2px 0 var(--acc); }
+.vog tr.tn td { font-weight: 700; color: var(--ink-2); background: var(--glass-2); }
+@media (max-width: 400px) { .cxt, .vog { font-size: 0.76rem; } .cxt th, .cxt td, .vog th, .vog td { padding: 4px 2px; } }

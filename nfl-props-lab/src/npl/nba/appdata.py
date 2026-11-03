@@ -12,7 +12,9 @@ import pandas as pd
 from .. import books
 from ..config import LONDON
 from ..dist import Dist
+from ..util import log
 from . import canon, live
+from . import extras as X
 from . import model as M
 
 STAT_COLS = {"pts": "pts", "reb": "reb", "ast": "ast", "fg3m": "fg3m"}
@@ -128,18 +130,36 @@ def _props_key():
     p = live.latest_edition_path()
     try:
         con = db.connect()
-        q = con.execute("SELECT (SELECT MAX(id) FROM quotes), (SELECT MAX(id) FROM quote_links)"
-                        ).fetchone()
+        q = con.execute("SELECT (SELECT MAX(id) FROM quotes), (SELECT MAX(id) FROM quote_links), "
+                        "(SELECT MAX(id) FROM game_lines), (SELECT MAX(id) FROM raw_files WHERE "
+                        "source = 'sportsdataverse')").fetchone()
         q = tuple(q)
+        try:  # historical lines (bought once, D-040); the table exists only where they were
+            q += tuple(con.execute("SELECT MAX(id) FROM hist_quotes").fetchone())
+        except Exception:  # noqa: BLE001
+            pass
     except Exception:  # noqa: BLE001 - no database: lines are simply absent
         q = None
-    lk = (canon.NBA_LAKE / "player_games.parquet").stat().st_mtime
+    lk = _lake_key()
     return (str(p), p.stat().st_mtime if p else None, lk, q)
 
 
+def _lake_key() -> float:
+    return (canon.NBA_LAKE / "player_games.parquet").stat().st_mtime
+
+
+def _con():
+    from .. import db
+
+    try:
+        return db.connect()
+    except Exception:  # noqa: BLE001 - no database: extras that need it are left out
+        return None
+
+
 def props() -> dict:
-    """Prop cards for the latest edition, cached until the edition, lake or stored quotes
-    change."""
+    """Prop cards for the latest edition, cached until the edition, lake, stored quotes, game
+    lines or SportsDataverse files change."""
     key = _props_key()
     if _PROPS.get("key") != key:
         _PROPS.clear()
@@ -159,6 +179,7 @@ def _props() -> dict:
     opp = opponent_factors(e["published_at"])
     mkt = market_lines(set(games))
     season = e["date_et"][:4]
+    ex, inj = _extras(e, mkt)
     out_by_team: dict[str, list] = {}
     for f in fc:
         if f["market"] == "pts" and f.get("injury") and f["injury"]["fantasy"] in ("OUT", "OFS"):
@@ -166,7 +187,9 @@ def _props() -> dict:
             out_by_team.setdefault(f["team"], []).append(
                 {"name": f["name"], "player_id": f["player_id"], "minutes": f["minutes_expected"],
                  "played_last": bool(lg is not None and len(lg) and
-                                     lg.tip_utc.iloc[-1] >= _team_last_tip(f["team"], e))})
+                                     lg.tip_utc.iloc[-1] >= _team_last_tip(f["team"], e)),
+                 # everyone listed here is Out; the snapshot's structured fields, if it lists him
+                 "report": inj.get(f["player_id"])})
     simple_s = _simple(fc, games)
     cards = []
     for f in fc:
@@ -186,8 +209,10 @@ def _props() -> dict:
         stat = "pts" if f["market"] == "pra" else f["market"]
         cards.append({
             **{k: f[k] for k in ("game_id", "player_id", "name", "team", "opponent", "position",
-                                 "market", "p_play", "injury", "minutes_expected", "mean",
-                                 "median", "q10", "q90", "dist")},
+                                 "market", "p_play", "minutes_expected", "mean", "median", "q10",
+                                 "q90", "dist")},
+            # the edition's injury entry plus the snapshot's structured fields under "report"
+            "injury": X.with_report(f["injury"], inj.get(f["player_id"])),
             "minutes_lineup_shift": f.get("minutes_lineup_shift"),
             "line_known": f.get("line_known"),
             "simple": simple_s.get((f["player_id"], f["market"])),
@@ -212,7 +237,27 @@ def _props() -> dict:
     return {"edition_id": e["edition_id"], "date_et": e["date_et"], "cards": cards,
             "model_version": e["code"]["model_version"],
             "markets": {k: M.MARKET_LABELS[k] for k in M.MARKETS},
-            "published_london": _london(e["published_at"])}
+            "published_london": _london(e["published_at"]), "extras": ex}
+
+
+def _extras(e: dict, mkt: dict) -> tuple[dict, dict]:
+    """(the props payload's `extras` block, {player_id: injury report}) for an edition: research
+    context from the box scores, play-by-play, injury snapshot, stored lines and game lines
+    (npl.nba.extras). Display extras: a failure leaves them out and never blocks the cards."""
+    con = _con()
+    if con is None:
+        return {}, {}
+    try:
+        inj = X.edition_injuries(con, e)
+    except Exception as err:  # noqa: BLE001
+        log.warning("NBA injury reports unavailable: %r", err)
+        inj = {}
+    try:
+        ex = X.build(e, mkt, lake(), con, lake_key=_lake_key())
+    except Exception as err:  # noqa: BLE001
+        log.warning("NBA card extras unavailable: %r", err)
+        ex = {"error": f"extras unavailable: {type(err).__name__}"}
+    return ex, inj
 
 
 def _p_cal(f: dict, m: dict | None, version: str) -> float | None:
@@ -300,7 +345,23 @@ def player(pid: str) -> dict:
     last = g.iloc[-1]
     return {"player_id": pid, "name": last["name"], "team": last.team, "position": last.pos,
             "game_log": rows, "forecasts": fc,
-            "edition_id": (e or {}).get("edition_id")}
+            "edition_id": (e or {}).get("edition_id"), "extras": _player_extras(pid, e)}
+
+
+def _player_extras(pid: str, e: dict | None) -> dict:
+    """The player page's research context. A player in the latest edition gets the figures on
+    his cards (the cached props extras, npl.nba.extras.player_view); anyone else his volume and
+    game script as of today (extras.for_player)."""
+    try:
+        if e is not None and any(f["player_id"] == pid for f in e["forecasts"]):
+            p = props()
+            card = next((c for c in p.get("cards", []) if c["player_id"] == pid), None)
+            return X.player_view(p.get("extras") or {}, card) if card else {}
+        con = _con()
+        return X.for_player(pid, lake(), con, lake_key=_lake_key()) if con is not None else {}
+    except Exception as err:  # noqa: BLE001 - a display extra; never block the page
+        log.warning("NBA player extras unavailable for %s: %r", pid, err)
+        return {}
 
 
 def game(gid: str) -> dict:
@@ -318,9 +379,21 @@ def game(gid: str) -> dict:
         d[f["market"]] = {"median": f["median"], "q10": f["q10"], "q90": f["q90"],
                           "mean": f["mean"]}
     opp = opponent_factors(e["published_at"])
+    gl, dfn = None, {}
+    con = _con()
+    if con is not None:
+        try:
+            gl = X.stored_game_lines(con, {gid}).get(gid)
+            dfn = X.team_defence(con, lake(), e["date_et"], {g["home"], g["away"]},
+                                 lake_key=_lake_key())
+        except Exception as err:  # noqa: BLE001 - a display extra; never block the page
+            log.warning("NBA game extras unavailable for %s: %r", gid, err)
     return {"game": {**g, "tip_london": _london(g["tip_utc"])}, "edition_id": e["edition_id"],
             "players": sorted(players.values(), key=lambda d: -d["minutes_expected"]),
-            "opp": {t: opp.get(t) for t in (g["home"], g["away"])}}
+            "opp": {t: opp.get(t) for t in (g["home"], g["away"])},
+            # pre-game consensus of the stored game lines (None when none were pulled) and each
+            # team's defence additions (npl.nba.extras)
+            "game_lines": gl, "defence": dfn}
 
 
 def backtests() -> list[dict]:

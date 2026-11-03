@@ -75,6 +75,19 @@ class FetchError(RuntimeError):
 
 RETRYABLE = {429, 500, 502, 503, 504}
 
+# Hosts the project never reaches by script: ESPN (Disney Terms of Use sect. 2.B.x forbid
+# automated access; D-019, D-046) and NBA.com, including its statistics and injury-report PDFs
+# (NBA.com terms sect. 9(iv): no use in connection with gambling; D-019, D-045).
+BLOCKED_HOSTS = ("espn.com", "espncdn.com", "espn.go.com", "espn.net", "nba.com")
+
+
+def blocked_host(url: str) -> bool:
+    """True for an address on a host the project must not fetch from (BLOCKED_HOSTS)."""
+    from urllib.parse import urlsplit
+
+    host = (urlsplit(url).hostname or "").lower().rstrip(".")
+    return any(host == d or host.endswith("." + d) for d in BLOCKED_HOSTS)
+
 
 def http_get(
     url: str,
@@ -91,7 +104,10 @@ def http_get(
 
     Retries connection errors and 429/5xx; honours Retry-After (capped). Non-retryable
     4xx responses raise immediately. Secrets in the URL never reach logs or errors.
+    Addresses on BLOCKED_HOSTS are refused before any request is made.
     """
+    if blocked_host(url):
+        raise FetchError(f"refused: {url} is on a blocked host (D-019, D-045, D-046)")
     s = session or requests
     last: Exception | None = None
     for attempt in range(1, max_tries + 1):

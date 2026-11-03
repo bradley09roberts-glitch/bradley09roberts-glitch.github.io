@@ -1,7 +1,12 @@
-"""Provisional NBA box scores from ESPN game feeds."""
+"""Parsers for the ESPN game feeds stored before D-046 (provisional box scores, pre-game injury
+reports). The pipeline no longer fetches or reads them; the parsers stay for audit only."""
+
+import io
+import json
 
 import pandas as pd
 
+from npl import db, rawstore
 from npl.nba import espn
 
 KEYS = ["minutes", "points", "fieldGoalsMade-fieldGoalsAttempted",
@@ -99,3 +104,25 @@ def test_apply_injuries_live_report_replaces_snapshot_for_covered_teams():
     assert pd.isna(out.fantasy["4"])                      # off ESPN's MIN report: available now
     assert out.fantasy["5"] == "OUT" and out.injury_source["5"] == "sportsdataverse"  # BOS not covered
     assert out.injury_source["1"] == "espn"
+
+
+def test_canon_ignores_stored_espn_feeds(tmp_path, monkeypatch):
+    """D-046: a finished game's stored ESPN feed no longer becomes provisional rows."""
+    from npl.nba import canon
+
+    for mod in (rawstore, canon, espn):
+        monkeypatch.setattr(mod, "DATA_HOME", tmp_path)
+    con = db.connect(tmp_path / "t.sqlite3")
+    box = espn.raw_rows(summary()).drop(columns="box_source").assign(game_id=401909881)
+    buf = io.BytesIO()
+    box.to_parquet(buf)
+    rawstore.store(con, source="sportsdataverse", dataset="nba_player_box", part="2027",
+                   url="https://github.com/x/player_box_2027.parquet", content=buf.getvalue(),
+                   filename="player_box_2027.parquet")
+    assert len(espn.stored_rows(con, exclude=set())) == 0
+    rawstore.store(con, source="espn", dataset="nba_summary", part="401909882",
+                   url="https://espn/feed", content=json.dumps(summary()).encode(),
+                   filename="summary_401909882.json")
+    assert len(espn.stored_rows(con, exclude=set())) == 3  # the stored feed is still readable
+    d = canon._raw_box(con)
+    assert set(d.game_id) == {401909881} and set(d.box_source) == {"sportsdataverse"}

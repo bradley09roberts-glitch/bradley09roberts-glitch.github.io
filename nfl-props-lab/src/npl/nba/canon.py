@@ -3,6 +3,10 @@
 player_games: one row per player listed in a box score (played or did-not-play). Players
 ruled out before the game are usually not listed at all; `candidates` reconstructs who
 could have played from recent appearances, so absence is still a recorded outcome.
+
+SportsDataverse only (D-046): a game enters the tables when SportsDataverse publishes it,
+usually the next morning. The ESPN feeds stored for provisional box scores before 3 Nov 2026
+(D-025) stay in the raw store and are not read.
 """
 
 from __future__ import annotations
@@ -16,7 +20,7 @@ import pandas as pd
 from .. import db
 from ..config import DATA_HOME
 from ..util import iso, utcnow
-from . import espn, source
+from . import source
 
 NBA_LAKE = DATA_HOME / "nba" / "lake"
 SEASON_TYPES = {2: "REG", 3: "POST", 5: "PLAYIN"}
@@ -34,23 +38,8 @@ def _raw_box(con: sqlite3.Connection) -> pd.DataFrame:
         "SELECT part, path FROM raw_files WHERE source=? AND dataset='nba_player_box' AND "
         "is_synthetic=0 ORDER BY retrieved_at, id", (source.SOURCE,)).fetchall()
     latest = {r["part"]: r["path"] for r in rows}  # last stored version per season
-    d = pd.concat([pd.read_parquet(DATA_HOME / p) for p in latest.values()],
-                  ignore_index=True).assign(box_source="sportsdataverse")
-    # games SportsDataverse has not published yet, from stored ESPN feeds (espn.py)
-    e = espn.stored_rows(con, exclude=set(d.game_id.dropna().astype("int64").astype(str)))
-    return pd.concat([d, e], ignore_index=True) if len(e) else d
-
-
-def sdv_current_game_ids(con: sqlite3.Connection) -> set[str]:
-    """Games in the latest SportsDataverse box-score file of the current season."""
-    r = con.execute(
-        "SELECT path FROM raw_files WHERE source=? AND dataset='nba_player_box' AND part=? AND "
-        "is_synthetic=0 ORDER BY retrieved_at DESC, id DESC LIMIT 1",
-        (source.SOURCE, str(source.CURRENT_SEASON))).fetchone()
-    if r is None:
-        return set()
-    g = pd.read_parquet(DATA_HOME / r["path"], columns=["game_id"]).game_id
-    return set(g.dropna().astype("int64").astype(str))
+    return pd.concat([pd.read_parquet(DATA_HOME / p) for p in latest.values()],
+                     ignore_index=True).assign(box_source="sportsdataverse")
 
 
 def build(con: sqlite3.Connection | None = None) -> dict:
@@ -110,8 +99,6 @@ def build(con: sqlite3.Connection | None = None) -> dict:
     manifest = {"built_at": iso(utcnow()), "counts": {"games": len(games),
                 "player_games": len(pg), "team_games": len(tg)},
                 "participation": pg.participation.value_counts().to_dict(),
-                "provisional_games": sorted(pg.loc[pg.box_source != "sportsdataverse",
-                                                   "game_id"].unique().tolist()),
                 "seasons": sorted(int(s) for s in games.season.unique())}
     (NBA_LAKE / "build_manifest.json").write_text(json.dumps(manifest, indent=1))
     return manifest

@@ -106,24 +106,15 @@ def cmd_snapshot(a) -> int:
 
 def cmd_nba(a) -> int:
     """NBA jobs: update (fetch + build), publish (edition for an ET date), settle, quotes."""
-    import pandas as pd
-
     from .nba import canon, live, settle, source
 
     con = db.connect()
     if a.action == "update":
+        # SportsDataverse only (D-046): a finished game arrives with its next-morning release
         out = source.fetch(con, seasons=[source.CURRENT_SEASON], max_age_hours=a.max_age_hours,
                            force=a.force)
-        # games finished but not yet in SportsDataverse: provisional rows from ESPN feeds
-        from .nba import espn
-        sched, _ = live._latest(con, "nba_schedule")
-        recent = sched[sched.season_type.isin(canon.SEASON_TYPES) &
-                       (pd.to_datetime(sched.date, utc=True) >
-                        pd.Timestamp.now(tz="UTC") - pd.Timedelta(days=3))]
-        out["espn"] = espn.fetch(con, espn.missing_games(recent, canon.sdv_current_game_ids(con)))
         manifest = canon.build(con)
         out["build"] = manifest["counts"]
-        out["provisional_games"] = manifest["provisional_games"]
         from .nba import shots
         out["shots"] = shots.build(con)
     elif a.action == "publish":
@@ -189,20 +180,89 @@ def cmd_track(a) -> int:
     return 0
 
 
+def _skipped_lines(budget) -> list[str]:
+    out = [f"SKIPPED {s['call']} (up to {s['estimated_credits']} credits): {s['reason']}"
+           for s in budget.skipped]
+    left = "unknown" if budget.remaining is None else f"{budget.remaining:,}"
+    return out + [f"Credits left: {left} (floor {budget.floor:,}, env NPL_ODDS_FLOOR)."]
+
+
 def cmd_quotes(a) -> int:
     from .sources import odds_api
 
     con = db.connect()
     try:
         odds_api.api_key()
-    except odds_api.MissingKey as e:
+        budget = odds_api.Budget()  # one floor for the whole pull (props, then game lines)
+    except (odds_api.MissingKey, ValueError) as e:
         print(f"BLOCKED: {e}")
         print(json.dumps(odds_api.status(con), indent=1))
         return 3
-    with rawstore.job(con, "quotes.snapshot", {"regions": a.regions}) as st:
+    lines = a.sport == "nba" and not a.no_game_lines
+    with rawstore.job(con, "quotes.snapshot", {"regions": a.regions, "sport": a.sport,
+                                               "game_lines": lines}) as st:
         st["detail"] = odds_api.snapshot_upcoming(con, regions=a.regions,
-                                                  hours_ahead=a.hours_ahead, sport=a.sport)
+                                                  hours_ahead=a.hours_ahead, sport=a.sport,
+                                                  budget=budget)
+        if lines:
+            st["detail"]["game_lines"] = odds_api.snapshot_game_lines(
+                con, sport=a.sport, regions=a.regions, budget=budget)
     print(json.dumps(st["detail"], indent=1, default=str))
+    print("\n".join(_skipped_lines(budget)))
+    return 0
+
+
+def _uk_time(ts: str) -> str:
+    from .config import LONDON
+    from .util import parse_iso
+
+    return parse_iso(ts).astimezone(LONDON).strftime("%a %H:%M %Z")
+
+
+def close_lines(d: dict) -> list[str]:
+    """What `npl close` prints: the planned calls with estimated credits, then what happened."""
+    out = [f"Closing snapshot, {d['sport'].upper()}: tracked games tipping off within "
+           f"{d['within_minutes']:g} min."]
+    if not d["planned"]:
+        return out + ["Nothing planned: no game with tracked props tips off in that window."]
+    for p in d["planned"]:
+        mk = ", ".join(p["markets"]) or "no market the provider prices"
+        out.append(f"  {p.get('label') or p['game_id']}, tip {_uk_time(p['tip_utc'])} "
+                   f"(in {p['minutes_to_tip']:g} min): {mk}; up to {p['estimated_credits']} "
+                   "credits")
+    calls = sum(1 for p in d["planned"] if p["markets"])
+    left = d.get("credits_left")
+    out.append(f"Planned: {calls} call{'' if calls == 1 else 's'}, up to "
+               f"{d['estimated_credits']} credits. Credits left: "
+               f"{'unknown' if left is None else f'{left:,}'} (floor {d.get('floor', '?')}).")
+    if d["dry_run"]:
+        return out + ["Dry run: no paid call made."]
+    for r in d["results"]:
+        out.append(f"  {r['label'] or r['game_id']}: {r['stored']} new quotes stored "
+                   f"({r['linked_players']} linked to players).")
+    out += [f"  SKIPPED {s['call']}: {s['reason']}" for s in d["skipped"]]
+    left = d.get("credits_left")
+    return out + [f"Credits left: {'unknown' if left is None else f'{left:,}'}."]
+
+
+def cmd_close(a) -> int:
+    """Closing snapshot for closing-line value (D-044): event odds shortly before tip-off, only
+    for games and markets with props on the paper record; see odds_api.snapshot_close."""
+    from .sources import odds_api
+
+    con = db.connect()
+    try:
+        odds_api.api_key()
+        budget = odds_api.Budget()
+    except (odds_api.MissingKey, ValueError) as e:
+        print(f"BLOCKED: {e}")
+        return 3
+    with rawstore.job(con, "quotes.close", {"sport": a.sport, "within": a.within,
+                                            "regions": a.regions, "dry_run": a.dry_run}) as st:
+        st["detail"] = odds_api.snapshot_close(con, sport=a.sport, within_minutes=a.within,
+                                               regions=a.regions, dry_run=a.dry_run,
+                                               budget=budget)
+    print("\n".join(close_lines(st["detail"])))
     return 0
 
 
@@ -328,7 +388,18 @@ def build_parser() -> argparse.ArgumentParser:
                    help="provider regions; props exist only for US books (uk returns none)")
     s.add_argument("--hours-ahead", type=float, default=48)
     s.add_argument("--sport", choices=["nfl", "nba"], default="nfl")
+    s.add_argument("--no-game-lines", action="store_true",
+                   help="NBA: skip the game-lines snapshot (moneyline, spread, total; 3 credits)")
     s.set_defaults(func=cmd_quotes)
+
+    s = sub.add_parser("close", help="closing snapshot of tracked props before tip-off (credits)")
+    s.add_argument("--sport", choices=["nba", "nfl"], default="nba")
+    s.add_argument("--within", type=float, required=True, metavar="MINUTES",
+                   help="games with tracked props tipping off within this many minutes")
+    s.add_argument("--regions", default="us")
+    s.add_argument("--dry-run", action="store_true",
+                   help="show the planned calls and credits; make no paid call")
+    s.set_defaults(func=cmd_close)
 
     s = sub.add_parser("picks", help="paper-tracking lists against the stored market lines")
     s.add_argument("--sport", choices=["nfl", "nba"], default="nba")

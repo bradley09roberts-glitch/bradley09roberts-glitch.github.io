@@ -1,13 +1,15 @@
-"""Provisional box scores from ESPN game feeds, for games SportsDataverse has not published yet.
+"""UNUSED since D-046 (3 Nov 2026): nothing in the pipeline imports this module.
 
-SportsDataverse builds its NBA files from these same ESPN feeds, usually about 12 hours after
-the games, so the ids (games, athletes) and team abbreviations are the same. Each feed is stored
-unchanged in the raw store; `raw_rows` turns it into rows in the SportsDataverse player-box
-layout, and `canon.build` uses them only for games missing from SportsDataverse, which replaces
-them as soon as it publishes the game. Rows carry box_source = "espn_provisional".
+ESPN's terms forbid automated access (Disney Terms of Use sect. 2.B.x; D-019), so the app no
+longer fetches ESPN's game feeds: box scores come only from SportsDataverse (the next morning)
+and editions use SportsDataverse's daily injury snapshot. The fetchers were removed. The pure
+parsers below are kept, with their tests, only so the feeds stored between 29 Oct and 3 Nov
+2026 (raw store, source "espn": datasets nba_summary and nba_pregame_summary, untouched) can
+still be read for audit.
 
-The same feed, fetched before tip-off, carries each team's current injury report. Editions use
-it in place of SportsDataverse's daily injury snapshot, which can be a day old (D-033).
+What they did: `raw_rows` turned a finished game's feed into rows in the SportsDataverse
+player-box layout (box_source = "espn_provisional", D-025); `injury_rows` and `apply_injuries`
+read a pre-game feed's injury report in place of the daily snapshot (D-033).
 """
 
 from __future__ import annotations
@@ -18,13 +20,11 @@ import sqlite3
 import numpy as np
 import pandas as pd
 
-from .. import rawstore
 from ..config import DATA_HOME, NEW_YORK
-from ..util import FetchError, http_get, iso, log, sha256_json, utcnow
+from ..util import utcnow
 
 SOURCE = "espn"
 DATASET = "nba_summary"
-URL = "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary?event={game_id}"
 # ESPN statistic key -> SportsDataverse column; "a-b" keys hold made-attempted pairs
 KEYS = {"minutes": ["minutes"], "points": ["points"], "rebounds": ["rebounds"],
         "assists": ["assists"], "turnovers": ["turnovers"], "steals": ["steals"],
@@ -88,29 +88,6 @@ def raw_rows(summary: dict) -> pd.DataFrame:
     return out
 
 
-def fetch(con: sqlite3.Connection, game_ids: list[str]) -> dict:
-    """Store the current ESPN feed of each finished game (unchanged feeds are only observed)."""
-    out = {"new": [], "unchanged": [], "not_final": [], "failed": []}
-    for g in game_ids:
-        url = URL.format(game_id=g)
-        try:
-            r = http_get(url, timeout=60)
-        except FetchError as e:
-            out["failed"].append(g)
-            rawstore.record_failure(con, source=SOURCE, dataset=DATASET, part=g, url=url,
-                                    status=e.status, error=str(e))
-            continue
-        if raw_rows(r.json()).empty:
-            out["not_final"].append(g)
-            continue
-        sf = rawstore.store(con, source=SOURCE, dataset=DATASET, part=g, url=url,
-                            content=r.content, filename=f"summary_{g}.json",
-                            content_type=r.headers.get("Content-Type"))
-        (out["new"] if sf.changed else out["unchanged"]).append(g)
-        log.info("espn %s %s", g, "NEW" if sf.changed else "same")
-    return out
-
-
 def missing_games(sched: pd.DataFrame, have: set[str], hours_after_tip: float = 3.0) -> list[str]:
     """Scheduled games that should be over but are not in the SportsDataverse box scores."""
     tip = pd.to_datetime(sched.date, utc=True)
@@ -153,33 +130,6 @@ def injury_rows(summary: dict) -> tuple[pd.DataFrame, set[str]]:
                          "status": st, "fantasy": _FANTASY.get(fan, fan) or None,
                          "detail": det.get("type") or "", "news_at": i.get("date")})
     return pd.DataFrame(rows, columns=INJ_COLS), teams
-
-
-def fetch_injuries(con: sqlite3.Connection, game_ids: list[str]) -> tuple[pd.DataFrame, set, dict]:
-    """Current injury reports for the slate's games, from their ESPN feeds (stored unchanged)."""
-    now = utcnow()
-    frames, covered, failed, shas = [], set(), [], []
-    for g in game_ids:
-        url = URL.format(game_id=g)
-        try:
-            r = http_get(url, timeout=30, max_tries=2)
-            rows, teams = injury_rows(r.json())
-        except (FetchError, ValueError, KeyError, IndexError) as e:
-            failed.append(g)
-            rawstore.record_failure(con, source=SOURCE, dataset=PRE_DATASET, part=g, url=url,
-                                    status=getattr(e, "status", None), error=str(e))
-            continue
-        sf = rawstore.store(con, source=SOURCE, dataset=PRE_DATASET, part=g, url=url,
-                            content=r.content, filename=f"pregame_{g}.json",
-                            content_type=r.headers.get("Content-Type"))
-        frames.append(rows)
-        covered |= teams
-        shas.append(sf.sha256)
-    df = pd.concat(frames, ignore_index=True) if frames else pd.DataFrame(columns=INJ_COLS)
-    meta = {"source": SOURCE, "dataset": PRE_DATASET, "retrieved_at": iso(now),
-            "games": len(game_ids) - len(failed), "failed": failed, "teams": sorted(covered),
-            "sha256": sha256_json(sorted(shas))}
-    return df, covered, meta
 
 
 def apply_injuries(x: pd.DataFrame, live: pd.DataFrame, covered: set, as_of: str) -> pd.DataFrame:

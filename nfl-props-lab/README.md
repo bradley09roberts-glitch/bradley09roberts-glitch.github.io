@@ -50,11 +50,16 @@ uv run npl money --ledger reports/backtests/<run>/ledger.csv.gz
 uv run npl nba update             # NBA: SportsDataverse box scores, schedule, injuries
 uv run npl nba publish --date 2026-10-28 --kind final   # NBA edition (US date)
 uv run npl nba settle             # NBA pre-tip record -> reports/nba/record/
-uv run npl quotes --sport nba --regions us --hours-ahead 24   # NBA prop prices (credits)
+uv run npl quotes --sport nba --regions us --hours-ahead 24   # NBA prop prices + game lines (credits)
+uv run npl close --sport nba --within 30 --dry-run   # plan a closing snapshot of tracked props
 uv run npl serve                  # web app at http://127.0.0.1:8765
 uv run npl snapshot --out app.html  # self-contained offline copy of the app (no server)
 uv run npl verify                 # lint, tests, edition hashes, API smoke test
 ```
+
+Odds calls cost credits. Every pull opens with the provider's free events call, makes no paid
+call that would leave fewer than `NPL_ODDS_FLOOR` credits (default 400) and lists any call it
+skipped. `npl close` without `--dry-run` spends about one credit per tracked market per game.
 
 Backtests and the ML feature cache are run from Python (`npl.backtest.run`,
 `npl.ml.build_cache`, `npl.evaluate.write_report`); `reports/EXPERIMENTS.md` lists the

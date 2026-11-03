@@ -1,9 +1,9 @@
 """SQLite application store: raw-file registry, job runs, identities, editions, quotes,
-settlements.
+game lines, settlements.
 
 SQLite in WAL mode is the transactional store. Published editions, forecasts, raw-file
-records, quotes and settlement revisions are append-only: triggers refuse UPDATE and
-DELETE, so a correction is always a new row that supersedes an older one.
+records, quotes, game lines and settlement revisions are append-only: triggers refuse UPDATE
+and DELETE, so a correction is always a new row that supersedes an older one.
 """
 
 from __future__ import annotations
@@ -164,10 +164,41 @@ CREATE TABLE IF NOT EXISTS tracked_props (
     tip_utc TEXT NOT NULL, line_seen TEXT,
     UNIQUE (rule, game_id, player_id, market)
 );
+
+-- game lines (moneyline, spread, total) from The Odds API's featured-markets call: one row per
+-- event, bookmaker, market and outcome, as returned (odds_api.snapshot_game_lines)
+CREATE TABLE IF NOT EXISTS game_lines (
+    id INTEGER PRIMARY KEY,
+    source TEXT NOT NULL,
+    sport TEXT NOT NULL,                -- 'nba' | 'nfl'
+    event_id TEXT NOT NULL,             -- the provider's event id
+    game_id TEXT,                       -- our game id; NULL when no game matched
+    commence_time TEXT NOT NULL,
+    home_team TEXT NOT NULL,            -- the provider's full team names
+    away_team TEXT NOT NULL,
+    bookmaker TEXT NOT NULL,
+    bookmaker_region TEXT NOT NULL,     -- the region requested
+    availability TEXT NOT NULL CHECK (availability IN
+        ('verified_uk','research_reference','synthetic_test')),
+    market TEXT NOT NULL CHECK (market IN ('moneyline','spread','total')),
+    outcome TEXT NOT NULL,              -- the provider's outcome name (team, 'Over', 'Under')
+    side TEXT CHECK (side IN ('home','away','draw','over','under')),
+    point REAL,                         -- spread or total; NULL for the moneyline
+    price REAL NOT NULL CHECK (price > 1.0),
+    quote_time TEXT,                    -- market last_update from the provider
+    observed_at TEXT NOT NULL,          -- when we retrieved it
+    raw_id INTEGER REFERENCES raw_files(id)
+);
+-- the same response stored twice adds nothing (NULL points and times compare equal here)
+CREATE UNIQUE INDEX IF NOT EXISTS game_lines_once ON game_lines(
+    source, sport, event_id, bookmaker, market, outcome, IFNULL(point, -1e9), price,
+    IFNULL(quote_time, ''));
+CREATE INDEX IF NOT EXISTS game_lines_game ON game_lines(sport, game_id);
 """
 
 APPEND_ONLY = ("raw_files", "raw_observations", "editions", "edition_games", "quotes",
-               "quote_links", "settlements", "paper_bets", "player_id_map", "tracked_props")
+               "quote_links", "settlements", "paper_bets", "player_id_map", "tracked_props",
+               "game_lines")
 
 
 def _triggers() -> str:

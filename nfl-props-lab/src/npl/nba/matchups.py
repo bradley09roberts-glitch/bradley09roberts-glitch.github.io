@@ -36,8 +36,8 @@ def _team_games() -> pd.DataFrame:
 def team_game_rows(seasons=APP_SEASONS) -> dict:
     S = shots.load()
     tg = _team_games()
-    # games without play-by-play yet (usually last night's, provisional box scores) are left
-    # out of every figure, so shot areas, positions and fouls all use the same games
+    # games without play-by-play yet (a box score can be published before it) are left out of
+    # every figure, so shot areas, positions and fouls all use the same games
     tg = tg[tg.season.isin(seasons) & tg.game_id.isin(set(S["def_shots"].game_id))]
     pg = canon.load()["player_games"]
     pg = pg[pg.season.isin(seasons) & (pg.participation == "played")]
