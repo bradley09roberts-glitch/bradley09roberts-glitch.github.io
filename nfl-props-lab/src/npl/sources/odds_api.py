@@ -25,8 +25,16 @@ Design rules
 * Closing snapshots (snapshot_close) re-price, shortly before tip-off, only the games and
   markets with props on the paper record (optionally only some rules' props), so track.clv has
   a late snapshot to compare with. The free events call gives each game's start time: a game
-  the provider shows as started is skipped and listed (its prices would be in-play), and a start
-  time more than 10 minutes from the tip-off recorded with the tracked props is warned about.
+  the provider shows as started, or starting within 2 minutes, is skipped and listed (its prices
+  would be in-play), and a start time more than 10 minutes from the tip-off recorded with the
+  tracked props is warned about. Each game's start time is checked again with a free events
+  call immediately before its paid call, with the same rule.
+* The pull log (table odds_pulls): every stored event-odds and featured-markets response is
+  logged there with its quotes or game lines, one row per event, bookmaker and market with the
+  provider's last_update, and one per market asked for. Quotes and game lines keep a row once,
+  so a pull in which nothing changed stores none there; readers rebuild each pull's board from
+  the log (npl.books.pull_board). backfill_pulls logs the responses stored before the log
+  existed.
 """
 
 from __future__ import annotations
@@ -41,7 +49,7 @@ from dataclasses import dataclass, field
 import pandas as pd
 
 from .. import db, rawstore
-from ..util import http_get, iso, log, parse_iso, utcnow
+from ..util import FetchError, http_get, iso, log, parse_iso, utcnow
 
 SOURCE = "the_odds_api"
 BASE = "https://api.the-odds-api.com/v4"
@@ -196,10 +204,12 @@ def _get(con: sqlite3.Connection, dataset: str, part: str, path: str, params: di
     return r.json(), credits, stored.id
 
 
-def list_events(con, session=None, sport: str = "nfl"):
-    """Free: the sport's listed events (with the credit headers)."""
+def list_events(con, session=None, sport: str = "nfl", event_ids: list[str] | None = None):
+    """Free: the sport's listed events (with the credit headers); `event_ids` asks for only
+    those events."""
+    params = {"eventIds": ",".join(event_ids)} if event_ids else {}
     return _get(con, "events", f"{sport}:{iso(utcnow())}",
-                f"/sports/{SPORTS[sport][0]}/events", {}, session)
+                f"/sports/{SPORTS[sport][0]}/events", params, session)
 
 
 def list_sports(con, session=None):
@@ -375,19 +385,25 @@ def link_event(quotes: pd.DataFrame, games: pd.DataFrame, teams: pd.DataFrame) -
                   errors="ignore").reset_index(drop=True)
 
 
-def store_quotes(con: sqlite3.Connection, rows: pd.DataFrame, raw_file_id: int | None) -> int:
-    cols = ["source", "bookmaker", "bookmaker_region", "availability", "provider_event_id",
-            "game_id", "player_name_raw", "player_id", "market", "line", "selection",
-            "decimal_price", "quote_time", "observed_at"]
+QUOTE_COLS = ["source", "bookmaker", "bookmaker_region", "availability", "provider_event_id",
+              "game_id", "player_name_raw", "player_id", "market", "line", "selection",
+              "decimal_price", "quote_time", "observed_at"]
+
+
+def _insert_quotes(con: sqlite3.Connection, rows: pd.DataFrame, raw_file_id: int | None) -> int:
     n = 0
-    with db.tx(con):
-        for r in rows[cols].itertuples(index=False):
-            cur = con.execute(
-                f"INSERT OR IGNORE INTO quotes({', '.join(cols)}, raw_file_id) VALUES "
-                f"({', '.join('?' * len(cols))}, ?)", (*[None if pd.isna(v) else v for v in r],
-                                                        raw_file_id))
-            n += cur.rowcount
+    for r in rows[QUOTE_COLS].itertuples(index=False):
+        cur = con.execute(
+            f"INSERT OR IGNORE INTO quotes({', '.join(QUOTE_COLS)}, raw_file_id) VALUES "
+            f"({', '.join('?' * len(QUOTE_COLS))}, ?)", (*[None if pd.isna(v) else v for v in r],
+                                                          raw_file_id))
+        n += cur.rowcount
     return n
+
+
+def store_quotes(con: sqlite3.Connection, rows: pd.DataFrame, raw_file_id: int | None) -> int:
+    with db.tx(con):
+        return _insert_quotes(con, rows, raw_file_id)
 
 
 def quotes_frame(con: sqlite3.Connection, include_synthetic: bool = False) -> pd.DataFrame:
@@ -409,17 +425,21 @@ GAME_LINE_COLS = ["source", "sport", "event_id", "game_id", "commence_time", "ho
                   "outcome", "side", "point", "price", "quote_time", "observed_at"]
 
 
+def _insert_game_lines(con: sqlite3.Connection, rows: pd.DataFrame, raw_id: int | None) -> int:
+    n = 0
+    for r in rows.reindex(columns=GAME_LINE_COLS).itertuples(index=False):
+        cur = con.execute(
+            f"INSERT OR IGNORE INTO game_lines({', '.join(GAME_LINE_COLS)}, raw_id) VALUES "
+            f"({', '.join('?' * len(GAME_LINE_COLS))}, ?)",
+            (*[None if pd.isna(v) else v for v in r], raw_id))
+        n += cur.rowcount
+    return n
+
+
 def store_game_lines(con: sqlite3.Connection, rows: pd.DataFrame, raw_id: int | None) -> int:
     """Append game-line rows; a row already stored from the same response adds nothing."""
-    n = 0
     with db.tx(con):
-        for r in rows.reindex(columns=GAME_LINE_COLS).itertuples(index=False):
-            cur = con.execute(
-                f"INSERT OR IGNORE INTO game_lines({', '.join(GAME_LINE_COLS)}, raw_id) VALUES "
-                f"({', '.join('?' * len(GAME_LINE_COLS))}, ?)",
-                (*[None if pd.isna(v) else v for v in r], raw_id))
-            n += cur.rowcount
-    return n
+        return _insert_game_lines(con, rows, raw_id)
 
 
 def game_lines_frame(con: sqlite3.Connection, sport: str | None = None, *, pregame: bool = False,
@@ -434,6 +454,194 @@ def game_lines_frame(con: sqlite3.Connection, sport: str | None = None, *, prega
         g = g[pd.to_datetime(g.observed_at, utc=True, format="ISO8601")
               < pd.to_datetime(g.commence_time, utc=True, format="ISO8601")]
     return g.reset_index(drop=True)
+
+
+# ----------------------------------------------------------------------------- the pull log
+PULL_COLS = ["raw_id", "dataset", "sport", "event_id", "game_id", "commence_time", "bookmaker",
+             "market", "provider_market", "last_update", "observed_at"]
+
+
+def requested_markets(url: str) -> list[str] | None:
+    """The provider market keys a stored request asked for (its markets parameter; the stored
+    address carries the parameters, the key redacted). None for a request limited to some
+    bookmakers: the books it left out say nothing about the market."""
+    from urllib.parse import parse_qs, urlsplit
+
+    qs = parse_qs(urlsplit(url).query)
+    if qs.get("bookmakers"):
+        return None
+    return [m for v in qs.get("markets", []) for m in v.split(",") if m]
+
+
+def _sport_of(url: str) -> str | None:
+    return next((s for s, (key, _) in SPORTS.items() if f"/sports/{key}/" in url), None)
+
+
+def pull_rows(payload: dict | list, *, raw_id: int, dataset: str, sport: str, observed_at: str,
+              requested: list[str] | None = None, game_ids: dict | None = None) -> list[dict]:
+    """The pull-log rows (odds_pulls) of one stored response: for each event, one row per
+    bookmaker-market we store (props markets for event odds, GAME_MARKETS for the featured call)
+    with the provider's last_update for it, taken as quote rows take their quote_time (the
+    market's last_update, else the bookmaker's), and one row with bookmaker None per market the
+    pull asked for (`requested`) or got back."""
+    if dataset == "featured_odds":
+        mmap = dict(GAME_MARKETS)
+        events = payload.get("data", []) if isinstance(payload, dict) else payload
+    else:
+        mmap = {k: ours for k, (ours, _) in SPORTS[sport][1].items()}
+        events = [payload.get("data", payload)] if isinstance(payload, dict) else []
+    out = []
+    for ev in events or []:
+        if not isinstance(ev, dict) or not ev.get("id"):
+            continue
+        eid = str(ev["id"])
+        gid = (game_ids or {}).get(eid)
+        base = {"raw_id": raw_id, "dataset": dataset, "sport": sport, "event_id": eid,
+                "game_id": gid if isinstance(gid, str) and gid else None,
+                "commence_time": ev.get("commence_time"), "observed_at": observed_at}
+        got = []
+        for bk in ev.get("bookmakers") or []:
+            for mk in bk.get("markets") or []:
+                key = mk.get("key")
+                if key not in mmap or not bk.get("key"):
+                    continue
+                got.append(key)
+                out.append({**base, "bookmaker": bk["key"], "market": mmap[key],
+                            "provider_market": key,
+                            "last_update": mk.get("last_update") or bk.get("last_update")})
+        for key in dict.fromkeys([*(requested or []), *got]):
+            if key in mmap:
+                out.append({**base, "bookmaker": None, "market": mmap[key], "provider_market": key,
+                            "last_update": None})
+    return out
+
+
+def _insert_pulls(con: sqlite3.Connection, rows: list[dict]) -> int:
+    n = 0
+    for r in rows:
+        cur = con.execute(f"INSERT OR IGNORE INTO odds_pulls({', '.join(PULL_COLS)}) VALUES "
+                          f"({', '.join('?' * len(PULL_COLS))})", [r[c] for c in PULL_COLS])
+        n += cur.rowcount
+    return n
+
+
+def _event_games(events: list, con: sqlite3.Connection, sport: str, lake_dir=None) -> dict:
+    """Provider event id -> our game id for a response's events, matched as quotes are (team
+    names, start within 6 hours); empty when the schedule or lake is not available."""
+    rows = [{"event_id": str(e["id"]), "home_team": e.get("home_team"),
+             "away_team": e.get("away_team"), "commence_time": e.get("commence_time")}
+            for e in events if isinstance(e, dict) and e.get("id")]
+    if not rows:
+        return {}
+    try:
+        m = link_games(rows, con, sport, lake_dir)
+    except Exception:  # noqa: BLE001 - no schedule or lake here: the log keeps the event id only
+        return {}
+    return {str(r.event_id): r.game_id for r in m.itertuples()
+            if isinstance(r.game_id, str) and r.game_id}
+
+
+def _events_of(payload, dataset: str) -> list:
+    if dataset == "featured_odds":
+        return (payload.get("data", []) if isinstance(payload, dict) else payload) or []
+    return [payload.get("data", payload)] if isinstance(payload, dict) else []
+
+
+def _pulls_for(con: sqlite3.Connection, raw_id: int, payload, *, dataset: str, sport: str,
+               observed_at: str, game_ids: dict | None = None, lake_dir=None) -> list[dict]:
+    """The pull-log rows of a response stored under raw_id; the markets asked for come from its
+    stored address. A request limited to some bookmakers is not logged."""
+    row = con.execute("SELECT url FROM raw_files WHERE id = ?", (raw_id,)).fetchone()
+    requested = requested_markets(row[0]) if row else []
+    if requested is None:
+        return []
+    ids = dict(game_ids or {})
+    events = _events_of(payload, dataset)
+    if any(str(e.get("id")) not in ids for e in events if isinstance(e, dict) and e.get("id")):
+        ids = {**_event_games(events, con, sport, lake_dir), **ids}
+    return pull_rows(payload, raw_id=raw_id, dataset=dataset, sport=sport,
+                     observed_at=observed_at, requested=requested, game_ids=ids)
+
+
+def record_pull(con: sqlite3.Connection, raw_id: int, payload, *, dataset: str, sport: str,
+                observed_at: str, game_ids: dict | None = None, lake_dir=None) -> int:
+    """Log one stored response in odds_pulls (a pull whose quotes or game lines are stored with
+    link_and_store or snapshot_game_lines is logged there, in the same transaction)."""
+    rows = _pulls_for(con, raw_id, payload, dataset=dataset, sport=sport,
+                      observed_at=observed_at, game_ids=game_ids, lake_dir=lake_dir)
+    with db.tx(con):
+        return _insert_pulls(con, rows)
+
+
+def pulls_frame(con: sqlite3.Connection, dataset: str | None = None, sport: str | None = None,
+                *, pregame: bool = False) -> pd.DataFrame:
+    """The pull log (synthetic responses left out); empty where the table has no rows.
+    pregame=True keeps only pulls observed before the event's start time in that response."""
+    sql = ("SELECT p.* FROM odds_pulls p JOIN raw_files r ON r.id = p.raw_id "
+           "WHERE r.is_synthetic = 0")
+    args: list = []
+    if dataset:
+        sql += " AND p.dataset = ?"
+        args.append(dataset)
+    if sport:
+        sql += " AND p.sport = ?"
+        args.append(sport)
+    try:
+        p = pd.read_sql_query(sql + " ORDER BY p.id", con, params=args)
+    except Exception:  # noqa: BLE001 - a store without the table: no log, readers fall back
+        return pd.DataFrame(columns=["id", *PULL_COLS])
+    if pregame and len(p):
+        start = pd.to_datetime(p.commence_time, utc=True, format="ISO8601")
+        p = p[start.isna() | (pd.to_datetime(p.observed_at, utc=True, format="ISO8601") < start)]
+    return p.reset_index(drop=True)
+
+
+def backfill_pulls(con: sqlite3.Connection, lake_dir=None) -> dict:
+    """One-off: log every stored event-odds and featured-markets response that is not in the
+    pull log yet (those stored before it existed), from the stored JSON. A pull's observed_at is
+    that of the rows stored from it (the time the pull used), else the response's retrieval
+    time; game ids come from the stored rows (later relinks included), else from the schedule.
+    Idempotent. Returns counts only."""
+    have = {r[0] for r in con.execute("SELECT DISTINCT raw_id FROM odds_pulls")}
+    raws = con.execute("SELECT id, dataset, url, retrieved_at, path FROM raw_files WHERE "
+                       "source = ? AND dataset IN ('event_odds', 'featured_odds') ORDER BY id",
+                       (SOURCE,)).fetchall()
+    q = quotes_frame(con, include_synthetic=True)
+    g = game_lines_frame(con, include_synthetic=True)
+    seen_at = {**q.groupby("raw_file_id").observed_at.min().to_dict(),
+               **g.groupby("raw_id").observed_at.min().to_dict()}
+    linked = pd.concat([q[["provider_event_id", "game_id"]].rename(
+        columns={"provider_event_id": "event_id"}), g[["event_id", "game_id"]]])
+    linked = linked[linked.game_id.notna()]
+    ids = linked.groupby("event_id").game_id.agg(lambda s: s.mode().iloc[0]).to_dict()
+    out = {"responses": len(raws), "already_logged": 0, "logged": 0, "event_odds": 0,
+           "featured_odds": 0, "unreadable": 0, "limited_to_bookmakers": 0, "rows": 0}
+    events: set = set()
+    for rid, dataset, url, retrieved_at, path in raws:
+        if rid in have:
+            out["already_logged"] += 1
+            continue
+        sport = _sport_of(url)
+        try:
+            payload = json.loads((rawstore.DATA_HOME / path).read_text())
+        except (OSError, ValueError):
+            out["unreadable"] += 1
+            continue
+        if sport is None:
+            out["unreadable"] += 1
+            continue
+        if requested_markets(url) is None:
+            out["limited_to_bookmakers"] += 1
+            continue
+        rows = _pulls_for(con, rid, payload, dataset=dataset, sport=sport,
+                          observed_at=seen_at.get(rid) or retrieved_at,
+                          game_ids={str(k): v for k, v in ids.items()}, lake_dir=lake_dir)
+        with db.tx(con):
+            out["rows"] += _insert_pulls(con, rows)
+        out["logged"] += 1
+        out[dataset] += 1
+        events |= {r["event_id"] for r in rows}
+    return {**out, "events": len(events)}
 
 
 def status(con: sqlite3.Connection) -> dict:
@@ -559,11 +767,27 @@ def _link_summary(q: pd.DataFrame) -> dict:
 
 
 def link_and_store(con: sqlite3.Connection, rows: list[dict], raw_file_id: int | None,
-                   lake_dir=None, sport: str = "nfl") -> dict:
-    q = link_quotes_nba(rows, con) if sport == "nba" else link_quotes(rows, lake_dir)
+                   lake_dir=None, sport: str = "nfl", *, payload=None,
+                   observed_at: str | None = None) -> dict:
+    """Link and store an event-odds response's quote rows. Given the response itself
+    (`payload`, stored under raw_file_id, and the pull's observed_at) the pull is logged in
+    odds_pulls in the same transaction, also when it stored no new row (nothing had changed)."""
+    q = ((link_quotes_nba(rows, con) if sport == "nba" else link_quotes(rows, lake_dir))
+         if rows else pd.DataFrame())
+    pulls = []
+    if payload is not None and raw_file_id is not None:
+        gids = ({} if q.empty else
+                {str(e): g for e, g in zip(q.provider_event_id, q.game_id, strict=True)
+                 if isinstance(g, str) and g})
+        when = observed_at or (rows[0]["observed_at"] if rows else iso(utcnow()))
+        pulls = _pulls_for(con, raw_file_id, payload, dataset="event_odds", sport=sport,
+                           observed_at=when, game_ids=gids, lake_dir=lake_dir)
+    with db.tx(con):
+        stored = _insert_quotes(con, q, raw_file_id) if len(q) else 0
+        logged = _insert_pulls(con, pulls)
     if q.empty:
-        return {"quotes": 0, "stored": 0, "linked_players": 0}
-    return {**_link_summary(q), "stored": store_quotes(con, q, raw_file_id)}
+        return {"quotes": 0, "stored": 0, "linked_players": 0, "pull_rows": logged}
+    return {**_link_summary(q), "stored": stored, "pull_rows": logged}
 
 
 def relink_raw(con: sqlite3.Connection, raw_file_id: int, lake_dir=None) -> dict:
@@ -629,15 +853,19 @@ def snapshot_upcoming(con, *, regions: str = "us", hours_ahead: float = 48, sess
         payload, credits, raw_id = event_odds(con, e["id"], markets, regions, session=session,
                                               sport=sport)
         budget.spent(cost, credits)
+        observed = iso(utcnow())
         returned = {m["key"] for b in payload.get("bookmakers", []) for m in b.get("markets", [])}
         got = [m for m in markets if m in returned]
-        if not got:
+        if not got:  # nothing on offer: logged all the same (an earlier board is now empty)
+            record_pull(con, raw_id, payload, dataset="event_odds", sport=sport,
+                        observed_at=observed, lake_dir=lake_dir)
             done.append({"event": label, "player_prop_markets_offered": 0})
             continue
-        rows = parse_event_odds(payload, observed_at=iso(utcnow()), request_region=regions,
+        rows = parse_event_odds(payload, observed_at=observed, request_region=regions,
                                 market_map=SPORTS[sport][1])
         done.append({"event": label, "markets": got,
-                     **link_and_store(con, rows, raw_id, lake_dir=lake_dir, sport=sport)})
+                     **link_and_store(con, rows, raw_id, lake_dir=lake_dir, sport=sport,
+                                      payload=payload, observed_at=observed)})
     return {"sport": sport, "regions": regions, "events": done, "credits": credits,
             "credits_left": budget.remaining, "floor": budget.floor,
             "skipped": budget.skipped[first_skip:]}
@@ -663,13 +891,21 @@ def snapshot_game_lines(con, sport: str = "nba", regions: str = "us", *, session
     observed = iso(utcnow())
     rows = parse_game_lines(payload, observed_at=observed, request_region=regions, sport=sport)
     q = link_games(rows, con, sport, lake_dir)
-    stored = store_game_lines(con, q, raw_id) if len(q) else 0
+    gids = ({} if q.empty else {str(e): g for e, g in zip(q.event_id, q.game_id, strict=True)
+                                if isinstance(g, str) and g})
+    # the pull log (every listed event, priced or not) with its rows, in one transaction
+    pulls = _pulls_for(con, raw_id, payload, dataset="featured_odds", sport=sport,
+                       observed_at=observed, game_ids=gids, lake_dir=lake_dir)
+    with db.tx(con):
+        stored = _insert_game_lines(con, q, raw_id) if len(q) else 0
+        logged = _insert_pulls(con, pulls)
     ev = q.drop_duplicates("event_id") if len(q) else pd.DataFrame(columns=["game_id"])
     listed = payload.get("data", []) if isinstance(payload, dict) else payload
     started = [e for e in listed if e.get("commence_time") and
                parse_iso(e["commence_time"]) <= parse_iso(observed)]
     return {**out, "events_listed": len(listed), "events_priced": len(ev),
             "events_under_way": len(started), "rows": len(q), "stored": stored,
+            "pull_rows": logged,
             "linked_games": sorted(ev.game_id.dropna().astype(str)),
             "unlinked_events": sorted(f"{r.away_team} @ {r.home_team}"
                                       for r in ev[ev.game_id.isna()].itertuples()),
@@ -679,6 +915,7 @@ def snapshot_game_lines(con, sport: str = "nba", regions: str = "us", *, session
 
 # ----------------------------------------------------------------------- closing snapshots
 TIP_TOLERANCE_MIN = 10  # provider start v recorded tip-off: a larger gap is warned about
+CLOSE_MARGIN_MIN = 2  # no closing call for a game starting within this many minutes, or started
 
 
 def plan_close(con: sqlite3.Connection, sport: str = "nba", within_minutes: float = 30,
@@ -735,18 +972,37 @@ def _hm(ts: pd.Timestamp) -> str:
     return ts.strftime("%H:%M UTC")
 
 
+def _utc_ts(v) -> pd.Timestamp:
+    t = pd.Timestamp(v)
+    return t.tz_localize("UTC") if t.tzinfo is None else t.tz_convert("UTC")
+
+
+def _too_close(st: pd.Timestamp, now: pd.Timestamp) -> str | None:
+    """Why no closing call is made for a game the provider shows starting at `st`: it has
+    started, or starts within CLOSE_MARGIN_MIN minutes (prices would be, or may soon be,
+    in-play); None when there is time."""
+    lead = (st - now).total_seconds() / 60
+    if lead <= 0:
+        return (f"already started at {_hm(st)} by the provider's start time (prices would be "
+                "in-play)")
+    if lead <= CLOSE_MARGIN_MIN:
+        return (f"starts at {_hm(st)} by the provider's start time, within {CLOSE_MARGIN_MIN} "
+                "min (prices could be in-play)")
+    return None
+
+
 def _check_start(p: dict, start: str | None, now: pd.Timestamp) -> str | None:
     """Use the provider's start time for a planned game: tip_utc and minutes_to_tip follow it
     (the recorded tip-off is kept as recorded_tip_utc), `started` is set when it is at or before
-    now, and a warning is returned when it is more than TIP_TOLERANCE_MIN minutes from the
-    recorded tip-off."""
-    p["started"] = False
+    now and `too_close` when it is within CLOSE_MARGIN_MIN minutes, and a warning is returned
+    when it is more than TIP_TOLERANCE_MIN minutes from the recorded tip-off."""
+    p["started"], p["too_close"] = False, False
     if not start:
         return None
-    st, rec = pd.Timestamp(start), pd.Timestamp(p["tip_utc"])
-    st = st.tz_localize("UTC") if st.tzinfo is None else st.tz_convert("UTC")
+    st, rec = _utc_ts(start), pd.Timestamp(p["tip_utc"])
     p |= {"recorded_tip_utc": p["tip_utc"], "tip_utc": iso(st.to_pydatetime()),
-          "minutes_to_tip": round((st - now).total_seconds() / 60, 1), "started": st <= now}
+          "minutes_to_tip": round((st - now).total_seconds() / 60, 1), "started": st <= now,
+          "too_close": now < st <= now + pd.Timedelta(minutes=CLOSE_MARGIN_MIN)}
     gap = (st - rec).total_seconds() / 60
     if abs(gap) <= TIP_TOLERANCE_MIN:
         return None
@@ -764,9 +1020,12 @@ def snapshot_close(con: sqlite3.Connection, sport: str = "nba", within_minutes: 
     quote pipeline, so track.clv (the last stored snapshot before tip-off) uses them. Estimated
     cost per game = markets x regions. With nothing planned no call is made at all. The free
     events call that opens the pull gives each game's event id and the provider's start time: a
-    game that has started by it is skipped and listed under `started` (its prices would be
-    in-play), and a start more than TIP_TOLERANCE_MIN minutes from the recorded tip-off is listed
-    under `warnings`. A dry run makes only that free call and no paid call."""
+    game that has started by it, or starts within CLOSE_MARGIN_MIN minutes, is skipped (started
+    games are listed under `started`; their prices would be in-play), and a start more than
+    TIP_TOLERANCE_MIN minutes from the recorded tip-off is listed under `warnings`. Immediately
+    before each paid call the game's start time is checked again with another free events call
+    (time has passed, and the start may have moved), with the same rule. A dry run makes only the
+    first free call and no paid call."""
     plan = plan_close(con, sport, within_minutes, now, rules=rules)
     per_region = n_regions(regions)
     for p in plan:
@@ -781,17 +1040,19 @@ def snapshot_close(con: sqlite3.Connection, sport: str = "nba", within_minutes: 
     first_skip = len(budget.skipped)
     events, credits = _start(con, budget, session, sport)
     ids = _event_ids(events, con, sport, lake_dir)
-    now = pd.Timestamp(now or utcnow())
+    clock = (lambda: pd.Timestamp(now)) if now is not None else (lambda: pd.Timestamp(utcnow()))
+    at = clock()
     for p in plan:
         ev = ids.get(p["game_id"], {})
         p["event_id"], p["label"] = ev.get("event_id"), ev.get("label")
-        if warn := _check_start(p, ev.get("commence_time"), now):
+        if warn := _check_start(p, ev.get("commence_time"), at):
             out["warnings"].append(warn)
             log.warning("npl close: %s", warn)
         if p["started"]:
             out["started"].append({"game_id": p["game_id"], "label": p["label"],
                                    "start_utc": p["tip_utc"]})
-    callable_ = [p for p in plan if p["event_id"] and p["markets"] and not p["started"]]
+    callable_ = [p for p in plan if p["event_id"] and p["markets"] and not p["started"]
+                 and not p["too_close"]]
     out |= {"credits_left": budget.remaining, "floor": budget.floor,
             "estimated_credits": sum(p["estimated_credits"] for p in callable_)}
     if dry_run:
@@ -801,31 +1062,62 @@ def snapshot_close(con: sqlite3.Connection, sport: str = "nba", within_minutes: 
         if not p["event_id"]:
             out["skipped"].append({"call": what, "reason": "not in the provider's event list"})
             continue
-        if p["started"]:
-            out["skipped"].append({"call": what, "reason": f"already started at "
-                                   f"{_hm(pd.Timestamp(p['tip_utc']))} by the provider's start "
-                                   "time (prices would be in-play)"})
+        if p["started"] or p["too_close"]:
+            out["skipped"].append({"call": what, "reason": _too_close(_utc_ts(p["tip_utc"]), at)})
             continue
         if not p["markets"]:
             out["skipped"].append({"call": what, "reason": "no tracked market the provider prices"})
             continue
         if not budget.allow(p["estimated_credits"], what):
             continue
+        if why := _recheck_start(con, session, sport, p, clock):
+            out["skipped"].append({"call": what, "reason": why})
+            if p.get("started_at_check"):
+                out["started"].append({"game_id": p["game_id"], "label": p["label"],
+                                       "start_utc": p["checked_start_utc"]})
+            continue
         payload, credits, raw_id = event_odds(con, p["event_id"], p["markets"], regions,
                                               session=session, sport=sport)
         budget.spent(p["estimated_credits"], credits)
-        rows = parse_event_odds(payload, observed_at=iso(utcnow()), request_region=regions,
+        observed = iso(utcnow())
+        rows = parse_event_odds(payload, observed_at=observed, request_region=regions,
                                 market_map=SPORTS[sport][1])
         out["results"].append({"game_id": p["game_id"], "label": p["label"],
                                **link_and_store(con, rows, raw_id, lake_dir=lake_dir,
-                                                sport=sport)})
+                                                sport=sport, payload=payload,
+                                                observed_at=observed)})
     out["skipped"] += budget.skipped[first_skip:]
     out |= {"credits": credits, "credits_left": budget.remaining}
     return out
+
+
+def _recheck_start(con: sqlite3.Connection, session, sport: str, p: dict, clock) -> str | None:
+    """The check made immediately before a game's paid closing call: its start time from a fresh
+    free events call (for that event only) against the time now. Returns why the call is not
+    made (started, starts within CLOSE_MARGIN_MIN minutes, no longer listed, no start time, or
+    the check failed), or None to go ahead; the start seen is kept in the plan as
+    checked_start_utc, checked_minutes_to_tip and started_at_check."""
+    try:
+        events, _, _ = list_events(con, session, sport, event_ids=[p["event_id"]])
+    except FetchError as err:
+        return f"start time not re-checked before the call ({err})"
+    ev = next((e for e in events or [] if isinstance(e, dict) and e.get("id") == p["event_id"]),
+              None)
+    if ev is None:
+        return "re-checked before the call: no longer in the provider's event list"
+    if not ev.get("commence_time"):
+        return "re-checked before the call: no start time from the provider"
+    st, at = _utc_ts(ev["commence_time"]), clock()
+    p["checked_start_utc"] = iso(st.to_pydatetime())
+    p["checked_minutes_to_tip"] = round((st - at).total_seconds() / 60, 1)
+    p["started_at_check"] = bool(st <= at)
+    why = _too_close(st, at)
+    return None if why is None else f"re-checked before the call: {why}"
 
 
 __all__ = ["parse_event_odds", "parse_game_lines", "link_players", "link_event", "link_games",
            "store_quotes", "store_game_lines", "game_lines_frame", "status", "snapshot_upcoming",
            "snapshot_game_lines", "snapshot_close", "plan_close", "Budget", "credit_floor",
            "link_and_store", "link_quotes_nba", "relink_raw", "MissingKey", "json",
-           "core_markets", "provider_markets", "NBA_MARKET_MAP", "GAME_MARKETS"]
+           "core_markets", "provider_markets", "NBA_MARKET_MAP", "GAME_MARKETS", "pull_rows",
+           "record_pull", "pulls_frame", "backfill_pulls", "requested_markets"]

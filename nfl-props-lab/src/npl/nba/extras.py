@@ -27,13 +27,13 @@ take). A missing figure or line stays missing; nothing is filled in.
              line: mean result minus line per stat, with the number of player-games
   game lines median spread and total across regulated books, best regulated moneyline per
              side, implied team points ((total -/+ spread) / 2), books, when seen, and the move
-             since the first stored observation; each board rebuilt per bookmaker
-             (books.complete_board)
+             since the first pull; each board the one a pull saw, from the pull log
+             (books.pull_board)
 
 Stored lines are the npl.books consensus of the snapshot nearest before tip-off: hist_quotes
-(one snapshot 3 hours before tip) for 2024-25 and the 2025-26 sample, quotes (the board at the
-last pull before tip for each game and market, rebuilt per bookmaker) for 2026-27. Per-stat
-arrays follow STATS.
+(one snapshot 3 hours before tip) for 2024-25 and the 2025-26 sample, quotes (the board the last
+pull before tip saw for each game and market, from the pull log) for 2026-27. Per-stat arrays
+follow STATS.
 
 Displayed figures are rounded half up (halves away from zero: 2.25 -> 2.3, -2.25 -> -2.3), not
 with Python's round(), which rounds the binary value half to even (round(2.25, 1) = 2.2).
@@ -64,6 +64,16 @@ HIST_LINES = canon.NBA_LAKE / "prop_lines_hist.parquet"  # derived from hist_quo
 LINES_VERSION = 1
 UNSPECIFIED = {"", "nan", "none", "not specified", "unknown"}
 
+
+def vs_opp_note(shown: int | None = None) -> str:
+    """The grid's note with the cap actually used: GRID_CAP games, or `shown` of them in a copy
+    that keeps fewer (the offline snapshot)."""
+    cap = f"up to {GRID_CAP}" + (f"; {shown} in the offline copy" if shown is not None else "")
+    return (f"Every game he played against tonight's opponent, newest first ({cap}). Diff = "
+            "result minus tonight's consensus line; line = that night's stored consensus line. "
+            "Blank: no line stored.")
+
+
 NOTES = {
     "volume": "Regular-season averages; last 5 = his last 5 games this season. Shot volume = "
               "FGA + 0.44 x FTA. Usage = share of his team's plays he ends with a shot, free "
@@ -77,9 +87,7 @@ NOTES = {
                "allowed or highest DREB%.",
     "injury": "From the SportsDataverse injury snapshot: body part or reason, area, detail, "
               "side and the return date it expects.",
-    "vs_opp": "Every game he played against tonight's opponent, newest first (up to 10). "
-              "Diff = result minus tonight's consensus line; line = that night's stored "
-              "consensus line. Blank: no line stored.",
+    "vs_opp": vs_opp_note(),
     "pos_v_opp": "Opponents' players in his position group, in this team's games with a stored "
                  "line: average result minus the consensus line. Small samples are noise.",
     "game_lines": "Median spread and total across regulated US books, best moneyline per side; "
@@ -466,19 +474,33 @@ def consensus_by_game(q: pd.DataFrame) -> pd.DataFrame:
     return cf[KEYS + ["line", "books"]].merge(snap, on=KEYS, how="left")[LINE_COLS]
 
 
-def live_lines(q: pd.DataFrame, tips: pd.Series) -> pd.DataFrame:
-    """2026-27 lines from stored quotes: per game and market, the board at the last collection
-    before tip (`tips`: game_id -> tip-off), rebuilt per bookmaker (books.complete_board).
-    Games not in the box scores yet are skipped."""
+def _before_tip(p: pd.DataFrame | None, q: pd.DataFrame, event: str) -> pd.DataFrame | None:
+    """The pulls of q's events taken before their game's tip-off (q carries `tip`)."""
+    if p is None or p.empty or event not in q:
+        return None
+    tip = q[[event, "tip"]].drop_duplicates(event).assign(**{event: lambda d: d[event].astype(str)})
+    p = p.merge(tip.rename(columns={event: "event_id"}), on="event_id")
+    return p[pd.to_datetime(p.observed_at, utc=True, format="ISO8601") < p.tip].drop(
+        columns="tip")
+
+
+def live_lines(q: pd.DataFrame, tips: pd.Series, pulls: pd.DataFrame | None = None
+               ) -> pd.DataFrame:
+    """2026-27 lines from stored quotes: per game and market, the board the last pull before tip
+    saw (`tips`: game_id -> tip-off; `pulls`: the pull log, books.pull_board), or without a pull
+    log the board at the last collection before tip rebuilt per bookmaker
+    (books.complete_board). Games not in the box scores yet are skipped."""
     q = q[q.game_id.notna() & q.market.isin(M.MARKETS)]
     if q.empty:
         return pd.DataFrame(columns=LINE_COLS)
     q = q.assign(game_id=q.game_id.astype(str),
                  obs=pd.to_datetime(q.observed_at, utc=True, format="ISO8601"))
     q = q.assign(tip=q.game_id.map(tips))
-    q = books.complete_board(q[q.tip.notna() & (q.obs < q.tip)], keys=("game_id", "market"))
+    q = q[q.tip.notna() & (q.obs < q.tip)]
+    q, _ = books.pull_board(q, _before_tip(pulls, q, "provider_event_id"),
+                            keys=("game_id", "market"))
     q = q[q.player_id.notna()]
-    return consensus_by_game(q.assign(snapshot=q.observed_at))
+    return consensus_by_game(q.assign(snapshot=q.board_at))
 
 
 def _hist_key(con: sqlite3.Connection):
@@ -524,16 +546,17 @@ def prop_lines(con: sqlite3.Connection, games: pd.DataFrame, quotes: pd.DataFram
     def build():
         from ..sources import odds_api
 
-        q = quotes
+        q, pulls = quotes, None
         if q is None:
             try:
                 q = odds_api.quotes_frame(con)
             except Exception:  # noqa: BLE001 - no quotes table: no live lines
                 q = pd.DataFrame(columns=["player_id", "game_id", "market"])
+            pulls = odds_api.pulls_frame(con, "event_odds", "nba")
         tips = games.assign(game_id=games.game_id.astype(str),
                             tip_utc=pd.to_datetime(games.tip_utc, utc=True)).set_index(
             "game_id").tip_utc
-        parts = [x for x in (hist_lines(con), live_lines(q, tips)) if len(x)]
+        parts = [x for x in (hist_lines(con), live_lines(q, tips, pulls)) if len(x)]
         if not parts:
             return pd.DataFrame(columns=LINE_COLS)
         d = pd.concat(parts, ignore_index=True).sort_values("snapshot", kind="stable")
@@ -645,7 +668,11 @@ def implied_points(total: float | None, home_spread: float | None) -> tuple:
 def board(x: pd.DataFrame) -> dict:
     """One observation's game lines for one game, regulated books only: median home spread and
     total, best moneyline price per side, books per market."""
-    r = x[x.bookmaker.map(books.regulated)]
+    if x.empty:  # a pull that listed the game with no prices, or every book withdrew
+        return {"home_spread": None, "total": None,
+                "moneyline": {"home": None, "home_book": None, "away": None, "away_book": None},
+                "books": {"spread": 0, "total": 0, "moneyline": 0}}
+    r = x[x.bookmaker.map(books.regulated).astype(bool)]
     sp = r[r.market == "spread"]
     home = sp[sp.side == "home"].groupby("bookmaker").point.first()
     away = sp[sp.side == "away"].groupby("bookmaker").point.first()
@@ -664,14 +691,25 @@ def board(x: pd.DataFrame) -> dict:
     return out
 
 
-def game_line_summary(x: pd.DataFrame) -> dict:
-    """Latest pre-game consensus for one game, the first stored one and the move between. Each
-    board is rebuilt per bookmaker as of its observation (books.complete_board: a book whose
-    lines did not change since an earlier pull counts with those rows, unless they are more than
-    12 hours older)."""
-    obs = sorted(x.observed_at.unique())
-    last = board(books.complete_board(x, keys=("game_id", "market"), ref=obs[-1]))
-    first = board(books.complete_board(x, keys=("game_id", "market"), ref=obs[0]))
+def game_line_summary(x: pd.DataFrame, pulls: pd.DataFrame | None = None) -> dict:
+    """Latest pre-game consensus for one game, the first one and the move between. With the pull
+    log (`pulls`: the game's pre-game featured-markets pulls) each board is the one a pull saw
+    (books.pull_board: a book whose lines did not change since an earlier pull counts with those
+    rows, a book missing from the pull does not), `seen` and `first_seen` are the last and first
+    pulls' times and `observations` counts the pulls, also those in which nothing changed.
+    Without it, each stored observation's board rebuilt per bookmaker (books.complete_board, a
+    book's rows dropped when more than 12 hours older)."""
+    keys = ("game_id", "market")
+    p = None
+    if pulls is not None and len(pulls) and "event_id" in x:
+        p = pulls[pulls.event_id.isin(set(x.event_id.astype(str)))]
+    if p is not None and len(p):
+        t = pd.to_datetime(p.observed_at, utc=True, format="ISO8601")
+        obs = list(dict.fromkeys(p.observed_at.iloc[np.argsort(t.to_numpy(), kind="stable")]))
+    else:
+        p, obs = None, sorted(x.observed_at.unique())
+    last = board(books.pull_board(x, p, keys, ref=obs[-1], event="event_id")[0])
+    first = board(books.pull_board(x, p, keys, ref=obs[0], event="event_id")[0])
     hp, ap = implied_points(last["total"], last["home_spread"])
 
     def move(k):
@@ -689,12 +727,14 @@ def game_line_summary(x: pd.DataFrame) -> dict:
             else "research_reference"}
 
 
-def game_lines(g: pd.DataFrame, game_ids: set | None = None) -> dict:
-    """{game_id: summary} from stored pre-game game-line rows; games never pulled are absent."""
+def game_lines(g: pd.DataFrame, game_ids: set | None = None,
+               pulls: pd.DataFrame | None = None) -> dict:
+    """{game_id: summary} from stored pre-game game-line rows and their pre-game pulls (the pull
+    log, or None); games never pulled are absent."""
     g = g[g.game_id.notna()]
     if game_ids is not None:
         g = g[g.game_id.astype(str).isin({str(i) for i in game_ids})]
-    return {str(gid): game_line_summary(x) for gid, x in g.groupby("game_id")}
+    return {str(gid): game_line_summary(x, pulls) for gid, x in g.groupby("game_id")}
 
 
 def stored_game_lines(con: sqlite3.Connection, game_ids: set) -> dict:
@@ -704,7 +744,8 @@ def stored_game_lines(con: sqlite3.Connection, game_ids: set) -> dict:
         g = odds_api.game_lines_frame(con, "nba", pregame=True)
     except Exception:  # noqa: BLE001 - no game_lines table: nothing pulled
         return {}
-    return game_lines(g, game_ids)
+    return game_lines(g, game_ids, odds_api.pulls_frame(con, "featured_odds", "nba",
+                                                        pregame=True))
 
 
 # --------------------------------------------------------------------------- assembly
@@ -722,7 +763,8 @@ def _keys(con: sqlite3.Connection, lake_key) -> dict:
         return {}
     try:
         q = tuple(con.execute("SELECT (SELECT MAX(id) FROM quotes), "
-                              "(SELECT MAX(id) FROM quote_links)").fetchone())
+                              "(SELECT MAX(id) FROM quote_links), "
+                              "(SELECT MAX(id) FROM odds_pulls)").fetchone())
     except sqlite3.OperationalError:
         q = None
     return {"lake": lake_key, "lines": (lake_key, q, tuple(_hist_key(con) or ()))}

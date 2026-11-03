@@ -54,7 +54,10 @@ def _grid(g, cap: int = SNAPSHOT_GRID):
 def _nba_extras(ex: dict, cards: list) -> dict:
     """The props `extras` block cut to what the kept cards look up: their players (with the
     v-opponent grid trimmed, _grid), their opponents' and teams' defence, their (opponent,
-    position) pairs and their games. A new block: the cached one is never changed."""
+    position) pairs and their games; the grid's note states the cap this copy uses. A new
+    block: the cached one is never changed."""
+    from .nba.extras import vs_opp_note
+
     if not ex or "players" not in ex:
         return ex
     pids = {c["player_id"] for c in cards}
@@ -63,17 +66,23 @@ def _nba_extras(ex: dict, cards: list) -> dict:
     gids = {c["game_id"] for c in cards}
     players = {k: ({**v, "vs_opp": _grid(v["vs_opp"])} if isinstance(v, dict) and "vs_opp" in v
                    else v) for k, v in ex["players"].items() if k in pids}
-    return {**ex, "players": players,
-            "defence": {k: v for k, v in ex.get("defence", {}).items() if k in teams},
-            "pos_v_opp": {k: v for k, v in ex.get("pos_v_opp", {}).items() if k in pvo},
-            "game_lines": {k: v for k, v in ex.get("game_lines", {}).items() if k in gids}}
+    out = {**ex, "players": players,
+           "defence": {k: v for k, v in ex.get("defence", {}).items() if k in teams},
+           "pos_v_opp": {k: v for k, v in ex.get("pos_v_opp", {}).items() if k in pvo},
+           "game_lines": {k: v for k, v in ex.get("game_lines", {}).items() if k in gids}}
+    if isinstance(ex.get("notes"), dict) and "vs_opp" in ex["notes"]:
+        out["notes"] = {**ex["notes"], "vs_opp": vs_opp_note(SNAPSHOT_GRID)}
+    return out
 
 
 def _add_nba(data: dict, min_p_play: float = 0.5) -> None:
     """NBA pages for the latest NBA edition (if any), trimmed: cards of players with a play
-    probability of at least `min_p_play`, 20-game logs on cards and the last 15 games on player
-    pages. Card extras stay in the props payload only: player pages here carry none (each one is
-    a slate player whose extras are in props `extras`)."""
+    probability of at least `min_p_play` (recorded as the props payload's snapshot_min_p_play),
+    20-game logs on cards and the last 15 games on player pages. Card extras stay in the props
+    payload only: player pages here carry none (each one is a slate player whose extras are in
+    props `extras`). data["snapshot_player_pages"] lists the players with a page in the copy.
+    The slate's injury counts cover every player of the edition (nba.appdata.injured_counts),
+    trimmed cards or not."""
     from .nba import appdata as nba
 
     s = nba.slate()
@@ -84,6 +93,7 @@ def _add_nba(data: dict, min_p_play: float = 0.5) -> None:
     props["cards"] = [{**c, "log": {k: (v[-20:] if isinstance(v, list) else v)
                                     for k, v in c["log"].items()}}
                       for c in props["cards"] if c["p_play"] >= min_p_play]
+    props["snapshot_min_p_play"] = min_p_play
     props["extras"] = _nba_extras(props.get("extras") or {}, props["cards"])
     data["/api/nba/props"] = nba.clean(props)
     data["/api/nba/backtests"] = nba.clean(nba.backtests())
@@ -102,6 +112,7 @@ def _add_nba(data: dict, min_p_play: float = 0.5) -> None:
     headshots.fetch("nba", pids)
     headshots.fetch_logos("nba")
     data["/api/visuals/nba"] = nba.visuals(pids)
+    pages = []
     for pid in sorted(pids):
         sp = nba.shot_profile(pid)
         if "error" not in sp:
@@ -113,6 +124,8 @@ def _add_nba(data: dict, min_p_play: float = 0.5) -> None:
         p.pop("forecasts", None)
         p.pop("extras", None)  # the same figures are in /api/nba/props extras (size limit)
         data[f"/api/nba/player/{pid}"] = nba.clean(p)
+        pages.append(pid)
+    data["snapshot_player_pages"] = pages
 
 
 def build(out: Path = DEFAULT_OUT, *, min_p_play: float = 0.5, nba_min_p_play: float = 0.5,

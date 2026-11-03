@@ -61,9 +61,12 @@ Odds calls cost credits. Every pull opens with the provider's free events call, 
 call that would leave fewer than `NPL_ODDS_FLOOR` credits (default 400) and lists any call it
 skipped. `npl close` without `--dry-run` spends about one credit per tracked market per game;
 `--rule RULE` (repeatable) limits it to the props of some rules. It uses the provider's start
-time from the free events call: a game already under way is skipped and listed (its prices
-would be in-play), and a start more than 10 minutes from the tip-off recorded with the tracked
-props is reported as a warning.
+time from the free events call: a game already under way, or starting within 2 minutes, is
+skipped and listed (its prices would be in-play), and a start more than 10 minutes from the
+tip-off recorded with the tracked props is reported as a warning. Just before each paid call it
+checks that game's start time again (free) with the same rule. Every stored odds response is
+also logged in the pull log (`odds_pulls`), which readers use to rebuild each pull's board;
+`uv run npl backfill-pulls` logs responses stored before the log existed (counts only).
 
 The snapshot embeds US bookmaker prices, so it is written to
 `data/snapshots/nfl-props-lab.html` (git-ignored; never commit it) unless `--out` says

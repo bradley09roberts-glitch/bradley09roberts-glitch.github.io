@@ -1,9 +1,10 @@
-"""Complete boards from the deduplicated stores (books.complete_board, D-046). quotes keep a row
-once per (book, event, player, market, line, side, provider last_update, price) and game_lines
-likewise without our observation time, so a later pull stores nothing for a book whose market
-did not change. Readers rebuild the board per bookmaker: that book's rows from its own latest
-observation at or before the reference time, dropped when more than 12 hours older. Every
-price below is made up."""
+"""Complete boards from the deduplicated stores without a pull log (books.complete_board, D-046;
+the fallback of books.pull_board, whose pull-log boards tests/test_pull_log.py covers). quotes
+keep a row once per (book, event, player, market, line, side, provider last_update, price) and
+game_lines likewise without our observation time, so a later pull stores nothing for a book
+whose market did not change. Rows that no logged pull covers (here: stored without a response)
+are rebuilt per bookmaker: that book's rows from its own latest observation at or before the
+reference time, dropped when more than 12 hours older. Every price below is made up."""
 
 import pandas as pd
 import pytest

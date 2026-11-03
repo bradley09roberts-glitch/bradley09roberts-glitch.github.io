@@ -228,6 +228,8 @@ def _uk_time(ts: str) -> str:
 
 def close_lines(d: dict) -> list[str]:
     """What `npl close` prints: the planned calls with estimated credits, then what happened."""
+    from .sources.odds_api import CLOSE_MARGIN_MIN
+
     rules = d.get("rules")
     which = f"props tracked under {', '.join(rules)}" if rules else "tracked props"
     out = [f"Closing snapshot, {d['sport'].upper()}: games with {which} tipping off within "
@@ -240,18 +242,23 @@ def close_lines(d: dict) -> list[str]:
             out.append(f"  {p.get('label') or p['game_id']}: started at "
                        f"{_uk_time(p['tip_utc'])} by the provider's start time; skipped")
             continue
+        if p.get("too_close"):
+            out.append(f"  {p.get('label') or p['game_id']}: starts at {_uk_time(p['tip_utc'])} "
+                       f"by the provider's start time, within {CLOSE_MARGIN_MIN} min; skipped")
+            continue
         out.append(f"  {p.get('label') or p['game_id']}, tip {_uk_time(p['tip_utc'])} "
                    f"(in {p['minutes_to_tip']:g} min): {mk}; up to {p['estimated_credits']} "
                    "credits")
     out += [f"WARNING {w}." for w in d.get("warnings", [])]
     calls = sum(1 for p in d["planned"] if p["markets"] and not p.get("started")
-                and p.get("event_id", True))
+                and not p.get("too_close") and p.get("event_id", True))
     left = d.get("credits_left")
     out.append(f"Planned: {calls} call{'' if calls == 1 else 's'}, up to "
                f"{d['estimated_credits']} credits. Credits left: "
                f"{'unknown' if left is None else f'{left:,}'} (floor {d.get('floor', '?')}).")
     if d["dry_run"]:
-        return out + ["Dry run: no paid call made."]
+        return out + ["Dry run: no paid call made. On a real run each game's start time is "
+                      "checked again just before its call."]
     for r in d["results"]:
         out.append(f"  {r['label'] or r['game_id']}: {r['stored']} new quotes stored "
                    f"({r['linked_players']} linked to players).")
@@ -280,6 +287,18 @@ def cmd_close(a) -> int:
                                                regions=a.regions, dry_run=a.dry_run,
                                                budget=budget, rules=rules)
     print("\n".join(close_lines(st["detail"])))
+    return 0
+
+
+def cmd_backfill_pulls(a) -> int:
+    """One-off: log the stored event-odds and featured-markets responses in the pull log
+    (odds_pulls) from their stored JSON; prints counts only, never a price."""
+    from .sources import odds_api
+
+    con = db.connect()
+    with rawstore.job(con, "quotes.backfill_pulls") as st:
+        st["detail"] = odds_api.backfill_pulls(con)
+    print(json.dumps(st["detail"], indent=1))
     return 0
 
 
@@ -431,6 +450,10 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--rule", action="append", dest="rules", metavar="RULE",
                    help="only props tracked under this rule (repeat for several; default: all)")
     s.set_defaults(func=cmd_close)
+
+    s = sub.add_parser("backfill-pulls",
+                       help="one-off: log stored odds responses in the pull log (counts only)")
+    s.set_defaults(func=cmd_backfill_pulls)
 
     s = sub.add_parser("picks", help="paper-tracking lists against the stored market lines")
     s.add_argument("--sport", choices=["nfl", "nba"], default="nba")

@@ -501,7 +501,7 @@ from data the project may use.
   site, espncdn.com, espnfc.com, espncricinfo.com, espndeportes.com), NBA.com, nba.net,
   wnba.com and NFL.com before any request. Redirects are followed by hand and each hop is checked
   before it is requested; a response whose address or redirect history is on a blocked host is
-  refused too.
+  refused too. (The rule was widened in the follow-up below.)
 - **Game lines** (moneyline, spread, total) for a whole slate from The Odds API's featured
   markets: one call, 3 credits a slate for the us region, stored in the append-only game_lines
   table. The props pull no longer makes the /markets pre-call (event odds cost only the markets
@@ -510,7 +510,8 @@ from data the project may use.
 - **Closing snapshots** (`npl close`): shortly before tip-off, event odds for the tracked
   markets only, of games that have not started by the provider's start time (from the free
   events call; a start more than 10 minutes from the recorded tip-off is warned about), so
-  closing-line value has a late snapshot. `--rule` limits it to some rules' props.
+  closing-line value has a late snapshot. `--rule` limits it to some rules' props. (A re-check
+  before each call was added in the follow-up below.)
 - **Complete boards.** The stores keep a row once (quotes are unique on the provider's
   per-book market update time and the price; game_lines likewise, without our observation time),
   so a later pull stores nothing for a book whose market did not change. Readers rebuild the
@@ -518,6 +519,7 @@ from data the project may use.
   observation at or before the reference time, ignored when more than 12 hours older. This
   applies to the card consensus, the stored lines on cards, the game lines and closing-line
   value; the duplicate and conflicting-price rules of D-044 apply to the rebuilt board.
+  (Replaced by the pull log in the follow-up below; this rule is now the fallback.)
 - **Context definitions** (npl.nba.extras; context only, never a forecast input). Usage =
   (FGA + 0.44 FTA + TOV) x (team minutes / 5) / (minutes x team (FGA + 0.44 FTA + TOV)), the
   team's TOV being the team box score's total, team turnovers included. Fourth-quarter share =
@@ -533,3 +535,33 @@ from data the project may use.
 - Fewer than 5 games (or player-games) are marked "tiny sample".
 - The offline snapshot embeds US prices, so it is written under data/ (git-ignored) and is
   refused above the host's 16,000,000-byte limit.
+
+Follow-up (3 Nov 2026, after a re-verification of this build):
+- **Pull log and board rule.** The 12-hour rebuild could not tell an unchanged book from one that
+  had withdrawn its market, and a pull in which nothing changed left no trace (a closing pull
+  with no changes gave no closing-line value). The append-only table odds_pulls records every
+  stored event-odds and featured-markets response: per event, each bookmaker-market with the
+  provider's last_update, each market asked for, our game id and the pull's observed_at
+  (`npl backfill-pulls` logged the 67 responses already stored: 1,754 rows). Boards are rebuilt
+  from it (npl.books.pull_board): for each event and market, the latest pull at or before the
+  reference time that asked for that market, and each bookmaker-market in it with the stored
+  rows whose quote_time equals its last_update. A book missing from that pull drops out, an
+  unchanged book stays, and the board is dated by the pull's observed_at (closing-line value's
+  close time and lead, the card's seen time, the game lines' seen time and number of pulls).
+  Events and markets that no logged pull asked for fall back to the 12-hour rebuild. Used for
+  the card consensus, the stored lines on cards, the game lines and closing-line value; on the
+  data stored so far every board came out as before.
+- **npl close** checks each game's start time again (a free events call for that event)
+  immediately before its paid call, and skips a game that has started or starts within 2
+  minutes; the plan applies the same rule.
+- **Host rule** (util.blocked_host, on the lower-cased host): refused when any dot-separated label
+  starts with "espn" (every ESPN domain whatever its country or suffix, such as espn.com.mx,
+  espn.cl, espnfc.us and espnscrum.com, with their subdomains, and espn.akamaized.net), or when
+  the host is nba.com, nba.net, wnba.com or nfl.com or a subdomain of one.
+- **Logos are cache-only**: fetch_logos requests nothing (it could still fetch from a host that
+  was not blocked).
+- **Slate injury counts:** each /api/nba/slate game carries "injured", out (Out or out for the
+  season) and questionable (any other status) for both teams, from all of the edition's players,
+  so the offline copy shows the same counts. The copy also records its card threshold
+  (snapshot_min_p_play) and its player pages (snapshot_player_pages), and the grid note states
+  the cap used (up to 10; 5 in the offline copy).

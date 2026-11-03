@@ -1,4 +1,5 @@
-"""D-046: no automated access to ESPN, NBA.com or NFL.com (util.BLOCKED_HOSTS, redirects
+"""D-046: no automated access to ESPN, NBA.com or NFL.com (util.blocked_host: any host with a
+label starting "espn", and nba.com, nba.net, wnba.com, nfl.com with their subdomains; redirects
 included). Box scores and injury reports come from SportsDataverse only; photos and logos are
 never downloaded, and the thumbnails cached before then are still used."""
 
@@ -35,14 +36,21 @@ def offline(monkeypatch):
     ("https://www.espncricinfo.com/x", True), ("https://www.espn.com.au/nba/", True),
     ("https://www.espn.in/x", True), ("https://www.espn.com.br/nba/", True),
     ("https://www.espndeportes.com/x", True), ("http://ESPN.CO.UK./x", True),
+    # any label starting "espn": every country site and suffix, and ESPN on others' domains
+    ("https://www.espn.com.mx/nba/", True), ("https://espn.cl/x", True),
+    ("https://www.espnfc.us/x", True), ("https://www.espnscrum.com/x", True),
+    ("https://espn.akamaized.net/x.mp4", True), ("https://espn.go.com/nba/", True),
+    ("https://secure.espn-cdn.net/x", True), ("https://espn.co.uk.example.org/x", True),
     ("https://stats.nba.com/stats/boxscore", True),
     ("https://ak-static.cms.nba.com/referee/injury/Injury-Report.pdf", True),
     ("https://cdn.nba.net/x.json", True), ("https://www.wnba.com/x", True),
     ("https://static.www.nfl.com/image/private/f_auto,q_auto/league/x", True),
-    ("https://www.nfl.com/injuries/", True),
+    ("https://www.nfl.com/injuries/", True), ("https://NBA.COM./x", True),
     ("https://github.com/sportsdataverse/sportsdataverse-data/releases/download/x", False),
+    ("https://objects.githubusercontent.com/x", False),
     ("https://api.the-odds-api.com/v4/sports", False), ("https://notespn.com/x", False),
-    ("https://espn.co.uk.example.org/x", False), ("https://notnfl.com/x", False)])
+    ("https://myespn.example.org/x", False), ("https://notnfl.com/x", False),
+    ("https://nba.com.example.org/x", False), ("https://notnba.net/x", False)])
 def test_blocked_hosts(url, blocked):
     assert blocked_host(url) is blocked
 
@@ -129,17 +137,25 @@ def test_player_photos_use_the_cache_only(tmp_path, monkeypatch, sport):
     assert sorted(f.name for f in d.iterdir()) == ["1.webp"]  # nothing written either
 
 
-def test_espn_logo_addresses_are_never_fetched(tmp_path, monkeypatch):
+def test_logos_use_the_cache_only(tmp_path, monkeypatch):
+    """No logo is requested from any address, ESPN's or another (D-046): the cached copies are
+    counted and used, and a team without one shows its abbreviation. The offline fixture fails
+    any request, and the module has no HTTP helper left to call."""
     monkeypatch.setattr(headshots, "DIR", tmp_path / "headshots")
     monkeypatch.setattr(headshots, "logo_urls", lambda sport: {
         "BOS": "https://a.espncdn.com/i/teamlogos/nba/500/bos.png",
-        "LAL": "https://a.espncdn.com/i/teamlogos/nba/500/lal.png"})
+        "LAL": "https://a.espncdn.com/i/teamlogos/nba/500/lal.png",
+        "NYK": "https://example.org/logos/nyk.png"})  # not a blocked host: still not fetched
     d = tmp_path / "logos" / "nba"
     d.mkdir(parents=True)
     for f in ("BOS.webp", "BOS.dark.webp", "_league.webp"):
         (d / f).write_bytes(b"cached")
-    assert headshots.fetch_logos("nba") == {"cached": 2, "new": 0, "failed": 0, "not_fetched": 2}
-    assert set(headshots.logo_uris("nba")) == {"BOS", "_league"}  # LAL shows its abbreviation
+    assert headshots.fetch_logos("nba") == {"cached": 2, "new": 0, "missing": 4}
+    assert set(headshots.logo_uris("nba")) == {"BOS", "_league"}  # LAL, NYK show abbreviations
+    assert sorted(f.name for f in d.iterdir()) == ["BOS.dark.webp", "BOS.webp", "_league.webp"]
+    assert not hasattr(headshots, "http_get")
+    assert headshots.fetch_logos("nfl") == {"cached": 0, "new": 0, "missing": 6}
+    assert not (tmp_path / "logos" / "nfl").exists()  # nothing created either
 
 
 def test_pipeline_modules_no_longer_use_the_espn_feeds():
@@ -186,3 +202,12 @@ def test_nba_update_is_sportsdataverse_only(tmp_path, monkeypatch, capsys):
     cli.cmd_nba(argparse.Namespace(action="update", max_age_hours=0.5, force=False))
     out = json.loads(capsys.readouterr().out)
     assert out == {"new": [], "failed": [], "build": {"games": 1}, "shots": {"shots": 0}}
+
+
+def test_percent_escaped_hosts_are_still_blocked():
+    from npl.util import blocked_host
+    for u in ("https://%65spn.com/x", "https://stats.nba%2ecom/x", "https://static.www.nfl%2Ecom/x",
+              "https://a.espncdn%2ecom/i.png"):
+        assert blocked_host(u), u
+    assert not blocked_host("https://api.the-odds-api.com/v4/sports")
+    assert not blocked_host("https://github.com/sportsdataverse/sportsdataverse-data/releases")

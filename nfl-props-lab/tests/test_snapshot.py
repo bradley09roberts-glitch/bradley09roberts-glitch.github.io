@@ -83,3 +83,43 @@ def test_snapshot_trims_the_grid_against_tonights_opponent():
     assert g["games"][0]["line"] == lined and "diff" in g["games"][0]
     assert all("line" not in r and "diff" not in r for r in g["games"][1:])  # no value: dropped
     assert ex == before  # the cached props block is not changed
+
+
+def test_nba_copy_records_its_threshold_pages_and_grid_cap(monkeypatch):
+    """The copy's props payload says which play probability its cards needed, the data lists the
+    players with a page in it, and the grid's note states the cap used; the slate (with its
+    injury counts for every player) and the cached props block are left as they are."""
+    from npl.nba import appdata as nba
+    from npl.nba import extras as X
+
+    def card(pid, p_play):
+        return {"player_id": pid, "p_play": p_play, "game_id": "g1", "team": "DET",
+                "opponent": "PHI", "position": "G", "log": {"values": list(range(30))}}
+
+    slate = {"edition_id": "e", "games": [{"game_id": "g1", "home": "DET", "away": "PHI",
+                                           "tip_utc": "2099-01-01T00:00:00Z",
+                                           "injured": {"DET": {"out": 3, "questionable": 1},
+                                                       "PHI": {"out": 0, "questionable": 0}}}]}
+    cached = {"edition_id": "e", "cards": [card("a", 0.9), card("b", 0.3), card("c", 0.95)],
+              "extras": {"players": {}, "notes": dict(X.NOTES)}}
+    before = copy.deepcopy(cached)
+    for name, fn in (("slate", lambda: slate), ("props", lambda: cached),
+                     ("backtests", lambda: []), ("game", lambda gid: {"game": {}}),
+                     ("matchups", lambda: {}), ("visuals", lambda pids: {}),
+                     ("shot_profile", lambda pid: {"error": "none"}),
+                     ("player", lambda pid: {"error": "unknown player"} if pid == "c" else
+                      {"player_id": pid, "game_log": [], "forecasts": [], "extras": {}})):
+        monkeypatch.setattr(nba, name, fn)
+    monkeypatch.setattr(headshots, "fetch", lambda sport, pids: {})
+    monkeypatch.setattr(headshots, "fetch_logos", lambda sport: {})
+    data = {}
+    snapshot._add_nba(data, min_p_play=0.6)
+    props = data["/api/nba/props"]
+    assert props["snapshot_min_p_play"] == 0.6
+    assert [c["player_id"] for c in props["cards"]] == ["a", "c"]
+    assert data["snapshot_player_pages"] == ["a"]  # c's page could not be built
+    assert "/api/nba/player/a" in data and "/api/nba/player/c" not in data
+    assert "(up to 10; 5 in the offline copy)" in props["extras"]["notes"]["vs_opp"]
+    assert "(up to 10)." in X.NOTES["vs_opp"]  # the server keeps its own cap
+    assert data["/api/nba/slate"]["games"][0]["injured"]["DET"] == {"out": 3, "questionable": 1}
+    assert cached == before  # the cached payload is not trimmed

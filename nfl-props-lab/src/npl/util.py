@@ -75,25 +75,36 @@ class FetchError(RuntimeError):
 
 RETRYABLE = {429, 500, 502, 503, 504}
 
-# Hosts the project never reaches by script, each with its subdomains (D-046): ESPN's sites, APIs
-# and image servers in every country (Disney Terms of Use sect. 2.B.x forbid automated access;
-# D-019); NBA.com and the league's other domains, including its statistics and injury-report PDFs
-# (NBA.com terms sect. 9(iv): no use in connection with gambling; D-019, D-045); NFL.com,
-# including its image server static.www.nfl.com (NFL.com terms sect. 1.3: no systematic
-# retrieval; D-009).
-BLOCKED_HOSTS = ("espn.com", "espn.co.uk", "espn.com.au", "espn.in", "espn.com.br",
-                 "espndeportes.com", "espnfc.com", "espncricinfo.com", "espncdn.com",
-                 "espn.go.com", "espn.net", "nba.com", "nba.net", "wnba.com", "nfl.com")
+# Hosts the project never reaches by script (D-046 and its follow-up). The host is lower-cased
+# and a trailing dot dropped, then refused when
+#  * any of its dot-separated labels starts with "espn" (ESPN_LABEL): every ESPN domain
+#    whatever its country or suffix (espn.com, espn.co.uk, espn.com.mx, espn.cl, espnfc.us,
+#    espncdn.com, espncricinfo.com, espnscrum.com, ...) with all its subdomains, and hosts such as
+#    espn.akamaized.net that serve ESPN under another company's domain (Disney Terms of Use
+#    sect. 2.B.x forbid automated access; D-019). Any other host with such a label is refused
+#    too; nothing the project uses has one;
+#  * it is, or is a subdomain of, one of BLOCKED_HOSTS: nba.com, nba.net, wnba.com (the NBA's
+#    domains, including its statistics and injury-report PDFs; NBA.com terms sect. 9(iv): no use
+#    in connection with gambling; D-019, D-045) and nfl.com (including its image server
+#    static.www.nfl.com; NFL.com terms sect. 1.3: no systematic retrieval; D-009).
+ESPN_LABEL = re.compile(r"(^|\.)espn[a-z0-9-]*(\.|$)")
+BLOCKED_HOSTS = ("nba.com", "nba.net", "wnba.com", "nfl.com")
 REDIRECTS = {301, 302, 303, 307, 308}
 MAX_REDIRECTS = 10
 
 
 def blocked_host(url: str) -> bool:
-    """True for an address on a host the project must not fetch from (BLOCKED_HOSTS)."""
-    from urllib.parse import urlsplit
+    """True for an address on a host the project must not fetch from (ESPN_LABEL or
+    BLOCKED_HOSTS, see above)."""
+    from urllib.parse import unquote, urlsplit
 
-    host = (urlsplit(url).hostname or "").lower().rstrip(".")
-    return any(host == d or host.endswith("." + d) for d in BLOCKED_HOSTS)
+    try:  # the host requests will actually contact: percent-escapes decoded, IDNA-normalised
+        host = unquote(urlsplit(url).hostname or "").lower().rstrip(".")
+        host = host.encode("idna").decode("ascii") if host else host
+    except (ValueError, UnicodeError):
+        return True  # an address that cannot be parsed is not fetched
+    return bool(ESPN_LABEL.search(host)) or any(host == d or host.endswith("." + d)
+                                                 for d in BLOCKED_HOSTS)
 
 
 def _refuse(url: str, how: str = "") -> FetchError:
@@ -111,8 +122,8 @@ def _landed(r) -> str | None:
 
 
 def _get_checked(s, url: str, params: dict | None, timeout: float):
-    """One GET with redirects followed by hand: every hop is checked against BLOCKED_HOSTS before
-    it is requested, and each response's own address and history after it arrives."""
+    """One GET with redirects followed by hand: every hop is checked with blocked_host before it
+    is requested, and each response's own address and history after it arrives."""
     from urllib.parse import urljoin
 
     hops: list = []
@@ -155,9 +166,10 @@ def http_get(
 
     Retries connection errors and 429/5xx; honours Retry-After (capped). Non-retryable
     4xx responses raise immediately. Secrets in the URL never reach logs or errors.
-    Addresses on BLOCKED_HOSTS are refused before any request is made, and so is a redirect to
-    one (redirects are followed by hand, each hop checked first); a response whose address or
-    redirect history is on a blocked host is refused too.
+    Addresses on a blocked host (blocked_host: any label starting "espn", or nba.com, nba.net,
+    wnba.com, nfl.com and their subdomains) are refused before any request is made, and so is a
+    redirect to one (redirects are followed by hand, each hop checked first); a response whose
+    address or redirect history is on a blocked host is refused too.
     """
     if blocked_host(url):
         raise _refuse(url)

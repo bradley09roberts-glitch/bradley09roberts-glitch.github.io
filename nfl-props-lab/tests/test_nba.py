@@ -101,9 +101,10 @@ def test_latest_edition_is_by_publish_time_not_label(tmp_path, monkeypatch):
 
 
 def test_market_line_uses_each_books_own_latest_rows():
-    """dk and fd moved 39.5 -> 38.5: their earlier line no longer counts. BetMGM has no later
-    rows (the store keeps an unchanged market's rows once), so its 39.5 still votes, until its
-    rows are more than 12 hours older than the latest observation (books.complete_board)."""
+    """Rows no logged pull covers (the fallback; tests/test_pull_log.py has the pull log): dk and
+    fd moved 39.5 -> 38.5, so their earlier line no longer counts. BetMGM has no later rows (the
+    store keeps an unchanged market's rows once), so its 39.5 still votes, until its rows are
+    more than 12 hours older than the latest observation (books.complete_board)."""
     from npl.nba import appdata
 
     def q(t, book, line, over, under):
@@ -122,6 +123,41 @@ def test_market_line_uses_each_books_own_latest_rows():
     stale = q("2026-10-28T08:40:01Z", "betmgm", 39.5, 1.9, 1.9)  # 13 hours before the latest
     m = appdata.consensus_lines(pd.DataFrame(stale + moved))[("p", "pra")]
     assert m["line"] == 38.5 and m["books"] == 2 and m["mgm_line"] is None
+
+
+def test_slate_counts_every_injured_player_of_the_edition(monkeypatch):
+    """Out (OUT, OFS) and questionable (any other entry: a game-time decision) per team, for
+    both teams of every game, once per player, from all of the edition's players."""
+    from npl.nba import appdata
+
+    def f(pid, team, opp, gid, fantasy=None, model="N1", market="pts", p_play=0.9):
+        inj = None if fantasy is None else {"status": "Out", "fantasy": fantasy}
+        return {"game_id": gid, "player_id": pid, "team": team, "opponent": opp,
+                "model": model, "market": market, "injury": inj, "p_play": p_play}
+
+    e = {"edition_id": "e", "date_et": "2026-11-02", "published_at": "2026-11-02T20:00:00Z",
+         "kind": "final", "headline_model": "N1", "code": {"model_version": "nba-0.3"},
+         "games": [{"game_id": "g1", "home": "CLE", "away": "OKC",
+                    "tip_utc": "2026-11-03T00:00:00Z", "published_before_tip": True},
+                   {"game_id": "g2", "home": "MIA", "away": "BOS",
+                    "tip_utc": "2026-11-03T00:30:00Z", "published_before_tip": True}],
+         "forecasts": [f("1", "CLE", "OKC", "g1", "OUT", p_play=0.0),
+                       f("1", "CLE", "OKC", "g1", "OUT", market="reb", p_play=0.0),
+                       f("1", "CLE", "OKC", "g1", "OUT", model="A", p_play=0.0),
+                       f("2", "CLE", "OKC", "g1", "OFS", p_play=0.0),
+                       f("3", "CLE", "OKC", "g1", "GTD", p_play=0.55),
+                       f("4", "OKC", "CLE", "g1"),
+                       f("5", "MIA", "BOS", "g2", "GTD", p_play=0.5)]}
+    assert appdata.injured_counts(e) == {
+        "CLE": {"out": 2, "questionable": 1}, "OKC": {"out": 0, "questionable": 0},
+        "MIA": {"out": 0, "questionable": 1}, "BOS": {"out": 0, "questionable": 0}}
+    monkeypatch.setattr(appdata, "latest", lambda: e)
+    games = appdata.slate()["games"]
+    assert games[0]["injured"] == {"CLE": {"out": 2, "questionable": 1},
+                                   "OKC": {"out": 0, "questionable": 0}}
+    assert games[1]["injured"] == {"MIA": {"out": 0, "questionable": 1},
+                                   "BOS": {"out": 0, "questionable": 0}}
+    assert games[0]["published_before_tip"] is True
 
 
 def _absence_case(ms=0):

@@ -85,27 +85,30 @@ def market_lines(game_ids: set[str]) -> dict:
     from ..sources import odds_api
 
     try:
-        q = odds_api.quotes_frame(db.connect())
+        con = db.connect()
+        q = odds_api.quotes_frame(con)
+        pulls = odds_api.pulls_frame(con, "event_odds", "nba")
     except Exception:  # noqa: BLE001 - no database or table: no lines
         return {}
-    return consensus_lines(q[q.game_id.isin(game_ids)])
+    return consensus_lines(q[q.game_id.isin(game_ids)], pulls)
 
 
-def consensus_lines(q: pd.DataFrame) -> dict:
+def consensus_lines(q: pd.DataFrame, pulls: pd.DataFrame | None = None) -> dict:
     """Consensus line, fair price and best regulated prices per (player, market) (books.py).
 
-    The board is the one at each game and market's latest observation, rebuilt per bookmaker
-    (books.complete_board): each book counts with its own latest rows, so a line it offered
-    earlier but has since moved (39.5 -> 38.5) does not stay in the mix, while a book whose
-    market did not change since an earlier pull (the store keeps such rows once) still counts,
-    unless its rows are more than 12 hours older than that observation."""
+    The board is the one each game and market's latest pull saw, rebuilt from the pull log
+    (books.pull_board): each book in that pull counts with its rows for the update time the
+    pull reported, so a book whose market did not change since an earlier pull (the store keeps
+    such rows once) still counts and a book that withdrew the market does not; `observed_at` is
+    that pull's time. Rows no logged pull covers (`pulls` None) fall back to the 12-hour
+    rebuild (books.complete_board)."""
     q = q[q.game_id.notna() & q.market.isin(M.MARKETS)]
-    q = books.complete_board(q, keys=("game_id", "market"))
+    q, _ = books.pull_board(q, pulls, keys=("game_id", "market"))
     q = q[q.player_id.notna()]
     if q.empty:
         return {}
     meta = q.assign(uk=q.availability == "verified_uk").groupby(["player_id", "market"]).agg(
-        seen=("observed_at", "max"), uk=("uk", "all"))
+        seen=("board_at", "max"), uk=("uk", "all"))
     out = books.records(books.consensus_frame(books.pairs(q)))
     for key, c in out.items():
         s = meta.loc[key]
@@ -114,11 +117,32 @@ def consensus_lines(q: pd.DataFrame) -> dict:
     return out
 
 
+def injured_counts(e: dict) -> dict:
+    """{team: {"out": n, "questionable": n}} for both teams of every game in an edition, one
+    count per player listed in it (all of its players, whatever their play probability): out =
+    an injury entry of Out or out for the season (OUT, OFS), questionable = any other entry
+    (a game-time decision), as the cards label them."""
+    out = {t: {"out": 0, "questionable": 0} for g in e["games"] for t in (g["home"], g["away"])}
+    seen = set()
+    for f in e["forecasts"]:
+        key = (f["game_id"], f["player_id"])
+        if f["model"] != e["headline_model"] or key in seen:
+            continue
+        seen.add(key)
+        inj = f.get("injury")
+        if inj:
+            kind = "out" if inj.get("fantasy") in ("OUT", "OFS") else "questionable"
+            out.setdefault(f["team"], {"out": 0, "questionable": 0})[kind] += 1
+    return out
+
+
 def slate() -> dict:
     e = latest()
     if e is None:
         return {"error": "no NBA edition yet"}
-    games = [{**g, "tip_london": _london(g["tip_utc"])} for g in e["games"]]
+    inj = injured_counts(e)
+    games = [{**g, "tip_london": _london(g["tip_utc"]),
+              "injured": {t: inj[t] for t in (g["home"], g["away"])}} for g in e["games"]]
     return {"edition_id": e["edition_id"], "date_et": e["date_et"],
             "published_at": e["published_at"], "published_london": _london(e["published_at"]),
             "kind": e["kind"], "games": games, "notes": e.get("notes", []),
@@ -135,8 +159,9 @@ def _props_key():
     try:
         con = db.connect()
         q = con.execute("SELECT (SELECT MAX(id) FROM quotes), (SELECT MAX(id) FROM quote_links), "
-                        "(SELECT MAX(id) FROM game_lines), (SELECT MAX(id) FROM raw_files WHERE "
-                        "source = 'sportsdataverse')").fetchone()
+                        "(SELECT MAX(id) FROM game_lines), (SELECT MAX(id) FROM odds_pulls), "
+                        "(SELECT MAX(id) FROM raw_files WHERE source = 'sportsdataverse')"
+                        ).fetchone()
         q = tuple(q)
         try:  # historical lines (bought once, D-040); the table exists only where they were
             q += tuple(con.execute("SELECT MAX(id) FROM hist_quotes").fetchone())
@@ -163,7 +188,7 @@ def _con():
 
 def props() -> dict:
     """Prop cards for the latest edition, cached until the edition, lake, stored quotes, game
-    lines or SportsDataverse files change."""
+    lines, pull log or SportsDataverse files change."""
     key = _props_key()
     if _PROPS.get("key") != key:
         _PROPS.clear()

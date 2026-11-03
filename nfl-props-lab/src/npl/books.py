@@ -23,14 +23,21 @@ rows exactly wherever the two definitions coincide):
      when its own main line is the consensus line; `arb` marks a pair of best prices that
      sum to less than 1 (an arbitrage, usually one stale price).
 
-Complete boards (complete_board, D-046): the stores keep each row once (quotes are unique on the
-provider's per bookmaker-market last_update and the price; game_lines likewise, without the time
-we observed them), so a later pull adds rows only for bookmaker-markets that changed and a book
-whose market did not change is absent from it. A board as of a reference time is therefore
-rebuilt per bookmaker: for each (game, market, bookmaker), that book's rows from its own latest
-observation at or before the reference, ignoring observations more than 12 hours older than the
-reference (a book unchanged for that long, or no longer quoting, drops out). The rules above then
-apply to the rebuilt board as to a single snapshot.
+Boards (D-046): the stores keep each row once (quotes are unique on the provider's per
+bookmaker-market last_update and the price; game_lines likewise, without the time we observed
+them), so a later pull adds rows only for bookmaker-markets that changed. Which books a pull saw
+is in the pull log (odds_pulls): every bookmaker-market of every stored response with its
+last_update, and every market the pull asked for. pull_board rebuilds the board as of a
+reference time from it: for each event and market, the latest pull at or before the reference
+that asked for that market; each bookmaker-market in that pull, with the stored rows whose
+quote_time equals its last_update. A book missing from that pull had withdrawn the market and is
+left out; a book whose market did not change stays, however old its rows. The board's time is
+the pull's observed_at, so a pull in which nothing changed still dates the board.
+Rows of an event and market that no logged pull asked for (stored before the log existed and
+not backfilled, or test rows) fall back to complete_board: for each (game, market, bookmaker),
+that book's rows from its own latest observation at or before the reference, ignoring
+observations more than 12 hours older than the reference (this cannot tell an unchanged book
+from one that withdrew). The rules above then apply to the rebuilt board as to a single snapshot.
 """
 
 from __future__ import annotations
@@ -68,6 +75,90 @@ def complete_board(q: pd.DataFrame, keys: tuple[str, ...] = ("game_id", "market"
         return x
     last = o.groupby([x[c] for c in k] + [x.bookmaker]).transform("max")
     return x[o == last]
+
+
+def _ts(s: pd.Series) -> pd.Series:
+    return pd.to_datetime(s, utc=True, format="ISO8601")
+
+
+def pull_board(q: pd.DataFrame, pulls: pd.DataFrame | None,
+               keys: tuple[str, ...] = ("game_id", "market"), ref=None,
+               event: str = "provider_event_id") -> tuple[pd.DataFrame, pd.DataFrame]:
+    """The board as of a reference time from the pull log (see above), and when it was seen.
+
+    q: stored rows (quotes, or game_lines with event="event_id") carrying `event`, bookmaker,
+    market, quote_time and observed_at; `keys` must include market. pulls: odds_pulls rows
+    (event_id, market, bookmaker, last_update, observed_at, raw_id), or None. ref: None = each
+    event and market's latest pull; a time = the latest pull at or before it (filter the pulls
+    first for a strict cut-off such as tip-off). An event and market that no pull asked for
+    falls back to complete_board.
+
+    Returns (rows, times): the board's rows with `board_at` (the pull's observed_at; on the
+    fallback the newest observation on the rebuilt board) and one row per `keys` group with its
+    board_at, also for a group whose board is empty (every book withdrew). Where one game has
+    several events, the one seen latest is kept."""
+    k = list(keys)
+    q = q.dropna(subset=k)
+    none = pd.DataFrame(columns=k + ["board_at"])
+    if q.empty:
+        return q.assign(board_at=pd.Series(dtype=object)), none
+    asked = pd.Series(False, index=q.index)
+    p = None
+    if pulls is not None and len(pulls) and event in q and "quote_time" in q:
+        p = pulls[pulls.event_id.isin(set(q[event].dropna().astype(str)))]
+        pairs = set(zip(p.event_id, p.market, strict=True))
+        asked = pd.Series([(str(e), m) in pairs for e, m in zip(q[event], q.market, strict=True)],
+                          index=q.index)
+    rows, times = [], []
+    if asked.any():
+        b, t = _logged_board(q[asked], p, k, None if ref is None else _utc(ref), event)
+        rows.append(b)
+        times.append(t)
+    if (~asked).any():
+        c = complete_board(q[~asked], keys, ref)
+        if len(c):
+            o = _ts(c.observed_at)
+            top = c.loc[o.groupby([c[x] for x in k]).idxmax().to_numpy(), k + ["observed_at"]]
+            t = top.rename(columns={"observed_at": "board_at"})
+            rows.append(c.merge(t, on=k))
+            times.append(t)
+    if not times:
+        return q.iloc[:0].assign(board_at=pd.Series(dtype=object)), none
+    t = pd.concat(times, ignore_index=True)
+    t = t.assign(_t=_ts(t.board_at)).sort_values("_t", kind="stable").drop_duplicates(
+        k, keep="last")[k + ["board_at"]].reset_index(drop=True)
+    b = pd.concat(rows, ignore_index=True).merge(t, on=k + ["board_at"])
+    return b, t
+
+
+def _utc(ref) -> pd.Timestamp:
+    r = pd.Timestamp(ref)
+    return r.tz_localize("UTC") if r.tzinfo is None else r.tz_convert("UTC")
+
+
+def _logged_board(q: pd.DataFrame, p: pd.DataFrame, k: list[str], ref, event: str
+                  ) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """pull_board for rows whose event and market a logged pull asked for."""
+    p = p.assign(_t=_ts(p.observed_at), event_id=p.event_id.astype(str))
+    if ref is not None:
+        p = p[p._t <= ref]
+    # the latest pull per event and market: the newest observation, then the later response
+    last = p.sort_values(["_t", "raw_id"], kind="stable").drop_duplicates(
+        ["event_id", "market"], keep="last")[["event_id", "market", "raw_id", "observed_at", "_t"]]
+    seen = p[p.bookmaker.notna()].merge(last[["event_id", "market", "raw_id"]],
+                                        on=["event_id", "market", "raw_id"])
+    seen = seen[["event_id", "market", "bookmaker", "last_update"]].drop_duplicates().merge(
+        last[["event_id", "market", "observed_at", "_t"]], on=["event_id", "market"]).rename(
+        columns={"event_id": event, "last_update": "quote_time", "observed_at": "board_at"})
+    x = q.assign(**{event: q[event].astype(str)})
+    b = x.merge(seen, on=[event, "market", "bookmaker", "quote_time"])
+    b = b[_ts(b.observed_at) <= b._t].drop(columns="_t")  # stored by the time of that pull
+    # each keys group's board time, from the chosen pull of its event (the latest of several)
+    t = x[[event, *k]].drop_duplicates().merge(
+        last.rename(columns={"event_id": event, "observed_at": "board_at"}), on=[event, "market"])
+    t = t.sort_values("_t", kind="stable").drop_duplicates(k, keep="last")
+    b = b.merge(t[[event, *k]], on=[event, *k])
+    return b, t[k + ["board_at"]]
 
 
 def pairs(q: pd.DataFrame, keys: tuple[str, ...] = ("player_id", "market")) -> pd.DataFrame:

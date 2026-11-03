@@ -533,3 +533,13 @@ def test_league_games_leave_out_exhibition_sides():
     g = pd.concat([L["games"], pd.DataFrame([{**L["games"].iloc[0].to_dict(), "game_id": "asg",
                                               "home": "STARS", "away": "WORLD"}])])
     assert "asg" not in X.league_games(g) and "g1" in X.league_games(g)
+
+
+def test_game_line_board_is_safe_on_an_empty_pull():
+    import pandas as pd
+
+    from npl.nba import extras
+    empty = pd.DataFrame(columns=["bookmaker", "market", "side", "point", "price"])
+    b = extras.board(empty)
+    assert b["home_spread"] is None and b["total"] is None and b["books"]["spread"] == 0
+    assert b["moneyline"]["home"] is None

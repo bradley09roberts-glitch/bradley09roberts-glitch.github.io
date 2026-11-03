@@ -1,22 +1,21 @@
 """Player photos and team and league logos for the app: small WebP thumbnails, cached locally.
 
-Photos are cache-only (D-046): nothing is downloaded. NBA photos and every team and league logo
-came from ESPN's image server (its terms forbid automated access) and NFL photos from NFL.com's
-image server, static.www.nfl.com, the address the nflverse player table lists (NFL.com terms
-sect. 1.3 forbid systematic retrieval). The thumbnails cached before 3 Nov 2026 are still shown;
-a player or team without one shows initials or the team's abbreviation. Thumbnails are 112 px
-squares around the head and shoulders, stored under data/headshots/<sport>/ and
-data/logos/<sport>/ (never in git) and embedded in the snapshot as data URIs, because the hosted
-page may not load images from other sites.
+Photos and logos are cache-only (D-046): nothing is downloaded, from any address. NBA photos
+and every team and league logo came from ESPN's image server (its terms forbid automated access)
+and NFL photos from NFL.com's image server, static.www.nfl.com, the address the nflverse player
+table lists (NFL.com terms sect. 1.3 forbid systematic retrieval). The thumbnails cached before
+3 Nov 2026 are still shown; a player or team without one shows initials or the team's
+abbreviation. Photo thumbnails are 112 px squares around the head and shoulders, stored under
+data/headshots/<sport>/ and logos under data/logos/<sport>/ (never in git), and both are
+embedded in the snapshot as data URIs, because the hosted page may not load images from other
+sites.
 """
 
 from __future__ import annotations
 
 import base64
-import io
 
 from .config import DATA_HOME
-from .util import FetchError, blocked_host, http_get, log
 
 DIR = DATA_HOME / "headshots"
 
@@ -37,23 +36,11 @@ def data_uris(sport: str, pids: set[str]) -> dict[str, str]:
 
 
 # ------------------------------------------------------------------ team and league logos
-LOGO_SIZE = 96
-
-
-def _logo_thumb(raw: bytes) -> bytes:
-    from PIL import Image
-
-    im = Image.open(io.BytesIO(raw)).convert("RGBA")
-    im.thumbnail((LOGO_SIZE, LOGO_SIZE), Image.LANCZOS)
-    out = io.BytesIO()
-    im.save(out, "WEBP", quality=90, method=6)
-    return out.getvalue()
-
-
 def logo_urls(sport: str) -> dict[str, str]:
     """Team logo addresses listed in the data (nflverse teams table for the NFL, the
-    SportsDataverse box scores for the NBA). Both list ESPN image addresses, which are never
-    fetched (fetch_logos skips them); the league logo has no permitted source at all."""
+    SportsDataverse box scores for the NBA), used only for the list of teams: both list ESPN
+    image addresses, and no logo is fetched from anywhere (fetch_logos is cache-only); the
+    league logo has no permitted source at all."""
     if sport == "nfl":
         from . import appdata
 
@@ -73,27 +60,13 @@ def logo_urls(sport: str) -> dict[str, str]:
 
 
 def fetch_logos(sport: str) -> dict:
-    """Each logo in two versions with transparent backgrounds, for light and dark pages
-    (<abbr>.webp and <abbr>.dark.webp). Cached copies are kept and used; an address on an ESPN
-    host is never requested (D-046), so a team without a cached logo shows its abbreviation."""
+    """Cached team logos (<abbr>.webp and <abbr>.dark.webp for light and dark pages), counted for
+    the teams in the data. Cache-only (D-046): nothing is requested from any address, so a team
+    without a cached logo shows its abbreviation."""
     d = DIR.parent / "logos" / sport
-    d.mkdir(parents=True, exist_ok=True)
-    out = {"cached": 0, "new": 0, "failed": 0, "not_fetched": 0}
-    for abbr, url in logo_urls(sport).items():
-        for f, u in ((d / f"{abbr}.webp", url), (d / f"{abbr}.dark.webp", url.replace("/500/", "/500-dark/"))):
-            if f.exists():
-                out["cached"] += 1
-                continue
-            if blocked_host(u):
-                out["not_fetched"] += 1
-                continue
-            try:
-                f.write_bytes(_logo_thumb(http_get(u, timeout=30, max_tries=2).content))
-                out["new"] += 1
-            except (FetchError, OSError, ValueError) as e:
-                log.info("no logo for %s %s (%s): %s", sport, abbr, u, e)
-                out["failed"] += 1
-    return out
+    files = [f for abbr in logo_urls(sport) for f in (d / f"{abbr}.webp", d / f"{abbr}.dark.webp")]
+    cached = sum(f.exists() for f in files)
+    return {"cached": cached, "new": 0, "missing": len(files) - cached}
 
 
 def logo_uris(sport: str, dark: bool = False) -> dict[str, str]:

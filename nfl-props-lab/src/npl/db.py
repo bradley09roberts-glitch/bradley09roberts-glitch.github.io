@@ -1,9 +1,9 @@
 """SQLite application store: raw-file registry, job runs, identities, editions, quotes,
-game lines, settlements.
+game lines, the odds pull log, settlements.
 
 SQLite in WAL mode is the transactional store. Published editions, forecasts, raw-file
-records, quotes, game lines and settlement revisions are append-only: triggers refuse UPDATE
-and DELETE, so a correction is always a new row that supersedes an older one.
+records, quotes, game lines, the pull log and settlement revisions are append-only: triggers
+refuse UPDATE and DELETE, so a correction is always a new row that supersedes an older one.
 """
 
 from __future__ import annotations
@@ -194,11 +194,35 @@ CREATE UNIQUE INDEX IF NOT EXISTS game_lines_once ON game_lines(
     source, sport, event_id, bookmaker, market, outcome, IFNULL(point, -1e9), price,
     IFNULL(quote_time, ''));
 CREATE INDEX IF NOT EXISTS game_lines_game ON game_lines(sport, game_id);
+
+-- the pull log (D-046 follow-up): what each stored odds response held, so a board can be
+-- rebuilt as that pull saw it even where nothing changed (quotes and game_lines keep a row once,
+-- so such a pull adds none there). One row per event, bookmaker and market in the response, with
+-- the provider's last_update for that bookmaker-market (the quote_time of its stored rows), and
+-- one row per event and requested market with bookmaker NULL (the pull asked for that market: a
+-- book missing from it had withdrawn the market). odds_api.record_pull / backfill_pulls.
+CREATE TABLE IF NOT EXISTS odds_pulls (
+    id INTEGER PRIMARY KEY,
+    raw_id INTEGER NOT NULL REFERENCES raw_files(id),
+    dataset TEXT NOT NULL CHECK (dataset IN ('event_odds','featured_odds')),
+    sport TEXT NOT NULL,
+    event_id TEXT NOT NULL,             -- the provider's event id
+    game_id TEXT,                       -- our game id where linked
+    commence_time TEXT,                 -- the provider's start time in this response
+    bookmaker TEXT,                     -- NULL: the request row for `market`
+    market TEXT NOT NULL,               -- our market key (quotes.market / game_lines.market)
+    provider_market TEXT NOT NULL,
+    last_update TEXT,                   -- the provider's last_update for the bookmaker-market
+    observed_at TEXT NOT NULL           -- when we retrieved it (the quotes' observed_at)
+);
+CREATE UNIQUE INDEX IF NOT EXISTS odds_pulls_once ON odds_pulls(
+    raw_id, event_id, IFNULL(bookmaker, ''), provider_market);
+CREATE INDEX IF NOT EXISTS odds_pulls_event ON odds_pulls(event_id, market);
 """
 
 APPEND_ONLY = ("raw_files", "raw_observations", "editions", "edition_games", "quotes",
                "quote_links", "settlements", "paper_bets", "player_id_map", "tracked_props",
-               "game_lines")
+               "game_lines", "odds_pulls")
 
 
 def _triggers() -> str:

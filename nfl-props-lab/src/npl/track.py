@@ -12,10 +12,12 @@ ways:
           slates, because props on the same night are correlated
   CLV     closing-line value: the recorded price x the margin-free consensus probability of
           the same side at the same line on the closing board, minus 1. The closing board is
-          the one at the last stored observation of the game and market before tip-off, rebuilt
-          per bookmaker (books.complete_board: a book whose prices did not change since an
-          earlier pull counts with those rows, unless they are more than 12 hours older).
-          Missing when no later snapshot was stored, or fewer than two books quote that line
+          the one the last pull of the game and market before tip-off saw, rebuilt from the
+          pull log (books.pull_board: a book whose prices did not change since an earlier pull
+          counts with those rows, a book missing from that pull does not, and a pull in which
+          nothing changed still closes at its own time); without a pull log, the last stored
+          observation's board rebuilt per bookmaker (books.complete_board, 12-hour rule).
+          Missing when no later snapshot was taken, or fewer than two books quote that line
           on the closing board. The snapshot's lead time is shown: a "close" taken hours before
           tip-off is only a later price, not the closing one.
 
@@ -102,8 +104,9 @@ def _fair_at(x: pd.DataFrame, line: float) -> tuple[float | None, int]:
     return float(((1 / y.over) / (1 / y.over + 1 / y.under)).mean()), len(y)
 
 
-def clv(t: pd.DataFrame, q: pd.DataFrame) -> pd.DataFrame:
-    """Closing-line value of each tracked prop from the stored live quotes."""
+def clv(t: pd.DataFrame, q: pd.DataFrame, pulls: pd.DataFrame | None = None) -> pd.DataFrame:
+    """Closing-line value of each tracked prop from the stored live quotes and the pull log
+    (odds_pulls rows; None: the 12-hour fallback board for every prop)."""
     out = t.copy()
     for c in ("close_at", "close_lead_min", "close_books", "fair_close", "clv"):
         out[c] = np.nan if c != "close_at" else None
@@ -111,6 +114,9 @@ def clv(t: pd.DataFrame, q: pd.DataFrame) -> pd.DataFrame:
         return out
     q = q[q.game_id.notna()].assign(game_id=q.game_id.astype(str),
                                     obs=pd.to_datetime(q.observed_at, utc=True, format="ISO8601"))
+    pl = None
+    if pulls is not None and len(pulls):
+        pl = pulls.assign(obs=pd.to_datetime(pulls.observed_at, utc=True, format="ISO8601"))
     for i, r in out.iterrows():
         tip = pd.Timestamp(r.tip_utc)
         tip = tip.tz_localize("UTC") if tip.tzinfo is None else tip
@@ -119,10 +125,17 @@ def clv(t: pd.DataFrame, q: pd.DataFrame) -> pd.DataFrame:
         gm = q[(q.game_id == str(r.game_id)) & (q.market == r.market) & (q.obs < tip)]
         if not (gm.player_id.astype(str) == str(r.player_id)).any():
             continue  # never quoted before tip
-        last = gm.obs.max()  # the last stored observation of this game and market before tip
+        # the closing board: the last pull of this game and market before tip (one in which
+        # nothing changed counts at its own time), or the 12-hour rebuild without a pull log
+        pm = None if pl is None else pl[(pl.market == r.market) & (pl.obs < tip) &
+                                        pl.event_id.isin(set(gm.provider_event_id.astype(str)))]
+        board, times = books.pull_board(gm, pm, keys=("game_id", "market"))
+        if times.empty:
+            continue
+        last = pd.Timestamp(times.board_at.iloc[0])
+        last = last.tz_localize("UTC") if last.tzinfo is None else last.tz_convert("UTC")
         if seen is not None and last <= seen:
-            continue  # nothing stored after the flag
-        board = books.complete_board(gm, keys=("game_id", "market"), ref=last)
+            continue  # nothing seen after the flag
         x = board[board.player_id.notna() & (board.player_id.astype(str) == str(r.player_id))]
         fair, nb = _fair_at(x, float(r.line))
         out.at[i, "close_at"] = last.isoformat()
@@ -182,7 +195,7 @@ def report(con: sqlite3.Connection, pg: pd.DataFrame | None = None, q: pd.DataFr
         return {"rules": {}, "rows": []}
     pg = canon.load()["player_games"] if pg is None else pg
     q = odds_api.quotes_frame(con) if q is None else q
-    t = clv(settle(t, pg), q)
+    t = clv(settle(t, pg), q, odds_api.pulls_frame(con, "event_odds"))
     return {"rules": {r: summary(x) for r, x in t.groupby("rule", sort=False)},
             "rows": t.to_dict("records")}
 

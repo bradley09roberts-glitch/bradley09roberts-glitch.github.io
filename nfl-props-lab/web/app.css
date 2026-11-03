@@ -10,6 +10,7 @@
   --glass: rgba(255, 255, 255, 0.065); --glass-2: rgba(255, 255, 255, 0.11); --glass-3: rgba(255, 255, 255, 0.17);
   --edge: rgba(255, 255, 255, 0.15); --edge-hi: rgba(255, 255, 255, 0.5); --edge-lo: rgba(255, 255, 255, 0.03);
   --sheen: rgba(255, 255, 255, 0.16); --blur: 22px;
+  --ground: rgba(12, 16, 28, 0.8); /* dark ground under glass panels: text stays readable over the glow */
   --shade: 0 22px 44px -22px rgba(0, 0, 0, 0.7), 0 2px 8px rgba(0, 0, 0, 0.22);
   --scrim: rgba(3, 6, 14, 0.55);
   /* outcomes and states (separate from the sport accent) */
@@ -42,6 +43,7 @@
 }
 @media (prefers-color-scheme: light) {
   :root:not([data-theme="dark"]) {
+    --ground: transparent;
     --base: #eef1f8; --ink: #0c1326; --ink-2: #39435c; --muted: #67718a;
     --glass: rgba(255, 255, 255, 0.5); --glass-2: rgba(255, 255, 255, 0.62); --glass-3: rgba(255, 255, 255, 0.78);
     --edge: rgba(255, 255, 255, 0.85); --edge-hi: rgba(255, 255, 255, 1); --edge-lo: rgba(20, 30, 60, 0.06);
@@ -66,6 +68,7 @@
   }
 }
 :root[data-theme="light"] {
+  --ground: transparent;
   --base: #eef1f8; --ink: #0c1326; --ink-2: #39435c; --muted: #67718a;
   --glass: rgba(255, 255, 255, 0.5); --glass-2: rgba(255, 255, 255, 0.62); --glass-3: rgba(255, 255, 255, 0.78);
   --edge: rgba(255, 255, 255, 0.85); --edge-hi: rgba(255, 255, 255, 1); --edge-lo: rgba(20, 30, 60, 0.06);
@@ -110,7 +113,7 @@ h3 { font-size: 1.1rem; font-weight: 700; }
 .small { font-size: 0.86rem; }
 .tiny { font-size: 0.75rem; }
 .eyebrow { font-family: var(--f-display); font-stretch: 100%; font-weight: 700; text-transform: uppercase;
-  letter-spacing: 0.14em; font-size: 0.72rem; color: var(--acc); }
+  letter-spacing: 0.14em; font-size: 0.72rem; color: var(--acc-text); }
 code { font-family: var(--f-mono); font-size: 0.85em; background: var(--glass-2); border-radius: 6px; padding: 1px 5px; }
 
 /* ---------- the arena: drifting light fields behind the glass ---------- */
@@ -132,7 +135,7 @@ code { font-family: var(--f-mono); font-size: 0.85em; background: var(--glass-2)
 
 /* ---------- glass: one recipe, used by role ---------- */
 .glass, .panel, .pcard, .banner, .topbar-in, nav.tabs, .sheet, .lineedit, #tip {
-  background: linear-gradient(160deg, var(--glass-2), var(--glass) 55%);
+  background: linear-gradient(160deg, var(--glass-2), var(--glass) 55%), var(--ground, transparent);
   -webkit-backdrop-filter: blur(var(--blur)) saturate(170%); backdrop-filter: blur(var(--blur)) saturate(170%);
   border: 1px solid var(--edge);
   box-shadow: inset 0 1px 0 var(--edge-hi), inset 0 -1px 0 var(--edge-lo), var(--shade);
@@ -150,7 +153,7 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
   padding-left: max(12px, env(safe-area-inset-left, 0px)); padding-right: max(12px, env(safe-area-inset-right, 0px)); }
 .topbar-in { display: flex; align-items: center; gap: 10px; padding: 7px 8px 7px 12px; max-width: 1200px; margin: 0 auto;
   border-radius: 999px; }
-.brand { display: flex; align-items: center; gap: 9px; color: var(--ink); min-width: 0; }
+.brand { display: flex; align-items: center; gap: 9px; color: var(--ink); min-width: 0; min-height: 36px; } /* tap target */
 .brand:hover { text-decoration: none; }
 .brand b { font-family: var(--f-display); font-stretch: 72%; font-weight: 850; font-size: 1.45rem; letter-spacing: 0.01em; line-height: 1; }
 @media (max-width: 520px) { .brand b { font-size: 1.12rem; } .brand .mark { width: 22px; height: 22px; } .topbar-in { gap: 7px; padding-left: 9px; } .sport a { padding: 5px 9px; } }
@@ -161,7 +164,7 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .topbar .spacer { flex: 1; }
 .chipbtn { border: 1px solid var(--edge); background: var(--glass); color: var(--ink-2); border-radius: 999px;
   padding: 6px 10px; font: inherit; font-size: 0.78rem; font-weight: 600; cursor: pointer; display: inline-flex; gap: 6px; align-items: center;
-  transition: background 0.2s, color 0.2s; }
+  justify-content: center; min-height: 34px; min-width: 34px; transition: background 0.2s, color 0.2s; }
 .chipbtn svg { width: 15px; height: 15px; }
 .chipbtn:hover { background: var(--glass-3); color: var(--ink); }
 .stamp { font-size: 0.72rem; color: var(--muted); white-space: nowrap; }
@@ -175,7 +178,7 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
   transition: transform 0.55s var(--spring), background 0.6s var(--ease); }
 :root[data-sport="nba"] .sport .lens { transform: translateX(100%); }
 .sport a { position: relative; z-index: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-  padding: 5px 12px; border-radius: 999px; font-family: var(--f-display); font-stretch: 85%; font-weight: 800;
+  padding: 5px 12px; min-height: 32px; border-radius: 999px; font-family: var(--f-display); font-stretch: 85%; font-weight: 800;
   letter-spacing: 0.06em; color: var(--ink-2); font-size: 0.9rem; transition: color 0.3s; }
 .sport a svg { width: 17px; height: 17px; }
 .sport a:hover { text-decoration: none; color: var(--ink); }
@@ -233,7 +236,7 @@ a.panel:hover { text-decoration: none; transform: translateY(-3px); }
     linear-gradient(var(--art), var(--art)) right 0 top calc(50% - 46px) / 150px 2px no-repeat,
     linear-gradient(var(--art), var(--art)) right 0 top calc(50% + 46px) / 150px 2px no-repeat,
     linear-gradient(var(--art), var(--art)) right 150px top calc(50% - 46px) / 2px 94px no-repeat; }
-.hero p { margin: 0; max-width: 66ch; color: var(--ink-2); }
+.hero p { margin: 0; max-width: 66ch; color: var(--ink); } /* ink: --ink-2 fell below 4.5:1 over the glow in dark mode */
 .hero .medal { position: absolute; right: 16px; top: 16px; width: 64px; height: 64px; }
 .hero .medal + .eyebrow, .hero .medal ~ h1, .hero .medal ~ p { padding-right: 76px; }
 .hero .medal ~ p ~ p, .hero .medal ~ .row { padding-right: 0; }
@@ -278,9 +281,10 @@ hr.rule { border: 0; border-top: 1px solid var(--edge); margin: 4px 0; }
 .kv dd { margin: 0; font-variant-numeric: tabular-nums; }
 
 /* filters and buttons */
+/* the filter bar sits on an opaque ground, so its small labels keep 4.5:1 over the glow */
 .filters { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; padding: 12px; border-radius: var(--r);
-  background: var(--glass); border: 1px solid var(--edge); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); }
-.filters label { display: flex; flex-direction: column; gap: 4px; font-size: 0.68rem; color: var(--muted);
+  background: linear-gradient(var(--card), var(--card)), var(--base); border: 1px solid var(--rule-2); }
+.filters label { display: flex; flex-direction: column; gap: 4px; font-size: 0.68rem; color: var(--muted-2);
   font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; min-width: 0; }
 .filters input, .filters select, .lineform input, .lineedit input { font: inherit; font-size: 0.92rem; color: var(--ink);
   background: var(--glass-2); border: 1px solid var(--edge); border-radius: 12px; padding: 8px 10px; min-width: 0;
@@ -310,7 +314,7 @@ hr.rule { border: 0; border-top: 1px solid var(--edge); margin: 4px 0; }
 .prop .foot { display: flex; flex-wrap: wrap; gap: 6px 12px; font-size: 0.76rem; color: var(--muted); align-items: center; }
 
 /* tables: glass well with a frosted header */
-.tablewrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid var(--edge); border-radius: var(--r-sm); background: var(--glass); }
+.tablewrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid var(--edge); border-radius: var(--r-sm); background: linear-gradient(var(--glass), var(--glass)), var(--ground, transparent); }
 table { border-collapse: collapse; width: 100%; font-size: 0.85rem; font-variant-numeric: tabular-nums; }
 th, td { text-align: right; padding: 7px 10px; border-bottom: 1px solid var(--edge); white-space: nowrap; }
 th:first-child, td:first-child, th.l, td.l { text-align: left; }
@@ -392,7 +396,9 @@ td .sw { display: inline-block; width: 14px; height: 3px; border-radius: 2px; ve
 .pcard .who { flex: 1 1 170px; min-width: 0; }
 .pcard header > .pill { margin-left: auto; }
 .pcard .who a { color: var(--ink); font-weight: 750; font-size: 1.06rem; }
-.pcard .sub { font-size: 0.76rem; color: var(--muted); }
+/* the card's subtitle (position, game, tip-off) on an opaque chip, like the line chip */
+.pcard .sub { font-size: 0.76rem; color: var(--muted-2); width: fit-content; max-width: 100%; margin-top: 3px; padding: 1px 8px; border-radius: 8px;
+  background: linear-gradient(var(--card), var(--card)), var(--base); }
 
 /* avatar: photo in a glass bubble ringed in the team's colours */
 .ava { --t1: var(--acc); --t2: var(--glow-2); flex: none; width: 50px; height: 50px; border-radius: 50%; position: relative;
@@ -410,17 +416,20 @@ td .sw { display: inline-block; width: 14px; height: 3px; border-radius: 2px; ve
 .hero .ava b { font-size: 1.8rem; }
 .hero .ava i { font-size: 0.72rem; bottom: 0; right: -10px; }
 
-.pline { display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; }
-.pline .mk { display: block; font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); font-weight: 800; }
+/* the line and the projection sit on an opaque strip (the card colour over the page base), so the
+   small labels keep 4.5:1 over the arena glow; the line chip has the same opaque ground */
+.pline { display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; padding: 8px 11px; border-radius: 14px;
+  background: linear-gradient(var(--card), var(--card)), var(--base); border: 1px solid var(--rule-2); }
+.pline .mk { display: block; font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted-2); font-weight: 800; }
 .linebtn { font-family: var(--f-display); font-stretch: 70%; font-weight: 850; font-size: 2.3rem; line-height: 0.95; color: var(--ink);
   background: none; border: 0; padding: 0; cursor: pointer; display: inline-flex; align-items: baseline; gap: 6px; }
-.linebtn small { font-family: var(--f-body); font-stretch: 100%; font-size: 0.68rem; font-weight: 700; color: var(--muted);
-  border: 1px solid var(--edge); background: var(--glass-2); border-radius: 999px; padding: 1px 7px; transform: translateY(-4px); }
-.linebtn:hover small { color: var(--acc); border-color: var(--acc); }
+.linebtn small { font-family: var(--f-body); font-stretch: 100%; font-size: 0.68rem; font-weight: 700; color: var(--muted-2);
+  border: 1px solid var(--rule-2); background: linear-gradient(var(--card), var(--card)), var(--base); border-radius: 999px; padding: 1px 7px; transform: translateY(-4px); }
+.linebtn:hover small { color: var(--acc-text); border-color: var(--acc); }
 .proj { text-align: right; }
 .proj b { display: block; font-family: var(--f-display); font-stretch: 70%; font-size: 2.3rem; font-weight: 850; line-height: 0.95;
   background: linear-gradient(180deg, var(--ink), var(--acc)); -webkit-background-clip: text; background-clip: text; color: transparent; }
-.proj span { font-size: 0.66rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; }
+.proj span { font-size: 0.66rem; color: var(--muted-2); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; }
 
 /* over/under gauge: a liquid tube */
 .ou .bar2 { height: 10px; border-radius: 999px; background: var(--miss-wash); overflow: hidden; position: relative;
@@ -441,29 +450,31 @@ td .sw { display: inline-block; width: 14px; height: 3px; border-radius: 2px; ve
 /* no model chance at this line: an empty, neutral tube (never a red one that reads as 0% over) */
 .ou.nil .bar2 { background: var(--glass-2); border-style: dashed; box-shadow: none; }
 
-/* hit-rate chips */
+/* hit-rate chips: opaque tiles (the hot and cold washes laid over the card colour), so their
+   labels and counts keep 4.5:1 over the arena glow */
 .hits { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
-.hit { display: flex; flex-direction: column; align-items: center; border-radius: 14px; padding: 5px 2px;
-  background: var(--glass); border: 1px solid var(--edge); }
-.hit i { font-style: normal; font-size: 0.6rem; color: var(--muted); font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
+.hit { --solid: linear-gradient(var(--card), var(--card)), var(--base); display: flex; flex-direction: column; align-items: center; border-radius: 14px; padding: 5px 2px;
+  background: var(--solid); border: 1px solid var(--rule-2); }
+.hit i { font-style: normal; font-size: 0.6rem; color: var(--ink-2); font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
 .hit b { font-family: var(--f-display); font-stretch: 75%; font-size: 1.2rem; font-weight: 850; line-height: 1.1; }
-.hit em { font-style: normal; font-size: 0.62rem; color: var(--muted); }
-.hit.hot { background: var(--hit-wash); border-color: transparent; box-shadow: inset 0 0 0 1px var(--hit-wash); } .hit.hot b { color: var(--hit); }
-.hit.cold { background: var(--miss-wash); border-color: transparent; } .hit.cold b { color: var(--miss); }
-.hit.na b { color: var(--muted); }
+.hit em { font-style: normal; font-size: 0.62rem; color: var(--ink-2); }
+.hit.hot { background: linear-gradient(var(--hit-wash), var(--hit-wash)), var(--solid); border-color: color-mix(in oklab, var(--hit) 40%, transparent); } .hit.hot b { color: var(--hit-text); }
+.hit.cold { background: linear-gradient(var(--miss-wash), var(--miss-wash)), var(--solid); border-color: color-mix(in oklab, var(--miss) 40%, transparent); } .hit.cold b { color: var(--miss-text); }
+.hit.na b { color: var(--muted-2); }
 
 /* last-games bars */
-.minibars { width: 100%; height: auto; }
+/* the last-games chart on an opaque ground, so its small labels keep their contrast over the glow */
+.minibars { width: 100%; height: auto; border-radius: 10px; background: linear-gradient(var(--card), var(--card)), var(--base); }
 .minibars rect.over { fill: var(--hit); } .minibars rect.under { fill: var(--miss); } .minibars rect.push { fill: var(--push); }
 .minibars .lline { stroke: var(--acc); stroke-width: 1.5; stroke-dasharray: 5 4; }
-.minibars .lval { fill: var(--acc); font-size: 10px; font-weight: 800; }
+.minibars .lval { fill: var(--acc-text); font-size: 10px; font-weight: 800; paint-order: stroke; stroke: var(--base); stroke-width: 3px; stroke-linejoin: round; } /* a halo where it crosses the last bar */
 .minibars .bv { fill: var(--ink-2); font-size: 9.5px; font-weight: 700; }
-.minibars .bl { fill: var(--muted); font-size: 8.5px; }
+.minibars .bl { fill: var(--muted-2); font-size: 8.5px; }
 
 .facts { display: flex; flex-wrap: wrap; gap: 6px; font-size: 0.74rem; }
-.facts > span { background: var(--glass); border: 1px solid var(--edge); border-radius: 999px; padding: 2px 9px; color: var(--ink-2); }
-span.mu { border: 1px solid var(--edge); border-radius: 999px; padding: 1px 8px; font-size: 0.74rem; }
-.mu.soft { color: var(--hit); border-color: var(--hit) !important; } .mu.tough { color: var(--miss); border-color: var(--miss) !important; }
+.facts > span { background: linear-gradient(var(--card), var(--card)), var(--base); border: 1px solid var(--rule-2); border-radius: 999px; padding: 2px 9px; color: var(--ink-2); }
+span.mu { border: 1px solid var(--edge); border-radius: 999px; padding: 1px 8px; font-size: 0.74rem; white-space: nowrap; display: inline-block; }
+.mu.soft { color: var(--hit-text); border-color: var(--hit) !important; } .mu.tough { color: var(--miss-text); border-color: var(--miss) !important; }
 .warnline { display: flex; gap: 6px; align-items: flex-start; font-size: 0.75rem; color: var(--warning); }
 .warnline svg { width: 15px; height: 15px; flex: none; margin-top: 1px; }
 
@@ -471,7 +482,7 @@ span.mu { border: 1px solid var(--edge); border-radius: 999px; padding: 1px 8px;
 .mktabs { display: flex; gap: 4px; overflow-x: auto; padding: 4px; border-radius: 999px; background: var(--glass);
   border: 1px solid var(--edge); width: max-content; max-width: 100%; }
 .mktabs button { flex: none; font-family: var(--f-display); font-stretch: 85%; font-weight: 800; letter-spacing: 0.06em; font-size: 0.92rem;
-  padding: 7px 15px; border-radius: 999px; border: 0; background: transparent; color: var(--ink-2); cursor: pointer;
+  padding: 7px 15px; min-height: 34px; border-radius: 999px; border: 0; background: transparent; color: var(--ink-2); cursor: pointer;
   transition: background 0.3s, color 0.3s, transform 0.3s var(--spring); }
 .mktabs button:hover { color: var(--ink); }
 .mktabs button.on { color: var(--acc-ink);
@@ -494,7 +505,7 @@ span.mu { border: 1px solid var(--edge); border-radius: 999px; padding: 1px 8px;
 .dmf label { min-width: 0; }
 .dmtab td.c { min-width: 52px; font-size: 0.8rem; }
 .dmtab td:first-child, .dmtab th:first-child { position: sticky; left: 0; background: var(--card); z-index: 1; }
-.thbtn { background: none; border: 0; color: inherit; font: inherit; font-weight: 700; cursor: pointer; padding: 0; text-transform: inherit; letter-spacing: inherit; }
+.thbtn { background: none; border: 0; color: inherit; font: inherit; font-weight: 700; cursor: pointer; padding: 8px 6px; margin: -8px -6px; text-transform: inherit; letter-spacing: inherit; }
 .thbtn.on { color: var(--acc); }
 .courtwrap { display: grid; gap: 14px; grid-template-columns: 1fr; align-items: start; }
 @media (min-width: 900px) { .courtwrap { grid-template-columns: minmax(0, 520px) 1fr; } }
@@ -515,7 +526,7 @@ td.zf2t { color: var(--hit); font-weight: 700; } td.zf1t { color: var(--hit); }
 td.zd2t { color: var(--miss); font-weight: 700; } td.zd1t { color: var(--miss); }
 .deft tr.sum td { background: var(--glass-2); font-weight: 600; }
 .deft tr.on td { background: var(--acc-wash); }
-.linkbtn { background: none; border: 0; padding: 0; color: var(--link); font: inherit; cursor: pointer; text-align: left; }
+.linkbtn { background: none; border: 0; padding: 7px 0; margin: -7px 0; color: var(--link); font: inherit; cursor: pointer; text-align: left; }
 .ftbox { border: 1px dashed var(--rule-2); border-radius: 14px; padding: 8px 10px; font-size: 0.85rem; margin: 8px 0; background: var(--glass); }
 .courtside .legend { margin-bottom: 6px; }
 pre.defs { white-space: pre-wrap; font-family: var(--f-mono); font-size: 0.72rem; color: var(--ink-2); }
@@ -606,7 +617,10 @@ h1.withlogo { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .usp-g .bk { overflow-wrap: anywhere; }
 .usp-g .wide { grid-column: span 2; }
 .usp-n { margin-top: 1px; padding-top: 4px; border-top: 1px dashed var(--rule-2); color: var(--ink-2); font-weight: 650; }
-.ou .cal { margin-top: 3px; color: var(--ink-2); } /* on the card's glass, so not grey */
+/* the calibration note: a caption on an opaque ground (on the bare glass the glow behind it
+   brought even --ink-2 below 4.5:1) */
+.ou .cal { margin-top: 4px; color: var(--ink-2); width: fit-content; max-width: 100%; padding: 2px 8px; border-radius: 8px;
+  background: linear-gradient(var(--card), var(--card)), var(--base); }
 .ctxbtn { align-self: flex-start; max-width: 100%; }
 /* ghost buttons on near-white grounds need a visible edge in light mode */
 .btn.ghost.ctxbtn, .sheet .btn.ghost { border-color: var(--btn-edge); background: var(--btn-fill); }
@@ -651,3 +665,61 @@ h1.withlogo { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .vog th.on { color: var(--acc-text); box-shadow: inset 0 -2px 0 var(--acc); }
 .vog tr.tn td { font-weight: 700; color: var(--ink-2); background: var(--glass-2); }
 @media (max-width: 400px) { .cxt, .vog { font-size: 0.76rem; } .cxt th, .cxt td, .vog th, .vog td { padding: 4px 2px; } }
+
+/* ---------- opaque grounds for small text over the arena glow ---------- */
+/* Grey or small text keeps 4.5:1 in both themes only on an opaque ground (the card colour laid
+   over the page base), as in the US prices block: on the bare glass the glow behind it can bring
+   even --ink-2 below that. */
+.solid { background: linear-gradient(var(--card), var(--card)), var(--base); border: 1px solid var(--rule-2); border-radius: var(--r-sm);
+  padding: 8px 11px; color: var(--ink-2); min-width: 0; }
+.solid .muted { color: var(--muted-2); }
+.solid > * + * { margin-top: 6px; }
+.solid > :first-child { margin-top: 0; }
+.solid > :last-child, p.solid { margin-bottom: 0; }
+.defrow > .tiny { margin-top: 4px; }
+/* tonight's tiles: tip-off, injured counts and the started mark on an opaque strip */
+.game-tile .meta { display: grid; justify-items: start; gap: 2px; padding: 6px 9px; border-radius: 12px; color: var(--ink-2);
+  background: linear-gradient(var(--card), var(--card)), var(--base); }
+.pill.started { margin-top: 3px; color: var(--warn-text); border-color: currentColor; background: none; white-space: normal; }
+.pill.started .dot { background: var(--warning); }
+/* the props board's count and the offline copy's play threshold, on the page itself */
+.countrow { display: grid; gap: 2px; }
+.countrow p { margin: 0; color: var(--ink); }
+/* the board's explanation folds into "How the cards work" (open on wide screens) */
+.hero .howto summary { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 4px 14px; border-radius: 999px; cursor: pointer;
+  list-style: none; font-size: 0.86rem; font-weight: 700; color: var(--link); border: 1px solid var(--rule-2);
+  background: linear-gradient(var(--card), var(--card)), var(--base); }
+.hero .howto summary::-webkit-details-marker { display: none; }
+.hero .howto summary::after { content: ""; width: 7px; height: 7px; border: solid currentColor; border-width: 0 2px 2px 0; transform: translateY(-2px) rotate(45deg); transition: transform 0.25s var(--ease); }
+.hero .howto[open] summary::after { transform: translateY(2px) rotate(-135deg); }
+.hero .howto p { margin-top: 8px; }
+/* phones: the board's filters in a compact grid (two across, then three), so the first card
+   starts on the first screen */
+@media (max-width: 520px) {
+  .filters.nbaf { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 8px; align-items: end; }
+  .filters.nbaf > label { grid-column: span 4; }
+  .filters.nbaf > label:nth-child(-n + 2) { grid-column: span 6; }
+  .filters.nbaf > label:nth-child(3) { grid-column: span 3; } /* plays at least: "60%" */
+  .filters.nbaf > label:nth-child(5) { grid-column: span 5; } /* sort: the longest choices */
+  .filters.nbaf input, .filters.nbaf select { width: 100%; }
+}
+
+/* ---------- tap targets of at least 32px ---------- */
+/* the lean pill keeps its size; a transparent margin around it takes the tap */
+.ou .leanrow .lean[data-tip] { position: relative; }
+.ou .leanrow .lean[data-tip]::after { content: ""; position: absolute; inset: -7px -4px; }
+/* "Best" (with its explanation) gets a 32px row of its own */
+.usp-g .k[data-tip] { display: flex; align-items: center; min-height: 32px; }
+/* names that link to a page: padding enlarges the hit area, the negative margin keeps the layout */
+.pcard .who a, .prop .who a { position: relative; display: inline-block; padding-block: 6px; margin-block: -6px; } /* above the line below */
+td a.plink { display: inline-block; padding-block: 7px; margin-block: -7px; }
+/* a name the offline copy has no page for: plain text in the name's own style */
+.pcard .who .nolink { color: var(--ink); font-weight: 750; font-size: 1.06rem; }
+.prop .who .nolink { color: var(--ink); font-weight: 700; font-size: 1.04rem; }
+.sheetlink.nopage { color: var(--muted-2); }
+
+/* small tap targets: an invisible hit area of at least 32px around chips and pills with tooltips */
+.facts > span[data-tip], .pill[data-tip] { position: relative; }
+.facts > span[data-tip]::after, .pill[data-tip]::after { content: ""; position: absolute; inset: -5px -2px; }
+details.small > summary { padding-block: 7px; margin-block: -7px; }
+.deft td a { display: inline-block; padding-block: 7px; margin-block: -7px; }

@@ -421,6 +421,98 @@ def test_close_warns_when_the_provider_start_is_over_10_minutes_off(con, start, 
     assert p["tip_utc"] == start and p["recorded_tip_utc"] == t(20)
 
 
+class Rechecked(FakeOddsAPI):
+    """The provider's events call answers with ev1 starting at starts[0], then starts[1], ...
+    (the last repeats): the first call plans the snapshot, the next ones are the re-checks made
+    just before each paid call. `then` runs before each re-check (e.g. the clock moves on)."""
+
+    def __init__(self, starts, then=None, **kw):
+        super().__init__(**kw)
+        self.starts, self.then, self.n_events = list(starts), then, 0
+
+    def get(self, url, params=None, **kw):
+        if urlsplit(url).path.endswith("/events"):
+            self.n_events += 1
+            if self.n_events > 1 and self.then:
+                self.then()
+            s = self.starts[min(self.n_events, len(self.starts)) - 1]
+            if s == "fail":  # the provider answers the re-check with an error
+                self.calls.append((urlsplit(url).path, {}))
+                r = FakeResponse(url, {"message": "unavailable"}, {})
+                r.status_code = 404
+                return r
+            self.events = [] if s is None else _ev1(s)
+        return super().get(url, params=params, **kw)
+
+
+@pytest.mark.parametrize("recheck,why", [
+    (t(1.5), "starts at 00:01 UTC by the provider's start time, within 2 min"),
+    (t(-1), "already started at 23:59 UTC"),
+    (None, "no longer in the provider's event list")])
+def test_close_rechecks_the_start_just_before_the_paid_call(con, recheck, why):
+    """Planned at 20 minutes before the start; the re-check just before the paid call finds the
+    game starting within 2 minutes, started, or gone: no paid call."""
+    _track(con)
+    fake = Rechecked([t(20), recheck], remaining=1000, event_odds={"ev1": CLOSE_ODDS})
+    out = oa.snapshot_close(con, "nba", 30, session=fake)
+    assert fake.paths() == ["/v4/sports/basketball_nba/events"] * 2 and fake.remaining == 1000
+    assert fake.calls[1][1] == {"eventIds": "ev1"}  # the re-check asks for that event only
+    assert out["results"] == [] and len(out["skipped"]) == 1
+    assert out["skipped"][0]["reason"].startswith("re-checked before the call: ")
+    assert why in out["skipped"][0]["reason"]
+    assert [g["start_utc"] for g in out["started"]] == ([t(-1)] if recheck == t(-1) else [])
+    assert con.execute("SELECT COUNT(*) FROM quotes").fetchone()[0] == 0
+    assert "SKIPPED PHI @ DET closing props: re-checked" in "\n".join(cli.close_lines(out))
+
+
+def test_close_skips_a_game_whose_start_could_not_be_rechecked(con):
+    _track(con)
+    fake = Rechecked([t(20), "fail"], remaining=1000, event_odds={"ev1": CLOSE_ODDS})
+    out = oa.snapshot_close(con, "nba", 30, session=fake)
+    assert not [p for p in fake.paths() if p.endswith("/odds")] and out["results"] == []
+    why = out["skipped"][0]["reason"]
+    assert why.startswith("start time not re-checked before the call (HTTP 404")
+    assert "test-key" not in why
+
+
+def test_close_recheck_lets_a_game_with_time_left_through(con):
+    _track(con)
+    fake = Rechecked([t(20), t(3)], remaining=1000, event_odds={"ev1": CLOSE_ODDS})
+    out = oa.snapshot_close(con, "nba", 30, session=fake)
+    assert fake.paths()[-2:] == ["/v4/sports/basketball_nba/events",
+                                 "/v4/sports/basketball_nba/events/ev1/odds"]
+    assert out["results"][0]["stored"] == 8 and out["skipped"] == []
+    assert out["planned"][0]["checked_start_utc"] == t(3)
+    assert out["planned"][0]["checked_minutes_to_tip"] == 3.0
+
+
+def test_close_recheck_uses_the_time_at_the_call(con, monkeypatch):
+    """The start has not moved, but 19 minutes have passed since the plan (an earlier call was
+    slow): one minute to go at the re-check, so no call."""
+    _track(con)
+    now = {"t": NOW}
+    monkeypatch.setattr(oa, "utcnow", lambda: now["t"])
+    fake = Rechecked([t(20)], then=lambda: now.update(t=NOW + timedelta(minutes=19)),
+                     remaining=1000, event_odds={"ev1": CLOSE_ODDS})
+    out = oa.snapshot_close(con, "nba", 30, session=fake)
+    assert not [p for p in fake.paths() if p.endswith("/odds")] and out["results"] == []
+    assert "within 2 min" in out["skipped"][0]["reason"]
+    assert out["planned"][0]["checked_minutes_to_tip"] == 1.0
+
+
+def test_close_skips_a_game_starting_within_2_minutes_at_the_plan(con):
+    _track(con)
+    fake = Rechecked([t(1.5)], remaining=1000, event_odds={"ev1": CLOSE_ODDS})
+    dry = oa.snapshot_close(con, "nba", 30, dry_run=True, session=fake)
+    assert dry["planned"][0]["too_close"] and dry["estimated_credits"] == 0
+    text = "\n".join(cli.close_lines(dry))
+    assert "within 2 min; skipped" in text and "Planned: 0 calls" in text
+    fake = Rechecked([t(1.5)], remaining=1000, event_odds={"ev1": CLOSE_ODDS})
+    out = oa.snapshot_close(con, "nba", 30, session=fake)
+    assert fake.paths() == ["/v4/sports/basketball_nba/events"]  # no re-check, no paid call
+    assert "within 2 min" in out["skipped"][0]["reason"] and out["started"] == []
+
+
 def test_close_can_be_limited_to_some_rules(con, monkeypatch):
     _track(con)
     a = oa.plan_close(con, "nba", 30, rules=["rule-a"])

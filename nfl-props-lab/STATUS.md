@@ -3,8 +3,9 @@
 ## Latest (3 Nov, parity build, D-046)
 
 * **ESPN dropped.** Box scores and injury news come from SportsDataverse only (the daily
-  snapshot, about 18:40 UTC; each edition says which one). The HTTP helper refuses ESPN, NBA.com,
-  nba.net, wnba.com and NFL.com, redirects included. Photos and logos are the cached copies only
+  snapshot, about 18:40 UTC; each edition says which one). The HTTP helper refuses any host with
+  a label starting "espn" (every ESPN domain and suffix) and nba.com, nba.net, wnba.com and
+  nfl.com with their subdomains, redirects included. Photos and logos are the cached copies only
   (NBA and NFL); without one the app shows initials.
 * **Odds:** game lines for the whole slate with each NBA pull (3 credits), no /markets pre-call,
   a credit floor (NPL_ODDS_FLOOR, default 400) and `npl close` for closing snapshots of tracked
@@ -15,6 +16,10 @@
 * **Fixed:** readers now rebuild complete boards from the deduplicated stores (a book whose
   prices had not changed since the previous pull was left out of the consensus, the closing
   board and the game lines); usage counts team turnovers; figures round half up.
+* **Follow-up:** boards come from a pull log (table odds_pulls, backfilled from the stored
+  responses), so a book that withdrew drops out, an unchanged one stays, and a closing pull with
+  no changes still gives closing-line value; `npl close` checks each start time again just
+  before its call; slate games carry injury counts for both teams.
 * **Snapshot:** `npl snapshot` writes `data/snapshots/nfl-props-lab.html` (it holds prices, so
   it is git-ignored) and refuses a page over the host's 16 MB limit: 14.9 MB on the 2 Nov slate.
 
