@@ -153,7 +153,8 @@ def nba_matchups():
 def nba_shot_profile(player_id: str):
     from .nba import appdata as nba
 
-    d = nba.shot_profile(player_id)
+    e = nba.latest()  # the page sits beside the latest edition: games before its date only
+    d = nba.shot_profile(player_id, before_date=e["date_et"] if e else None)
     if "error" in d:
         raise HTTPException(404, d["error"])
     return _j(d)

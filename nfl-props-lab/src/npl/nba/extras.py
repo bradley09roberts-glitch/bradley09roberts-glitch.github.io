@@ -83,8 +83,9 @@ NOTES = {
               "season, from play-by-play; overtime is counted in the total and shown "
               "separately. Close games: final margin 5 points or fewer.",
     "defence": "This regular season, from team box scores. DREB% = defensive rebounds / "
-               "(defensive rebounds + opponents' offensive rebounds). Rank 1 = fewest assists "
-               "allowed or highest DREB%.",
+               "(defensive rebounds + opponents' offensive rebounds). Each place names its "
+               "direction: assists counted from the most allowed (or the fewest), DREB% from "
+               "the highest.",
     "injury": "From the SportsDataverse injury snapshot: body part or reason, area, detail, "
               "side and the return date it expects.",
     "vs_opp": vs_opp_note(),

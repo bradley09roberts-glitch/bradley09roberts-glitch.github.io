@@ -53,7 +53,7 @@ uv run npl nba settle             # NBA pre-tip record -> reports/nba/record/
 uv run npl quotes --sport nba --regions us --hours-ahead 24   # NBA prop prices + game lines (credits)
 uv run npl close --sport nba --within 30 --dry-run   # plan a closing snapshot of tracked props
 uv run npl serve                  # web app at http://127.0.0.1:8765
-uv run npl snapshot --min-p-play 0.9 --nba-min-p-play 0.6   # offline copy of the app (no server)
+uv run npl snapshot --min-p-play 0.9 --nba-min-p-play 0.7   # offline copy of the app (no server)
 uv run npl verify                 # lint, tests, edition hashes, API smoke test
 ```
 
@@ -71,14 +71,22 @@ also logged in the pull log (`odds_pulls`), which readers use to rebuild each pu
 The snapshot embeds US bookmaker prices, so it is written to
 `data/snapshots/nfl-props-lab.html` (git-ignored; never commit it) unless `--out` says
 otherwise. The thresholds shown are the defaults: NBA cards, player pages and photos for players
-at least 60% likely to play (the props board's default filter), NFL player pages and photos for
-players at least 90% likely to play (every NFL card is kept). A page over 16,000,000 bytes, the
-host's limit, is refused unless `--allow-oversize` is given. Measured on 3 Nov 2026 with the
-2 Nov NBA edition (15 games) and the Week 8 NFL edition: 15,439,935 bytes with the NBA factor
-tabs (D-047; 14,919,249 before them, and about 18.2 MB then with both thresholds at 0.5).
+at least 70% likely to play, NFL player pages and photos for players at least 90% likely to play
+(every NFL card is kept). A page over 16,000,000 bytes, the host's limit, is refused unless
+`--allow-oversize` is given. Measured on 3 Nov 2026 with the 2 Nov NBA edition (15 games) and
+the Week 8 NFL edition: about 14.76 MB at these defaults (1,410 NBA cards, 352 with a
+bookmaker line; builds differ by a few dozen bytes because they carry timestamps). The NBA default was raised from 60% (the props board's filter) that day, for
+slates with more lines: on that edition a card with a line takes about 1.05 KB more than one
+without (its line and factor tabs), so the same 15 games with about 900 lined cards would come
+to about 15.34 MB at 70% but 15.86 MB at 60%, over the 15.5 MB we aim to stay under. At 60% the
+page measured about 15.28 MB (about 15.44 MB before the factor tabs' labels were kept once,
+D-047). These estimates count cards only: a slate with stored game lines and a larger NFL edition
+add a little more. If a build is refused as too large, raise `--nba-min-p-play` (or
+`--min-p-play` for the NFL pages) and build again.
 
 The server gzips responses of 1 KB or more. NBA cards carry four factor tabs (D-047: research
-context from rules that did not beat the market when tested), and
+context from rules that, when tested, made no money at the best regulated price in either
+season and did not measurably improve on the market's own forecast), and
 `/api/nba/parlay?legs=PLAYER_ID:MARKET:SIDE,...&price=4.5` combines card legs at their
 margin-free chances, as the app's parlay check does (arithmetic only; legs from one game are
 flagged as not independent).

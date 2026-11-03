@@ -4,20 +4,30 @@
 
 * **Factor tabs** on NBA cards and player pages: Opponent, Recent form, Minutes & usage and Game
   outlook. Each lean comes from a simple rule fixed before a backtest on two seasons of stored
-  real lines, and each tab shows that rule's result in both seasons. None beat the bookmakers'
-  margin-free price, and neither did three or more agreeing: research context, not picks.
+  real lines, and each tab shows that rule's result in both seasons. None made money at the best
+  regulated price in either season, and none measurably improved on the market's own forecast in
+  the test season; neither did three or more agreeing: research context, not picks.
 * **Parlay check:** card legs at the US line, their margin-free chances multiplied as if
   independent, the fair odds and the expected value at odds you type; legs from one game or of
   one player are flagged. The leg list stays in your browser. `/api/nba/parlay` does the same
   sums on the server; a test runs the page's JavaScript against the Python.
 * **Fixed after review:** every box-score input (card logs, the form count, the season behind the
-  matchup and role rules, the opponent ranks) now stops at the earlier of the edition's
+  opponent and absent-teammate rules, the opponent ranks) now stops at the earlier of the edition's
   publication and the game's start. Before, a game that had started before a late edition (the
   2 Nov final, 01:13 UTC) entered its players' card logs once its box score arrived (191
   players). The form label now matches its figures, and the server gzips responses of 1 KB or
   more (the NBA props body: 14.2 MB, sent as 0.94 MB).
-* **Snapshot:** 15.44 MB on the 2 Nov slate with the README's thresholds; the factors' tested
-  lines are kept once in the page and put back on each card when it opens.
+* **Final fixes:** a card's US line, and the form count against it, now come only from prices
+  seen before the game's start (a pull taken in play could set it before). Each season's tested
+  line says its return counts only the props with a regulated price. A parlay price of infinity
+  is refused like any bad price (the server answered with an error before). Backend wording in
+  our own words: no other app's tab names, and places with their direction ("counted from the
+  most allowed") instead of rank notes.
+* **Snapshot:** 14.76 MB on the 2 Nov slate with the README's thresholds. What every card repeats
+  (the factors' tested lines and labels and the overall line's closing sentence) is kept once in
+  the page and put back on each card when it opens. The NBA default threshold is now 70% (it was
+  60%), so a 15-game slate with about 900 cards with a line stays under 15.5 MB (about 15.34 MB;
+  15.86 MB at 60%).
 
 ## Latest (3 Nov, parity build, D-046)
 

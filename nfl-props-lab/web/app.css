@@ -240,6 +240,11 @@ a.panel:hover { text-decoration: none; transform: translateY(-3px); }
 .hero .medal { position: absolute; right: 16px; top: 16px; width: 64px; height: 64px; }
 .hero .medal + .eyebrow, .hero .medal ~ h1, .hero .medal ~ p { padding-right: 76px; }
 .hero .medal ~ p ~ p, .hero .medal ~ .row { padding-right: 0; }
+/* the hero's eyebrow on an opaque chip (the card colour over the page base): the glass hero lets
+   the arena glow through, and over it the accent text fell below 4.5:1 in dark mode */
+.hero .eyebrow { align-self: flex-start; max-width: 100%; padding: 1px 9px; border-radius: 10px; border: 1px solid var(--rule-2);
+  background: linear-gradient(var(--card), var(--card)), var(--base); }
+.hero .medal + .eyebrow { padding-right: 9px; max-width: calc(100% - 76px); } /* clear of the medal, as its padding was */
 .grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 330px), 1fr)); }
 .grid.tight { grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr)); }
 .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
@@ -348,7 +353,7 @@ td .sw { display: inline-block; width: 14px; height: 3px; border-radius: 2px; ve
 /* sheet (detail overlay) */
 .sheet-back { position: fixed; inset: 0; z-index: 40; background: var(--scrim); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
   display: flex; align-items: flex-end; justify-content: center; }
-.sheet { width: 100%; max-width: 720px; max-height: 88vh; overflow-y: auto; background: var(--card);
+.sheet { width: 100%; max-width: 720px; max-height: 88vh; overflow-y: auto; overscroll-behavior: contain; background: var(--card);
   border-radius: 28px 28px 0 0; padding-block: 18px calc(22px + env(safe-area-inset-bottom, 0px));
   padding-left: max(18px, env(safe-area-inset-left, 0px)); padding-right: max(18px, env(safe-area-inset-right, 0px));
   display: flex; flex-direction: column; gap: 12px; }
@@ -488,6 +493,15 @@ span.mu { border: 1px solid var(--edge); border-radius: 999px; padding: 1px 8px;
 .mktabs button.on { color: var(--acc-ink);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0) 60%), var(--acc);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 6px 16px -8px var(--acc); }
+/* light mode: white on the light accent was 4.4:1 on NBA pages and the sheen made it paler (the
+   sport switch's lens 2.2:1): accent buttons, the open market tab and the lens take the darker
+   accent text colour with no sheen (white on it about 6:1), as the parlay counter does; the 1px
+   rim light stays */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) .btn:not(.ghost), :root:not([data-theme="dark"]) .mktabs button.on,
+  :root:not([data-theme="dark"]) .sport .lens { background: var(--acc-text); }
+}
+:root[data-theme="light"] .btn:not(.ghost), :root[data-theme="light"] .mktabs button.on, :root[data-theme="light"] .sport .lens { background: var(--acc-text); }
 
 /* tonight's games: glass tiles lit by both teams' colours */
 .games { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr)); }
@@ -742,7 +756,10 @@ details.small > summary { padding-block: 7px; margin-block: -7px; }
   padding: 6px 2px; border: 1px solid transparent; border-radius: 14px; background: transparent; color: var(--ink-2); font: inherit; cursor: pointer; text-align: center;
   transition: background 0.25s, color 0.25s, border-color 0.25s, transform 0.3s var(--spring); }
 .ftabs [role="tab"] b { font-family: var(--f-display); font-stretch: 85%; font-weight: 800; font-size: 0.82rem; letter-spacing: 0.03em; line-height: 1.1; }
-.ftabs [role="tab"]:hover { color: var(--ink); background: var(--glass-2); }
+/* hover: a faint wash (on --glass-2 in dark mode the grey "Unknown" fell to about 3:1 and
+   "Under" to about 4:1), and the neutral and unknown words lift to --ink-2, at 4.5:1 or more */
+.ftabs [role="tab"]:hover { color: var(--ink); background: var(--glass); }
+.ftabs [role="tab"]:hover .fl.neutral, .ftabs [role="tab"]:hover .fl.unknown { color: var(--ink-2); }
 .ftabs [role="tab"]:active { transform: scale(0.97); }
 .ftabs [role="tab"][aria-selected="true"] { color: var(--ink); border-color: var(--acc); background: linear-gradient(var(--card), var(--card)), var(--base);
   box-shadow: inset 0 1px 0 var(--edge-hi), 0 6px 16px -10px var(--acc); }
@@ -754,6 +771,12 @@ details.small > summary { padding-block: 7px; margin-block: -7px; }
 .fl.unknown i { background: transparent; border: 1.5px dashed currentColor; }
 .fpanel { display: grid; gap: 12px; min-width: 0; }
 .fpanel[hidden] { display: none; }
+/* paragraphs in the tabs and their sections keep no default margins, so the gaps between blocks
+   are the grids' own 12px (a section's last note had added its 1em below); inside a section
+   the 6px rhythm (.cx > * + *) stays */
+.fx > p, .fpanel > p { margin: 0; }
+.cx > p { margin-bottom: 0; }
+.cx > p:first-child { margin-top: 0; }
 .fhd { display: grid; gap: 3px; }
 .fhl { margin: 0; font-size: 0.95rem; font-weight: 700; line-height: 1.35; color: var(--ink); }
 .frel { margin: 0; font-size: 0.75rem; color: var(--ink-2); }

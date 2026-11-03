@@ -85,10 +85,43 @@ def test_bad_legs_are_refused(legs):
         P.fair_combo(legs)
 
 
-@pytest.mark.parametrize("price", [1.0, 0.5, -2.0])
+@pytest.mark.parametrize("price", [1.0, 0.5, -2.0, math.inf, -math.inf, math.nan, "inf", "abc",
+                                   True])
 def test_bad_prices_are_refused(price):
-    with pytest.raises(ValueError):
+    """Every bad price, infinite or not a number included, in the same words."""
+    with pytest.raises(ValueError, match=r"^price must be a decimal price above 1, got "):
         P.fair_combo([_leg(0.5)], price=price)
+
+
+@pytest.mark.parametrize("chance", [math.inf, math.nan, "abc"])
+def test_bad_chances_are_refused_in_the_same_words(chance):
+    with pytest.raises(ValueError, match=r"^leg 2: chance must be strictly between 0 and 1"):
+        P.fair_combo([_leg(0.5, "g1", "a"), _leg(chance, "g2", "b")])
+
+
+# the test client's own notice about its HTTP library, not about this code
+@pytest.mark.filterwarnings("ignore:Using `httpx` with `starlette.testclient` is deprecated")
+def test_the_parlay_route_refuses_an_infinite_price(monkeypatch):
+    """/api/nba/parlay?price=inf answers 422 with the price message (it was a server error),
+    as do NaN and prices of 1 or less; a good price still works."""
+    from fastapi.testclient import TestClient
+
+    from npl import api
+    from npl.nba import appdata
+
+    cards = [{"player_id": pid, "market": "pts", "name": pid.upper(), "game_id": gid,
+              "market_line": {"line": 20.5, "fair_over": 0.5, "fair_under": 0.5, "books": 5}}
+             for pid, gid in (("a", "g1"), ("b", "g2"))]
+    monkeypatch.setattr(appdata, "props", lambda: {"cards": cards})
+    client = TestClient(api.app, raise_server_exceptions=False)
+    legs = "a:pts:over,b:pts:under"
+    for bad in ("inf", "Infinity", "-inf", "nan", "1", "0.5"):
+        r = client.get("/api/nba/parlay", params={"legs": legs, "price": bad})
+        assert r.status_code == 422, (bad, r.status_code)
+        assert r.json()["detail"].startswith("price must be a decimal price above 1, got "), bad
+    ok = client.get("/api/nba/parlay", params={"legs": legs, "price": "4.5"})
+    assert ok.status_code == 200 and ok.json()["ev"] == round(0.25 * 4.5 - 1, 4)
+    assert ok.json()["chance"] == 0.25 and ok.json()["independent"] is True
 
 
 def test_many_legs_stay_exact():
@@ -96,3 +129,13 @@ def test_many_legs_stay_exact():
     r = P.fair_combo(legs)
     assert r["chance"] == pytest.approx(2 ** -10) and r["fair_odds"] == pytest.approx(1024)
     assert math.isclose(r["chance"] * r["fair_odds"], 1.0)
+
+
+def test_absurd_prices_are_refused():
+    import pytest
+
+    from npl import parlay
+    legs = [{"chance": 0.5, "game_id": "a", "player_id": "1"}]
+    with pytest.raises(ValueError, match="decimal price above 1"):
+        parlay.fair_combo(legs, price=1e307)
+    assert parlay.fair_combo(legs, price=1000.0)["price"] == 1000.0

@@ -40,27 +40,40 @@ def _pairs(groups: list[list[int]]) -> list[tuple[int, int]]:
     return sorted(p for g in groups for p in combinations(g, 2))
 
 
+def _number(x) -> float:
+    """x as a float, NaN for what is not a number (text such as "abc"), so that a check on it
+    fails and the caller refuses it in its own words."""
+    try:
+        return float(x)
+    except (TypeError, ValueError):
+        return math.nan
+
+
+MAX_PRICE = 1000.0  # a decimal price above this is a typo, not an offer
+
+
 def fair_combo(legs, price: float | None = None) -> dict:
     """Combined margin-free chance of `legs`, assuming independence, with flags.
 
     legs: dicts with `chance` (the margin-free chance of the side taken, strictly between 0
     and 1) and, for the flags, `game_id`, `player_id` and optionally `books` (books behind the
     fair chance); other keys (market, side, line, label) are ignored. price: an offered decimal
-    price for the whole combination (above 1), or None.
+    price for the whole combination (finite and above 1), or None.
 
     Returns legs (count), chance, fair_odds, price, ev and breakeven (None without a price),
     independent (no two legs from one game), same_game and same_player (groups of leg numbers,
-    0-based), thin (leg numbers) and warnings (one line each, legs numbered from 1)."""
+    0-based), thin (leg numbers) and warnings (one line each, legs numbered from 1). A bad leg
+    or price raises ValueError, whatever was wrong with it (text, infinity or out of range)."""
     legs = list(legs)
     if not legs:
         raise ValueError("no legs")
     chances = []
     for i, leg in enumerate(legs, 1):
         p = leg.get("chance")
-        if p is None or isinstance(p, bool) or not 0 < float(p) < 1:
+        if p is None or isinstance(p, bool) or not 0 < _number(p) < 1:
             raise ValueError(f"leg {i}: chance must be strictly between 0 and 1, got {p!r}")
         chances.append(float(p))
-    if price is not None and not float(price) > 1:
+    if price is not None and not (math.isfinite(_number(price)) and 1 < _number(price) <= MAX_PRICE):
         raise ValueError(f"price must be a decimal price above 1, got {price!r}")
     chance = math.prod(chances)
     games, players = _groups(legs, "game_id"), _groups(legs, "player_id")

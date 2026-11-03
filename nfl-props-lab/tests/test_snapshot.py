@@ -57,7 +57,7 @@ def test_an_oversize_page_is_refused_and_not_written(tmp_path, tiny, monkeypatch
 def test_cli_defaults_thresholds_and_refusal(tmp_path, monkeypatch, capsys):
     a = cli.build_parser().parse_args(["snapshot"])
     assert a.out == str(config.DATA_HOME / "snapshots" / "nfl-props-lab.html")
-    assert (a.min_p_play, a.nba_min_p_play, a.allow_oversize) == (0.9, 0.6, False)
+    assert (a.min_p_play, a.nba_min_p_play, a.allow_oversize) == (0.9, 0.7, False)
     seen = {}
 
     def build(out, **kw):
@@ -115,7 +115,7 @@ def test_nba_copy_records_its_threshold_pages_and_grid_cap(monkeypatch):
     for name, fn in (("slate", lambda: slate), ("props", lambda: cached),
                      ("backtests", lambda: []), ("game", lambda gid: {"game": {}}),
                      ("matchups", lambda: {}), ("visuals", lambda pids: {}),
-                     ("shot_profile", lambda pid: {"error": "none"}),
+                     ("shot_profile", lambda pid, **kw: {"error": "none"}),
                      ("player", lambda pid: {"error": "unknown player"} if pid == "c" else
                       {"player_id": pid, "game_log": [], "forecasts": [], "extras": {}})):
         monkeypatch.setattr(nba, name, fn)

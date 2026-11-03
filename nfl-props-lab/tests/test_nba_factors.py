@@ -116,14 +116,14 @@ def test_matchup_ranks_thirty_teams_top_and_bottom_ten():
                     0: "under"}
     m = F.matchup(t, 20, "G", "pts")
     assert m["headline"] == "20 give up the 10th-most points to guards: 60 a game between them (5 games)"
-    assert m["evidence"] == {"allowed": 60.0, "rank": 21, "of": 30, "games": 5}
+    assert m["evidence"] == {"allowed": 60.0, "rank_most": 10, "rank": 21, "of": 30, "games": 5}
     u = F.matchup(t, 0, "C", "pra")
     assert u["headline"].startswith("0 give up the 1st-fewest PRA to centres")
     assert "mid-table" in F.matchup(t, 15, "F", "pts")["headline"]
     # every team gives up the same rebounds: ties share the better rank both ways (method
     # "min", as the backtest), so all of them count as giving up the most
     tie = F.matchup(t, 15, "F", "reb")
-    assert tie["lean"] == "over" and tie["evidence"]["rank"] == 1
+    assert tie["lean"] == "over" and tie["evidence"]["rank"] == tie["evidence"]["rank_most"] == 1
     assert tie["headline"].startswith("15 give up the 1st-most rebounds to forwards")
     assert F.matchup(t, 15, "F", "pts")["reliability"] == F.TESTS["MU"]["reliability"]
 
@@ -141,7 +141,7 @@ def test_matchup_needs_five_opponent_games_and_counts_missing_positions_as_zero(
     # LAL faced GS (no centre) and PHX, whose centre did not play in game c: 0 in 2 games
     assert t.loc[("LAL", "C", "pra")].allowed == 0.0
     m = F.matchup(t, "PHX", "C", "pra")
-    assert m["lean"] == "unknown" and m["headline"] == "PHX have played 2 games: too few to rank (needs 5)"
+    assert m["lean"] == "unknown" and m["headline"] == "PHX have played 2 games: too few for the rule (needs 5)"
     assert F.matchup(t, "BOS", "G", "pts")["headline"] == "BOS have not played yet this season"
     assert F.matchup(t, "PHX", "X", "pts")["lean"] == "unknown"
     # games on the slate's date or later are not counted
@@ -230,7 +230,7 @@ def test_role_combines_the_two_rules_as_the_backtest():
     assert F.role("PHX", "mw", out, steady)["lean"] == "neutral"  # himself is not a teammate
     assert F.role("PHX", "jg", {"ready": True, "absent": []}, early)["lean"] == "neutral"
     x = F.role("PHX", "jg", {"ready": False, "absent": []}, early)
-    assert x["lean"] == "unknown" and x["headline"] == "Only 4 games this season: the role checks need 5"
+    assert x["lean"] == "unknown" and x["headline"] == "Only 4 games this season: these checks need 5 games"
     assert F.role("PHX", "jg", None, F.minutes_trend([]))["lean"] == "unknown"
     many = {"ready": True, "absent": [{"player_id": c, "name": c, "games": 9, "minutes": 30.0}
                                       for c in ("A", "B", "C", "D")]}
@@ -243,13 +243,17 @@ def test_role_combines_the_two_rules_as_the_backtest():
 def test_overall_counts_and_the_honest_line():
     o = F.overall({"matchup": "under", "form": "under", "game_script": "neutral",
                    "role": "neutral"})
-    assert o["text"] == "2 factors lean under, 2 neutral. Tested: these factors did not beat the market."
+    assert o["text"] == ("2 factors lean under, 2 neutral. Tested: none of these rules made money at "
+                         "the best regulated price in either season, or measurably improved on the "
+                         "market's own forecast in the test season.")
     assert (o["over"], o["under"], o["neutral"], o["unknown"], o["agree"]) == (0, 2, 2, 0, None)
     three = F.overall({"matchup": "over", "form": "over", "game_script": "neutral",
                        "role": "over"})
     assert three["agree"] == "over"
     assert three["text"] == ("3 factors lean over, 1 neutral. Tested: when 3 or more agreed, "
-                             "that side won 51.2% v the market's 51.4%. No edge.")
+                             "that side won 51.2% v a fair chance of 51.4% in the test season "
+                             "and lost money at the best regulated price in both seasons. No "
+                             "edge.")
     mixed = F.overall({"matchup": "over", "form": "under", "game_script": "unknown",
                        "role": "unknown"})
     assert mixed["text"].startswith("1 factor leans over, 1 under, 2 unknown.")
@@ -277,11 +281,79 @@ def test_reliability_labels_are_the_backtests():
                                             "for it. No edge.")
     assert F.TESTS["CB"]["reliability"] == ("Factors agreeing is not an edge: tested on 2 seasons "
                                             "of real lines.")
-    assert all(v["roi"] < 0 for v in F.TESTS.values())  # every rule lost at regulated prices
+    # every rule lost money at the best regulated price in both seasons, on fewer props than it
+    # pointed to (only those with a regulated price count)
+    for v in F.TESTS.values():
+        for s in (v, v["fit"]):
+            assert s["roi"] < 0 and s["roi_ci"][0] < s["roi"] < s["roi_ci"][1]
+            assert 0 < s["roi_props"] <= s["props"]
     t = F.tests_payload()
     assert set(t["rules"]) == {"T4", "T5", "MU", "GS", "Q4", "RA", "RM", "CB"}
     assert t["rules"]["CB"]["props"] == 1592 and t["rules"]["CB"]["won"] == 0.512
+    assert t["rules"]["T4"]["fit"]["roi_props"] == 44018 and t["rules"]["T4"]["roi_props"] == 11392
     json.dumps(t)
+
+
+def test_each_label_follows_from_the_lean_and_the_payload_keeps_them_once():
+    """A factor's reliability label is the one RELIABILITY holds for its lean (the role tab's
+    follows which rule set it), and the props payload carries that table and the overall line's
+    two closing sentences once, beside `tested`, for the offline copy."""
+    t = F.tests_payload()
+    assert t["reliability"] == F.RELIABILITY and t["overall"] == F.OVERALL_TESTED
+    assert set(t["reliability"]) == set(F.FACTORS)
+    assert all(set(v) == set(F.LEANS) for v in t["reliability"].values())
+    assert t["reliability"]["role"] == {"over": F.TESTS["RA"]["reliability"],
+                                        "under": F.TESTS["RM"]["reliability"],
+                                        "neutral": F.ROLE_RELIABILITY,
+                                        "unknown": F.ROLE_RELIABILITY}
+    out = {"ready": True, "absent": [{"player_id": "mw", "name": "Mark W", "games": 5,
+                                      "minutes": 27.1}]}
+    steady, down = F.minutes_trend([30] * 6), F.minutes_trend([32.5, 32.5, 20, 20, 20])
+    made = [F.form(v, ln) for v, ln in (([30] * 4, 22.5), ([1] * 4, 22.5), ([25, 10, 30, 12], 22.5),
+                                        ([30], None))]
+    made += [F.game_script("PHX", s) for s in (8.0, 2.5, None)]
+    made += [F.role("PHX", "jg", o, m) for o in (out, {"ready": True, "absent": []}, None)
+             for m in (steady, down, F.minutes_trend([]))]
+    names = ["form"] * 4 + ["game_script"] * 3 + ["role"] * 9
+    assert {f["lean"] for f in made} == set(F.LEANS)
+    for k, f in zip(names, made, strict=True):
+        assert f["reliability"] == F.RELIABILITY[k][f["lean"]], (k, f["lean"])
+    for agree in ("over", None):  # the overall line ends with the sentence the table holds
+        leans = dict.fromkeys(F.FACTORS, agree or "neutral")
+        assert F.overall(leans)["text"].endswith(" " + F.OVERALL_TESTED["agree" if agree else
+                                                                       "other"])
+
+
+def test_the_tested_claims_hold_for_the_figures():
+    """What the text says about the tests: no rule (and no agreement of 3 or more) made money at
+    the best regulated price in either season, and none measurably improved on the market's own
+    forecast in the test season. It never says a rule beat the margin-free price: form's side
+    did beat the fair chance in 2025-26."""
+    claim = ("none of these rules made money at the best regulated price in either season, "
+             "and none measurably improved on the market's own forecast in the test season; "
+             "neither did three or more agreeing")
+    assert claim in F.SUMMARY.lower()
+    assert "the opponent's figures and absent teammates" in F.SUMMARY
+    assert all(v["roi"] < 0 and v["fit"]["roi"] < 0 for v in F.TESTS.values())
+    assert F.TESTS["T4"]["won"] > F.TESTS["T4"]["market"]  # so "beat the fair chance" is said
+    words = [F.SUMMARY, *F.OVERALL_TESTED.values(), *F.NOTES.values(), *F.RULES.values(),
+             *(lab for v in F.RELIABILITY.values() for lab in v.values()), F.__doc__]
+    assert not [s for s in words if re.search(r"beat the (bookmakers|market)|margin-free price",
+                                              s, re.I)]
+
+
+def test_backend_text_uses_our_own_words():
+    """No tab words of the other app (matchup, role, game script) and no rank-number notes in
+    what the cards and notes show; places carry their direction instead."""
+    from npl.nba import extras as X
+
+    shown = [F.SUMMARY, *F.NOTES.values(), *F.RULES.values(), *F.OVERALL_TESTED.values(),
+             F.role("PHX", "jg", {"ready": False, "absent": []}, F.minutes_trend([30] * 4))
+             ["headline"], X.NOTES["defence"]]
+    assert not [s for s in shown if re.search(r"\b(matchup|role|game script)\b|rank 1", s, re.I)]
+    assert "counted from the most allowed" in F.NOTES["matchup"]
+    assert "counted from the most allowed" in X.NOTES["defence"]
+    assert F.RULES["MU"].endswith("once it has played 5 games")
 
 
 def test_every_factor_carries_both_seasons_with_the_backtest_figures():
@@ -289,18 +361,20 @@ def test_every_factor_carries_both_seasons_with_the_backtest_figures():
     assert set(t) == set(F.FACTORS) and all(set(v) == {"fit", "test"} for v in t.values())
     assert t["form"] == {
         "fit": "2024-25: on 44,754 props the side it pointed to won 51.3% v a fair chance of "
-               "51.7%; return −5.0% (95% interval −6.0% to −3.9%) at the best regulated price.",
+               "51.7%; return −5.0% on the 44,018 with a regulated price (95% interval −6.0% "
+               "to −3.9%), at the best one.",
         "test": "2025-26 sample: on 11,731 props the side it pointed to won 52.7% v a fair "
-                "chance of 51.6%; return −2.4% (95% interval −4.4% to −0.4%) at the best "
-                "regulated price."}
+                "chance of 51.6%; return −2.4% on the 11,392 with a regulated price (95% "
+                "interval −4.4% to −0.4%), at the best one."}
     assert t["game_script"]["test"] == (
         "2025-26 sample: on 4,018 props the under won 51.0% v a fair chance of 50.7% (all unders "
-        "51.7%); return −4.1% (95% interval −8.4% to +0.2%) at the best regulated price.")
+        "51.7%); return −4.1% on the 3,867 with a regulated price (95% interval −8.4% to "
+        "+0.2%), at the best one.")
     assert t["role"]["fit"] == (
         "2024-25: with a regular out, the over won 48.9% v a fair chance of 49.3% on 43,020 "
-        "props, return −5.2% (95% interval −6.6% to −3.8%); with his minutes down, the under won "
-        "49.0% v 50.5% on 3,187, return −7.8% (−13.1% to −2.8%); both at the best regulated "
-        "price.")
+        "props, return −5.2% on the 42,077 with a regulated price (95% interval −6.6% to "
+        "−3.8%); with his minutes down, the under won 49.0% v 50.5% on 3,187, return −7.8% on "
+        "the 3,129 with one (−13.1% to −2.8%); both at the best regulated price.")
     assert t["role"]["test"].startswith("2025-26 sample: with a regular out, the over won 48.0%")
     # each line holds its own season's figures from the table (fit, then the test sample)
     for key, rule in (("matchup", "MU"), ("form", "T4"), ("game_script", "GS")):
@@ -308,9 +382,15 @@ def test_every_factor_carries_both_seasons_with_the_backtest_figures():
             line = t[key][part]
             assert line.startswith(F.SEASON_NAMES[part] + ": on ")
             for bit in (f"{s['props']:,} props", f"won {F._pc(s['won'])} v a fair chance of "
-                        f"{F._pc(s['market'])}", f"return {F._pc(s['roi'], True)} (95% interval "
+                        f"{F._pc(s['market'])}", f"return {F._pc(s['roi'], True)} on the "
+                        f"{s['roi_props']:,} with a regulated price (95% interval "
                         f"{F._pc(s['roi_ci'][0], True)} to {F._pc(s['roi_ci'][1], True)})"):
                 assert bit in line, (key, part, bit)
+    for part, (a, m) in (("fit", (F.TESTS["RA"]["fit"], F.TESTS["RM"]["fit"])),
+                         ("test", (F.TESTS["RA"], F.TESTS["RM"]))):
+        line = t["role"][part]
+        assert f"on the {a['roi_props']:,} with a regulated price" in line
+        assert f"on the {m['roi_props']:,} with one" in line
     # every rule's output carries its factor's lines (a copy), and the payload carries them once
     outs = {"form": F.form([30] * 4, 22.5), "matchup": F.matchup(None, "GS", "X", "pts"),
             "game_script": F.game_script("PHX", None),
@@ -463,8 +543,7 @@ def test_build_gives_every_card_its_four_factors():
     assert jg["game_script"]["headline"] == "PHX +2.5 (total 227.5): underdogs by less than 7"
     assert jg["game_script"]["evidence"]["points"] == 112.5 and jg["game_script"]["evidence"]["q4"] == 0.1591
     assert jg["role"]["lean"] == "over" and jg["role"]["headline"] == "MW (27 min a game) missed PHX's last game"
-    assert jg["overall"]["text"] == ("1 factor leans over, 1 under, 1 neutral, 1 unknown. "
-                                     "Tested: these factors did not beat the market.")
+    assert jg["overall"]["text"] == "1 factor leans over, 1 under, 1 neutral, 1 unknown. " + F.NO_EDGE
     assert fx[("jg", "pts")]["form"]["lean"] == "unknown"  # no line for his points
     sc = fx[("sc", "pts")]
     assert sc["game_script"]["headline"] == "GS -2.5 (total 227.5): favourites"
@@ -539,47 +618,88 @@ def test_snapshot_keeps_factor_tabs_on_cards_with_a_line_only():
     lined = {"market_line": {"line": 22.5}, "factors": fx, "log": {"values": list(range(30))}}
     bare = {"market_line": None, "factors": fx, "log": {"values": [1, 2]}}
     a, b = snapshot._nba_card(lined), snapshot._nba_card(bare)
-    assert a["factors"] is fx and a["log"]["values"] == list(range(10, 30))
+    assert a["factors"] == fx and a["log"]["values"] == list(range(10, 30))
     assert "factors" not in b and b["log"]["values"] == [1, 2]
     assert "factors" in bare  # the cached card is not changed
 
 
-def test_snapshot_keeps_the_tested_lines_once():
-    shared = F.tests_payload()["tested"]
-    fx = {**{k: {"lean": "neutral", "tested": dict(shared[k])} for k in F.FACTORS},
-          "overall": {"text": "x"}}
+def _built():
+    """The scenario's factor blocks as the server builds them, one per (player, market)."""
+    e, L, logs, mkt, ex = _scenario()
+    return F.build(e, e["forecasts"], logs, mkt, ex, L)
+
+
+def test_snapshot_keeps_what_every_card_repeats_once():
+    """The offline copy drops, per factor, the `tested` lines and the reliability label when
+    they are the payload's (factor_tests), and the overall line's closing sentence (its text
+    becomes `counts`); evidence keeps what the tabs show. Anything of a card's own is kept."""
+    shared = F.tests_payload()
+    fx = copy.deepcopy(_built()[("jg", "pra")])
+    assert fx["matchup"]["lean"] == "unknown" and fx["role"]["lean"] == "over"
     fx["role"]["tested"] = {"fit": "own", "test": "own"}  # not the payload's copy: kept
+    fx["form"]["reliability"] = "own label"  # likewise
     card = {"market_line": {"line": 22.5}, "factors": fx, "log": {"values": [1]}}
     before = copy.deepcopy(card)
-    out = snapshot._nba_card(card, shared)
-    assert all("tested" not in out["factors"][k] for k in ("matchup", "form", "game_script"))
-    assert out["factors"]["role"]["tested"] == {"fit": "own", "test": "own"}
-    assert out["factors"]["overall"] == {"text": "x"} and out["factors"]["form"]["lean"] == "neutral"
+    out = snapshot._nba_card(card, shared)["factors"]
+    assert all("tested" not in out[k] for k in ("matchup", "form", "game_script"))
+    assert out["role"]["tested"] == {"fit": "own", "test": "own"}
+    assert all("reliability" not in out[k] for k in ("matchup", "game_script", "role"))
+    assert out["form"]["reliability"] == "own label"
+    assert out["form"]["headline"] == fx["form"]["headline"] and out["form"]["lean"] == "under"
+    o = out["overall"]
+    assert "text" not in o and o["counts"] == "1 factor leans over, 1 under, 1 neutral, 1 unknown."
+    assert {k: o[k] for k in F.LEANS} == {k: fx["overall"][k] for k in F.LEANS}
+    # evidence: what the tabs show (the matchup's place from the most, unless the lean is under)
+    assert out["matchup"]["evidence"] == {"allowed": fx["matchup"]["evidence"]["allowed"],
+                                          "rank_most": fx["matchup"]["evidence"]["rank_most"],
+                                          "of": 4, "games": 4}
+    assert out["role"]["evidence"] == {"absent": ["MW"], "last3": 30.0, "season": 30.0}
+    assert out["form"]["evidence"] == fx["form"]["evidence"]
+    assert out["game_script"]["evidence"] == fx["game_script"]["evidence"]
+    under = snapshot._shown("matchup", {"lean": "under", "evidence": {
+        "allowed": 9.0, "rank_most": 28, "rank": 2, "of": 30, "games": 6}})
+    assert under["evidence"] == {"allowed": 9.0, "rank": 2, "of": 30, "games": 6}
+    old = snapshot._shown("matchup", {"lean": "over", "evidence": {"allowed": 9.0, "rank": 2}})
+    assert old["evidence"] == {"allowed": 9.0, "rank": 2}  # no rank_most stored: rank stays
+    # an overall line that does not end with the payload's sentence keeps its text
+    assert snapshot._overall({"agree": None, "text": "x"}, shared) == {"agree": None, "text": "x"}
+    assert snapshot._overall(fx["overall"], None) == fx["overall"]
     assert card == before  # the cached card is not changed
 
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="node is not installed")
-def test_the_offline_page_puts_the_tested_lines_back_on_each_card():
-    shared = F.tests_payload()["tested"]
-    lined = {"market_line": {"line": 22.5}, "log": {"values": [1]},
-             "factors": {**{k: {"lean": "under", "tested": dict(shared[k])} for k in F.FACTORS},
-                         "overall": {"text": "x"}}}
-    own = copy.deepcopy(lined)
+def test_the_offline_page_puts_the_shared_lines_back_on_each_card():
+    """REHYDRATE, run with node on a page of trimmed cards, gives every card the factors the
+    server sends (tested lines, labels and the whole overall line), with the evidence the tabs
+    show; what a card kept of its own is left alone."""
+    shared = F.tests_payload()
+    fx = _built()
+    lined = [{"market_line": {"line": 22.5}, "log": {"values": [1]}, "factors": copy.deepcopy(b)}
+             for b in fx.values()]
+    agree = copy.deepcopy(lined[0])  # 3 or more agreeing: the other closing sentence
+    agree["factors"]["overall"] = F.overall(dict.fromkeys(F.FACTORS, "under"))
+    own = copy.deepcopy(lined[0])
     own["factors"]["form"]["tested"] = {"fit": "own", "test": "own"}
+    own["factors"]["role"]["reliability"] = "own label"
     bare = {"market_line": None, "log": {"values": []}, "factors": None}
-    cards = [snapshot._nba_card(c, shared) for c in (lined, own, bare)]
-    assert "tested" not in cards[0]["factors"]["form"]
-    page = {"data": {"/api/nba/props": {"factor_tests": {"tested": shared}, "cards": cards}}}
+    server = [*lined, agree, own, bare]
+    cards = [snapshot._nba_card(c, shared) for c in server]
+    assert "tested" not in cards[0]["factors"]["form"] and "text" not in cards[-3]["factors"]["overall"]
+    page = {"data": {"/api/nba/props": {"factor_tests": shared, "cards": cards}}}
     script = snapshot.REHYDRATE.removeprefix("<script>").removesuffix("</script>")
     js = (f"const window = {{ NPL_SNAPSHOT: {json.dumps(page)} }};\n{script}\n"
           "process.stdout.write(JSON.stringify(window.NPL_SNAPSHOT.data['/api/nba/props'].cards));")
     r = subprocess.run([shutil.which("node"), "-e", js], capture_output=True, text=True,
                        timeout=60, check=True)
     got = json.loads(r.stdout)
-    assert got[0]["factors"] == lined["factors"]  # every line back, as the server sends it
-    assert got[1]["factors"]["form"]["tested"] == {"fit": "own", "test": "own"}
-    assert got[1]["factors"]["matchup"]["tested"] == shared["matchup"]
-    assert "factors" not in got[2]
+    for g, c in zip(got[:-1], server[:-1], strict=True):
+        want = {k: (v if k == "overall" else snapshot._shown(k, v)) for k, v in c["factors"].items()}
+        assert g["factors"] == want  # as the server sends it, evidence as the tabs show it
+    assert got[-3]["factors"]["overall"]["text"].endswith(F.OVERALL_TESTED["agree"])
+    assert got[-2]["factors"]["form"]["tested"] == {"fit": "own", "test": "own"}
+    assert got[-2]["factors"]["role"]["reliability"] == "own label"
+    assert got[-2]["factors"]["matchup"]["tested"] == shared["tested"]["matchup"]
+    assert "factors" not in got[-1]
 
 
 def test_parlay_route_resolves_card_legs(monkeypatch):

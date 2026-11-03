@@ -96,20 +96,37 @@ def opponent_factors(at) -> dict:
     return out
 
 
-def market_lines(game_ids: set[str]) -> dict:
-    """Latest stored quotes per (player, market) for these games: the most common line, the
-    market's over chance with the bookmaker margin removed (average over books quoting both
-    sides), best prices and when they were seen. US books are a research reference only."""
+def market_lines(starts: dict) -> dict:
+    """Latest pre-game quotes per (player, market) for these games (`starts`: {game_id: its
+    start, tip_utc}): the most common line, the market's over chance with the bookmaker margin
+    removed (average over books quoting both sides), best prices and when they were seen. US
+    books are a research reference only.
+
+    Pre-game only, so a card's line (and the form count against it) never comes from in-play
+    prices: quotes observed at or after their game's start are left out, and so are pulls taken
+    then, by the provider's start time (odds_api.pulls_frame, pregame=True) or by ours."""
     from .. import db
     from ..sources import odds_api
 
     try:
         con = db.connect()
         q = odds_api.quotes_frame(con)
-        pulls = odds_api.pulls_frame(con, "event_odds", "nba")
+        pulls = odds_api.pulls_frame(con, "event_odds", "nba", pregame=True)
     except Exception:  # noqa: BLE001 - no database or table: no lines
         return {}
-    return consensus_lines(q[q.game_id.isin(game_ids)], pulls)
+    q = pregame_quotes(q, starts)
+    return consensus_lines(q, X._before_tip(pulls, q, "provider_event_id"))
+
+
+def pregame_quotes(q: pd.DataFrame, starts: dict) -> pd.DataFrame:
+    """Stored quotes of these games (`starts`: {game_id: start}) observed strictly before their
+    game's start, with that start as `tip`; quotes of other games are left out."""
+    tip = pd.Series(pd.to_datetime(list(starts.values()), utc=True),
+                    index=[str(k) for k in starts], dtype="datetime64[ns, UTC]")
+    q = q[q.game_id.notna()]
+    t = q.game_id.astype(str).map(tip)
+    seen = pd.to_datetime(q.observed_at, utc=True, format="ISO8601")
+    return q.assign(tip=t)[t.notna() & (seen < t)]
 
 
 def consensus_lines(q: pd.DataFrame, pulls: pd.DataFrame | None = None) -> dict:
@@ -229,7 +246,7 @@ def _props() -> dict:
     logs = game_logs(*log_cuts(e, fc))
     games = {g["game_id"]: g for g in e["games"]}
     opp = opponent_factors(F.slate_cutoff(e))
-    mkt = market_lines(set(games))
+    mkt = market_lines({gid: g["tip_utc"] for gid, g in games.items()})  # pre-game quotes only
     season = e["date_et"][:4]
     ex, inj = _extras(e, mkt)
     fx = _factors(e, fc, logs, mkt, ex)
@@ -554,7 +571,9 @@ def matchups() -> dict:
     return _MU["data"]
 
 
-def shot_profile(pid: str) -> dict:
+def shot_profile(pid: str, before_date: str | None = None) -> dict:
+    """His shot profile. With `before_date` (an edition's US date) only games played before that
+    date count, so the page shown with that edition never includes the game being forecast."""
     from . import matchups as mu
 
     pg = lake()["player_games"]
@@ -562,8 +581,12 @@ def shot_profile(pid: str) -> dict:
     if g.empty:
         return {"error": "unknown player"}
     last = g.sort_values("tip_utc").iloc[-1]
+    ids = None
+    if before_date:
+        ids = set(g[g.date < pd.Timestamp(before_date)].game_id.astype(str))
     return clean({"player_id": pid, "name": last["name"], "team": last.team,
-                  "position": last.pos, "seasons": mu.player_profile(pid)})
+                  "position": last.pos, "seasons": mu.player_profile(pid, game_ids=ids),
+                  "games_before": before_date})
 
 
 # ------------------------------------------------------------------ look: colours, photos

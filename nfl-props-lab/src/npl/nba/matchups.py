@@ -175,12 +175,16 @@ def cached_reliability() -> dict:
     return r
 
 
-def player_profile(pid: str, seasons=APP_SEASONS) -> dict:
+def player_profile(pid: str, seasons=APP_SEASONS, game_ids: set[str] | None = None) -> dict:
+    """His shot zones per season; with `game_ids`, only those games (e.g. games before an
+    edition's slate, so a forecast page never counts the game being forecast)."""
     S = shots.load()
     pz = S["player_shots"]
     pz = pz[(pz.player_id == pid) & pz.season.isin(seasons)]
     pf = S["player_ft"]
     pf = pf[(pf.player_id == pid) & pf.season.isin(seasons)]
+    if game_ids is not None:
+        pz, pf = pz[pz.game_id.isin(game_ids)], pf[pf.game_id.isin(game_ids)]
     out = {}
     for s in seasons:
         x = pz[pz.season == s]

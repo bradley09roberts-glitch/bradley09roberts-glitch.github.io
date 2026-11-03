@@ -272,6 +272,39 @@ def test_a_pull_of_some_markets_leaves_the_other_markets_alone(con, clock):
     assert m[("4431678", "reb")]["books"] == 2 and m[("4431678", "reb")]["observed_at"] == iso(T1)
 
 
+def test_card_lines_come_from_before_the_start_only(con, clock, monkeypatch):
+    """Pulls taken after tip-off (the provider still listing the game as upcoming) never set a
+    card's US line, nor the form count against it: market_lines keeps the quotes observed
+    before the game's start and the pulls taken before it, by the provider's start time
+    (pulls_frame, pregame=True) and by ours."""
+    pull(con, clock, T1, props(THREE))
+    later = iso(TIP + timedelta(hours=2))  # the provider's events call: still upcoming
+    moved = {b: (iso(TIP + timedelta(minutes=20)), [pts(27.5, 1.8, 2.0), reb(4.5, 1.9, 1.9)])
+             for b in THREE}
+    for at, payload in ((TIP + timedelta(minutes=20), props(moved)),  # in play, its start TIP
+                        # nothing changed; this response gives a start later than ours
+                        (TIP + timedelta(minutes=40), {**props(moved), "commence_time": later})):
+        clock["t"] = at
+        oa.snapshot_upcoming(con, regions="us", session=Provider([payload], start=later),
+                             sport="nba")
+    q = oa.quotes_frame(con)
+    assert (pd.to_datetime(q.observed_at, utc=True) >= pd.Timestamp(TIP)).any()  # stored
+    monkeypatch.setattr(db, "connect", lambda *a, **k: con)
+    m = appdata.market_lines({GID: iso(TIP)})
+    c = m[("4432166", "pts")]
+    assert (c["line"], c["books"], c["observed_at"]) == (25.5, 3, iso(T1))  # the morning board
+    assert m[("4431678", "reb")]["line"] == 3.5
+    # read as before, the last pull (taken in play) set the line
+    assert appdata.consensus_lines(q, oa.pulls_frame(con))[("4432166", "pts")]["line"] == 27.5
+    # the provider's start alone is not enough: its later start keeps the 00:40 pull, whose
+    # board (the 00:20 rows, left out) is then empty
+    start = appdata.pregame_quotes(q, {GID: iso(TIP)})
+    assert (pd.to_datetime(start.observed_at, utc=True) < pd.Timestamp(TIP)).all()
+    assert ("4432166", "pts") not in appdata.consensus_lines(
+        start, oa.pulls_frame(con, "event_odds", "nba", pregame=True))
+    assert appdata.market_lines({"another game": iso(TIP)}) == {}
+
+
 def test_fallback_where_no_pull_was_logged(con, clock):
     """Rows of an event no logged pull covers (stored before the log, not backfilled) use the
     12-hour rule; a logged event in the same frame uses its pulls."""

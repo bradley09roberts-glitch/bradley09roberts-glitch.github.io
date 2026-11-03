@@ -414,14 +414,16 @@ def build_parser() -> argparse.ArgumentParser:
                         "embeds US prices)")
     s.add_argument("--fragment", action="store_true",
                    help="omit the HTML document skeleton (for hosts that add their own)")
-    # defaults chosen so a full slate stays under the host's limit: on the 2 Nov 2026 NBA slate
-    # (15 games) with the Week 8 NFL edition the page measured 14.9 MB (18.2 MB at 0.5 / 0.5)
+    # defaults chosen so a full slate stays under the host's limit with room to spare: the 2 Nov
+    # 2026 NBA slate (15 games) with the Week 8 NFL edition, scaled up to about 900 cards with a
+    # line, comes to about 15.3 MB at 0.9 / 0.7 (15.9 MB at 0.9 / 0.6; README)
     s.add_argument("--min-p-play", type=float, default=0.9,
                    help="NFL: play probability a player needs for his player page and photo "
                         "(every NFL card is kept; default 0.9)")
-    s.add_argument("--nba-min-p-play", type=float, default=0.6,
+    s.add_argument("--nba-min-p-play", type=float, default=0.7,
                    help="NBA: play probability a player needs for his cards, page and photo "
-                        "(default 0.6, the props board's default filter)")
+                        "(default 0.7, above the props board's 0.6 filter so that a slate with "
+                        "about 900 cards with a line stays under 15.5 MB)")
     s.add_argument("--allow-oversize", action="store_true",
                    help="write the page even above the host's 16,000,000-byte limit")
     s.set_defaults(func=cmd_snapshot)

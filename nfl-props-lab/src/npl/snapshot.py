@@ -7,11 +7,13 @@ terms forbid redistributing raw data) unless another path is given. It must stay
 hosting limit: build() measures the page and refuses to write one above MAX_BYTES unless
 allow_oversize=True. What keeps it small: NFL player pages and photos only for players at or
 above min_p_play; NBA cards, player pages and photos only at or above nba_min_p_play, 20-game
-logs on cards and 15 on player pages, factor tabs (D-047) only on cards with a bookmaker line
-(their `tested` lines kept once, in the payload, and put back on each card by REHYDRATE before
-the app runs), and in the card extras the newest SNAPSHOT_GRID games against tonight's opponent with line and
-difference arrays left out where they hold no value (the app reads a missing array as "no
-line")."""
+logs on cards and 15 on player pages, factor tabs (D-047) only on cards with a bookmaker line,
+with what every card repeats kept once, in the payload's factor_tests (each factor's `tested`
+lines and reliability label, and the overall line's closing sentence), and put back on each
+card by REHYDRATE before the app runs, and their evidence cut to the figures the tabs show
+(SHOWN); and in the card extras the newest SNAPSHOT_GRID games against tonight's opponent with
+line and difference arrays left out where they hold no value (the app reads a missing array as
+"no line")."""
 
 from __future__ import annotations
 
@@ -53,42 +55,102 @@ def _grid(g, cap: int = SNAPSHOT_GRID):
     return {**g, "games": rows}
 
 
-def _untested(f, shared):
-    """A factor without its `tested` lines when they are the props payload's own copy
-    (factor_tests.tested, put back on the page by REHYDRATE); otherwise the factor as it is."""
-    if isinstance(f, dict) and shared is not None and f.get("tested") == shared:
-        return {k: v for k, v in f.items() if k != "tested"}
-    return f
+# The evidence each factor tab shows (web/app.js, fxMatchup and fxRole): the offline copy keeps
+# only these and, of the matchup's two places, the one its tab writes (counted from the fewest,
+# `rank`, when the lean is under, else from the most, `rank_most`). The role's game count is in
+# its headline. Other factors keep their evidence.
+SHOWN = {"matchup": ("allowed", "of", "games"), "role": ("absent", "last3", "season")}
 
 
-def _nba_card(c: dict, tested: dict | None = None) -> dict:
+def _shown(k: str, f):
+    """A factor's evidence cut to the figures its tab shows (SHOWN); otherwise as it is."""
+    ev = f.get("evidence") if isinstance(f, dict) else None
+    if k not in SHOWN or not isinstance(ev, dict):
+        return f
+    keep = set(SHOWN[k])
+    if k == "matchup":
+        keep.add("rank" if f.get("lean") == "under" or "rank_most" not in ev else "rank_most")
+    return {**f, "evidence": {x: v for x, v in ev.items() if x in keep}}
+
+
+def _unshared(k: str, f, shared: dict | None):
+    """A factor without what the props payload keeps once (factor_tests, put back on the page by
+    REHYDRATE): its `tested` lines when they are the payload's copy (factor_tests.tested) and its
+    reliability label when it is the payload's label for its lean (factor_tests.reliability);
+    otherwise the factor as it is."""
+    if not isinstance(f, dict) or not shared:
+        return f
+    drop = set()
+    t = (shared.get("tested") or {}).get(k)
+    if t is not None and f.get("tested") == t:
+        drop.add("tested")
+    lab = ((shared.get("reliability") or {}).get(k) or {}).get(f.get("lean"))
+    if isinstance(lab, str) and f.get("reliability") == lab:
+        drop.add("reliability")
+    return {x: v for x, v in f.items() if x not in drop} if drop else f
+
+
+def _overall(o, shared: dict | None):
+    """The overall line without its closing sentence when that is the props payload's
+    (factor_tests.overall: "agree" when 3 or more factors agree, else "other"): `text` gives
+    way to `counts`, the words before it, and REHYDRATE joins the two again."""
+    end = ((shared or {}).get("overall") or {}).get(
+        "agree" if isinstance(o, dict) and o.get("agree") else "other")
+    t = o.get("text") if isinstance(o, dict) else None
+    if not (isinstance(end, str) and end and isinstance(t, str)) or "counts" in o:
+        return o
+    if t != end and not t.endswith(" " + end):
+        return o
+    return {**{x: v for x, v in o.items() if x != "text"}, "counts": t[:-len(end)].rstrip()}
+
+
+def _nba_card(c: dict, shared: dict | None = None) -> dict:
     """A kept NBA card for the snapshot: its log cut to the last 20 games, and its factor tabs
     (`factors`, npl.nba.factors) only when it has a bookmaker line: the rules were tested at
-    bookmakers' lines, and on every card they would add about 1.2 KB each (1.9 MB on the 2 Nov
-    slate, over the page limit). Each kept factor drops its `tested` lines when they match
-    `tested` (the payload's factor_tests.tested): they are the same on every card, about 1.5 KB
-    a card, so the copy keeps them once and REHYDRATE puts them back. A new dict: the cached card
-    is never changed."""
+    bookmakers' lines, and on the 2 Nov slate's other cards they would add about 0.7 MB. Each
+    kept factor's evidence is cut to what its tab shows (SHOWN), and what is the same on every
+    card is dropped when it matches `shared` (the payload's factor_tests): the `tested` lines
+    (about 1.7 KB a card as the page writes them) and reliability labels (about 0.4 KB) of the
+    factors and the overall line's closing sentence (_overall). The copy keeps those once and
+    REHYDRATE puts them back; the tabs then take about 0.73 KB a card. A new dict: the cached
+    card is never changed."""
     out = {**c, "log": {k: (v[-20:] if isinstance(v, list) else v) for k, v in c["log"].items()}}
     if not c.get("market_line"):
         out.pop("factors", None)
-    elif tested and isinstance(c.get("factors"), dict):
-        out["factors"] = {k: _untested(v, tested.get(k)) for k, v in c["factors"].items()}
+    elif isinstance(c.get("factors"), dict):
+        out["factors"] = {k: (_overall(v, shared) if k == "overall" else
+                              _unshared(k, _shown(k, v), shared))
+                          for k, v in c["factors"].items()}
     return out
 
 
-# Run before the app: copies the props payload's factor_tests.tested back onto each NBA card's
-# factors (the copy keeps those lines once instead of on every card, _nba_card), so the app reads
-# the same card shape as from the server. A factor that kept its own lines is left alone.
+# Run before the app: puts back on each NBA card's factors what the copy keeps once, in the
+# props payload's factor_tests (_nba_card): each factor's `tested` lines (factor_tests.tested)
+# and reliability label for its lean (factor_tests.reliability), and the overall line's closing
+# sentence after its `counts` (factor_tests.overall), so the app reads the same card shape as
+# from the server (the evidence stays cut to what the tabs show). A factor that kept its own
+# lines or label, or an overall line that kept its text, is left alone.
 REHYDRATE = """<script>(function () {
   var p = window.NPL_SNAPSHOT && window.NPL_SNAPSHOT.data["/api/nba/props"];
-  var t = p && p.factor_tests && p.factor_tests.tested;
-  if (!t || !Array.isArray(p.cards)) return;
+  var s = p && p.factor_tests;
+  if (!s || typeof s !== "object" || !Array.isArray(p.cards)) return;
+  var t = s.tested || {}, r = s.reliability || {}, e = s.overall || {};
   p.cards.forEach(function (c) {
     var f = c.factors;
     if (!f || typeof f !== "object") return;
-    Object.keys(t).forEach(function (k) {
-      if (f[k] && typeof f[k] === "object" && !("tested" in f[k])) f[k].tested = t[k];
+    Object.keys(f).forEach(function (k) {
+      var x = f[k];
+      if (!x || typeof x !== "object") return;
+      if (k === "overall") {
+        if (typeof x.counts !== "string" || "text" in x) return;
+        var end = e[x.agree ? "agree" : "other"];
+        x.text = typeof end === "string" ? (x.counts ? x.counts + " " + end : end) : x.counts;
+        delete x.counts;
+        return;
+      }
+      if (!("tested" in x) && t[k]) x.tested = t[k];
+      var lab = r[k] && r[k][x.lean];
+      if (!("reliability" in x) && typeof lab === "string") x.reliability = lab;
     });
   });
 })();</script>"""
@@ -122,12 +184,12 @@ def _add_nba(data: dict, min_p_play: float = 0.5) -> None:
     """NBA pages for the latest NBA edition (if any), trimmed: cards of players with a play
     probability of at least `min_p_play` (recorded as the props payload's snapshot_min_p_play),
     20-game logs on cards and factor tabs only on cards with a bookmaker line (_nba_card;
-    recorded as snapshot_factors_lined_only; their `tested` lines kept once, in
-    factor_tests.tested, recorded as snapshot_tested_shared), the last 15 games on player
-    pages. Card extras
-    stay in the props payload only: player pages here carry none (each one is a slate player
-    whose extras are in props `extras`). data["snapshot_player_pages"] lists the players with a
-    page in the copy.
+    recorded as snapshot_factors_lined_only), their evidence cut to what the tabs show and what
+    every card repeats kept once, in factor_tests: the `tested` lines (recorded as
+    snapshot_tested_shared), the reliability labels and the overall line's closing sentence
+    (snapshot_labels_shared); the last 15 games on player pages. Card extras stay in the props
+    payload only: player pages here carry none (each one is a slate player whose extras are in
+    props `extras`). data["snapshot_player_pages"] lists the players with a page in the copy.
     The slate's injury counts cover every player of the edition (nba.appdata.injured_counts),
     trimmed cards or not."""
     from .nba import appdata as nba
@@ -137,12 +199,14 @@ def _add_nba(data: dict, min_p_play: float = 0.5) -> None:
         return
     data["/api/nba/slate"] = nba.clean(s)
     props = dict(nba.props())  # a copy: the cached payload itself is never trimmed
-    tested = (props.get("factor_tests") or {}).get("tested")
-    props["cards"] = [_nba_card(c, tested) for c in props["cards"] if c["p_play"] >= min_p_play]
+    shared = props.get("factor_tests") or None
+    props["cards"] = [_nba_card(c, shared) for c in props["cards"] if c["p_play"] >= min_p_play]
     props["snapshot_min_p_play"] = min_p_play
     props["snapshot_factors_lined_only"] = True  # factor tabs only on cards with a line
-    if tested:  # each factor's `tested` lines kept once, in factor_tests (REHYDRATE)
+    if shared and shared.get("tested"):  # each factor's `tested` lines kept once (REHYDRATE)
         props["snapshot_tested_shared"] = True
+    if shared and (shared.get("reliability") or shared.get("overall")):  # labels, likewise
+        props["snapshot_labels_shared"] = True
     props["extras"] = _nba_extras(props.get("extras") or {}, props["cards"])
     data["/api/nba/props"] = nba.clean(props)
     data["/api/nba/backtests"] = nba.clean(nba.backtests())
@@ -163,7 +227,7 @@ def _add_nba(data: dict, min_p_play: float = 0.5) -> None:
     data["/api/visuals/nba"] = nba.visuals(pids)
     pages = []
     for pid in sorted(pids):
-        sp = nba.shot_profile(pid)
+        sp = nba.shot_profile(pid, before_date=s.get("date_et"))
         if "error" not in sp:
             data[f"/api/nba/shotprofile/{pid}"] = sp
         p = nba.player(pid)

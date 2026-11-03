@@ -590,12 +590,18 @@ on the game total, not the prop; the under needed 54.1% at -118 against a margin
   effect the line already carries (57-73% of it); underdog by 7+ (GS) 51.0% v 50.7%, -4.1%, no
   effect; fourth-quarter share below the league's (Q4) 51.5% v 50.7%, -3.2%, no effect; a
   25-minute regular missed the last game (RA) 48.0% v 49.3%, -6.8%, the line moves about 87% as
-  much as output; minutes drop (RM) 50.0% v 50.7%, -5.9%, no effect. All 8 rules lost money in
-  both seasons (16 of 16, 12 with the whole interval below zero) and none added anything beyond
-  the market (Holm p 1.0). Three or more of the four agreeing (CB), the nearest testable reading
-  of a "strong signal", won 51.2% v 51.4% on 1,592 test props (ROI -4.1% [-7.9, -0.2]); all
+  much as output; minutes drop (RM) 50.0% v 50.7%, -5.9%, no effect. None of the 8 rules made
+  money at the best regulated price in either season (16 of 16 returns below zero, 12 with the
+  whole interval below zero; each return counts only the props with a regulated price, 94-99%
+  of them: T4's 44,018 of 44,754 in 2024-25), and none measurably improved on the market's own
+  forecast in the test season (the rule added to the market's margin-free chance: log loss per
+  prop between 0.00003 lower and 0.00019 higher, Holm p 1.0 for each). Three or more of the four
+  agreeing (CB), the nearest testable reading of a "strong signal", did neither: it won 51.2% v
+  51.4% on 1,592 test props (ROI -4.1% [-7.9, -0.2] on the 1,537 with a regulated price); all
   seven rules in one model did no better than the market alone (test log loss +0.00015
-  [-0.00020, +0.00049]). Rotobot's own label on the Green
+  [-0.00020, +0.00049]). Note the narrower claim: a rule's side can beat the fair chance and
+  still lose money (form in 2025-26, matchup in 2024-25), so the app never says a rule did not
+  beat the margin-free price. Rotobot's own label on the Green
   card sat on three neutral tabs and one unfavourable, so it is not factor agreement, and its
   basis is not shown. Our frozen factors on that card: form under (15, 15, 28, 6), matchup over
   (GS gave up the 6th-most PRA to guards), role too early (4 games), so no agreement.
@@ -604,7 +610,9 @@ on the game total, not the prop; the under needed 54.1% at -118 against a margin
   unknown, a one-line headline in our own words from our numbers, its key figures, the
   backtest's reliability label and `tested`, one line for each season (fit 2024-25, test the
   2025-26 sample) with that rule's figures; `overall` counts the leans and says how such factors
-  did when tested; npl.nba.factors). Each lean is the frozen rule applied exactly as tested,
+  did when tested; npl.nba.factors). The matchup's figures give its place both ways: rank_most
+  counted from the most allowed (the rule's own order, tied teams sharing the better place) and
+  rank from the fewest. Each lean is the frozen rule applied exactly as tested,
   to games that started before the earlier of publication and his game's start: on the 2 Nov
   slate the live code reproduced the backtest code's leans on 450 of 450 matchup rows, 372 of 372
   lined form props, 30 of 30 team absentee sets and 332 of 332 minutes checks. "unknown" marks a
@@ -639,14 +647,20 @@ on the game total, not the prop; the under needed 54.1% at -118 against a margin
   sums. The page's arithmetic is the JavaScript twin of npl.parlay; tests/test_parlay_js.py runs
   it with node against npl.parlay on 430 cases.
 - **Offline copy.** Factor tabs are kept only on cards with a bookmaker line (the universe the
-  rules were tested on; flag snapshot_factors_lined_only): about 1.2 KB a card, 0.43 MB on the
-  357 lined cards of the 2 Nov slate with the README's thresholds; on every kept card they would
-  add 1.9 MB. The `tested` lines are the same on every card (1.7 KB a card as the page encodes
-  them, 0.62 MB on those cards, which would take the page over the limit), so the copy keeps
-  them once, in factor_tests.tested, and a short script puts them back on each card before the
-  app starts (snapshot_tested_shared). The page: 15,439,935 bytes (15.44 MB) of the 16 MB limit,
-  measured on 3 Nov with this build (the 15.35 MB first written here did not match the build:
-  it measured 15,385,610 bytes before the review fixes).
+  rules were tested on; flag snapshot_factors_lined_only); on the other kept cards they would
+  add about 0.7 MB. What every card repeats is kept once, in factor_tests, and a short script
+  (REHYDRATE) puts it back on each card before the app starts: the `tested` lines (1.7 KB a card
+  as the page encodes them; snapshot_tested_shared) and, since the final fixes, each factor's
+  reliability label (factor_tests.reliability, by lean) and the overall line's closing sentence
+  (factor_tests.overall; snapshot_labels_shared); the matchup and role figures are cut to those
+  the tabs show. A lined card's tabs now take about 0.73 KB (1.2 KB before), and a card with a
+  line about 1.05 KB more than one without. The page with the README's defaults (NFL 0.9, NBA
+  0.7): about 14.76 MB of the 16 MB limit, measured on 3 Nov with this build on
+  the 2 Nov slate (1,410 NBA cards, 352 with a line); at the old NBA default of 0.6, about 15.28 MB
+  (about 15.44 MB before the labels were kept once; the 15.35 MB first written here did not
+  match its build, which measured 15,385,610 bytes). The NBA default went up to 0.7 because the
+  same slate with about 900 lined cards, simulated from those per-card sizes, would come to
+  about 15.86 MB at 0.6, over the 15.5 MB we keep under (about 15.34 MB at 0.7).
 - **Review fixes (3 Nov).** Tab names: the first build showed the tabs under the other app's
   names (matchup, form, game script, role); they now carry ours (above). Leak: the cards' logs
   were cut at the edition's publication, and the 2 Nov final was published at 01:13 UTC, after
@@ -662,6 +676,21 @@ on the game total, not the prop; the under needed 54.1% at -118 against a margin
   at the best regulated price in both. No edge."; the summary line says the same. The server
   gzips responses of 1 KB or more (level 6: the NBA props body of 2 Nov, 14.2 MB, goes as
   0.94 MB); the ledger download, already gzip, is sent as it is.
-- What would change this: a factor rule beating the margin-free price on clean 2026-27 data (the
-  next untouched holdout), first by closing-line value, before anything is labelled more than
-  context.
+- **Final fixes (3 Nov).** Wording: "no figure beat the bookmakers' margin-free price" was not
+  what the tests showed (form's side beat the fair chance in 2025-26); the module, the summary,
+  the cards' overall line and this entry now say what they did show: none of the rules made
+  money at the best regulated price in either season, and none measurably improved on the
+  market's own forecast in the test season; neither did three or more agreeing. Each season's
+  tested line now says its return counts only the props with a regulated price ("return -5.0% on
+  the 44,018 with a regulated price (95% interval ...)", roi_props from the run's summary).
+  Our own words where the backend still used the other app's tab words or the old rank notes:
+  "these checks need 5 games", "the opponent's figures and absent teammates", places "counted
+  from the most allowed" in the matchup and defence notes (no "Rank 1 = ..." sentence), "once it
+  has played 5 games". The matchup evidence carries rank_most. Parlay: an infinite price (or
+  NaN, or text) is refused in the same words as any bad price, so /api/nba/parlay?price=inf
+  answers 422 (it was a server error). Pre-game lines: the cards' US line, and the form count
+  against it, read only quotes observed before the game's start and pulls taken before it (by
+  the provider's start time and ours); before, a pull taken in play could set a card's line.
+- What would change this: a factor rule making money at the best regulated price and improving
+  on the market's own forecast on clean 2026-27 data (the next untouched holdout), first by
+  closing-line value, before anything is labelled more than context.
