@@ -101,6 +101,19 @@ def nba_props():
     return _j(nba.clean(d))
 
 
+@app.get("/api/nba/parlay")
+def nba_parlay(legs: str, price: float | None = None):
+    """Combined margin-free chance of some NBA card legs, assuming independence, with same-game
+    and same-player flags (npl.parlay): legs = player_id:market:side,... ; price = an offered
+    decimal price. Research arithmetic only."""
+    from .nba import appdata as nba
+
+    d = nba.parlay(legs, price)
+    if "error" in d:
+        raise HTTPException(422, d["error"])
+    return _j(nba.clean(d))
+
+
 @app.get("/api/nba/player/{player_id}")
 def nba_player(player_id: str):
     from .nba import appdata as nba

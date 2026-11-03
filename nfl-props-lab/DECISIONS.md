@@ -565,3 +565,67 @@ Follow-up (3 Nov 2026, after a re-verification of this build):
   so the offline copy shows the same counts. The copy also records its card threshold
   (snapshot_min_p_play) and its player pages (snapshot_player_pages), and the grid note states
   the cap used (up to 10; 5 in the offline copy).
+
+## D-047 (3 Nov 2026) Factor tabs and a parlay helper taken from another props app; no picks
+The user runs a private "Claude v Rotobot v ChatGPT" parlay contest and asked us to audit
+Rotobot, a US subscription props app, and copy it, after its "Strong signal" Jalen Green
+(PHX) under 22.5 PRA at -118 lost: he played 36 minutes for 11 points, 8 rebounds and 8 assists
+(27). Public research (about a dozen public pages read once and not kept; its terms forbid
+scraping, and nothing here fetches its data): it sells "AI picks", but no pick record, win rate,
+profit, closing-line value or calibration is published anywhere, it names no data supplier or
+licence, and its own terms say no tool can predict outcomes reliably. Our checks of the Green
+card: its with/without split for Mark Williams had the wrong sign in our box scores (+7.3 PRA
+without him in the 2025-26 regular season, confounded by minutes); its 93% "sharp money" was
+on the game total, not the prop; the under needed 54.1% at -118 against a margin-free market of
+51.6%.
+- **Backtest (R2, 3 Nov 2026).** Its four factor tabs, written as rules before any outcome was
+  seen and not tuned, on the stored real lines (snapshots about 3 h before tip; fit 2024-25,
+  71,922 props on 164 dates; test the 2025-26 sample, 18,751 props on 42 dates). Test season,
+  favoured side's hit rate v the market's margin-free chance of it, flat ROI at the best
+  regulated price: form, 3 of last 4 on one side of the line (T4) 52.7% v 51.6%, -2.4% [-4.4,
+  -0.4], already in the price (the same rule did not beat the market in 2024-25, 51.3% v 51.7%);
+  4 of last 5 53.9% v 52.1%, -1.2% (2025-26 only: re-check on 2026-27 data); matchup, opponent
+  top or bottom 10 for what it gives up to his position group (MU) 50.4% v 50.1%, -3.6%, a real
+  effect the line already carries (57-73% of it); underdog by 7+ (GS) 51.0% v 50.7%, -4.1%, no
+  effect; fourth-quarter share below the league's (Q4) 51.5% v 50.7%, -3.2%, no effect; a
+  25-minute regular missed the last game (RA) 48.0% v 49.3%, -6.8%, the line moves about 87% as
+  much as output; minutes drop (RM) 50.0% v 50.7%, -5.9%, no effect. All 8 rules lost money in
+  both seasons (16 of 16, 12 with the whole interval below zero) and none added anything beyond
+  the market (Holm p 1.0). Three or more of the four agreeing (CB), the nearest testable reading
+  of a "strong signal", won 51.2% v 51.4% on 1,592 test props (ROI -4.1% [-7.9, -0.2]); all
+  seven rules in one model did no better than the market alone (test log loss +0.00015
+  [-0.00020, +0.00049]). Rotobot's own label on the Green
+  card sat on three neutral tabs and one unfavourable, so it is not factor agreement, and its
+  basis is not shown. Our frozen factors on that card: form under (15, 15, 28, 6), matchup over
+  (GS gave up the 6th-most PRA to guards), role too early (4 games), so no agreement.
+- **Taken (features and ideas only).** Four factor tabs on every NBA card in the props payload
+  (`factors`: matchup, form, game_script, role, each with lean over / under / neutral /
+  unknown, a one-line headline in our own words from our numbers, its key figures and the
+  backtest's reliability label; `overall` counts the leans and says how such factors did when
+  tested; npl.nba.factors). Each lean is the frozen rule applied exactly as tested: on the 2 Nov
+  slate the live code reproduced the backtest code's leans on 450 of 450 matchup rows, 372 of 372
+  lined form props, 30 of 30 team absentee sets and 332 of 332 minutes checks. "unknown" marks a
+  rule that cannot be applied (no line, opponent under 5 games, no game lines stored, under 5
+  games). The game-script spread is our stored pre-game game line (median of regulated books),
+  not the near-close play-by-play spread the backtest used; fourth-quarter share is shown as a
+  figure only. A parlay helper: each card's market_line carries fair_under beside fair_over, and
+  npl.parlay.fair_combo multiplies the legs' margin-free chances as if independent, gives the
+  fair decimal odds and the EV at an offered price, and flags legs from the same game ("same
+  game, chances not independent"), of the same player and from thin markets (under 3 books);
+  /api/nba/parlay does the same for the live server.
+- **Not taken.** Picks and "strong signal" labels: nothing passed the test above, so nothing is
+  called a pick, strong or a signal (D-041, D-043). Sharp-money splits: no source is named, the
+  Green figure was for the game total, and we hold no split data to test. Line moves since the
+  open: no opening prices are stored (closing snapshots began in November 2026). Play types and
+  tracking stats (rebound chances, potential assists): no data we may use (the NBA's own
+  tracking data, whose terms bar gambling use, D-019). Bet links and one-tap betting: the app is
+  research only and quotes US books a UK customer cannot use. None of its text, names, logo,
+  colours, illustrations or layout; the app keeps its own design and does not present itself
+  as, or imply any connection with, that app.
+- **Offline copy.** Factor tabs are kept only on cards with a bookmaker line (the universe the
+  rules were tested on; flag snapshot_factors_lined_only): about 1.2 KB a card, 0.42 MB on the 2
+  Nov slate with the README's thresholds (15.35 MB of the 16 MB limit); on every kept card they
+  would add 1.9 MB.
+- What would change this: a factor rule beating the margin-free price on clean 2026-27 data (the
+  next untouched holdout), first by closing-line value, before anything is labelled more than
+  context.

@@ -250,6 +250,9 @@ const ICONS = {
   warn: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3 2 20h20L12 3zM12 10v4M12 17h.01"/></svg>',
   info: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7h.01"/></svg>',
   ok: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg>',
+  plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>',
+  tick: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>',
+  legs: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 3 7.5l9 4.5 9-4.5L12 3z"/><path d="m3 12 9 4.5 9-4.5M3 16.5 12 21l9-4.5"/></svg>',
 };
 // Fallback marks for the sport switch until the league logos load
 const GLYPH = {
@@ -734,7 +737,7 @@ function nbaCard(c, idx, cal) {
       ${c.opp_pace ? `<span data-tip="${esc(c.opponent)} pace|${c.opp_pace.value} possessions per 48 min (rank ${c.opp_pace.rank})">Pace ${c.opp_pace.rank}/30</span>` : ""}</div>
     ${c.teammates_out && c.teammates_out.length ? `<div class="warnline">${ICONS.warn}<span>${c.teammates_out.map((t) => esc(t.name)).join(", ")} ruled out after playing last game: extra minutes and shots are not in this projection.</span></div>` : ""}
     ${wowyBlock(c, line)}
-    <button class="btn ghost ctxbtn" data-ctx="${idx}" aria-haspopup="dialog">Context: minutes, game script, v ${esc(c.opponent)}</button>
+    <div class="row cardacts"><button class="btn ghost ctxbtn" data-ctx="${idx}" aria-haspopup="dialog">Matchup, form, game script, role</button>${pcButton(c, idx)}</div>
   </article>`;
 }
 
@@ -927,9 +930,9 @@ function cxScript(x, c, said) {
   const foot = [c && x.game_lines ? "Lines: median of regulated US books, best price to win per side. US prices: research only, not open to UK customers." : "", close.length ? "Close-game figures: number of games in brackets." : ""].filter(Boolean).join(" ");
   return `<section class="cx"><h4>Game script</h4>${kvl(rows)}${foot ? `<p class="tiny muted">${foot}</p>` : ""}</section>`;
 }
-function cxOpp(x, c, market, said) {
+function cxOpp(x, c, market, said, extra = []) {
   if (!c) return "";
-  const d = x.defence, pv = x.pos_v_opp || {}, S = x.seasons || {}, rows = [];
+  const d = x.defence, pv = x.pos_v_opp || {}, S = x.seasons || {}, rows = [...extra];
   if (d) rows.push(["Assists allowed", `<b>${dec(d.ast_allowed, 1)}</b> per game · ${ord(d.ast_rank)} of ${d.of} <span class="muted">(1st = fewest)</span>`],
     ["Defensive rebounds", `<b>${pct1(d.dreb_pct)}</b> DREB% · ${ord(d.dreb_rank)} of ${d.of} <span class="muted">(1st = highest)</span>`]);
   else rows.push(["Defence", `<span class="muted">no team box scores this season yet</span>`]);
@@ -966,13 +969,104 @@ function ctxBlock(x, c, market) {
   const m = market || c?.market || "pts"; const said = { pra: false }; // sections are built in reading order
   return `<div class="ctx">${[cxInjury(c), cxVolume(x), cxScript(x, c, said), cxOpp(x, c, m, said), cxGrid(x, c, m, said)].filter(Boolean).join("")}${cxNotes(x)}<p class="tiny muted">Context only: none of these figures feeds the projection.</p></div>`;
 }
-// the card's detail: a sheet with the context block (phones: slides up from the bottom)
+// ---------------------------------------------------------------- NBA factor tabs (D-047)
+// A card's detail and its player page show four tabs: matchup, form, game script and role. Each
+// lean is a simple rule written down before a backtest on two seasons of stored real lines and
+// applied exactly as tested (npl.nba.factors). None of the rules beat the bookmakers'
+// margin-free price, so a lean only says how a rule reads tonight; nothing here is a
+// recommendation. The figures of the context block sit under the tab they belong to. The
+// offline copy keeps the leans only on cards with a US line (props.snapshot_factors_lined_only):
+// a card without them shows its context under the same tabs.
+const FX_TABS = [["matchup", "Matchup"], ["form", "Form"], ["game_script", "Game script"], ["role", "Role"]];
+const FX_WORD = { over: "Over", under: "Under", neutral: "Neutral", unknown: "Unknown" };
+// the tested rules behind each tab (factor_tests.rules); Q4 is shown as a figure only
+const FX_RULES = { matchup: ["MU"], form: ["T4"], game_script: ["GS", "Q4"], role: ["RA", "RM"] };
+let fxSeq = 0; // ids for each set of tabs drawn
+let fxKeep = null; // { key, tab }: a player page keeps its open tab when it re-draws
+const fxTag = (lean) => { const k = FX_WORD[lean] ? lean : "unknown"; return `<span class="fl ${k}"><i aria-hidden="true"></i>${FX_WORD[k]}</span>`; };
+const pctPts = (x) => `${pm1(shift(x, 2))}%`; // a share as signed per cent: -0.024 -> −2.4%
+// one tested rule in plain words: what it says, and how the side it points to did on the test season
+function fxRule(T, k) {
+  const r = T?.rules?.[k]; if (!r) return "";
+  const ci = Array.isArray(r.roi_ci) && r.roi_ci.length === 2 ? ` (95% interval ${pctPts(r.roi_ci[0])} to ${pctPts(r.roi_ci[1])})` : "";
+  return `<li><b>${k === "Q4" ? "Shown as a figure only" : "Rule"}:</b> ${esc(r.rule)}. On ${Number(r.props).toLocaleString("en-GB")} test props that side won ${pct1(r.won)} v the market's ${pct1(r.market)}; return ${pctPts(r.roi)}${ci} at the best regulated price.</li>`;
+}
+// matchup: what the opponent gives up to his position group (the rule's figure), the card's
+// opponent ranks, the position v the opponent's lines and his games against them
+function fxMatchup(c, x, f, said) {
+  const ev = f?.evidence || {}, grp = POS_ONE[c.position], rows = [];
+  if (ev.allowed != null && grp) rows.push([`${esc(c.opponent)} v ${esc(grp)}`, `<b>${dec(ev.allowed, 1)}</b> ${esc(c.market === "pra" ? praName(said) : NBA_LONG[c.market] || c.market)} a game, all ${esc(grp)} combined · ${ord(ev.rank)} of ${ev.of} <span class="muted">(1st = fewest)</span> · ${plural(ev.games, "game")}${tinyTag(ev.games)}`]);
+  const o = c.opp_factor, pc = c.opp_pace;
+  if (o) rows.push([`Defence v ${esc(NBA_SHORT[c.market === "pra" ? "pts" : c.market])}`, `${ord(o.rank)} of 30 <span class="muted">(per possession, 1st = allows least)</span>`]);
+  if (pc) rows.push(["Pace", `${ord(pc.rank)} of 30 <span class="muted">(${dec(pc.value, 1)} possessions per 48 min, 1st = fastest)</span>`]);
+  if (x) return cxOpp(x, c, c.market, said, rows) + cxGrid(x, c, c.market, said);
+  return rows.length ? `<section class="cx"><h4>Opponent: ${esc(c.opponent)}</h4>${kvl(rows)}</section>` : "";
+}
+// form: hit rates and his last 10 games at the line the rule counted against (the US line),
+// else at the card's own line
+function fxForm(c, f) {
+  const ev = f?.evidence || {}, own = lineFor("nba", c), us = ev.line != null, line = us ? ev.line : own.line;
+  const src = us ? "the US line" : own.src === "your line" ? "your line" : "the model's 50/50 line";
+  if (!(c.log?.values || []).length) return `<section class="cx"><h4>Recent games</h4><p class="small muted">No previous games.</p></section>`;
+  return `<section class="cx"><h4>Recent games at ${esc(src)} ${esc(line)}</h4>${hitChips(c.log, line, c.opponent)}${miniBars(c.log, line, 10)}
+    <p class="tiny muted">Share of his games over ${esc(line)}: last 5, 10 and 20, this season and v ${esc(c.opponent)}. Bars: his last 10 games, green over the line and red under.</p></section>`;
+}
+// role: the rule's figures (regulars out of the last game, minutes), volume, injuries, with/without
+function fxRole(c, x, f) {
+  const ev = f?.evidence || {}, rows = [];
+  if (ev.absent?.length) rows.push(["Regulars out of the last game", esc(ev.absent.join(", "))]);
+  if (ev.last3 != null && ev.season != null) rows.push(["Minutes", `<b>${dec(ev.last3, 1)}</b> a game in his last 3 v ${dec(ev.season, 1)} this season`]);
+  const ww = wowyBlock(c, lineFor("nba", c).line);
+  return (rows.length ? `<section class="cx"><h4>Role checks</h4>${kvl(rows)}</section>` : "") + (x ? cxVolume(x) : "") + cxInjury(c)
+    + (ww ? `<section class="cx"><h4>With and without</h4>${ww}</section>` : "");
+}
+function fxNotes(x, T) {
+  const n = x?.notes || {}; const keys = ["volume", "script", "defence", "pos_v_opp", "vs_opp", "injury", "game_lines"].filter((k) => n[k]);
+  const tested = T?.summary ? `<p class="tiny muted"><b>Factor leans.</b> ${esc(T.summary)} Rules fixed before any result was seen and checked on ${esc(T.fit)} and the ${esc(T.test)}.</p>` : "";
+  return keys.length || tested ? `<details class="cxnotes"><summary class="tiny">How these are measured and tested</summary>${tested}${keys.map((k) => `<p class="tiny muted">${esc(n[k])}</p>`).join("")}</details>` : "";
+}
+// the four tabs for one card: the summary line, the tab row, one panel per tab (the first open
+// unless `keep` names a player page whose open tab is remembered)
+function fxBlock(c, x, P, { keep = null } = {}) {
+  const F = c.factors && typeof c.factors === "object" ? c.factors : null, T = P?.factor_tests || null, uid = `fx${++fxSeq}`;
+  const open = keep && fxKeep?.key === keep && FX_TABS.some(([k]) => k === fxKeep.tab) ? fxKeep.tab : FX_TABS[0][0];
+  const why = SNAP && P?.snapshot_factors_lined_only && !c.market_line ? "the offline copy keeps them only for cards with a US line" : "none were built for this card";
+  const top = F?.overall?.text ? `<p class="fxall">${esc(F.overall.text)}</p>` : `<p class="fxall none">No factor leans here: ${why}. The context is under the same tabs.</p>`;
+  const body = { matchup: (s) => fxMatchup(c, x, F?.matchup, s), form: () => fxForm(c, F?.form), game_script: (s) => (x ? cxScript(x, c, s) : ""), role: () => fxRole(c, x, F?.role) };
+  const tabs = FX_TABS.map(([k, label]) => { const f = F?.[k], on = k === open;
+    return `<button type="button" role="tab" id="${uid}-t-${k}" aria-controls="${uid}-p-${k}" aria-selected="${on}" tabindex="${on ? 0 : -1}" data-ftab="${k}"><b>${label}</b>${f ? fxTag(f.lean) : ""}</button>`; }).join("");
+  const panels = FX_TABS.map(([k]) => { const f = F?.[k], said = { pra: false }; // each tab names PRA in full the first time
+    const rules = f ? FX_RULES[k].map((r) => fxRule(T, r)).filter(Boolean).join("") : "";
+    const head = f ? `<div class="fhd"><p class="fhl">${esc(f.headline)}</p><p class="frel">${esc(f.reliability)}</p>
+      ${rules ? `<details class="ftest"><summary>How this lean is set and tested</summary><ul>${rules}</ul>${k === "role" ? "<p>Either rule alone sets the lean; both together, or neither, give no lean.</p>" : ""}${T?.test ? `<p>The test props are the ${esc(T.test)}.</p>` : ""}</details>` : ""}</div>` : "";
+    return `<div class="fpanel" role="tabpanel" id="${uid}-p-${k}" aria-labelledby="${uid}-t-${k}" tabindex="0"${k === open ? "" : " hidden"}>${head}
+      ${body[k](said) || `<p class="small muted">No further figures for this card.</p>`}${f && T?.notes?.[k] ? `<p class="tiny muted">${esc(T.notes[k])}</p>` : ""}</div>`; }).join("");
+  const missing = x ? "" : `<p class="tiny muted">No context figures for this card${P?.extras?.error ? ` (${esc(P.extras.error)})` : ""}.</p>`;
+  return `<div class="fx"${keep ? ` data-keep="${esc(keep)}"` : ""}>${top}<div class="ftabs" role="tablist" aria-label="Factor check">${tabs}</div>${panels}${missing}${fxNotes(x, T)}<p class="tiny muted">Context only: none of these figures feeds the projection.</p></div>`;
+}
+// tabs: a tap or click opens one; arrow keys, Home and End move along the row (WAI-ARIA tabs)
+function fxSelect(btn, focus) {
+  const list = btn.closest(".ftabs"); if (!list) return;
+  $$('[role="tab"]', list).forEach((b) => { const on = b === btn; b.setAttribute("aria-selected", String(on)); b.tabIndex = on ? 0 : -1;
+    const p = document.getElementById(b.getAttribute("aria-controls")); if (p) p.hidden = !on; });
+  if (focus) btn.focus();
+  const keep = btn.closest(".fx")?.dataset.keep; if (keep) fxKeep = { key: keep, tab: btn.dataset.ftab };
+}
+document.addEventListener("click", (e) => { const b = e.target.closest?.(".ftabs [role=tab]"); if (b) fxSelect(b, false); });
+document.addEventListener("keydown", (e) => {
+  const b = e.target.closest?.(".ftabs [role=tab]"); if (!b) return;
+  const tabs = $$('[role="tab"]', b.closest(".ftabs")), i = tabs.indexOf(b);
+  const j = { ArrowRight: i + 1, ArrowLeft: i - 1, Home: 0, End: tabs.length - 1 }[e.key];
+  if (j == null) return; e.preventDefault(); fxSelect(tabs[(j + tabs.length) % tabs.length], true);
+});
+
+// the card's detail: a sheet with the factor tabs (phones: slides up from the bottom)
 function openNbaSheet(c, P, opener) {
   const x = nbaCtx(c, P.extras);
   const back = document.createElement("div"); back.className = "sheet-back";
-  back.innerHTML = `<div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(c.name)}: research context">
-    <div class="row between" style="flex-wrap:nowrap;align-items:flex-start"><div><span class="eyebrow">${esc(c.team)} ${c.is_home ? "v" : "@"} ${esc(c.opponent)} · ${esc(c.tip_london)}</span><h2>${esc(c.name)}</h2><p class="tiny muted">Context for his ${esc(NBA_LONG[c.market] || c.market)} card</p></div><button class="btn ghost" data-close>Close</button></div>
-    ${x ? ctxBlock(x, c) : banner("info", `<p class="small">No context figures for this card${P.extras?.error ? ` (${esc(P.extras.error)})` : ""}.</p>`)}
+  back.innerHTML = `<div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(c.name)}: factor check and context">
+    <div class="row between" style="flex-wrap:nowrap;align-items:flex-start"><div><span class="eyebrow">${esc(c.team)} ${c.is_home ? "v" : "@"} ${esc(c.opponent)} · ${esc(c.tip_london)}</span><h2>${esc(c.name)}</h2><p class="tiny muted">Factor check and context for his ${esc(NBA_LONG[c.market] || c.market)} card${c.market_line ? ` (US line ${esc(c.market_line.line)})` : ""}</p></div><button class="btn ghost" data-close>Close</button></div>
+    ${fxBlock(c, x, P)}
     ${hasNbaPage(c.player_id) ? `<p class="small sheetlink"><a href="#nba-player.${esc(c.player_id)}.${esc(c.market)}">${esc(c.name)}: full player page (${esc(NBA_SHORT[c.market] || c.market)})</a></p>` : `<p class="tiny sheetlink nopage">His player page is not in this offline copy.</p>`}</div>`;
   document.body.appendChild(back);
   const close = () => { back.remove(); document.removeEventListener("keydown", onKey); window.removeEventListener("hashchange", close); if (opener && opener.isConnected) opener.focus(); };
@@ -981,6 +1075,190 @@ function openNbaSheet(c, P, opener) {
   back.addEventListener("click", (e) => { if (e.target === back) close(); });
   $("[data-close]", back).addEventListener("click", close);
   $("[data-close]", back).focus();
+}
+
+// ---------------------------------------------------------------- parlay check (D-047)
+// A leg is a card's prop at the US line, on the side chosen on the card. Its chance is the
+// market's margin-free chance of that side (market_line.fair_over / fair_under); the legs are
+// multiplied as if independent (npl.parlay.fair_combo, below in JavaScript), with flags for
+// legs from one game or of one player and for thin markets. The leg list is kept in this
+// browser only (localStorage, per viewer). A saved leg whose card has left the board, or whose
+// US line has moved, is listed but left out of the sums. Research arithmetic only.
+
+// >>> parlay maths: npl.parlay.fair_combo in JavaScript (a node check compares the two)
+const PC_SAME_GAME = "same game, chances not independent";
+const PC_SAME_PLAYER = "same player, chances not independent";
+const PC_THIN = "fewer than 3 books, fair chance less reliable";
+const PC_MIN_BOOKS = 3;
+// leg numbers (0-based) that share a value of `key`: groups of 2 or more, in leg order
+function pcGroups(legs, key) {
+  const seen = new Map();
+  legs.forEach((l, i) => { const v = l[key]; if (v != null) { if (!seen.has(v)) seen.set(v, []); seen.get(v).push(i); } });
+  return [...seen.values()].filter((g) => g.length > 1);
+}
+function pcPairs(groups) {
+  const out = []; groups.forEach((g) => g.forEach((a, i) => g.slice(i + 1).forEach((b) => out.push([a, b]))));
+  return out.sort((x, y) => x[0] - y[0] || x[1] - y[1]);
+}
+// legs: [{chance, game_id, player_id, books}]; price: an offered decimal price or null. Returns
+// the combined chance, fair odds (1 / chance), EV (chance x price - 1) and break-even (1 / price)
+// with the flags and one warning line each (legs numbered from 1), as npl.parlay.fair_combo.
+function fairCombo(legs, price = null) {
+  legs = [...legs];
+  if (!legs.length) throw new Error("no legs");
+  const ch = legs.map((l, i) => { const p = l.chance;
+    if (p == null || typeof p === "boolean" || !(Number(p) > 0 && Number(p) < 1)) throw new Error(`leg ${i + 1}: chance must be strictly between 0 and 1, got ${p}`);
+    return Number(p); });
+  if (price != null && !(Number(price) > 1)) throw new Error(`price must be a decimal price above 1, got ${price}`);
+  const chance = ch.reduce((a, b) => a * b, 1);
+  const games = pcGroups(legs, "game_id"), players = pcGroups(legs, "player_id");
+  const thin = legs.map((l, i) => (l.books != null && l.books < PC_MIN_BOOKS ? i : -1)).filter((i) => i >= 0);
+  const warnings = [...pcPairs(games).map(([a, b]) => `Legs ${a + 1} and ${b + 1}: ${PC_SAME_GAME}`),
+    ...pcPairs(players).map(([a, b]) => `Legs ${a + 1} and ${b + 1}: ${PC_SAME_PLAYER}`), ...thin.map((i) => `Leg ${i + 1}: ${PC_THIN}`)];
+  const out = { legs: legs.length, chance, fair_odds: 1 / chance, price: null, ev: null, breakeven: null, independent: !games.length,
+    same_game: games, same_player: players, thin, warnings };
+  if (price != null) { const d = Number(price); Object.assign(out, { price: d, ev: chance * d - 1, breakeven: 1 / d }); }
+  return out;
+}
+// offered odds as a decimal price: decimal (4.5 or 4,5), US (+350, -120), fractional (7/2) or
+// evens; null when empty, NaN when it cannot be read or is not above 1
+function parseOdds(s) {
+  const t = String(s ?? "").trim().replace(/[−–]/g, "-").replace(/\s+/g, "");
+  if (!t) return null;
+  if (/^(evs|evens)$/i.test(t)) return 2;
+  let m = t.match(/^(\d+(?:\.\d+)?)\/(\d+(?:\.\d+)?)$/);
+  if (m) return +m[1] > 0 && +m[2] > 0 ? 1 + +m[1] / +m[2] : NaN;
+  m = t.match(/^([+-])(\d+(?:\.\d+)?)$/);
+  if (m) return +m[2] >= 100 ? (m[1] === "+" ? 1 + +m[2] / 100 : 1 + 100 / +m[2]) : NaN;
+  m = t.replace(/^(\d+),(\d+)$/, "$1.$2").match(/^\d+(?:\.\d+)?$/);
+  return m && +m[0] > 1 ? +m[0] : NaN;
+}
+// <<< parlay maths
+
+const PC_MAX = 12; // legs held at once
+let pcMem = null; // the leg list, read once from this browser's storage (kept here if storage fails)
+function pcRead() {
+  const v = store.get("parlay", null), l = v && Array.isArray(v.legs) ? v.legs : [];
+  return l.filter((x) => x && typeof x === "object" && typeof x.pid === "string" && NBA_MKT[x.mk] && (x.side === "over" || x.side === "under")
+    && typeof x.line === "number" && isFinite(x.line)).slice(0, PC_MAX);
+}
+const pcLegs = () => (pcMem ??= pcRead());
+function pcSave(legs) { pcMem = legs; store.set("parlay", { v: 1, legs }); }
+const pcFind = (pid, mk) => pcLegs().find((l) => l.pid === String(pid) && l.mk === mk) || null;
+const pcUnder = (m) => (m.fair_under != null ? m.fair_under : m.fair_over != null ? 1 - m.fair_over : null);
+// a card can join the check when it has a US line with a market chance for each side
+const pcOk = (c) => { const m = c.market_line, u = m ? pcUnder(m) : null; return !!(m && m.line != null && m.fair_over > 0 && m.fair_over < 1 && u > 0 && u < 1); };
+const sideWord = (s) => (s === "over" ? "Over" : "Under");
+const pcLabel = (leg) => (leg ? `${ICONS.tick}<span>In parlay check: ${sideWord(leg.side)} ${esc(leg.line)}</span>` : `${ICONS.plus}<span>Add to parlay check</span>`);
+function pcButton(c, idx) {
+  if (!pcOk(c)) return "";
+  const leg = pcFind(c.player_id, c.market);
+  return `<button type="button" class="btn ghost pcbtn${leg ? " on" : ""}" data-pc="${idx}" data-pid="${esc(c.player_id)}" data-mk="${esc(c.market)}" aria-expanded="false">${pcLabel(leg)}</button>`;
+}
+function pcPut(c, side) {
+  const legs = [...pcLegs()], i = legs.findIndex((l) => l.pid === String(c.player_id) && l.mk === c.market);
+  const leg = { pid: String(c.player_id), mk: c.market, side, line: c.market_line.line, gid: c.game_id, name: c.name, team: c.team, opp: c.opponent,
+    home: !!c.is_home, ed: cache.get("/api/nba/props")?.edition_id ?? null };
+  if (i >= 0) legs[i] = leg; else legs.push(leg);
+  pcSave(legs);
+}
+function pcDrop(pid, mk) { pcSave(pcLegs().filter((l) => !(l.pid === String(pid) && l.mk === mk))); }
+// a polite announcement for screen readers when a leg is added or removed
+function pcSay(msg) {
+  let r = document.getElementById("pclive");
+  if (!r) { r = document.createElement("div"); r.id = "pclive"; r.className = "vh"; r.setAttribute("aria-live", "polite"); document.body.appendChild(r); }
+  r.textContent = msg || "";
+}
+// the floating counter (NBA pages only; hidden with no legs)
+function pcFab() {
+  let b = document.getElementById("pcfab");
+  if (!b) { b = document.createElement("button"); b.type = "button"; b.id = "pcfab"; b.className = "pcfab"; b.setAttribute("aria-haspopup", "dialog");
+    b.addEventListener("click", () => openPcSheet(b)); document.body.appendChild(b); }
+  const n = pcLegs().length;
+  document.documentElement.classList.toggle("haslegs", n > 0); // room at the page foot for the counter
+  b.hidden = !n; b.innerHTML = `${ICONS.legs}<span>Parlay check</span><b>${n}</b>`; b.setAttribute("aria-label", `Parlay check: ${plural(n, "leg")}`);
+}
+function pcSync() {
+  pcFab();
+  $$("button[data-pc]").forEach((b) => { const leg = pcFind(b.dataset.pid, b.dataset.mk); b.classList.toggle("on", !!leg); b.innerHTML = pcLabel(leg); });
+}
+window.addEventListener("storage", (e) => { if (e.key == null || e.key === "npl:parlay") { pcMem = null; pcSync(); } }); // another tab changed the list
+// the side chooser under a card's button: over or under at the US line, with each side's market chance
+function pcPick(btn, c) {
+  const host = btn.closest(".cardacts") || btn, again = host.nextElementSibling?.classList.contains("pcpick");
+  $$(".pcpick").forEach((x) => x.remove()); $$('button[data-pc][aria-expanded="true"]').forEach((b) => b.setAttribute("aria-expanded", "false"));
+  if (again || !pcOk(c)) return; // a second tap on the button closes its chooser
+  const m = c.market_line, leg = pcFind(c.player_id, c.market), full = !leg && pcLegs().length >= PC_MAX, ch = { over: m.fair_over, under: pcUnder(m) };
+  const box = document.createElement("div"); box.className = "pcpick"; box.setAttribute("role", "group"); box.setAttribute("aria-label", `Parlay check: ${c.name}, ${NBA_MKT[c.market]}`);
+  box.innerHTML = `<p class="tiny">${full ? `The check holds ${PC_MAX} legs at most: remove one first.` : `Choose a side at the US line ${esc(m.line)}. Market chance with the margin removed:`}</p>
+    <div class="pcsides">${["over", "under"].map((s) => `<button type="button" class="pcside ${s}" data-side="${s}" aria-pressed="${leg?.side === s}"${full ? " disabled" : ""}>${sideWord(s)} ${esc(m.line)}<small>${pct1(ch[s])}</small></button>`).join("")}</div>
+    <div class="row between">${leg ? `<button type="button" class="btn ghost" data-act="rm">Remove from the check</button>` : "<span></span>"}<button type="button" class="btn ghost" data-act="close">Cancel</button></div>`;
+  host.after(box); btn.setAttribute("aria-expanded", "true");
+  const done = (msg) => { box.remove(); btn.setAttribute("aria-expanded", "false"); pcSync(); pcSay(msg); if (btn.isConnected) btn.focus(); };
+  $$("[data-side]", box).forEach((b) => b.addEventListener("click", () => { pcPut(c, b.dataset.side);
+    done(`${c.name} ${NBA_SHORT[c.market]} ${b.dataset.side} ${m.line} is in the parlay check (${plural(pcLegs().length, "leg")}).`); }));
+  $('[data-act="rm"]', box)?.addEventListener("click", () => { pcDrop(c.player_id, c.market); done(`${c.name} ${NBA_SHORT[c.market]} is out of the parlay check.`); });
+  $('[data-act="close"]', box).addEventListener("click", () => done(""));
+  box.addEventListener("keydown", (e) => { if (e.key === "Escape") { e.stopPropagation(); done(""); } });
+  ($("[data-side]:not([disabled])", box) || $('[data-act="close"]', box)).focus();
+}
+// each saved leg against the board now loaded: its chance where its card still has that US line
+function pcResolve(P) {
+  const cards = new Map((P?.cards || []).map((c) => [`${c.player_id}|${c.market}`, c]));
+  return pcLegs().map((l) => { const c = cards.get(`${l.pid}|${l.mk}`), m = c?.market_line, p = m ? (l.side === "over" ? m.fair_over : pcUnder(m)) : null;
+    const why = !P ? "the props board could not be loaded" : !c ? "not on the current board" : !m ? "no US line on the current board" : m.line !== l.line ? `the US line is now ${m.line}` : !(p > 0 && p < 1) ? "no market chance stored" : "";
+    return { ...l, chance: why ? null : p, books: m?.books ?? null, why }; });
+}
+async function openPcSheet(opener) {
+  if (document.querySelector(".pcsheet")) return;
+  let P = null; try { P = await api("/api/nba/props"); } catch { /* the legs are listed as saved, without chances */ }
+  const back = document.createElement("div"); back.className = "sheet-back";
+  back.innerHTML = `<div class="sheet pcsheet" role="dialog" aria-modal="true" aria-labelledby="pcHead">
+    <div class="row between" style="flex-wrap:nowrap;align-items:flex-start"><div><span class="eyebrow">NBA${P?.date_et ? ` · ${esc(P.date_et)}` : ""} · US lines</span><h2 id="pcHead">Parlay check</h2></div><button class="btn ghost" data-close>Close</button></div>
+    <p class="pcnote">Research only. Combined chances assume the legs are independent.</p>
+    <div class="pcbody"></div>
+    <p class="tiny muted pcfoot">A leg's chance is the US books' chance of that side at the US line with the margin removed, averaged over books: a research reference, not a price open to UK customers. Expected value = combined chance × odds − 1. Legs from one game move together (pace, minutes, the score), so their product is not their real combined chance. Bookmakers' parlay odds usually carry far bigger margins than single prices. The legs are saved in this browser only.</p></div>`;
+  document.body.appendChild(back);
+  const body = $(".pcbody", back); let odds = "", okLegs = [];
+  const evOut = () => {
+    const out = $("#pcEv", back), inp = $("#pcOdds", back); if (!out || !inp || !okLegs.length) return;
+    odds = inp.value; const d = parseOdds(odds);
+    if (d == null) { out.innerHTML = "Type the odds offered for the whole parlay to see the expected value: decimal (4.5), US (+350) or fractional (7/2)."; return; }
+    if (!(d > 1)) { out.innerHTML = `<span class="err">Odds not recognised. Try decimal 4.5, US +350 or -120, or fractional 7/2.</span>`; return; }
+    const r = fairCombo(okLegs, d);
+    out.innerHTML = `${d !== Number(odds.trim()) ? `Read as decimal ${dec(d, 2)}. ` : ""}Expected value <b>${pctPts(r.ev)}</b> per unit staked if the combined chance is right; these odds need ${pct1(r.breakeven)} to break even.${r.independent ? "" : " Not reliable here: some legs come from the same game."}`;
+  };
+  const draw = () => {
+    const R = pcResolve(P), ok = R.filter((l) => !l.why), old = R.filter((l) => l.why);
+    okLegs = ok.map((l) => ({ chance: l.chance, game_id: l.gid, player_id: l.pid, books: l.books }));
+    const res = okLegs.length ? fairCombo(okLegs) : null;
+    const row = (l, n) => `<li class="pcleg${l.why ? " stale" : ""}"><span class="n" aria-hidden="true">${n || "–"}</span><div class="pcwho"><b>${esc(l.name)}</b> <span class="nw">${esc(NBA_SHORT[l.mk])} ${l.side} ${esc(l.line)}</span>
+        <div class="tiny">${esc(l.team)} ${l.home ? "v" : "@"} ${esc(l.opp)} · ${l.why ? esc(l.why) : `market <b>${pct1(l.chance)}</b> · ${plural(l.books ?? 0, "book")}`}</div></div>
+        <button type="button" class="btn ghost pcrm" data-rm="${esc(l.pid)}|${esc(l.mk)}" aria-label="Remove ${esc(l.name)}, ${esc(NBA_MKT[l.mk])} ${l.side} ${esc(l.line)}">Remove</button></li>`;
+    if (!R.length) { body.innerHTML = `<p class="small pcempty">No legs yet. Use "Add to parlay check" on a card with a US line, then choose over or under.</p>`; return; }
+    body.innerHTML = `${ok.length ? `<ol class="pclegs">${ok.map((l, i) => row(l, i + 1)).join("")}</ol>` : ""}
+      ${old.length ? `<p class="tiny pcold">Left out of the sums:</p><ul class="pclegs">${old.map((l) => row(l, 0)).join("")}</ul>` : ""}
+      ${res ? `<div class="pcsum"><div><span class="l">Combined fair chance</span><b>${pct1(res.chance)}</b>${res.independent ? "" : `<span class="tinys">legs share a game</span>`}</div><div><span class="l">Fair decimal odds</span><b>${dec(res.fair_odds, 2)}</b></div></div>
+        ${res.warnings.length ? `<ul class="pcwarn">${res.warnings.map((w) => `<li>${ICONS.warn}<span>${esc(w)}</span></li>`).join("")}</ul>` : ""}
+        <form class="pcodds" autocomplete="off"><label for="pcOdds">Offered odds for the whole parlay</label><input id="pcOdds" type="text" enterkeyhint="done" spellcheck="false" autocapitalize="off" placeholder="e.g. 4.5, +350 or 7/2" value="${esc(odds)}" aria-describedby="pcEv"><output id="pcEv" class="pcev" for="pcOdds" aria-live="polite"></output></form>` : ""}
+      <div class="row"><button type="button" class="btn ghost" data-act="clear">Remove all legs</button></div>`;
+    $$("[data-rm]", body).forEach((b) => b.addEventListener("click", () => { const [pid, mk] = b.dataset.rm.split("|"); pcDrop(pid, mk); pcSync(); draw();
+      pcSay(`Leg removed: ${plural(pcLegs().length, "leg")} left.`); ($("[data-rm]", body) || $("[data-close]", back)).focus(); }));
+    const clear = $('[data-act="clear"]', body);
+    clear.addEventListener("click", () => {
+      if (!clear.dataset.sure) { clear.dataset.sure = "1"; clear.textContent = "Tap again to remove all legs";
+        setTimeout(() => { if (clear.isConnected) { delete clear.dataset.sure; clear.textContent = "Remove all legs"; } }, 4000); return; }
+      pcSave([]); pcSync(); draw(); pcSay("All legs removed."); $("[data-close]", back).focus(); });
+    const inp = $("#pcOdds", body);
+    if (inp) { inp.addEventListener("input", evOut); inp.form.addEventListener("submit", (e) => { e.preventDefault(); inp.blur(); }); }
+    evOut();
+  };
+  const close = () => { back.remove(); document.removeEventListener("keydown", onKey); window.removeEventListener("hashchange", close); if (opener && opener.isConnected && !opener.hidden) opener.focus(); };
+  const onKey = (e) => { if (e.key === "Escape") close(); };
+  document.addEventListener("keydown", onKey); window.addEventListener("hashchange", close);
+  back.addEventListener("click", (e) => { if (e.target === back) close(); });
+  $("[data-close]", back).addEventListener("click", close);
+  draw(); $("[data-close]", back).focus();
 }
 
 let DVPC = null; // current-season defence v position for the props cards
@@ -1062,7 +1340,7 @@ async function viewNbaProps(v) {
   const wide = window.matchMedia("(min-width: 700px)").matches;
   v.innerHTML = `<section class="hero"><div class="medal">${leagueMark("nba")}</div><span class="eyebrow">NBA props · ${esc(p.date_et)} · saved ${esc(p.published_london)}</span><h1>Props board</h1>
       ${banner("warn", `<p><b>Research only: no demonstrated edge.</b> Tested on a full season of real bookmaker lines (about 72,000 props, 2024-25), the bookmakers' prices were more accurate than this model and its picks lost about 2% at the best US prices (more at a single bookmaker). Use these cards to research, not as bets.</p>`)}
-      <details class="howto"${wide ? " open" : ""}><summary>How the cards work</summary><p>Each card shows the model's projection, its over/under chance at a line, and how often the player went over that line recently. The line is, in order: yours (tap it to type your bookmaker's), the US market line where stored (a research reference; US books are not open to UK bettors), or the model's fair 50/50 line. ${cal ? `At the US line the chance is calibrated on real lines; at any other line it is the raw model.${flat.length ? ` For ${esc(flat.map((k) => NBA_LONG[k]).join(" and "))} the calibration found almost no signal, so those cards show no model view at the US line.` : ""}` : "This model version has no calibration on real lines, so cards show no chance at the US line; at any other line they show the raw model."} "Context" opens minutes, game script, the opponent and his games against them.</p></details></section>
+      <details class="howto"${wide ? " open" : ""}><summary>How the cards work</summary><p>Each card shows the model's projection, its over/under chance at a line, and how often the player went over that line recently. The line is, in order: yours (tap it to type your bookmaker's), the US market line where stored (a research reference; US books are not open to UK bettors), or the model's fair 50/50 line. ${cal ? `At the US line the chance is calibrated on real lines; at any other line it is the raw model.${flat.length ? ` For ${esc(flat.map((k) => NBA_LONG[k]).join(" and "))} the calibration found almost no signal, so those cards show no model view at the US line.` : ""}` : "This model version has no calibration on real lines, so cards show no chance at the US line; at any other line they show the raw model."} "Matchup, form, game script, role" opens four tabs: how four simple rules read tonight (none beat the bookmakers when tested on two seasons of real lines) with the context under each. "Add to parlay check" collects legs at the US line and combines their market chances.</p></details></section>
     <div class="mktabs" role="tablist">${Object.entries(NBA_SHORT).map(([k, l]) => `<button role="tab" class="${k === f.market ? "on" : ""}" data-mk="${k}">${l}</button>`).join("")}</div>
     <div class="filters nbaf" role="search">
       <label>Player<input type="search" id="nq" value="${esc(f.q)}" placeholder="Name"></label>
@@ -1098,7 +1376,8 @@ async function viewNbaProps(v) {
   $("#nsort").addEventListener("change", (e) => { f.sort = e.target.value; save(); });
   $("#nform").addEventListener("change", (e) => { f.form = e.target.value; save(); });
   $("#nmore").addEventListener("click", () => { shown += 24; render(); });
-  $("#ncards").addEventListener("click", (e) => { const b = e.target.closest("[data-ctx]"); if (b) openNbaSheet(all[+b.dataset.ctx], p, b); });
+  $("#ncards").addEventListener("click", (e) => { const b = e.target.closest("[data-ctx]"); if (b) openNbaSheet(all[+b.dataset.ctx], p, b);
+    const q = e.target.closest("button[data-pc]"); if (q) pcPick(q, all[+q.dataset.pc]); });
   render();
 }
 
@@ -1114,13 +1393,16 @@ async function viewNbaPlayer(v, arg) {
     // context: his card's figures in the props `extras`; the live server's page extras otherwise
     // (a player with no game tonight gets volume and game script only)
     const own = P.extras && (P.extras.volume || P.extras.script) ? P.extras : null;
-    const ctxPanel = (x, card) => (x ? `<section class="panel"><h2>Context</h2>${ctxBlock(x, card, mk)}</section>` : "");
+    // with a card tonight: the factor tabs (its open tab kept while the page re-draws); without
+    // one: the context block alone
+    const ctxPanel = (x, card) => (card ? `<section class="panel fxpanel"><h2>Factor check</h2>${fxBlock(card, x, props, { keep: pid })}</section>`
+      : x ? `<section class="panel"><h2>Context</h2>${ctxBlock(x, null, mk)}</section>` : "");
     if (!c) { v.innerHTML = head + banner("info", "<p>No forecast for this player in the latest edition (no game tonight, or no previous NBA minutes).</p>") + ctxPanel(own, null) + logTable(P); return; }
     const { line, src, fair: isFair } = lineFor("nba", c); const D = new Dist(c.dist); const ch = nbaChance(c, line, cal);
     v.innerHTML = head + `<div class="mktabs">${cards.map((x) => `<button class="${x.market === mk ? "on" : ""}" data-mk="${x.market}">${NBA_SHORT[x.market]}</button>`).join("")}</div>
       <section class="panel"><div class="row between"><div><span class="eyebrow">${esc(c.team)} ${c.is_home ? "v" : "@"} ${esc(c.opponent)} · ${esc(c.tip_london)}</span><h2>${esc(NBA_MKT[mk])}</h2></div>${nbaInjury(c.injury)}</div>
         <div class="pline"><div><span class="mk">Line</span><button class="linebtn" data-line="0">${line}<small>${src} ${ICONS.pen}</small></button></div><div class="proj"><b>${dec(c.mean, 1)}</b><span>projection (median ${c.median}, 80% ${c.q10}–${c.q90})</span></div></div>
-        ${nbaOuBar(ch, isFair)}${usPrices(c)}<p class="tiny solid bep">${ch.show ? `Break-even decimal prices at this line (${ch.cal ? "calibrated chance" : "raw model"}): over ${dec(fair(ch.over, ch.push), 2)}, under ${dec(fair(ch.under, ch.push), 2)}.` : "No break-even prices at this line: the card shows no model chance here."}</p>
+        ${nbaOuBar(ch, isFair)}${usPrices(c)}${pcOk(c) ? `<div class="row cardacts">${pcButton(c, 0)}</div>` : ""}<p class="tiny solid bep">${ch.show ? `Break-even decimal prices at this line (${ch.cal ? "calibrated chance" : "raw model"}): over ${dec(fair(ch.over, ch.push), 2)}, under ${dec(fair(ch.under, ch.push), 2)}.` : "No break-even prices at this line: the card shows no model chance here."}</p>
         ${hitChips(c.log, line, c.opponent)}
         <h3 style="margin-top:12px">Last 20 games</h3>${miniBars(c.log, line, 20, { width: 640, height: 170 })}
         <h3 style="margin-top:12px">Model distribution</h3>${distChart(D, { line })}
@@ -1134,6 +1416,7 @@ async function viewNbaPlayer(v, arg) {
     $$(".mktabs button[data-mk]", v).forEach((b) => b.addEventListener("click", () => { mk = b.dataset.mk; store.set("nbaPlayerMk", mk);
       try { history.replaceState(null, "", `#nba-player.${pid}.${mk}`); } catch { /* the address keeps the earlier market */ }
       draw(); }));
+    $$("button[data-pc]", v).forEach((b) => b.addEventListener("click", () => pcPick(b, c)));
     bindLineButtons(v, [c], "nba", draw);
   };
   draw();
@@ -1176,9 +1459,13 @@ async function viewNbaAbout(v) {
       <p class="small">Chance of playing comes from recent appearances, then the daily injury report: Out = 1%, game-time decision = 65% of the usual chance. Those two numbers are assumptions; injury reports have no history here before September 2026, so their effect is judged from now on.</p></section>
     <section class="panel"><h2>Known gaps</h2><ul class="small"><li>When a teammate who played last game is ruled out, the extra minutes and shots are not added yet (flagged on the card).</li><li>Box scores arrive the morning after games (about 12:00 to 12:40 UK time). An edition published before then is made without the previous night's games, so a team on the second night of a back-to-back is forecast without the first one.</li><li>Injury news comes from the daily snapshot (about 18:40 UK time). Later news is not included, so late scratches are missed.</li><li>Bookmaker prices are US books' (The Odds API), shown as a research reference only: UK bookmakers' NBA props are not available through the odds feed, and any line you enter is your own.</li></ul></section>
     <section class="panel"><h2>Sources</h2><p class="small">Box scores, schedules and the daily injury snapshot: SportsDataverse (sportsdataverse-data releases, CC BY 4.0), built from ESPN's game feeds. Nothing is fetched from ESPN itself (its terms forbid automated access; D-046). Player photos and logos are copies saved before 3 Nov 2026; without one, initials are shown. Prices: The Odds API (player props and game lines from US books), a research reference only. Not used: NBA.com statistics and injury PDFs (their terms forbid use in connection with gambling).</p></section>
-    <section class="panel" id="ctxdefs"><h2>Card prices and context</h2><p class="small">US prices on a card are the best price at a state-regulated US book on its main line, and BetMGM's pair when its main line is the consensus line. The market chance is the average over books with the margin removed. The lean sets the calibrated model's chance against that chance, both as whole percentages: under 3 percentage points apart is "No lean". With fewer than 3 books at the line, or no regulated best price, the card says "thin market" and shows no lean. Where the calibration on real lines found almost no signal for a market, the card says "No model view at this line". A lean is a description, not a pick: no gap has made money on real past lines (D-043). "Tiny sample" marks figures from fewer than 5 games or player-games.</p></section>`;
+    <section class="panel" id="ctxdefs"><h2>Card prices and context</h2><p class="small">US prices on a card are the best price at a state-regulated US book on its main line, and BetMGM's pair when its main line is the consensus line. The market chance is the average over books with the margin removed. The lean sets the calibrated model's chance against that chance, both as whole percentages: under 3 percentage points apart is "No lean". With fewer than 3 books at the line, or no regulated best price, the card says "thin market" and shows no lean. Where the calibration on real lines found almost no signal for a market, the card says "No model view at this line". A lean is a description, not a pick: no gap has made money on real past lines (D-043). "Tiny sample" marks figures from fewer than 5 games or player-games.</p></section>
+    <section class="panel" id="fxdefs"><h2>Factor tabs and the parlay check</h2><p class="small">A card's detail and its player page show four tabs: matchup, form, game script and role. Each lean (over, under, neutral or unknown) comes from a simple rule written down before it was tested on two seasons of stored real lines, and is applied exactly as tested; "unknown" means the rule cannot be applied yet (no US line, too few games or no game lines stored). None of the rules beat the bookmakers' margin-free prices, and neither did three or more of them agreeing, so a lean describes how a rule reads tonight and recommends nothing.</p>
+      <p class="small">The parlay check multiplies the legs' margin-free market chances at the US line as if the legs were independent, and gives the fair decimal odds (1 ÷ the combined chance) and, at odds you type, the expected value (combined chance × odds − 1). Legs from the same game, or of the same player, move together, so their product is flagged as unreliable. The legs are saved in this browser only.</p></section>`;
   // the context definitions travel with the props payload; filled in when it has loaded
   api("/api/nba/props").then((p) => { const n = p.extras?.notes; const el = $("#ctxdefs", v); if (!el) return;
+    const T = p.factor_tests, fd = $("#fxdefs", v);
+    if (T?.summary && fd) fd.insertAdjacentHTML("beforeend", `<p class="small">${esc(T.summary)} Checked on ${esc(T.fit)} and the ${esc(T.test)} (${esc(dayFmt(T.date, true))}).</p>`);
     // the edition's calibration, as the cards use it (slopes from reports/nba/model/calibration.json)
     const cal = nbaCal(p), flat = flatMarkets(cal);
     el.insertAdjacentHTML("beforeend", `<p class="small">${cal ? `Model ${esc(cal.version)}: calibration slope ${NBA_STATS.filter((k) => cal.slope[k] != null).map((k) => `${esc(NBA_SHORT[k])} ${dec(cal.slope[k], 2)}`).join(", ")} (1 would mean the calibrated chance follows the model fully). Below ${dec(cal.flat_below, 1)} the card shows no model view at the US line${flat.length ? `: ${esc(flat.map((k) => NBA_LONG[k]).join(" and "))}` : ""}.` : "This edition's model version has no calibration on real lines, so cards show no chance at the US line."}</p>`);
@@ -1614,4 +1901,5 @@ async function loadLook() {
   for (const s of ["nfl", "nba"]) { try { LOOK[s] = await api(`/api/visuals/${s}`); } catch { /* no photos: initials are shown */ } }
 }
 shell();
+pcFab();
 loadLook().finally(() => { paintMarks(); route(); });

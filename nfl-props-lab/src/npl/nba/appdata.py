@@ -15,6 +15,7 @@ from ..dist import Dist
 from ..util import log
 from . import canon, live
 from . import extras as X
+from . import factors as F
 from . import model as M
 
 STAT_COLS = {"pts": "pts", "reb": "reb", "ast": "ast", "fg3m": "fg3m"}
@@ -94,7 +95,8 @@ def market_lines(game_ids: set[str]) -> dict:
 
 
 def consensus_lines(q: pd.DataFrame, pulls: pd.DataFrame | None = None) -> dict:
-    """Consensus line, fair price and best regulated prices per (player, market) (books.py).
+    """Consensus line, fair price and best regulated prices per (player, market) (books.py),
+    with fair_under = 1 - fair_over (the margin-free chance of each side, npl.parlay).
 
     The board is the one each game and market's latest pull saw, rebuilt from the pull log
     (books.pull_board): each book in that pull counts with its rows for the update time the
@@ -114,6 +116,8 @@ def consensus_lines(q: pd.DataFrame, pulls: pd.DataFrame | None = None) -> dict:
         s = meta.loc[key]
         c |= {"observed_at": str(s.seen),
               "availability": "verified_uk" if s.uk else "research_reference"}
+        if c.get("fair_over") is not None:  # each side's margin-free chance, for combining legs
+            c["fair_under"] = X.half_up(1 - c["fair_over"], 4)
     return out
 
 
@@ -209,6 +213,7 @@ def _props() -> dict:
     mkt = market_lines(set(games))
     season = e["date_et"][:4]
     ex, inj = _extras(e, mkt)
+    fx = _factors(e, fc, logs, mkt, ex)
     out_by_team: dict[str, list] = {}
     for f in fc:
         if f["market"] == "pts" and f.get("injury") and f["injury"]["fantasy"] in ("OUT", "OFS"):
@@ -262,12 +267,61 @@ def _props() -> dict:
                               if t["name"] != f["name"] and t["minutes"] >= 20 and
                               t["played_last"]],
             "wowy": _wowy(f, lg, logs, out_by_team.get(f["team"], []), int(season) + 1
-                          if int(e["date_et"][5:7]) >= 8 else int(season))})
+                          if int(e["date_et"][5:7]) >= 8 else int(season)),
+            # matchup, form, game script and role leans from the backtested rules (D-047)
+            "factors": fx.get((f["player_id"], f["market"]))})
     return {"edition_id": e["edition_id"], "date_et": e["date_et"], "cards": cards,
             "model_version": e["code"]["model_version"],
             "calibration": calibration(e["code"]["model_version"]),
             "markets": {k: M.MARKET_LABELS[k] for k in M.MARKETS},
-            "published_london": _london(e["published_at"]), "extras": ex}
+            "published_london": _london(e["published_at"]), "extras": ex,
+            "factor_tests": F.tests_payload()}
+
+
+def _factors(e: dict, fc: list, logs: dict, mkt: dict, ex: dict) -> dict:
+    """{(player_id, market): factor breakdown} for the cards (npl.nba.factors, D-047). A display
+    extra: a failure leaves the cards without one (None) and never blocks them."""
+    try:
+        return F.build(e, fc, logs, mkt, ex if isinstance(ex, dict) else {}, lake())
+    except Exception as err:  # noqa: BLE001
+        log.warning("NBA factor breakdown unavailable: %r", err)
+        return {}
+
+
+def parlay(spec: str, price: float | None = None) -> dict:
+    """npl.parlay.fair_combo for legs of the latest cards, written player_id:market:side and
+    separated by commas (side over or under), each at its card's margin-free chance of that
+    side (market_line.fair_over / fair_under), with an offered decimal price or None. Figures
+    are rounded half up for display (chances 4 dp, fair odds 2 dp); `selections` lists the
+    legs as resolved. {"error": ...} for a leg that cannot be resolved."""
+    from .. import parlay as P
+
+    pr = props()
+    if "error" in pr:
+        return pr
+    cards = {(c["player_id"], c["market"]): c for c in pr["cards"]}
+    legs = []
+    for i, part in enumerate((x.strip() for x in spec.split(",") if x.strip()), 1):
+        bits = part.split(":")
+        if len(bits) != 3 or bits[2] not in ("over", "under"):
+            return {"error": f"leg {i}: write player_id:market:over or player_id:market:under"}
+        pid, mk, side = bits
+        c = cards.get((pid, mk))
+        if c is None:
+            return {"error": f"leg {i}: no card for player {pid}, market {mk}"}
+        m = c.get("market_line")
+        if not m or m.get(f"fair_{side}") is None:
+            return {"error": f"leg {i}: no bookmaker line stored for {c['name']} {mk}"}
+        legs.append({"player_id": pid, "name": c["name"], "game_id": c["game_id"],
+                     "market": mk, "side": side, "line": m["line"],
+                     "chance": m[f"fair_{side}"], "books": m["books"]})
+    try:
+        r = P.fair_combo(legs, price)
+    except ValueError as err:
+        return {"error": str(err)}
+    nd = {"chance": 4, "fair_odds": 2, "ev": 4, "breakeven": 4}
+    return {**r, **{k: None if r[k] is None else X.half_up(r[k], n) for k, n in nd.items()},
+            "selections": legs}
 
 
 def calibration(version: str | None) -> dict | None:

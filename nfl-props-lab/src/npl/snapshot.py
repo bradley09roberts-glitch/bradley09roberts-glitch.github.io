@@ -7,9 +7,10 @@ terms forbid redistributing raw data) unless another path is given. It must stay
 hosting limit: build() measures the page and refuses to write one above MAX_BYTES unless
 allow_oversize=True. What keeps it small: NFL player pages and photos only for players at or
 above min_p_play; NBA cards, player pages and photos only at or above nba_min_p_play, 20-game
-logs on cards and 15 on player pages, and in the card extras the newest SNAPSHOT_GRID games
-against tonight's opponent with line and difference arrays left out where they hold no value
-(the app reads a missing array as "no line")."""
+logs on cards and 15 on player pages, factor tabs (D-047) only on cards with a bookmaker line,
+and in the card extras the newest SNAPSHOT_GRID games against tonight's opponent with line and
+difference arrays left out where they hold no value (the app reads a missing array as "no
+line")."""
 
 from __future__ import annotations
 
@@ -51,6 +52,17 @@ def _grid(g, cap: int = SNAPSHOT_GRID):
     return {**g, "games": rows}
 
 
+def _nba_card(c: dict) -> dict:
+    """A kept NBA card for the snapshot: its log cut to the last 20 games, and its factor tabs
+    (`factors`, npl.nba.factors) only when it has a bookmaker line: the rules were tested at
+    bookmakers' lines, and on every card they would add about 1 KB each (1.9 MB on the 2 Nov
+    slate, over the page limit). A new dict: the cached card is never changed."""
+    out = {**c, "log": {k: (v[-20:] if isinstance(v, list) else v) for k, v in c["log"].items()}}
+    if not c.get("market_line"):
+        out.pop("factors", None)
+    return out
+
+
 def _nba_extras(ex: dict, cards: list) -> dict:
     """The props `extras` block cut to what the kept cards look up: their players (with the
     v-opponent grid trimmed, _grid), their opponents' and teams' defence, their (opponent,
@@ -78,9 +90,11 @@ def _nba_extras(ex: dict, cards: list) -> dict:
 def _add_nba(data: dict, min_p_play: float = 0.5) -> None:
     """NBA pages for the latest NBA edition (if any), trimmed: cards of players with a play
     probability of at least `min_p_play` (recorded as the props payload's snapshot_min_p_play),
-    20-game logs on cards and the last 15 games on player pages. Card extras stay in the props
-    payload only: player pages here carry none (each one is a slate player whose extras are in
-    props `extras`). data["snapshot_player_pages"] lists the players with a page in the copy.
+    20-game logs on cards and factor tabs only on cards with a bookmaker line (_nba_card;
+    recorded as snapshot_factors_lined_only), the last 15 games on player pages. Card extras
+    stay in the props payload only: player pages here carry none (each one is a slate player
+    whose extras are in props `extras`). data["snapshot_player_pages"] lists the players with a
+    page in the copy.
     The slate's injury counts cover every player of the edition (nba.appdata.injured_counts),
     trimmed cards or not."""
     from .nba import appdata as nba
@@ -90,10 +104,9 @@ def _add_nba(data: dict, min_p_play: float = 0.5) -> None:
         return
     data["/api/nba/slate"] = nba.clean(s)
     props = dict(nba.props())  # a copy: the cached payload itself is never trimmed
-    props["cards"] = [{**c, "log": {k: (v[-20:] if isinstance(v, list) else v)
-                                    for k, v in c["log"].items()}}
-                      for c in props["cards"] if c["p_play"] >= min_p_play]
+    props["cards"] = [_nba_card(c) for c in props["cards"] if c["p_play"] >= min_p_play]
     props["snapshot_min_p_play"] = min_p_play
+    props["snapshot_factors_lined_only"] = True  # factor tabs only on cards with a line
     props["extras"] = _nba_extras(props.get("extras") or {}, props["cards"])
     data["/api/nba/props"] = nba.clean(props)
     data["/api/nba/backtests"] = nba.clean(nba.backtests())
