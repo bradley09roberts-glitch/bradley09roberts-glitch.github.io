@@ -189,6 +189,7 @@ def _props() -> dict:
                                  "market", "p_play", "injury", "minutes_expected", "mean",
                                  "median", "q10", "q90", "dist")},
             "minutes_lineup_shift": f.get("minutes_lineup_shift"),
+            "line_known": f.get("line_known"),
             "simple": simple_s.get((f["player_id"], f["market"])),
             "market_label": M.MARKET_LABELS[f["market"]], "model": e["headline_model"],
             "tip_utc": g["tip_utc"], "tip_london": _london(g["tip_utc"]),

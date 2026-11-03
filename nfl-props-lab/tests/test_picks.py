@@ -47,3 +47,29 @@ def test_stars_out_flags_a_recently_absent_starter_only():
              {"player_id": "R", "name": "Role", "team": "MIN", "injury": None}]
     # S missed 1 of 5 games: flagged; V has missed 4 of 5, so the model has seen LAC without him
     assert picks.stars_out(cards, cur) == {"MIN": ["Star"]}
+
+
+def test_tracked_rule_needs_betmgm_at_its_own_line_and_a_line_known_at_publish(monkeypatch):
+    import numpy as np
+    import pandas as pd
+
+    from npl.dist import Dist
+    from npl.nba import appdata as A
+
+    pm = np.exp(-((np.arange(60) - 20.0) ** 2) / 50.0)
+    card = {"name": "A", "player_id": "1", "team": "X", "opponent": "Y", "game_id": "g",
+            "market": "reb", "p_play": 0.99, "injury": None, "line_known": True,
+            "tip_utc": (pd.Timestamp.now(tz="UTC") + pd.Timedelta(hours=2)).isoformat(),
+            "tip_london": "", "dist": Dist.from_pmf(0, pm / pm.sum()).to_json(),
+            "market_line": {"line": 20.5, "fair_over": 0.5, "books": 5, "mgm_over": 2.3,
+                            "mgm_under": 1.6, "mgm_line": 20.5, "arb": False,
+                            "observed_at": "2026-11-03T01:00:00Z"}}
+    P = {"edition_id": "e", "model_version": picks.TRACK_MODEL, "cards": [card]}
+    monkeypatch.setattr(A, "props", lambda: P)
+    r = picks.nba()["tracking"]
+    assert len(r) == 1 and r[0]["book"] == "betmgm" and r[0]["side"] == "over"
+    card["line_known"] = False  # published before the day's lines: no line-player factor
+    assert picks.nba()["tracking"] == []
+    card["line_known"] = True
+    card["market_line"] |= {"mgm_over": None, "mgm_under": None, "mgm_line": 21.5}
+    assert picks.nba()["tracking"] == []  # BetMGM hangs another line: no fallback book

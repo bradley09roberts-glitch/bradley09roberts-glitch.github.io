@@ -109,6 +109,8 @@ def nba() -> dict:
         pc = calib.calibrated(c["market"], raw, ver)
         if not (m.get("mgm_over") and m.get("mgm_under")):
             continue  # D-044: BetMGM's own main line must be the consensus line
+        if ver == TRACK_MODEL and c.get("line_known") is not True:
+            continue  # the edition was made before this player's line was pulled: no line factor
         evs = {side: p * m[f"mgm_{side}"] - 1 for side, p in (("over", pa), ("under", 1 - pa))}
         side = max(evs, key=evs.get)
         ev, price, book = evs[side], m[f"mgm_{side}"], "betmgm"

@@ -224,6 +224,7 @@ def publish(date_et: str, kind: str = "early", con: sqlite3.Connection | None = 
                         "status": r.status, "fantasy": r.fantasy, "detail": r.detail,
                         "as_of": r.as_of_date, "source": r.injury_source},
                     "minutes_expected": round(float(r.min_mu), 1),
+                    "line_known": bool(r.has_line),  # nba-0.3 line factors applied (D-044)
                     "minutes_lineup_shift": round(float(r.min_mu - r.min_mu_base), 1),
                     "mean": round(d.mean(), 2), "median": d.median(),
                     "q10": d.quantile(0.1), "q90": d.quantile(0.9), "dist": d.to_json()})
