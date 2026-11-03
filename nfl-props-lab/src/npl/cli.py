@@ -71,6 +71,11 @@ def cmd_publish(a) -> int:
         if code["dirty"] and not a.allow_dirty and not a.dry_run:
             raise edition.EditionError("commit the code before publishing (tree is dirty)")
         lake = features.load_lake()
+        mem = lake["membership"]
+        if not ((mem.season == a.season) & (mem.week == a.week)).any():
+            raise edition.EditionError(
+                f"no weekly rosters for {a.season} week {a.week} yet (nflverse usually adds the "
+                "new week mid-week, before the first injury report); run `npl update` later")
         mlm = backtest._ml_models_for(lake, a.season, a.week,
                                       {"models": None, "season": None, "fits": []})
         res = forecast.run_slate(lake, a.season, a.week, n_sims=a.sims, seed=a.seed,
