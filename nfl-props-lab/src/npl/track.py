@@ -4,8 +4,9 @@ honestly, not to place bets.
 Every prop a rule flags is recorded once, the first time it is flagged, in the SQLite table
 tracked_props: later runs on the same slate do not add it again, and its line and price stay
 as first seen (that is when a bet would have been placed). `report()` settles each one from
-the box scores (a player who did not play is void; whole-number lines are never tracked, so
-there are no pushes) and scores it two ways:
+the box scores (a player who did not play is void; whole-number lines are never tracked, but a
+push is graded as one if it happens; a missing stat leaves the prop open) and scores it two
+ways:
 
   profit  flat 1 unit at the recorded price; ROI with a 95% interval that resamples whole
           slates, because props on the same night are correlated
@@ -75,9 +76,13 @@ def settle(t: pd.DataFrame, pg: pd.DataFrame) -> pd.DataFrame:
         if (g, p) not in key.index or key.loc[(g, p), "participation"] != "played":
             out.at[i, "status"] = "void"
             continue
-        a = float(key.loc[(g, p), r.market])
+        a = key.loc[(g, p), r.market]
+        if pd.isna(a):
+            continue  # played but the stat is missing: left open, never graded
+        a = float(a)
         out.at[i, "actual"] = a
-        out.at[i, "status"] = "win" if (a > r.line) == (r.side == "over") else "loss"
+        out.at[i, "status"] = ("push" if a == r.line else
+                               "win" if (a > r.line) == (r.side == "over") else "loss")
     return out
 
 
@@ -143,7 +148,8 @@ def summary(t: pd.DataFrame) -> dict:
     done = t.status.isin(["win", "loss"])
     pnl = np.where(t.status == "win", t.price - 1, -1.0)[done.to_numpy()]
     out = {"flagged": len(t), "settled": int(done.sum()), "won": int((t.status == "win").sum()),
-           "lost": int((t.status == "loss").sum()), "void": int((t.status == "void").sum()),
+           "lost": int((t.status == "loss").sum()),
+           "void": int(t.status.isin(["void", "push"]).sum()),
            "open": int((t.status == "open").sum()), "slates": int(slate.nunique())}
     if done.any():
         lo, hi = _boot(pnl, slate[done].to_numpy())

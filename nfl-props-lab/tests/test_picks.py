@@ -28,6 +28,14 @@ def test_calibration_pulls_points_to_the_market_and_keeps_some_rebound_signal():
     assert abs(calib.anchored("reb", 0.50, 0.80) - 0.50) < 0.05
 
 
+def test_calibration_refuses_coefficients_fitted_on_another_model():
+    from npl.nba import calib
+    for v in ("nba-0.1", "nba-0.3"):  # both fitted versions load, with their own clips
+        assert 0.4 < calib.calibrated("reb", 0.6, v) < 0.6
+    with pytest.raises(KeyError, match="no calibration"):
+        calib.calibrated("reb", 0.6, "nba-0.2")
+
+
 def test_stars_out_flags_a_recently_absent_starter_only():
     import pandas as pd
     games = [f"g{i}" for i in range(5)]

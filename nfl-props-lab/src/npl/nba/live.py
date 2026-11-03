@@ -38,7 +38,10 @@ INJ_GTD_MULT = 0.65
 # nba-0.2 pushed 108 players up by 2 minutes on average and they played what nba-0.1 expected:
 # the live estimate of teammate minutes missing tonight runs higher than the observed absences
 # the adjustment was fitted on. Back on once live absences are validated against stored reports.
-LIVE_PARAMS = "nba-0.1"
+# D-044: nba-0.3 = nba-0.1 plus three audited fixes (minutes table centred at the fractional
+# expectation, rate factors for players with a posted line, points variance proportional to the
+# mean), with calibration.json refitted for it. Still no lineup-aware minutes.
+LIVE_PARAMS = "nba-0.3"
 
 
 # --------------------------------------------------------------------------- availability
@@ -149,12 +152,34 @@ def build(date_et: str, con: sqlite3.Connection | None = None, now: datetime | N
                         np.where(st.eq("GTD"), 1 - x.p_play, (1 - x.p_play) * cal))
     x = M.apply_lineup(x, absent_w, hist, p, pg)
     lg = M.league_rates(L["player_games"], L["team_games"], B.FIT_SEASONS)
+    x["has_line"], lines_seen = posted_lines(con, x)
     pms = {"N1": M.n1_pmfs(x, p, lg), "A": M.baseline_pmfs(x, p, "A"),
            "C": M.baseline_pmfs(x, p, "C")}
     return {"x": x, "games": sg, "pms": pms, "params": p,
             "inputs": {"schedule": sched_meta, "injuries": inj_meta, "injuries_live": live_meta,
                        "box_last_tip": iso(pg.tip_utc.max()),
+                       "lines": {"players_with_a_line": int(x.has_line.sum()),
+                                 "quotes_seen_at": lines_seen},
                        "injury_snapshot": injn.as_of_date.max() if len(injn) else None}}
+
+
+def posted_lines(con: sqlite3.Connection, x: pd.DataFrame) -> tuple[pd.Series, str | None]:
+    """Which candidates have a bookmaker line in any market in the stored quotes (nba-0.3 lifts
+    those players' rates: the model runs low for players the books price; fitted on 2024-25).
+    Before the first odds pull of the day nobody has one, so publish again after pulling lines."""
+    from ..sources import odds_api
+
+    none = pd.Series(False, index=x.index)
+    try:
+        q = odds_api.quotes_frame(con)
+    except Exception:  # noqa: BLE001 - no quotes table yet
+        return none, None
+    q = q[q.game_id.isin(set(x.game_id.astype(str))) & q.player_id.notna()]
+    if q.empty:
+        return none, None
+    have = set(zip(q.game_id.astype(str), q.player_id.astype(str), strict=True))
+    has = [(str(g), str(i)) in have for g, i in zip(x.game_id, x.player_id, strict=True)]
+    return pd.Series(has, index=x.index), str(q.observed_at.max())
 
 
 def _asof_states(cand: pd.DataFrame, ps: pd.DataFrame) -> pd.DataFrame:

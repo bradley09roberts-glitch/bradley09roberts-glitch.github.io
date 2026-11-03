@@ -51,6 +51,9 @@ class Params:
     # live only: observed / predicted missing minutes by team games played this season, from the
     # fit seasons; P(plays) over-predicts absences in a team's first games (n07)
     lineup_cal: dict | None = None
+    min_frac: bool = False  # nba-0.3: residual table centred at mu (interpolated), not round(mu)
+    line_fac: dict | None = None  # nba-0.3: per-stat rate factors for rows with a posted line
+    pts_nb1_phi: float | None = None  # nba-0.3: points ~ NB1, variance = phi * mean
     disp: dict = field(default_factory=lambda: {"pts": 8.0, "reb": 35.0, "ast": 35.0,
                                                 "fg3m": 12.0})
     disp_a: dict = field(default_factory=lambda: {"pts": 5.0, "reb": 12.0, "ast": 12.0,
@@ -353,6 +356,24 @@ def nb_pmf_matrix(mu: np.ndarray, k: float, kmax: int) -> np.ndarray:
     return pm
 
 
+def nb1_pmf_matrix(mu: np.ndarray, phi: float, kmax: int) -> np.ndarray:
+    """NegBin pmf rows with variance phi * mean (size mean / (phi - 1)); tail into the last bin."""
+    mu = np.maximum(np.asarray(mu, float), 1e-6)
+    k = (mu / (phi - 1.0))[:, None]
+    y = np.arange(kmax + 1)[None, :]
+    lp = (gammaln(y + k) - gammaln(k) - gammaln(y + 1) - k * np.log(phi)
+          + y * np.log((phi - 1.0) / phi))
+    pm = np.exp(lp)
+    pm[:, -1] += np.clip(1 - pm.sum(1), 0, None)
+    return pm
+
+
+def count_pmf(s: str, mu: np.ndarray, p: Params) -> np.ndarray:
+    if s == "pts" and p.pts_nb1_phi:
+        return nb1_pmf_matrix(mu, p.pts_nb1_phi, MAX_K[s])
+    return nb_pmf_matrix(mu, p.disp[s], MAX_K[s])
+
+
 MIN_BANDS = (0, 8, 14, 20, 26, 31, 36, 49)
 
 
@@ -371,9 +392,16 @@ def fit_minutes_residuals(x: pd.DataFrame) -> dict:
     return out
 
 
-def minutes_weights_empirical(mu: np.ndarray, resid: dict) -> np.ndarray:
+def minutes_weights_empirical(mu: np.ndarray, resid: dict, frac: bool = False) -> np.ndarray:
+    if not frac:
+        return _place_resid(mu, np.round(mu).astype(int), resid)
+    b0 = np.floor(mu).astype(int)
+    t = (mu - b0)[:, None]
+    return (1 - t) * _place_resid(mu, b0, resid) + t * _place_resid(mu, b0 + 1, resid)
+
+
+def _place_resid(mu: np.ndarray, base: np.ndarray, resid: dict) -> np.ndarray:
     band = np.digitize(mu, MIN_BANDS[1:-1])
-    base = np.round(mu).astype(int)
     W = np.zeros((len(mu), len(MIN_GRID)))
     for b, h in resid.items():
         idx = np.where(band == b)[0]
@@ -409,7 +437,7 @@ def n1_pmfs(x: pd.DataFrame, p: Params, lg: dict,
     mu_m = x.min_mu.fillna(12.0).to_numpy()
     sd_m = np.maximum(x.min_sd.fillna(8.0).to_numpy() * p.min_sd_scale, p.min_sd_floor)
     if p.min_resid:
-        W = minutes_weights_empirical(np.clip(mu_m, 1, 48), p.min_resid)
+        W = minutes_weights_empirical(np.clip(mu_m, 1, 48), p.min_resid, frac=p.min_frac)
     else:
         W = minutes_weights(np.clip(mu_m, 1, 48), sd_m)  # (n, G)
     mult = np.ones(n)
@@ -429,12 +457,14 @@ def n1_pmfs(x: pd.DataFrame, p: Params, lg: dict,
             m = m * (1 + (raw - 1) * nn / (nn + p.k_def))
         if f"rmult_{s}" in x:  # absent-teammate usage (absence_adjust)
             m = m * x[f"rmult_{s}"].fillna(1.0).to_numpy()
+        if p.line_fac and "has_line" in x:  # nba-0.3: players with a posted line
+            m = m * np.where(x.has_line.fillna(False).to_numpy(bool), p.line_fac[s], 1.0)
         K = MAX_K[s]
         mix = np.zeros((n, K + 1))
         for j, mins in enumerate(MIN_GRID):
             if not W[:, j].any():
                 continue
-            mix += W[:, j:j + 1] * nb_pmf_matrix(rate * mins * m, p.disp[s], K)
+            mix += W[:, j:j + 1] * count_pmf(s, rate * mins * m, p)
         pm[s] = mix
     if "pra" not in only:
         return pm
@@ -452,15 +482,17 @@ def n1_pmfs(x: pd.DataFrame, p: Params, lg: dict,
             m = m * (1 + (raw - 1) * nn / (nn + p.k_def))
         if f"rmult_{s}" in x:
             m = m * x[f"rmult_{s}"].fillna(1.0).to_numpy()
+        if p.line_fac and "has_line" in x:
+            m = m * np.where(x.has_line.fillna(False).to_numpy(bool), p.line_fac[s], 1.0)
         rates[s] = r.to_numpy() * m
     for j, mins in enumerate(MIN_GRID[::2]):  # every other minute keeps this tractable
         jj = 2 * j
         w = W[:, jj] + (W[:, jj + 1] if jj + 1 < W.shape[1] else 0)
         if not w.any():
             continue
-        a = nb_pmf_matrix(rates["pts"] * (mins + 0.5), p.disp["pts"], MAX_K["pts"])
-        b = nb_pmf_matrix(rates["reb"] * (mins + 0.5), p.disp["reb"], MAX_K["reb"])
-        c = nb_pmf_matrix(rates["ast"] * (mins + 0.5), p.disp["ast"], MAX_K["ast"])
+        a = count_pmf("pts", rates["pts"] * (mins + 0.5), p)
+        b = count_pmf("reb", rates["reb"] * (mins + 0.5), p)
+        c = count_pmf("ast", rates["ast"] * (mins + 0.5), p)
         ab = _conv_rows(a, b)
         abc = _conv_rows(ab, c)[:, :K + 1]
         pra += w[:, None] * abc

@@ -204,3 +204,46 @@ def test_simple_team_rest_and_projection():
                       **{f"opp_factor_{s}": [1.2] for s in SM.MARKETS}})
     rest = {s: {0: 0.9, 1: 1.0, 2: 1.0, 3: 1.0} for s in SM.MARKETS}
     assert SM.project(f, rest).pts[0] == pytest.approx(10 * 1.2 * 0.9 * 1.1)
+
+
+def _one_player():
+    x = pd.DataFrame({"min_mu": [30.4], "min_sd": [5.0], "pos": ["G"], "pace_ew": [100.0],
+                      "opp_pace": [100.0], "lg_pace": [100.0], "opp_n": [10],
+                      "min_sum": [300.0], "pts_sum": [180.0], "reb_sum": [50.0],
+                      "ast_sum": [60.0], "fg3m_sum": [20.0],
+                      **{f"def_{s}": [1.0] for s in M.BASE_STATS},
+                      **{f"lg_{s}": [1.0] for s in M.BASE_STATS}})
+    lg = {"pos_rate": {"G": {"pts": .5, "reb": .15, "ast": .15, "fg3m": .05},
+                       "F": {"pts": .45, "reb": .2, "ast": .1, "fg3m": .04}},
+          "per_poss": {s: 1.0 for s in M.BASE_STATS}, "pace48": 100.0}
+    return x, lg
+
+
+def test_nba_0_3_changes_nothing_under_nba_0_1_params():
+    p1 = M.load_params("nba-0.1")
+    x, lg = _one_player()
+    a = M.n1_pmfs(x, p1, lg)
+    b = M.n1_pmfs(x.assign(has_line=True), p1, lg)
+    for s in M.MARKETS:
+        assert np.array_equal(a[s], b[s])
+
+
+def test_nba_0_3_line_factor_nb1_points_and_fractional_minutes():
+    p3 = M.load_params("nba-0.3")
+    assert p3.min_frac and p3.pts_nb1_phi and p3.line_fac["fg3m"] > 1
+    x, lg = _one_player()
+    no, yes = M.n1_pmfs(x.assign(has_line=False), p3, lg), M.n1_pmfs(x.assign(has_line=True), p3, lg)
+    k = np.arange(no["pts"].shape[1])
+    for s in M.BASE_STATS:  # a posted line lifts the mean by the fitted factor
+        kk = np.arange(no[s].shape[1])
+        assert (yes[s] * kk).sum() / (no[s] * kk).sum() == pytest.approx(p3.line_fac[s], rel=2e-3)
+    # points ~ NB1: variance phi x mean for a fixed mean
+    pm = M.nb1_pmf_matrix(np.array([22.0]), p3.pts_nb1_phi, 120)[0]
+    mu = (pm * np.arange(121)).sum()
+    assert mu == pytest.approx(22.0, rel=1e-6)
+    assert (pm * (np.arange(121) - mu) ** 2).sum() == pytest.approx(22.0 * p3.pts_nb1_phi, rel=1e-4)
+    assert (no["pts"] * k).sum() > 0
+    # fractional centre: at a whole number it equals the rounded table
+    resid = p3.min_resid
+    w_int = M.minutes_weights_empirical(np.array([30.0]), resid, frac=True)
+    assert np.allclose(w_int, M.minutes_weights_empirical(np.array([30.0]), resid, frac=False))

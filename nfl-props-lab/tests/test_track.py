@@ -95,3 +95,11 @@ def test_best_prices_come_from_regulated_books_only():
     assert m["books"] == 3  # offshore prices still inform the consensus
     assert m["best_over"] == 1.95 and m["best_over_book"] == "fanduel"
     assert m["best_under"] == 1.9 and m["best_under_book"] == "betmgm"
+
+
+def test_settle_grades_a_push_and_leaves_a_missing_stat_open():
+    t = pd.DataFrame([_row(line=21.0), _row(player_id="p2", side="under")])
+    pg = pd.DataFrame({"game_id": ["g1", "g1"], "player_id": ["p1", "p2"],
+                       "participation": ["played", "played"], "pts": [21.0, None],
+                       "reb": [5.0, 5.0], "ast": [2.0, 2.0]})
+    assert track.settle(t, pg).status.tolist() == ["push", "open"]

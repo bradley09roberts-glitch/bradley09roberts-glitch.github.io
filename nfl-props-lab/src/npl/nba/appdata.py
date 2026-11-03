@@ -90,40 +90,21 @@ def market_lines(game_ids: set[str]) -> dict:
 
 
 def consensus_lines(q: pd.DataFrame) -> dict:
-    """Only the most recent collection for each game and market counts: a line a bookmaker
+    """Consensus line, fair price and best regulated prices per (player, market) (books.py).
+
+    Only the most recent collection for each game and market counts: a line a bookmaker
     offered earlier but no longer shows (it moved 39.5 -> 38.5) must not stay in the mix."""
     q = q[q.player_id.notna() & q.market.isin(M.MARKETS)]
     if q.empty:
         return {}
     q = q[q.observed_at == q.groupby(["game_id", "market"]).observed_at.transform("max")]
-    q = q.sort_values("observed_at").drop_duplicates(
-        ["bookmaker", "player_id", "market", "line", "selection"], keep="last")
-    out = {}
-    for (pid, mk), x in q.groupby(["player_id", "market"]):
-        line = x.line.mode().iloc[0]
-        y = x[x.line == line].pivot_table(index="bookmaker", columns="selection",
-                                          values="decimal_price", aggfunc="last")
-        if not {"over", "under"} <= set(y.columns):
-            continue
-        y = y.dropna()
-        if y.empty:
-            continue
-        fair = (1 / y.over) / (1 / y.over + 1 / y.under)
-        mgm = y.loc["betmgm"] if "betmgm" in y.index else None
-        reg = y[[books.regulated(b) for b in y.index]]  # best prices from regulated books only
-        out[(pid, mk)] = {"line": float(line), "fair_over": round(float(fair.mean()), 4),
-                          "mgm_over": float(mgm.over) if mgm is not None else None,
-                          "mgm_under": float(mgm.under) if mgm is not None else None,
-                          "best_over": float(reg.over.max()) if len(reg) else None,
-                          "best_under": float(reg.under.max()) if len(reg) else None,
-                          "best_over_book": str(reg.over.idxmax()) if len(reg) else None,
-                          "best_under_book": str(reg.under.idxmax()) if len(reg) else None,
-                          "books": int(len(y)), "margin": round(float((1 / y.over + 1 / y.under
-                                                                        - 1).mean()), 4),
-                          "observed_at": str(x.observed_at.max()),
-                          "availability": "research_reference" if (x.availability !=
-                                                                   "verified_uk").any()
-                          else "verified_uk"}
+    meta = q.assign(uk=q.availability == "verified_uk").groupby(["player_id", "market"]).agg(
+        seen=("observed_at", "max"), uk=("uk", "all"))
+    out = books.records(books.consensus_frame(books.pairs(q)))
+    for key, c in out.items():
+        s = meta.loc[key]
+        c |= {"observed_at": str(s.seen),
+              "availability": "verified_uk" if s.uk else "research_reference"}
     return out
 
 
@@ -219,7 +200,8 @@ def _props() -> dict:
                     else season},
             "opp_factor": o.get(stat), "opp_pace": o.get("pace"),
             "market_line": mkt.get((f["player_id"], f["market"])),
-            "p_cal_market": _p_cal(f, mkt.get((f["player_id"], f["market"]))),
+            "p_cal_market": _p_cal(f, mkt.get((f["player_id"], f["market"])),
+                                   e["code"]["model_version"]),
             # only absences that recent minutes cannot reflect yet (he played last game)
             "teammates_out": [t for t in out_by_team.get(f["team"], [])
                               if t["name"] != f["name"] and t["minutes"] >= 20 and
@@ -227,16 +209,23 @@ def _props() -> dict:
             "wowy": _wowy(f, lg, logs, out_by_team.get(f["team"], []), int(season) + 1
                           if int(e["date_et"][5:7]) >= 8 else int(season))})
     return {"edition_id": e["edition_id"], "date_et": e["date_et"], "cards": cards,
+            "model_version": e["code"]["model_version"],
             "markets": {k: M.MARKET_LABELS[k] for k in M.MARKETS},
             "published_london": _london(e["published_at"])}
 
 
-def _p_cal(f: dict, m: dict | None) -> float | None:
-    """Calibrated model over chance at the bookmakers' line (D-043); None without a line."""
+def _p_cal(f: dict, m: dict | None, version: str) -> float | None:
+    """Calibrated model over chance at the bookmakers' line (D-043), with the coefficients fitted
+    for the model version that made this edition; None without a line or without coefficients."""
     if not m:
         return None
     from . import calib
-    return round(calib.calibrated(f["market"], Dist.from_json(f["dist"]).line(m["line"])["over"]), 4)
+    try:
+        p = calib.calibrated(f["market"], Dist.from_json(f["dist"]).line(m["line"])["over"],
+                             version)
+    except KeyError:  # an edition from a model with no fitted calibration
+        return None
+    return round(p, 4)
 
 
 def _simple(fc: list, games: dict) -> dict:

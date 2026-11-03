@@ -165,11 +165,16 @@ def cmd_picks(a) -> int:
     print(picks.table(res))
     if a.sport == "nba" and not res.get("error"):
         con, now = db.connect(), utcnow().isoformat()
-        n = [track.record(con, res[k], rule=r, sport="nba", edition_id=res["edition_id"],
-                          flagged_at=now)
-             for k, r in (("tracking", picks.TRACK_RULE), ("simple_gap", picks.SIMPLE_RULE))]
-        print(f"Paper record: {n[0]} new tracked props, {n[1]} new simple-baseline props "
-              "(first flag only; see `npl track`).")
+        lists = [("simple_gap", picks.SIMPLE_RULE)]
+        if res["model_version"] == picks.TRACK_MODEL:
+            lists.insert(0, ("tracking", picks.TRACK_RULE))
+        else:  # the frozen rule's stack was fitted on TRACK_MODEL's probabilities only
+            print(f"Tracked rule not recorded: this edition was made by {res['model_version']}, "
+                  f"the rule needs {picks.TRACK_MODEL}. Publish a new edition first.")
+        for k, r in lists:
+            n = track.record(con, res[k], rule=r, sport="nba", edition_id=res["edition_id"],
+                             flagged_at=now)
+            print(f"Paper record: {n} new {k} props for {r} (first flag only; see `npl track`).")
     out = DATA_HOME / "runs" / f"picks_{a.sport}_{utcnow().strftime('%Y%m%dT%H%MZ')}.json"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(res, indent=1, default=str))

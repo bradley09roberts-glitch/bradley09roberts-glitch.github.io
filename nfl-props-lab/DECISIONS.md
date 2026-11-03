@@ -408,3 +408,58 @@ usable information beyond the market. So:
   baseline as paper tracking only; the NFL command reports that picks are retired.
 - The anchored rule is judged on its paper record after about 3,000 tracked props (a 2% edge
   needs that many to show); until then nothing is presented as a bet.
+
+## D-044 (3 Nov 2026) Audit fixes: paper record, regulated prices, corrected consensus, BetMGM-only tracking
+A two-stage audit (online research, code audits, then every proposed fix tested on the stored
+real lines under the fit-2024-25 / test-2025-26 protocol and checked by an independent verifier
+who tried to knock it down; reports/AUDIT_2026-11.md) found the arithmetic sound but the
+market definitions and the tracked rule loose. Changes:
+- **Paper record** (`npl track`, src/npl/track.py, table tracked_props, append-only): each prop a
+  rule flags is recorded once, at its first flag, with line, price and book; settled from box
+  scores (did not play = void; a push is graded as one; a missing stat stays open) and scored by
+  profit with slate-block intervals and by closing-line value against the margin-free consensus
+  at the last stored snapshot before tip-off.
+- **Takeable prices** (src/npl/books.py): best prices come from regulated US books' main lines
+  only. Offshore books (Bovada, BetOnline and others) still inform the fair price, but their
+  quotes, ladder rungs and arbitrage-implying pairs had inflated earlier research returns; the
+  D-043 rule's fallback was priced only offshore on 27.5% of its 2025-26 bets.
+- **Consensus**: one vote per book at its most balanced line (the old mode over quote rows let
+  BetRivers and Bovada ladders and 4,590 duplicate rows outvote other books, biasing the line
+  low on 1.8-2.9% of props); a book quoting two prices for one line is dropped from that prop;
+  fair = mean over every two-way price at the consensus line (limiting it to main-line voters
+  was slightly worse in all three seasons, so it was not adopted); BetMGM is priced only at its
+  own main line; an arbitrage flag. Market log loss moves by 0.0004 or less.
+- **N1 nba-0.3 live** (live.LIVE_PARAMS): nba-0.1 plus three fixes that passed the protocol
+  and an independent check: the minutes table centred at the fractional expectation instead of
+  the rounded one (numerical hygiene), rate factors for players with a posted line (pts 1.030,
+  reb 1.021, ast 1.030, threes 1.051, fitted on 2024-25: the model ran low for exactly the
+  players the books price) and points with variance proportional to the mean (phi 2.26). On the
+  2025-26 sample raw log loss 0.7058 -> 0.7027 (-0.0031 [-0.0046, -0.0017]), mean P(over) minus
+  actual -0.026 -> -0.003, points CRPS -0.8% for all players. Through the calibration it is
+  worth almost nothing (0.68815 -> 0.68803) and nothing beyond the market. calibration.json now
+  holds coefficients per model version (refitted for nba-0.3 on 2024-25) and calib refuses a
+  mismatch; each card uses its edition's version. The line factors need the odds snapshot, so
+  an edition published before the day's odds pull has none: publish again after pulling lines.
+  Rejected: league-drift multiplier, minutes-rate link, dispersion refits, opponent-weight
+  refit (no gain now), injury-report absences (better raw forecasts but no gain after
+  calibration and none against the market; season-start flaw).
+- **Tracked rule** changed before its first recorded run: `nba-anchored-ev2-mgm@D044` = the
+  anchored stack for nba-0.3 (recorded only from nba-0.3 editions), EV >= 2% at BetMGM's
+  price, no fallback. On the fit season the fallback leg lost at regulated prices (-8.5% on
+  283 bets; -9.3% on 67 in 2025-26). Backtested exactly as coded
+  (reports/nba/experiments/n12_audit): with nba-0.3, 686 bets +8.6% [+0.9, +15.8] in 2024-25
+  (in-sample for the stack) and 220 bets +11.5% [-1.4, +23.6] on the 2025-26 sample (examined
+  before); with nba-0.1, 713 bets +7.9% and 225 bets +13.1%; claimed EV about +3.3% in each.
+  Rebounds carry most of it; points and PRA lost in 2024-25 on few bets. This is not an edge:
+  89-95% of these bets had BetMGM as the strict best
+  regulated price (off-market soft-book prices of the kind that get limited), the market split
+  was not pre-registered, and they are US prices a UK customer cannot take. Leave-one-out fair
+  prices were tested and not adopted (no support on the fit season).
+- **Judging**: D-043's 3,000-prop checkpoint is withdrawn. A 2% edge needs about 14,000
+  independent bets (more with same-night correlation) to show in profit with 80% power;
+  closing-line value shows a real 1-2% within a few hundred. The rule is judged on CLV first,
+  after at least 100 tracked bets, and nothing is staked unless CLV is positive with an interval
+  above zero.
+- Smaller fixes: voids and pushes are no longer counted as turnover (money.py); the calibration
+  logit clip matches its fit; opponent factors use the live parameter set; the odds puller
+  defaults to the us region (UK requests return no props and cost credits).

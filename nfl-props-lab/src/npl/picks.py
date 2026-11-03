@@ -72,26 +72,32 @@ def stars_out(cards: list[dict], cur: pd.DataFrame, max_missed: int = 2) -> dict
 
 
 TRACK_EV = 0.02  # D-043: frozen paper-tracking threshold
-TRACK_RULE = "nba-anchored-ev2@D043"  # rule ids on the paper record (track.py)
+TRACK_RULE = "nba-anchored-ev2-mgm@D044"  # rule ids on the paper record (track.py)
+TRACK_MODEL = "nba-0.3"  # the rule is recorded only from editions made by this model
 SIMPLE_RULE = "nba-simple-gap1@D038"
 
 
 def nba() -> dict:
-    """Paper-tracking list for the latest NBA edition and the newest stored lines (D-043).
+    """Paper-tracking list for the latest NBA edition and the newest stored lines (D-043, D-044).
 
     The 6-15 / 10-15 point rules are retired: on a full season of real lines they lost (D-041).
     Each eligible prop (plays >= 85%, no injury flag, >= 3 books, half-point line, not started)
     gets the frozen market-anchored probability (calib.anchored: about 95% the market's
     margin-free price, nudged by the model in rebounds, assists and threes) and is tracked when
-    the better side's expected value is at least 2% at BetMGM's price (best US price, flagged,
-    where BetMGM does not quote that line). Tracking only: no edge has been shown.
+    the better side's expected value at BetMGM's price is at least 2%. BetMGM only (D-044): the
+    fallback to another book's best price lost in both seasons at regulated prices (-8.5% and
+    -9.3%), and BetMGM is priced only where its own main line is the consensus line. Tracking
+    only: no edge has been shown, and these are US prices a UK customer cannot take.
     """
     from .dist import Dist
     from .nba import appdata as A
     from .nba import calib
 
     P = A.props()
+    if "error" in P:
+        return {"error": P["error"]}
     now = pd.Timestamp.now(tz="UTC")
+    ver = P["model_version"]  # the stack fitted for the model that made this edition
     rows = []
     for c in P["cards"]:
         m = c.get("market_line")
@@ -99,18 +105,13 @@ def nba() -> dict:
                 or float(m["line"]).is_integer() or pd.Timestamp(c["tip_utc"]) <= now):
             continue
         raw = Dist.from_json(c["dist"]).line(m["line"])["over"]
-        pa = calib.anchored(c["market"], m["fair_over"], raw)
-        pc = calib.calibrated(c["market"], raw)
-        evs = {}
-        for side, p in (("over", pa), ("under", 1 - pa)):
-            mgm = m.get(f"mgm_{side}")
-            price, book = (mgm, "betmgm") if mgm else (m.get(f"best_{side}"), m.get(f"best_{side}_book"))
-            if price:  # BetMGM, else the best regulated US book (never offshore; audit 2026-11)
-                evs[side] = (p * price - 1, price, book)
-        if not evs:
-            continue
-        side = max(evs, key=lambda k: evs[k][0])
-        ev, price, book = evs[side]
+        pa = calib.anchored(c["market"], m["fair_over"], raw, ver)
+        pc = calib.calibrated(c["market"], raw, ver)
+        if not (m.get("mgm_over") and m.get("mgm_under")):
+            continue  # D-044: BetMGM's own main line must be the consensus line
+        evs = {side: p * m[f"mgm_{side}"] - 1 for side, p in (("over", pa), ("under", 1 - pa))}
+        side = max(evs, key=evs.get)
+        ev, price, book = evs[side], m[f"mgm_{side}"], "betmgm"
         if ev < TRACK_EV:
             continue
         flip = side == "under"
@@ -121,10 +122,10 @@ def nba() -> dict:
                      "p_anchor": round(1 - pa if flip else pa, 4), "p_model_cal": round(1 - pc if flip else pc, 4),
                      "p_rule": round(1 - pa if flip else pa, 4),
                      "market_p": round(1 - m["fair_over"] if flip else m["fair_over"], 4),
-                     "price": price, "book": book,
-                     "price_source": "betmgm" if book == "betmgm" else f"{book} (no BetMGM line)",
+                     "price": price, "book": book, "arb": m.get("arb", False),
                      "ev": round(ev, 4), "books": m["books"], "line_seen": m["observed_at"]})
-    return {"edition_id": P["edition_id"], "tracking": sorted(rows, key=lambda r: -r["ev"]),
+    return {"edition_id": P["edition_id"], "model_version": ver,
+            "tracking": sorted(rows, key=lambda r: -r["ev"]),
             "simple_gap": simple_gap(P["cards"]), "rules": nba.__doc__}
 
 
