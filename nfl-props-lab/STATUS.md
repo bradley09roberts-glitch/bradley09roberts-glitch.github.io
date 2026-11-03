@@ -1,4 +1,23 @@
-# Status (Wednesday 28 October 2026)
+# Status (Tuesday 3 November 2026)
+
+## Latest (3 Nov, audit)
+
+A two-stage audit (reports/AUDIT_2026-11.md, D-044) checked every calculation, researched
+best practice online, tested each proposed fix on the stored real lines (fit 2024-25, one test
+on the 2025-26 sample) and had an independent verifier try to knock each claim down.
+* **Fixed and live:** a paper record with settlement and closing-line value (`npl track`);
+  best prices from regulated US books only; a corrected consensus line (one vote per book);
+  N1 nba-0.3 (fractional minutes centre, line-player rate factors, NB1 points) with refitted
+  calibration; voids no longer counted as stake.
+* **Tracked on paper, not bets:** `nba-anchored-ev2-mgm@D044` (EV >= 2% at BetMGM only) and
+  the simple baseline. Judged on closing-line value first; nothing is staked unless CLV is
+  positive with an interval above zero after at least 100 tracked bets.
+* **Still no demonstrated edge.** The market (margin-free US consensus) beats or ties every
+  model; no market rule survives correction for multiple tests. All prices are US research
+  references a UK customer cannot take.
+* Before publishing an NBA edition, pull the day's lines (`npl quotes --sport nba`): nba-0.3's
+  line-player factors need them.
+
 
 ## Latest (25 Oct 07:40-08:00 UTC check-in)
 
