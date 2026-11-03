@@ -103,3 +103,14 @@ def test_settle_grades_a_push_and_leaves_a_missing_stat_open():
                        "participation": ["played", "played"], "pts": [21.0, None],
                        "reb": [5.0, 5.0], "ast": [2.0, 2.0]})
     assert track.settle(t, pg).status.tolist() == ["push", "open"]
+
+
+def test_no_interval_until_five_slates():
+    t = pd.DataFrame([_row(), _row(player_id="p2")])
+    t["status"] = ["win", "loss"]
+    t["clv"] = [0.05, -0.01]
+    t["close_lead_min"] = [10.0, 12.0]
+    s = track.summary(t)  # one slate
+    assert s["roi_ci95"] is None and s["clv_ci95"] is None
+    rows = t.assign(rule="r", fair_close=0.5, actual=1.0).to_dict("records")
+    assert "no interval until 5 slates" in track.table({"rules": {"r": s}, "rows": rows}, last=1)

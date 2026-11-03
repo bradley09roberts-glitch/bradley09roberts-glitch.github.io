@@ -171,15 +171,17 @@ def summary(t: pd.DataFrame) -> dict:
            "void": int(t.status.isin(["void", "push"]).sum()),
            "open": int((t.status == "open").sum()), "slates": int(slate.nunique())}
     if done.any():
-        lo, hi = _boot(pnl, slate[done].to_numpy())
+        # a slate-block interval needs several slates: with fewer than 5 it would look precise
+        lo, hi = _boot(pnl, slate[done].to_numpy()) if slate[done].nunique() >= 5 else (None, None)
         out |= {"profit_units": round(float(pnl.sum()), 2), "roi": round(float(pnl.mean()), 4),
-                "roi_ci95": [round(lo, 4), round(hi, 4)],
+                "roi_ci95": [round(lo, 4), round(hi, 4)] if lo is not None else None,
                 "expected_wins": round(float(t.loc[done, "market_p"].sum()), 1)}
     has = t.clv.notna()
     if has.any():
-        lo, hi = _boot(t.loc[has, "clv"].to_numpy(float), slate[has].to_numpy())
+        lo, hi = (_boot(t.loc[has, "clv"].to_numpy(float), slate[has].to_numpy())
+                  if slate[has].nunique() >= 5 else (None, None))
         out |= {"clv_bets": int(has.sum()), "clv_mean": round(float(t.loc[has, "clv"].mean()), 4),
-                "clv_ci95": [round(lo, 4), round(hi, 4)],
+                "clv_ci95": [round(lo, 4), round(hi, 4)] if lo is not None else None,
                 "clv_positive_share": round(float((t.loc[has, "clv"] > 0).mean()), 3),
                 "close_lead_min_median": float(t.loc[has, "close_lead_min"].median())}
     return out
@@ -208,11 +210,14 @@ def table(rep: dict, last: int = 30) -> str:
         line = (f"{rule}: {s['flagged']} tracked, {s.get('won', 0)}-{s.get('lost', 0)} "
                 f"({s.get('void', 0)} void, {s.get('open', 0)} open) over {s.get('slates', 0)} slates")
         if "roi" in s:
-            line += (f"; profit {s['profit_units']:+.2f} units, ROI {s['roi']:+.1%} "
-                     f"[{s['roi_ci95'][0]:+.1%}, {s['roi_ci95'][1]:+.1%}]; wins {s['won']} v "
-                     f"{s['expected_wins']} the market expected")
+            ci = (f"[{s['roi_ci95'][0]:+.1%}, {s['roi_ci95'][1]:+.1%}]" if s["roi_ci95"]
+                  else "(no interval until 5 slates)")
+            line += (f"; profit {s['profit_units']:+.2f} units, ROI {s['roi']:+.1%} {ci}; "
+                     f"wins {s['won']} v {s['expected_wins']} the market expected")
         if "clv_mean" in s:
-            line += (f"; CLV {s['clv_mean']:+.2%} [{s['clv_ci95'][0]:+.2%}, {s['clv_ci95'][1]:+.2%}]"
+            cc = (f"[{s['clv_ci95'][0]:+.2%}, {s['clv_ci95'][1]:+.2%}]" if s["clv_ci95"]
+                  else "(no interval until 5 slates)")
+            line += (f"; CLV {s['clv_mean']:+.2%} {cc}"
                      f" on {s['clv_bets']} bets, close a median {s['close_lead_min_median']:.0f} min"
                      " before tip")
         out.append(line)
