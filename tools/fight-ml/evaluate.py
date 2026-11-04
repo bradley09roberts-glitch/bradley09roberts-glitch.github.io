@@ -34,7 +34,7 @@ def gate(pm, pc, y, n_boot=N_BOOT, seed=0):
     gap = lls(pc, y) - lls(pm, y)                      # > 0 = model better
     boots = np.random.default_rng(seed).choice(gap, (n_boot, len(gap))).mean(1)
     lo_, hi_ = np.percentile(boots, [50 * (1 - CI), 50 * (1 + CI)])
-    return {"n": int(len(y)), "model_ll": round(float(lls(pm, y).mean()), 4), "close_ll": round(float(lls(pc, y).mean()), 4),
+    return {"n": int(len(y)), "gap": round(float(gap.mean()), 4), "model_ll": round(float(lls(pm, y).mean()), 4), "close_ll": round(float(lls(pc, y).mean()), 4),
             "model_acc": round(acc(pm, y), 4), "close_acc": round(acc(pc, y), 4),
             "ci95": [round(float(lo_), 4), round(float(hi_), 4)], "verdict": "PASS" if lo_ > 0 else "FAIL"}
 

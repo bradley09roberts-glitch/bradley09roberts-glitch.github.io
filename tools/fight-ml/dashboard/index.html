@@ -177,7 +177,7 @@
 
   <section class="ml-sec" id="audit">
     <h2>Checks</h2>
-    <p>The gate's leakage checklist, then the improvements tried (each judged on 2014–18 only, with 2019+ results hidden from the code), then the regression check for the one leak the audit found.</p>
+    <p>The gate's leakage checklist, then the improvements tried (each judged on 2014–18 only), then the regression check for the one leak the audit found.</p>
     <div class="ml-grid">
       <div class="ml-card">
         <h3>Leakage checklist</h3>
@@ -190,7 +190,7 @@
       </div>
       <div class="ml-card">
         <h3>Improvements tried</h3>
-        <p class="ml-note">ML blend log loss on 2014–18 with 2019+ results hidden. The first row's Without is the leaky score from before the fix; every other row is after it.</p>
+        <p class="ml-note">ML blend log loss on 2014–18. Every score comes from a run with 2019+ results hidden, except the first row's Without: the leaky score from before the fix (still 2014–18 only).</p>
         <div class="ml-tablebox">
           <table class="ml-table" data-source="improvements" data-row-key="change">
             <thead><tr><th data-field="change">Change</th><th class="num" data-field="val_ll_without">Without</th><th class="num" data-field="val_ll_with">With</th><th data-field="kept">Kept</th></tr></thead>

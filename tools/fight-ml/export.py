@@ -27,7 +27,7 @@ rows = []
 for s, v in E["gate"].items():
     for m, g in v.items():
         rows.append({"set": SETNAME[s], "model": LABEL.get(m, m), "n": g["n"], "model_ll": g["model_ll"], "close_ll": g["close_ll"],
-                     "gap": round(g["close_ll"] - g["model_ll"], 4), "ci_lo": g["ci95"][0], "ci_hi": g["ci95"][1], "verdict": g["verdict"],
+                     "gap": g["gap"], "ci_lo": g["ci95"][0], "ci_hi": g["ci95"][1], "verdict": g["verdict"],
                      "model_acc": g["model_acc"], "close_acc": g["close_acc"]})
 w("gate", ["set", "model", "n", "model_ll", "close_ll", "gap", "ci_lo", "ci_hi", "verdict", "model_acc", "close_acc"], rows)
 

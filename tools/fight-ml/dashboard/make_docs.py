@@ -19,12 +19,12 @@ D = {
     "rl_summary": ("RL agent summary", "The RL agent's own hit rates, total reward, fights rewarded and share of near-certain chances."),
     "calibration": ("Calibration by chance band", "The favourite's stated chance against how often it won, by band, on the ledger's 2019-26 bouts with a closing price."),
     "adds": ("Adds to v4 or the close?", "Each learner combined with v4 (against v4 alone) or with the close (against the close recalibrated the same way), weights fitted on earlier bouts only."),
-    "divisions": ("Results by division", "Learners and v4 against the close by division, priced 2019-26 bouts, divisions above a minimum size."),
+    "divisions": ("Results by division", "Learners and v4 against the close by division, priced 2019-26 bouts, divisions with at least a minimum number of bouts."),
     "ablation": ("Without each data source", "Learners re-trained and re-tuned without each data source: 2014-18 validation and every UFC fight from 2019."),
     "fill_in": ("Hindsight-leak check", "Fights where only one fighter's physicals were filled in: how often that fighter won, and what the ML blend said."),
     "checklist": ("Leakage checklist", "The model gate's leakage checklist and the audits' fixes, with how each was checked."),
-    "improvements": ("Improvements tried", "Changes tried to the model, each judged by ML blend log loss on 2014-18 with 2019+ results hidden."),
-    "method": ("Method settings", "The settings the evaluation used: rolling window, RL runs, near-certain cut-offs, interval, bootstrap draws, smallest division shown."),
+    "improvements": ("Improvements tried", "Changes tried to the model, each judged by ML blend log loss on 2014-18. Every score comes from a run with 2019+ results hidden, except the first row's Without (the leaky pre-fix score, still 2014-18 only)."),
+    "method": ("Method settings", "The settings the evaluation used: rolling window, RL runs, near-certain cut-offs, interval, bootstrap draws, smallest division shown and the margin used to de-vig the close."),
     "predictions": ("Every prediction", "Every learner's chance for the first-listed fighter in all UFC fights since 1994, with the result (blank for draws and no contests)."),
 }
 B = json.load(open(BLOBS))

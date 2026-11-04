@@ -50,7 +50,11 @@ def reach(s):
 ALIAS = {"Patricio Pitbull": "Patricio Freire", "Rafael Cerquiera": "Rafael Cerqueira", "Zach Reese": "Zachary Reese",
          "Joe Kropschot": "Joseph Kropschot", "Nick Galanti": "Nicholas Galanti", "Mahammadali Osmanli": "Mehemmedeli Osmanli",
          "Ilimbek Akylbek": "Ilimbek Akylbek Uulu", "Cam Nelson": "Cameron Nelson", "YiSak Lee": "Yi Sak Lee",
-         "Hector Santiago": "Hector de Sousa Santiago"}
+         "Hector Santiago": "Hector de Sousa Santiago",
+         # spelled differently in the fight files; UFCStats' fighter-details ids link each to this fighter-file row
+         "Ben Johnston": "Benjamin Donovan Johnston", "Shem Rock": "Shaqueme Rock", "Jose Souza": "Jose Henrique",
+         "Muhammad Saidov": "Muhammad Said", "Regina Tarin": "Regina Malpica Rivera", "Adrian Luna Martinetti": "Juan Adrian Luna"}
+# Left unjoined on purpose: Tina Black and Tyrell Fortune, whose fighter-details ids point at other people's rows.
 def _norm(s_):
     s_ = unicodedata.normalize("NFKD", s_).encode("ascii", "ignore").decode().lower()
     s_ = re.sub(r"[.'’`]", "", s_); s_ = re.sub(r"[-_]", " ", s_)

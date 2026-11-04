@@ -34,7 +34,8 @@ learning UFCStats' habit of listing the winner first (64% of fights).
 - **Physicals:** age, height, reach, stance.
 - **Sherdog play-by-play:** share of rounds Sherdog's scorers gave the fighter, 10-8s, how often they were hurt or hurt
   the opponent, fatigue. These come from 5,318 UFC fights covered in 2016–26.
-- **Written fight stories** (where they exist): first takedown, first hurt, one-punch losses, unlucky losses.
+- **Written fight stories** (where they exist): of the fighter's earlier fights with a story, the share that were losses
+  from takedowns or the bottom game, from getting hurt standing, from one shot, or unlucky.
 - **Style interactions:** one fighter's takedowns against the other's takedown defence, and so on.
 
 Stats are pulled toward running population means for small samples, and a debutant's UFCStats rates start at those means. Layoff, Sherdog and story features stay blank when there is no data. Two UFCStats fighters share each of 9 names; each bout goes to the namesake whose listed weight is nearest the bout's division. Fighters spelled differently across the UFCStats files (Jr./III, hyphens, nicknames, typos) are joined by a short alias list and a suffix-blind match.
@@ -101,10 +102,12 @@ devtools/dev_runs.sh $S $S/dev           # the 2014-18 comparisons that judged e
 ./run_all.sh $S $S/ml_run                # final: features, learners, ablations, evaluation (about 7 minutes)
 python3 -I export.py $S $S/ml_run $S/dash_data     # the dashboard's data files, predictions included
 python3 -I report_tables.py $S/ml_run $S/dash_data $S/ml/learn_all.json $S/dev/dev_base $S/dev/dev $S/dev/dev_s1
+python3 -I dashboard/make_docs.py $S/dash_data dashboard/index.html blobs.json $S/dash_docs   # the page's store documents
 ```
 
 `report_tables.py` builds the improvements and checklist tables; its third argument is `learn_all.json` from the run
 before the audit fix (the leaky validation score it reports). `features.py` takes `DEBUT_PRIORS=0 RATINGS=0 SHRINK=1`
 for the original features, and `devtools/learn_old.py` is the original learners.
 `phys_check.py` measures how missing physical data depends on career length. `dashboard/index.html` is the dashboard
-page.
+page. To publish, upload each CSV in `dash_data` to the dashboard, list each dataset id with its uploaded asset id in
+`blobs.json`, run `make_docs.py`, and write the documents in `dash_docs/writes.json` to the dashboard's store.
