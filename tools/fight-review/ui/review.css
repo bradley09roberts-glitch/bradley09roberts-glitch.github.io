@@ -1,0 +1,104 @@
+/* ---- fight review (56-review.js): verdicts, round-by-round, weak spots. Uses the page's tokens only. */
+.rv-pill{gap:4px;cursor:pointer;position:relative;z-index:2}
+.rv-pill svg{width:11px;height:11px}
+.rv-pill.warn{color:var(--warn);border-color:rgba(221,187,118,.35);background:var(--warn-wash)}
+.rv-pill.neg{color:var(--neg);border-color:rgba(236,127,134,.35);background:var(--neg-wash)}
+.rv-pill.pos{color:var(--pos);border-color:rgba(98,201,160,.35);background:var(--pos-wash)}
+.rv-pill:hover{border-color:var(--line-3)}
+.rv-verdict{border-left:3px solid var(--line-3)}
+.rv-verdict.tone-warn{border-left-color:var(--warn)}
+.rv-verdict.tone-neg{border-left-color:var(--neg)}
+.rv-verdict.tone-pos{border-left-color:var(--pos)}
+.rv-vh{display:flex;align-items:center;gap:8px;font-size:var(--fs-lg)}
+.rv-vh svg{width:20px;height:20px}
+.tone-warn .rv-vh{color:var(--warn)}.tone-neg .rv-vh{color:var(--neg)}.tone-pos .rv-vh{color:var(--pos)}
+.kv dd.rv-wrap{text-align:right;font-weight:500;color:var(--text-2);max-width:34rem;justify-self:end}
+.kv dd.rv-wrap b{color:var(--text);font-weight:650}
+.rv-story{font-size:var(--fs);line-height:1.6;color:var(--text);max-width:68ch}
+.rv-before{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,14rem),1fr));gap:10px}
+.rv-before > div,.rv-firsts > div{display:flex;flex-direction:column;gap:3px;padding:10px 12px;border-radius:var(--r);background:var(--sunken);border:1px solid var(--line)}
+.rv-before b,.rv-firsts b{font-size:var(--fs-sm)}
+.rv-before small,.rv-firsts small{font-size:var(--fs-xs);color:var(--text-2)}
+.rv-firsts{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,14rem),1fr));gap:10px}
+
+.rv-rounds{display:flex;flex-direction:column;gap:10px}
+.rv-round{display:flex;flex-direction:column;gap:8px;padding:12px 14px;border-radius:var(--r);background:var(--sunken);border:1px solid var(--line);min-width:0}
+.rv-round.ended{border-color:var(--line-3)}
+.rv-rh{display:flex;align-items:center;gap:6px 10px;flex-wrap:wrap}
+.rv-rh b{font-size:var(--fs-sm)}
+.rv-rh .sp{flex:1}
+.rv-sd{display:inline-flex;align-items:center;gap:3px}
+.rv-sd .faint{margin-right:3px}
+.rv-sc{display:inline-grid;place-items:center;width:16px;height:16px;border-radius:4px;border:1px solid var(--line-2);font-size:10px;font-weight:750;color:var(--bg);background:var(--line-2)}
+.rv-sc.a{background:var(--fa);border-color:var(--fa)}
+.rv-sc.b{background:var(--fb);border-color:var(--fb)}
+.rv-stat{display:inline-flex;align-items:center;gap:5px;color:var(--text-2);white-space:nowrap}
+.rv-lines{display:flex;flex-direction:column;gap:4px}
+.rv-line{display:grid;grid-template-columns:4.2rem minmax(0,1fr) minmax(6.5rem,9rem) minmax(0,1fr) 4.2rem;gap:8px;align-items:center;font-size:var(--fs-xs)}
+.rv-va{text-align:left;color:var(--text)}
+.rv-vb{text-align:right;color:var(--text)}
+.rv-k{text-align:center;color:var(--text-2);line-height:1.2;display:flex;flex-direction:column}
+.rv-k small{font-size:10px;color:var(--text-3)}
+.rv-bar{display:flex;height:6px;border-radius:3px;overflow:hidden;background:var(--surface)}
+.rv-line > .rv-bar:nth-of-type(1){flex-direction:row-reverse}
+.rv-bar i{display:block;height:100%}
+.rv-line > .rv-bar:nth-of-type(1) i.a{background:var(--fa)}
+.rv-line > .rv-bar:nth-of-type(1) i.b{background:transparent}
+.rv-line > .rv-bar:nth-of-type(2) i.a{background:var(--fb)}
+.rv-line > .rv-bar:nth-of-type(2) i.b{background:transparent}
+.rv-rnote{font-size:var(--fs-xs);color:var(--text-2);margin:0}
+.rv-rnote b{color:var(--text)}
+.rv-verdict .kv{grid-template-columns:minmax(8rem,auto) minmax(0,1fr)}
+@media (max-width:560px){
+  .rv-line{grid-template-columns:3.8rem minmax(0,1fr) 3.8rem;padding:3px 0;border-bottom:1px solid var(--line)}
+  .rv-line:last-child{border-bottom:0}
+  .rv-line > .rv-bar{display:none}
+  .rv-k{flex-direction:row;justify-content:center;gap:5px;flex-wrap:wrap}
+  .rv-verdict .kv{grid-template-columns:minmax(0,1fr)}
+  .rv-verdict .kv dt{margin-top:6px}
+  .rv-verdict .kv dd,.kv dd.rv-wrap{text-align:left;justify-self:start}
+}
+
+.rv-moments{display:flex;flex-direction:column}
+.rv-moments li{display:grid;grid-template-columns:2rem 10px minmax(0,1fr);gap:10px;align-items:baseline;padding:8px 0;border-bottom:1px solid var(--line);font-size:var(--fs-sm)}
+.rv-moments li:last-child{border-bottom:0}
+.rv-moments small{display:block;font-size:var(--fs-xs);color:var(--text-2)}
+.rv-rd{font-size:var(--fs-xs);color:var(--text-3);font-weight:650}
+.swatch.n{background:var(--text-3)}
+
+.rv-proj td,.rv-proj th{white-space:nowrap}
+.rv-proj td small{font-size:var(--fs-2xs)}
+.rv-proj td.rv-off{background:var(--warn-wash)}
+.rv-proj td.rv-off b{color:var(--warn)}
+
+.rv-flags{display:flex;flex-direction:column;gap:6px}
+.rv-flags li{display:flex;flex-direction:column;gap:2px;padding:8px 10px;border-radius:var(--r-sm);border:1px solid var(--line);background:var(--sunken);font-size:var(--fs-sm)}
+.rv-flags li.neg{border-color:rgba(236,127,134,.22)}
+.rv-flags li.pos{border-color:rgba(98,201,160,.22)}
+.rv-flags li > span:last-child{color:var(--text-2);font-size:var(--fs-xs)}
+.rv-lesson{display:flex;flex-direction:column;gap:8px;min-width:0}
+.rv-lesson-h{display:flex;align-items:center;gap:8px}
+.rv-lesson-h > div{display:flex;flex-direction:column;min-width:0}
+.rv-lesson .btn{align-self:flex-start}
+.rv-fcard{gap:12px}
+.rv-neg{color:var(--neg)}
+.rv-pos{color:var(--pos)}
+
+.rv-tile{text-align:left;border:0;cursor:pointer;font:inherit;color:inherit;transition:background var(--t-fast)}
+.rv-tile:hover{background:var(--raised)}
+.rv-tile .l{display:inline-flex;align-items:center;gap:6px}
+.rv-tile .l svg{width:14px;height:14px}
+.rv-tile.tone-warn .l{color:var(--warn)}.rv-tile.tone-neg .l{color:var(--neg)}.rv-tile.tone-pos .l{color:var(--pos)}
+.rv-list{display:flex;flex-direction:column}
+.rv-item{border-bottom:1px solid var(--line)}
+.rv-item:last-child{border-bottom:0}
+.rv-item-a{display:flex;flex-direction:column;gap:3px;padding:12px 4px;text-decoration:none;border-radius:var(--r-sm)}
+.rv-item-a:hover{background:var(--raised)}
+.rv-item-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.rv-item-h .sp{flex:1}
+.rv-item-a p{margin:2px 0 0;color:var(--text-2)}
+.rv .grid-2{align-items:start}
+.rv-head-r{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.hist-t .rv-pill{align-self:flex-start;margin-top:3px}
+.ulist-i .rv-pill{margin-left:auto}
+.rv-base td{background:rgba(255,255,255,.03)}
