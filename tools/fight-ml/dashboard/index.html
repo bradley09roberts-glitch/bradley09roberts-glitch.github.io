@@ -164,7 +164,7 @@
       </div>
       <div class="ml-card">
         <h3>Does it add anything to v4 or the close?</h3>
-        <p class="ml-note">Each learner combined with v4, or with the close, by a weight fitted on earlier bouts only, against the same fit without it. The close test is a diagnostic: it uses closing prices, so it can't be bet.</p>
+        <p class="ml-note">Each learner combined with v4, or with the close, by weights fitted on earlier bouts only. For v4 the comparison is v4 alone; for the close it is the close recalibrated the same way. The close test is a diagnostic: it uses closing prices, so it can't be bet.</p>
         <div class="ml-tablebox">
           <table class="ml-table" data-source="adds" data-row-key="model,test">
             <thead><tr><th data-field="model">Learner</th><th data-field="test">Test</th><th class="num" data-field="with_ll">With it</th><th class="num" data-field="without_ll">Without</th><th class="num" data-field="weight">Its weight</th></tr></thead>
@@ -190,7 +190,7 @@
       </div>
       <div class="ml-card">
         <h3>Improvements tried</h3>
-        <p class="ml-note">ML blend log loss on 2014–18, after the leak fix.</p>
+        <p class="ml-note">ML blend log loss on 2014–18 with 2019+ results hidden. The first row's Without is the leaky score from before the fix; every other row is after it.</p>
         <div class="ml-tablebox">
           <table class="ml-table" data-source="improvements" data-row-key="change">
             <thead><tr><th data-field="change">Change</th><th class="num" data-field="val_ll_without">Without</th><th class="num" data-field="val_ll_with">With</th><th data-field="kept">Kept</th></tr></thead>
@@ -259,7 +259,7 @@
 
   dash.calc('gate_count', {
     title: 'Models that beat the close',
-    description: 'For each period, how many models clear the gate (whole 95% interval above zero) out of how many were tested.',
+    description: 'For each period, how many models clear the gate (whole bootstrap interval above zero) out of how many were tested.',
     inputs: ['gate'],
     fn: (gate) => Array.from(d3.group(gate, (r) => r.set), ([set, rows]) => ({ set, passed: rows.filter((r) => r.verdict === 'PASS').length, models: rows.length })),
   });
@@ -399,7 +399,7 @@
     const want = [['Elo only', 0, 'Elo'], ['Online learner', 1, 'Online'], ['ML blend', 2, 'Blend'], ['RL agent', 3, 'RL']];
     const by = d3.group(d.data, (r) => r.model);
     const series = want.filter(([nm]) => by.has(nm)).map(([nm, ci, short]) => ({
-      name: nm, short, color: C()[ci], points: by.get(nm).map((r) => ({ x: day(r.date), y: num(r.acc400) })).sort((a, b) => a.x - b.x),
+      name: nm, short, color: C()[ci], points: by.get(nm).map((r) => ({ x: day(r.date), y: num(r.acc_roll) })).sort((a, b) => a.x - b.x),
     }));
     window.ML.lineChart(el, series, {
       height: 320, yFmt: d3.format('.0%'), yTip: F.pct, tipHead: (x) => 'Up to ' + fmtDay(x), endLabels: el.clientWidth > 480,

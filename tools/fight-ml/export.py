@@ -33,9 +33,9 @@ w("gate", ["set", "model", "n", "model_ll", "close_ll", "gap", "ci_lo", "ci_hi",
 
 rows = []
 for m in ("elo", "online", "logit", "gbm", "blend", "rl_greedy", "rl"):
-    for d, a in E["curves"][m]["rolling400"]:
-        rows.append({"model": LABEL[m], "date": d, "acc400": a})
-w("curve", ["model", "date", "acc400"], rows)
+    for d, a in E["curves"][m]["rolling"]:
+        rows.append({"model": LABEL[m], "date": d, "acc_roll": a})
+w("curve", ["model", "date", "acc_roll"], rows)
 rows = []
 for m in ("elo", "online", "logit", "gbm", "blend", "rl_greedy", "rl"):
     for yv, x in E["curves"][m]["yearly"].items():

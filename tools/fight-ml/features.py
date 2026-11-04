@@ -9,13 +9,15 @@ have no intercept) give P(A) = 1 - P(B) and can't learn the UFCStats habit of li
 Rates are shrunk toward population means of past fights; a debutant's UFCStats rates start at those priors, so a fight
 against a debutant still carries the other fighter's record. Layoff, Sherdog and story features stay blank (NaN) when
 there is no data, never zero. Missing physicals are filled with running typical values from fighters already seen.
-Ratings group: Glicko-1 (rating plus RD that grows with time out) and an Elo, both scored by margin of victory
-(finish = full win, decision by the judges' point margin, blended with the stats round share); gl_p is the Glicko win logit.
+Ratings group: Glicko-1 (rating plus RD that grows with time out) and an Elo, both fed a margin-of-victory score: 30% from
+the outcome (finish = full win, decision by the judges' point margin) and 70% from the stats round share; gl_p is the
+Glicko win logit.
 
-Inputs (scratch): work/ufc_fights.json, raw/ufc_fighter_tott.csv, sherdog/all_fights.json, stories/*.json, work/review_core.json
+Inputs (scratch): work/ufc_fights.json, raw/ufc_fighter_tott.csv, sherdog/all_fights.json, stories/*.json, and
+ML_DIR/round_model_pre2019.json (the stats round scorer, fitted on 2016-18 Sherdog rounds)
 Output: ml/features.npz + ml/features_meta.json
 """
-import csv, glob, json, math, os, re, sys
+import csv, glob, json, math, os, re, sys, unicodedata
 from collections import defaultdict
 from datetime import date as D, datetime
 import numpy as np
@@ -42,6 +44,28 @@ def inches(s):
     m = re.match(r"\s*(\d+)'\s*(\d+)", s or ""); return int(m.group(1)) * 12 + int(m.group(2)) if m else None
 def reach(s):
     m = re.match(r"\s*(\d+(?:\.\d+)?)\"", s or ""); return float(m.group(1)) if m else None
+# One fighter, two spellings: the fight files and the fighter file sometimes disagree. Exact match first, then a listed
+# alias, then a match that ignores accents, punctuation, hyphens and Jr./III suffixes (only when it points to exactly one
+# fighter-file name, so Lance Gibson and Lance Gibson Jr. stay apart).
+ALIAS = {"Patricio Pitbull": "Patricio Freire", "Rafael Cerquiera": "Rafael Cerqueira", "Zach Reese": "Zachary Reese",
+         "Joe Kropschot": "Joseph Kropschot", "Nick Galanti": "Nicholas Galanti", "Mahammadali Osmanli": "Mehemmedeli Osmanli",
+         "Ilimbek Akylbek": "Ilimbek Akylbek Uulu", "Cam Nelson": "Cameron Nelson", "YiSak Lee": "Yi Sak Lee",
+         "Hector Santiago": "Hector de Sousa Santiago"}
+def _norm(s_):
+    s_ = unicodedata.normalize("NFKD", s_).encode("ascii", "ignore").decode().lower()
+    s_ = re.sub(r"[.'’`]", "", s_); s_ = re.sub(r"[-_]", " ", s_)
+    return " ".join(t for t in s_.split() if t not in ("jr", "sr", "ii", "iii", "iv"))
+_TNAMES = {r["FIGHTER"].strip() for r in tott}
+_TNORM = defaultdict(set)
+for _n in _TNAMES: _TNORM[_norm(_n)].add(_n)
+def canon(name):
+    if name in _TNAMES: return name
+    if name in ALIAS and ALIAS[name] in _TNAMES: return ALIAS[name]
+    c = _TNORM.get(_norm(name), set())
+    return next(iter(c)) if len(c) == 1 else name
+CANON = {n: canon(n) for f in U.values() for n in f.get("names", [])}
+UNMATCHED = sorted(n for n, c in CANON.items() if c not in _TNAMES)
+
 DIVS = [("light heavyweight", 205), ("strawweight", 115), ("flyweight", 125), ("bantamweight", 135), ("featherweight", 145),
         ("lightweight", 155), ("welterweight", 170), ("middleweight", 185), ("heavyweight", 265)]
 def div_lbs(wc):
@@ -65,7 +89,8 @@ for r in tott:
 # identity. Uses only the bout's own division and earlier assignments.
 KEY, _last = {}, {}
 for _fid, _f in sorted(U.items(), key=lambda kv: kv[1].get("d") or ""):
-    for _nm in _f.get("names", []):
+    for _un in _f.get("names", []):
+        _nm = CANON[_un]
         if _nm not in DUPS: continue
         _rows, _lb, _d = TOTT_ROWS[_nm], div_lbs(_f.get("wc")), D.fromisoformat(_f["d"]) if _f.get("d") else None
         _prev = _last.get(_nm)
@@ -74,14 +99,15 @@ for _fid, _f in sorted(U.items(), key=lambda kv: kv[1].get("d") or ""):
             j = _prev[0]
         else:
             j = min(range(len(_rows)), key=dist)
-        KEY[(_fid, _nm)] = f"{_nm}|{j}"; PHYS[f"{_nm}|{j}"] = _rows[j][1]
+        KEY[(_fid, _un)] = f"{_nm}|{j}"; PHYS[f"{_nm}|{j}"] = _rows[j][1]
         if _d: _last[_nm] = (j, _d)
-def key_of(fid, name): return KEY.get((fid, name), name)
+def key_of(fid, name): return KEY.get((fid, name), CANON.get(name, name))
 
 # ---------- missing physicals are filled with typical values, never left blank or flagged.
 # UFCStats (scraped in 2026) mostly filled in reach, height, stance and (before 2014) DOB for fighters who stayed on the
 # roster, so a blank marks a fighter who was later cut: information from after the fight. A filled-in value looks like a
-# real one, so the learners can't tell which fighters had blanks. All constants are static and use no results.
+# real one, so the learners can't tell which fighters had blanks. Fill-in values are running means of fighters already
+# seen (weak fixed priors: 5 pseudo-observations at 70 in, +1.5 in ape index, age 28), updated after each card; no results.
 class Running:
     """Mean of values seen so far, starting from a weak prior (FILL_PRIOR pseudo-observations at a fixed typical value)."""
     def __init__(self, prior): self.s = prior * FILL_PRIOR; self.c = FILL_PRIOR
@@ -386,6 +412,7 @@ np.savez_compressed(f"{MLD}/features.npz", X=X, Y=Y, IMP=np.array(IMP))
 json.dump({"names": NAMES, "groups": GROUPS, "meta": META, "elo_k": ELO_K,
            "ratings": {"gl_rd0": GL_RD0, "gl_c": GL_C, "mov_gam": MOV_GAM, "mov_beta": MOV_BETA, "em_k": EM_K},
            "shrink": SHRINK, "debut_priors": DEBUT_PRIORS, "ratings_group": RATINGS, "firewall": os.environ.get("FIREWALL") == "1",
+           "names_without_fighter_file_row": UNMATCHED,
            "fill_ins_final": {"age_at_debut": round(FILL_AGE.mean(), 2), "ape": round(FILL_APE.mean(), 2), "height_all": round(FILL_HALL.mean(), 1)}}, open(f"{MLD}/features_meta.json", "w"))
 lab = Y >= 0
 print("rows", len(Y), "labelled", int(lab.sum()), "features", X.shape[1], "from", META[0][1], "to", META[-1][1])

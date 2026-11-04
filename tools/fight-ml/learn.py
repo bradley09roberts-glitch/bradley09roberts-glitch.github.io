@@ -22,6 +22,7 @@ from threadpoolctl import threadpool_limits
 # One OpenMP thread for the boosting fits: with this little data, extra threads barely help, and when other jobs share the
 # machine they spin-wait and a single fit can go from ~1.5 s to minutes. Override with GBM_THREADS.
 GBM_THREADS = int(os.environ.get("GBM_THREADS", "1"))
+RL_SEEDS = 5                       # runs of the exploring RL agent, averaged
 S = sys.argv[1]
 MLD = os.environ.get("ML_DIR", f"{S}/ml")   # output folder (a copy can work in its own)
 GROUPS_ON = sys.argv[2] if len(sys.argv) > 2 else "all"
@@ -165,11 +166,11 @@ if __name__ == "__main__":
         s = score(np.mean(ps, 0), VAL)
         if bestr is None or s["acc"] > bestr[0]["acc"] or (s["acc"] == bestr[0]["acc"] and s["ll"] < bestr[0]["ll"]): bestr = (s, lr)
     RLR = bestr[1]
-    rl_runs = [run_rl(RLR, s) for s in range(5)]
+    rl_runs = [run_rl(RLR, s) for s in range(RL_SEEDS)]
     p_rl = np.mean([r[0] for r in rl_runs], 0)
     rl_reward = np.mean([r[1] for r in rl_runs], 0)
     p_rlg, _ = run_rl(RLR, 0, greedy=True)
-    res["rl"] = {"lr": RLR, "seeds": 5}
+    res["rl"] = {"lr": RLR, "seeds": RL_SEEDS}
     bestg = None
     grid = [dict(learning_rate=lr_, max_iter=it, max_leaf_nodes=lv, min_samples_leaf=40, l2_regularization=1.0, max_features=mf)
             for lr_ in (0.03, 0.06) for it in (150, 300) for lv in (3, 7) for mf in (0.3, 1.0)]

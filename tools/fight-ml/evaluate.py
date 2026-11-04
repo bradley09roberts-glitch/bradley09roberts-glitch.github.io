@@ -12,7 +12,7 @@ import csv, hashlib, json, os, sys
 import numpy as np
 S = sys.argv[1]; MLD = os.environ.get("ML_DIR", f"{S}/ml"); TAGS = sys.argv[2:] or ["all"]
 MARGIN = 0.0457
-WINDOW, EXTREME, N_BOOT, DIV_MIN = 400, 0.02, 5000, 60      # rolling window, near-certain cut-off, bootstrap draws, smallest division shown
+WINDOW, EXTREME, N_BOOT, DIV_MIN, CI = 400, 0.02, 5000, 60, 0.95   # rolling window, near-certain cut-off, bootstrap draws, smallest division shown, interval
 def sha(fn): return hashlib.sha256(open(fn, "rb").read()).hexdigest()[:16]
 M = json.load(open(f"{MLD}/features_meta.json")); meta = M["meta"]
 assert not M.get("firewall"), "this features.npz is a firewalled development copy"
@@ -33,7 +33,7 @@ def acc(p, y): return float(np.mean(np.where(p == .5, .5, (p > .5) == (y == 1)))
 def gate(pm, pc, y, n_boot=N_BOOT, seed=0):
     gap = lls(pc, y) - lls(pm, y)                      # > 0 = model better
     boots = np.random.default_rng(seed).choice(gap, (n_boot, len(gap))).mean(1)
-    lo_, hi_ = np.percentile(boots, [2.5, 97.5])
+    lo_, hi_ = np.percentile(boots, [50 * (1 - CI), 50 * (1 + CI)])
     return {"n": int(len(y)), "model_ll": round(float(lls(pm, y).mean()), 4), "close_ll": round(float(lls(pc, y).mean()), 4),
             "model_acc": round(acc(pm, y), 4), "close_acc": round(acc(pc, y), 4),
             "ci95": [round(float(lo_), 4), round(float(hi_), 4)], "verdict": "PASS" if lo_ > 0 else "FAIL"}
@@ -132,7 +132,7 @@ for nm, p in preds.items():
     dd = dates_all[ok]; yy = yrs_all[ok]
     roll = np.convolve(hit, np.ones(WINDOW) / WINDOW, mode="valid")
     step = max(1, len(roll) // 300)
-    out["curves"][nm] = {"rolling400": [[dd[i + WINDOW - 1], round(float(roll[i]), 4)] for i in range(0, len(roll), step)],
+    out["curves"][nm] = {"rolling": [[dd[i + WINDOW - 1], round(float(roll[i]), 4)] for i in range(0, len(roll), step)],
                          "yearly": {yv: {"n": int((yy == yv).sum()), "acc": round(float(hit[yy == yv].mean()), 4),
                                          "ll": round(float(lls(p[ok][yy == yv], Y[ok][yy == yv]).mean()), 4)}
                                     for yv in sorted(set(yy)) if (yy == yv).sum() >= 50}}
@@ -149,7 +149,7 @@ out["rl"] = {
     "own_hit_2019_26": round(float(own_hit[dl >= "2019-01-01"].mean()), 4),
     "own_hit_2014_18": round(float(own_hit[(dl >= "2014-01-01") & (dl < "2019-01-01")].mean()), 4),
     "cum_reward": [[dl[i], round(float(cum_reward[i]), 1)] for i in range(0, len(cum_reward), max(1, len(cum_reward) // 300))] + [[dl[-1], round(float(cum_reward[-1]), 1)]],
-    "rolling400_reward": [[dl[i], round(float(np.mean(rw[lab][max(0, i - WINDOW + 1):i + 1])), 4)] for i in range(WINDOW - 1, len(dl), max(1, len(dl) // 300))],
+    "rolling_reward": [[dl[i], round(float(np.mean(rw[lab][max(0, i - WINDOW + 1):i + 1])), 4)] for i in range(WINDOW - 1, len(dl), max(1, len(dl) // 300))],
     # the same agent as the reward: the exploring policy's own chances (rl, averaged over its seeds)
     "share_extreme_probs_2019_26": round(float(np.mean((preds["rl"][lab & (dates_all >= "2019-01-01")] < EXTREME) | (preds["rl"][lab & (dates_all >= "2019-01-01")] > 1 - EXTREME))), 4) if "rl" in preds else None,
 }
@@ -172,7 +172,7 @@ if IMP is not None:
         out["fill_in_check"][win] = rec
 
 LJ = json.load(open(f"{MLD}/learn_{TAGS[0]}.json"))["res"]
-out["method"] = {"rolling_window": WINDOW, "extreme_lo": EXTREME, "extreme_hi": 1 - EXTREME, "n_boot": N_BOOT, "ci": 0.95, "div_min": DIV_MIN,
+out["method"] = {"rolling_window": WINDOW, "extreme_lo": EXTREME, "extreme_hi": 1 - EXTREME, "n_boot": N_BOOT, "ci": CI, "div_min": DIV_MIN,
                  "rl_seeds": LJ["rl"]["seeds"], "close_margin": MARGIN}
 json.dump(out, open(f"{MLD}/eval.json", "w"), indent=1)
 with open(f"{MLD}/predictions_all.csv", "w", newline="") as fh:

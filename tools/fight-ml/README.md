@@ -24,8 +24,8 @@ learning UFCStats' habit of listing the winner first (64% of fights).
 
 ## Features (each from fights before the one predicted)
 
-- **Elo, Glicko-1 and a margin-of-victory Elo.** Finishes count fully, decisions by the judges' margin blended with the
-  stats round share.
+- **Elo, Glicko-1 and a margin-of-victory Elo.** The last two score each result 30% by the outcome (a finish is a full
+  win, a decision counts by the judges' margin) and 70% by the stats round share.
 - **Record:** experience, win rate, finishes, KO and submission losses, opponent quality, streak, layoff, and a luck
   adjustment from earlier fight reviews.
 - **UFCStats rates per minute, all time and recency-weighted:** strikes landed and absorbed, accuracy and defence,
@@ -37,7 +37,7 @@ learning UFCStats' habit of listing the winner first (64% of fights).
 - **Written fight stories** (where they exist): first takedown, first hurt, one-punch losses, unlucky losses.
 - **Style interactions:** one fighter's takedowns against the other's takedown defence, and so on.
 
-Stats are pulled toward running population means for small samples, and a debutant's UFCStats rates start at those means. Layoff, Sherdog and story features stay blank when there is no data. Two UFCStats fighters share each of 9 names; each bout goes to the namesake whose listed weight is nearest the bout's division.
+Stats are pulled toward running population means for small samples, and a debutant's UFCStats rates start at those means. Layoff, Sherdog and story features stay blank when there is no data. Two UFCStats fighters share each of 9 names; each bout goes to the namesake whose listed weight is nearest the bout's division. Fighters spelled differently across the UFCStats files (Jr./III, hyphens, nicknames, typos) are joined by a short alias list and a suffix-blind match.
 
 ## How it was kept honest
 
@@ -49,7 +49,7 @@ Stats are pulled toward running population means for small samples, and a debuta
 - An independent audit had three reviewers, and a skeptic checked each finding. It found one leak. Whether UFCStats has a
   fighter's reach, height, stance or birth date depends on how long their career later lasted: blanks mark fighters who
   were cut. A coverage flag had become the strongest feature, and it inflated 2014–18 validation (blend log loss 0.620
-  against 0.657 honest).
+  against 0.658 honest).
   - The flag is gone, and blanks are filled with running typical values (averages of fighters already seen), which the
     models can't tell from real ones. In 2014–18, the fighter with filled-in physicals won 6% of the time, and the blend
     gave them 45%, so it can't see the fill-ins.
@@ -61,20 +61,20 @@ Stats are pulled toward running population means for small samples, and a debuta
   - one driver script, with hash checks so the evaluation can't read stale predictions;
   - boosting early stopping off;
   - a second, independent verification found smaller issues, also fixed: fill-in values that used later fights,
-    namesakes split by weight-class string, 1990s fights adding minutes with no stats, and two RL agents shown under
-    one name.
+    namesakes split by weight-class string, the same fighter spelled two ways, 1990s fights adding minutes with no stats,
+    and two RL agents shown under one name.
 
 ## Results (2019–26 ledger bouts; the close only on bouts it priced)
 
 | | Picked, all 3,958 bouts | Picked, 2,497 priced | Log loss, priced |
 |---|---|---|---|
-| ML blend | 62.5% | 62.2% | 0.6437 |
-| RL agent | 61.9% | 62.4% | 1.7123 |
+| ML blend | 62.6% | 62.2% | 0.6438 |
+| RL agent | 61.8% | 62.2% | 1.7078 |
 | v4 (ledger) | 63.7% | 64.1% | 0.6384 |
 | Closing line | — | 66.5% | 0.6061 |
 
-- **2025–26 season:** on all 988 bouts, ML blend 64.9%, yearly logistic 65.7%, RL agent 65.3%, v4 66.7%. On the 378
-  priced bouts: ML blend 64.3%, yearly logistic 65.3%, RL agent 68.0%, v4 66.1%, the close 66.1%. That is 378 bouts, so
+- **2025–26 season:** on all 988 bouts, ML blend 65.1%, yearly logistic 65.8%, RL agent 65.2%, v4 66.7%. On the 378
+  priced bouts: ML blend 64.3%, yearly logistic 65.3%, RL agent 67.2%, v4 66.1%, the close 66.1%. That is 378 bouts, so
   a few points either way is noise, and the log losses still put the close first.
 - **Gate:** every model fails against the close, v4 included, in every period. The 95% interval of (close log loss −
   model log loss) for the blend is [−0.048, −0.027] on 2019–26.
@@ -83,8 +83,8 @@ Stats are pulled toward running population means for small samples, and a debuta
   to pick, not how likely they are to win. Its log loss (1.71) is well over twice the others'.
 - **Sherdog play-by-play and fight stories add nothing measurable:**
   - 2014–18 blend log loss 0.6461 with them, 0.6463 without;
-  - 2019+ 0.6440 with, 0.6438 without.
-  - The ratings group is what helped: 0.6510 → 0.6461 on 2014–18 and 0.6467 → 0.6440 from 2019.
+  - 2019+ 0.6439 with, 0.6438 without.
+  - The ratings group is what helped: 0.6510 → 0.6461 on 2014–18 and 0.6467 → 0.6439 from 2019.
 - **Combining with v4:** combining a learner with v4 (weights fitted on earlier bouts only) changes log loss by about
   0.001 or less (Elo makes it 0.001 worse), and every interval includes zero.
 
