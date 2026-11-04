@@ -70,11 +70,11 @@ Stats are pulled toward running population means for small samples, and a debuta
 | | Picked, all 3,958 bouts | Picked, 2,497 priced | Log loss, priced |
 |---|---|---|---|
 | ML blend | 62.6% | 62.2% | 0.6438 |
-| RL agent | 61.8% | 62.2% | 1.7078 |
+| RL agent | 61.9% | 62.2% | 1.7078 |
 | v4 (ledger) | 63.7% | 64.1% | 0.6384 |
 | Closing line | — | 66.5% | 0.6061 |
 
-- **2025–26 season:** on all 988 bouts, ML blend 65.1%, yearly logistic 65.8%, RL agent 65.2%, v4 66.7%. On the 378
+- **2025–26 season:** on all 988 bouts, ML blend 65.2%, yearly logistic 66.0%, RL agent 65.5%, v4 66.7%. On the 378
   priced bouts: ML blend 64.3%, yearly logistic 65.3%, RL agent 67.2%, v4 66.1%, the close 66.1%. That is 378 bouts, so
   a few points either way is noise, and the log losses still put the close first.
 - **Gate:** every model fails against the close, v4 included, in every period. The 95% interval of (close log loss −
@@ -84,8 +84,8 @@ Stats are pulled toward running population means for small samples, and a debuta
   to pick, not how likely they are to win. Its log loss (1.71) is well over twice the others'.
 - **Sherdog play-by-play and fight stories add nothing measurable:**
   - 2014–18 blend log loss 0.6461 with them, 0.6463 without;
-  - 2019+ 0.6439 with, 0.6438 without.
-  - The ratings group is what helped: 0.6510 → 0.6461 on 2014–18 and 0.6467 → 0.6439 from 2019.
+  - 2019+ 0.6438 with, 0.6436 without.
+  - The ratings group is what helped: 0.6510 → 0.6461 on 2014–18 and 0.6465 → 0.6438 from 2019.
 - **Combining with v4:** combining a learner with v4 (weights fitted on earlier bouts only) changes log loss by about
   0.001 or less (Elo makes it 0.001 worse), and every interval includes zero.
 
