@@ -8,6 +8,12 @@ data = open(data_p, encoding="utf8").read().replace("</", "<\\/")
 js = open(js_p, encoding="utf8").read()
 css = open(css_p, encoding="utf8").read()
 if 'id="review-data"' in page: sys.exit("source already has a review block: start from the unpatched page")
+# A page read back from the artifact service carries the skeleton the service adds at publish; drop it so a republish
+# isn't wrapped twice.
+if page.startswith("<!doctype html><html><head><meta charset=utf8>"):
+    k = page.index("</head><body>") + len("</head><body>")
+    page = page[k:].lstrip("\n")
+    if page.rstrip().endswith("</body></html>"): page = page.rstrip()[:-len("</body></html>")].rstrip() + "\n"
 
 def once(old, new, where):
     global page
