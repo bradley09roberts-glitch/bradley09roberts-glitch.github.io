@@ -1,0 +1,6 @@
+dev_base devtools/learn_old.py all base_old
+dev_base learn.py all base_new
+dev devtools/learn_old.py all final_old
+dev learn.py all final_new
+dev learn.py elo,record,stats,physical,sherdog,stories,style norat_new
+dev_s1 learn.py all s1_new

@@ -1,0 +1,574 @@
+<meta name="dash-one-writer">
+<style>
+#dash-root { --dash-gutter: var(--cds-pad-lg); }
+.ml-page { max-width: 72rem; margin-inline: auto; font-family: var(--font-anthropic-sans); color: var(--color-fg); }
+.ml-head { margin-bottom: var(--cds-gap-lg); }
+.ml-title { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); margin: 0 0 var(--cds-gap-sm); }
+.ml-take { font-size: var(--cds-font-size-body); line-height: 1.55; max-width: 60rem; margin: 0; }
+.ml-page b { font-weight: 600; font-variant-numeric: tabular-nums; }
+.ml-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr)); gap: var(--cds-gap-md); margin: var(--cds-gap-lg) 0 var(--cds-gap-xs); }
+.ml-tile { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-lg); }
+.ml-tile h3 { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); font-weight: var(--cds-font-weight-medium); margin: 0 0 var(--cds-gap-xs); }
+.ml-big { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); font-variant-numeric: tabular-nums; display: block; min-height: 1.3em; }
+.ml-sub { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); margin: var(--cds-gap-xs) 0 0; }
+.ml-cap { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); margin: 0 0 var(--cds-gap-lg); }
+.ml-sec { margin-top: var(--cds-gap-xl); }
+.ml-sec > h2 { font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); margin: 0 0 var(--cds-gap-xs); }
+.ml-sec > p { margin: 0 0 var(--cds-gap-md); max-width: 60rem; line-height: 1.5; color: var(--color-fg-muted); font-size: var(--cds-font-size-body); }
+.ml-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr)); gap: var(--cds-gap-md); }
+.ml-card { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-lg); min-width: 0; }
+.ml-card h3 { font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); margin: 0 0 var(--cds-gap-xs); }
+.ml-note { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); margin: 0 0 var(--cds-gap-md); line-height: 1.45; }
+.ml-chart { position: relative; width: 100%; }
+.ml-chart.tall { min-height: 320px; } .ml-chart.mid { min-height: 260px; } .ml-chart.short { min-height: 230px; }
+.ml-chart svg { display: block; overflow: visible; }
+.ml-chart text { font-family: var(--font-anthropic-sans); font-size: var(--cds-font-size-caption); fill: var(--color-fg-muted); }
+.ml-chart .ml-lbl { fill: var(--color-fg); }
+.ml-tip { position: absolute; pointer-events: none; background: var(--cds-surface-popover); border: 1px solid var(--cds-border); border-radius: var(--cds-radius); box-shadow: var(--cds-shadow-popover); padding: var(--cds-pad-xs) var(--cds-pad-sm); font-size: var(--cds-font-size-caption); white-space: nowrap; z-index: 2; font-variant-numeric: tabular-nums; }
+.ml-tip .ml-tip-h { color: var(--cds-text-secondary); margin-bottom: 2px; }
+.ml-tip .ml-tip-r { display: flex; align-items: center; gap: 6px; }
+.ml-tip i, .ml-sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; flex: none; }
+.ml-legend { display: flex; flex-wrap: wrap; gap: var(--cds-gap-xs) var(--cds-gap-md); list-style: none; padding: 0; margin: 0 0 var(--cds-gap-sm); font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.ml-legend li { display: flex; align-items: center; gap: 6px; }
+.ml-seg { display: inline-flex; border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); overflow: hidden; margin-bottom: var(--cds-gap-sm); }
+.ml-seg button { font: inherit; font-size: var(--cds-font-size-caption); background: transparent; color: var(--color-fg-muted); border: 0; padding: var(--cds-pad-xs) var(--cds-pad-sm); cursor: pointer; }
+.ml-seg button[aria-pressed="true"] { background: var(--color-bg); color: var(--color-fg); font-weight: var(--cds-font-weight-medium); }
+.ml-tablebox { max-height: 26rem; overflow: auto; }
+.ml-table { width: 100%; border-collapse: collapse; font-size: var(--cds-font-size-caption); font-variant-numeric: tabular-nums; }
+.ml-table th { position: sticky; top: 0; background: var(--color-panel); text-align: left; font-weight: var(--cds-font-weight-medium); color: var(--color-fg-muted); padding: var(--cds-pad-xs) var(--cds-pad-sm); border-bottom: 1px solid var(--color-border-line); }
+.ml-table th.num, .ml-table td.num { text-align: right; }
+.ml-table td { padding: var(--cds-pad-xs) var(--cds-pad-sm); border-bottom: 1px solid var(--color-border-line); vertical-align: top; }
+.ml-table td.wrap { white-space: normal; min-width: 14rem; line-height: 1.4; }
+.ml-table th button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+.ml-ok { color: var(--color-ok); } .ml-bad { color: var(--color-bad); } .ml-warn { color: var(--color-warn); }
+.ml-search { font: inherit; font-size: var(--cds-font-size-caption); padding: var(--cds-pad-xs) var(--cds-pad-sm); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); background: var(--color-bg); color: var(--color-fg); margin-bottom: var(--cds-gap-sm); width: min(100%, 18rem); }
+.ml-fail { display: flex; align-items: center; justify-content: center; gap: 6px; min-height: inherit; color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
+.ml-fail::before { content: ""; width: .375rem; height: .375rem; border-radius: 50%; background: var(--color-bad); }
+[data-dash-source-state=empty] { color: transparent; }
+[data-dash-source-state=refreshing] { opacity: .5; transition: opacity var(--cds-dur-slow); }
+@media (prefers-reduced-motion: no-preference) {
+  .ml-chart .ml-draw-in { animation: ml-fade var(--cds-dur-slow) var(--cds-ease-out); }
+  @keyframes ml-fade { from { opacity: 0; } to { opacity: 1; } }
+}
+</style>
+
+<div class="ml-page">
+  <header class="ml-head" id="top">
+    <h1 class="ml-title">Fight ML Lab</h1>
+    <p class="ml-take">Machine learning trained on every UFC fight since 1994 (UFCStats round stats plus Sherdog's round-by-round play-by-play from each fighter's earlier fights), learning from each card's results before the next. On the ledger's 2019–26 bouts that had a closing price, the ML blend picked
+      <b class="dash-skeleton" data-draw="val" data-fmt="pct" data-source="results" data-field="acc" data-where="set=2019-26&amp;bouts=priced&amp;model=ML blend">—</b> of winners, the reward-trained RL agent
+      <b class="dash-skeleton" data-draw="val" data-fmt="pct" data-source="results" data-field="acc" data-where="set=2019-26&amp;bouts=priced&amp;model=RL agent">—</b>, v4
+      <b class="dash-skeleton" data-draw="val" data-fmt="pct" data-source="results" data-field="acc" data-where="set=2019-26&amp;bouts=priced&amp;model=v4 (ledger)">—</b> and the closing line
+      <b class="dash-skeleton" data-draw="val" data-fmt="pct" data-source="results" data-field="acc" data-where="set=2019-26&amp;bouts=priced&amp;model=Closing line">—</b>.
+      <b class="dash-skeleton" data-draw="val" data-fmt="int" data-source="gate_count" data-field="passed" data-where="set=2019-26">—</b> of
+      <b class="dash-skeleton" data-draw="val" data-fmt="int" data-source="gate_count" data-field="models" data-where="set=2019-26">—</b> models beat the closing line on log loss; the gate clears a model for betting only if it does.</p>
+  </header>
+
+  <div class="ml-tiles">
+    <div class="ml-tile"><h3>ML blend</h3>
+      <span class="ml-big dash-skeleton" data-draw="val" data-fmt="pct" data-source="results" data-field="acc" data-where="set=2019-26&amp;bouts=priced&amp;model=ML blend">—</span>
+      <p class="ml-sub">log loss <b class="dash-skeleton" data-draw="val" data-fmt="ll" data-source="results" data-field="ll" data-where="set=2019-26&amp;bouts=priced&amp;model=ML blend">—</b></p></div>
+    <div class="ml-tile"><h3>RL agent (+1 right, −1 wrong)</h3>
+      <span class="ml-big dash-skeleton" data-draw="val" data-fmt="pct" data-source="results" data-field="acc" data-where="set=2019-26&amp;bouts=priced&amp;model=RL agent">—</span>
+      <p class="ml-sub">log loss <b class="dash-skeleton" data-draw="val" data-fmt="ll" data-source="results" data-field="ll" data-where="set=2019-26&amp;bouts=priced&amp;model=RL agent">—</b></p></div>
+    <div class="ml-tile"><h3>v4 (ledger model)</h3>
+      <span class="ml-big dash-skeleton" data-draw="val" data-fmt="pct" data-source="results" data-field="acc" data-where="set=2019-26&amp;bouts=priced&amp;model=v4 (ledger)">—</span>
+      <p class="ml-sub">log loss <b class="dash-skeleton" data-draw="val" data-fmt="ll" data-source="results" data-field="ll" data-where="set=2019-26&amp;bouts=priced&amp;model=v4 (ledger)">—</b></p></div>
+    <div class="ml-tile"><h3>Closing line (de-vigged)</h3>
+      <span class="ml-big dash-skeleton" data-draw="val" data-fmt="pct" data-source="results" data-field="acc" data-where="set=2019-26&amp;bouts=priced&amp;model=Closing line">—</span>
+      <p class="ml-sub">log loss <b class="dash-skeleton" data-draw="val" data-fmt="ll" data-source="results" data-field="ll" data-where="set=2019-26&amp;bouts=priced&amp;model=Closing line">—</b></p></div>
+  </div>
+  <p class="ml-cap">Share of winners picked, 2019–26 ledger bouts with a closing price (<b class="dash-skeleton" data-draw="val" data-fmt="int" data-source="results" data-field="n" data-where="set=2019-26&amp;bouts=priced&amp;model=Closing line">—</b> bouts), all four on the same bouts. Log loss scores the stated chances: lower is better, and a coin flip scores <b data-draw="coin">—</b>.</p>
+
+  <section class="ml-sec" id="learning">
+    <h2>How accurate it got, fight by fight since 1994</h2>
+    <p>Each model predicts a card, then sees the results and learns from them before the next card. Settings were chosen on 2014–18 (shaded); nothing was tuned on 2019 onward, so the line from 2019 is a true test.</p>
+    <div class="ml-card">
+      <h3>Winners picked, last 400 UFC fights</h3>
+      <p class="ml-note">Every UFC fight with a result, not only the ledger's bouts. Hover for values.</p>
+      <ul class="ml-legend">
+        <li><i class="ml-sw" data-series="0"></i>Elo only</li>
+        <li><i class="ml-sw" data-series="1"></i>Online learner (log-score reward)</li>
+        <li><i class="ml-sw" data-series="2"></i>ML blend</li>
+        <li><i class="ml-sw" data-series="3"></i>RL agent (+1 / −1 reward)</li>
+      </ul>
+      <div class="ml-chart tall dash-skeleton" data-draw="curve" data-source="curve"></div>
+    </div>
+  </section>
+
+  <section class="ml-sec" id="reward">
+    <h2>Rewarded for every right pick</h2>
+    <p>The RL agent picks a fighter, scores +1 when that fighter wins and −1 when they lose, and shifts its weights toward whatever earned reward (policy gradient). It explores by picking each side in proportion to its belief, so its own picks land a little below its best guesses.</p>
+    <div class="ml-grid">
+      <div class="ml-card">
+        <h3>Running score</h3>
+        <p class="ml-note">Total reward over <b class="dash-skeleton" data-draw="val" data-fmt="int" data-source="rl_summary" data-field="value" data-where="measure=fights_rewarded">—</b> fights: <b class="dash-skeleton" data-draw="val" data-fmt="signed" data-source="rl_summary" data-field="value" data-where="measure=total_reward">—</b>, averaged over 5 runs.</p>
+        <div class="ml-chart mid dash-skeleton" data-draw="reward" data-source="rl_reward"></div>
+      </div>
+      <div class="ml-card">
+        <h3>Accuracy by year</h3>
+        <p class="ml-note">Its own exploring picks were right <b class="dash-skeleton" data-draw="val" data-fmt="pct" data-source="rl_summary" data-field="value" data-where="measure=own_hit_2019_26">—</b> of the time in 2019–26. But <b class="dash-skeleton" data-draw="val" data-fmt="pct" data-source="rl_summary" data-field="value" data-where="measure=share_extreme_probs_2019_26">—</b> of its 2019–26 chances were below 2% or above 98%: a ±1 reward teaches who to pick, not how likely they are to win.</p>
+        <ul class="ml-legend">
+          <li><i class="ml-sw" data-series="3"></i>RL agent (best guess)</li>
+          <li><i class="ml-sw" data-series="4"></i>RL agent's own picks</li>
+          <li><i class="ml-sw" data-series="1"></i>Online learner</li>
+        </ul>
+        <div class="ml-chart mid dash-skeleton" data-draw="yearly" data-source="yearly"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="ml-sec" id="gate">
+    <h2>Does it beat the closing line?</h2>
+    <p>The model gate: log loss against the de-vigged close on the same bouts, with a 95% bootstrap interval. A model clears it only if the whole interval is right of zero.</p>
+    <div class="ml-card">
+      <h3>Log loss advantage over the close</h3>
+      <p class="ml-note">Close's log loss minus the model's, per bout. Right of zero beats the market. A model far off the scale is drawn at the edge with its value.</p>
+      <div class="ml-seg" role="group" aria-label="Period">
+        <button type="button" data-set="2019-26" aria-pressed="true">2019–26</button>
+        <button type="button" data-set="2023-26" aria-pressed="false">2023–26 locked</button>
+        <button type="button" data-set="2025-26" aria-pressed="false">2025–26 season</button>
+      </div>
+      <div class="ml-chart mid dash-skeleton" data-draw="gate" data-source="gate"></div>
+    </div>
+  </section>
+
+  <section class="ml-sec" id="calibration">
+    <h2>Are its chances honest?</h2>
+    <p>For each band of the favourite's stated chance, how often the favourite won, on the ledger's 2019–26 bouts. On the diagonal is honest; below it is overconfident.</p>
+    <div class="ml-card">
+      <h3>Stated chance against how often it happened</h3>
+      <ul class="ml-legend">
+        <li><i class="ml-sw" data-series="2"></i>ML blend</li>
+        <li><i class="ml-sw" data-series="3"></i>RL agent</li>
+        <li><i class="ml-sw" data-series="5"></i>v4 (ledger)</li>
+        <li><i class="ml-sw" data-series="6"></i>Closing line</li>
+      </ul>
+      <div class="ml-chart tall dash-skeleton" data-draw="calib" data-source="calibration"></div>
+    </div>
+  </section>
+
+  <section class="ml-sec" id="sources">
+    <h2>What each kind of data adds</h2>
+    <p>The ML blend re-trained without each source, re-tuned on 2014–18 each time. The 2019+ columns score every UFC fight from 2019, not only the ledger's bouts.</p>
+    <div class="ml-grid">
+      <div class="ml-card">
+        <h3>Without each data source</h3>
+        <p class="ml-note">ML blend. Log loss: lower is better.</p>
+        <div class="ml-tablebox">
+          <table class="ml-table" data-source="ablation_blend" data-row-key="variant">
+            <thead><tr><th data-field="variant">Data used</th><th class="num" data-field="val_acc">2014–18 picked</th><th class="num" data-field="val_ll">2014–18 log loss</th><th class="num" data-field="test_acc">2019+ picked</th><th class="num" data-field="test_ll">2019+ log loss</th></tr></thead>
+            <tbody data-draw="t-ablation"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="ml-card">
+        <h3>Does it add anything to v4 or the close?</h3>
+        <p class="ml-note">Each learner combined with v4, or with the close, by a weight fitted on earlier bouts only, against the same fit without it. The close test is a diagnostic: it uses closing prices, so it can't be bet.</p>
+        <div class="ml-tablebox">
+          <table class="ml-table" data-source="adds" data-row-key="model,test">
+            <thead><tr><th data-field="model">Learner</th><th data-field="test">Test</th><th class="num" data-field="with_ll">With it</th><th class="num" data-field="without_ll">Without</th><th class="num" data-field="weight">Its weight</th></tr></thead>
+            <tbody data-draw="t-adds"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="ml-sec" id="audit">
+    <h2>Checks</h2>
+    <p>The gate's leakage checklist, then the improvements tried (each judged on 2014–18 only, with 2019+ results hidden from the code), then the regression check for the one leak the audit found.</p>
+    <div class="ml-grid">
+      <div class="ml-card">
+        <h3>Leakage checklist</h3>
+        <div class="ml-tablebox">
+          <table class="ml-table" data-source="checklist" data-row-key="item">
+            <thead><tr><th data-field="item">Rule</th><th data-field="result">Result</th><th data-field="detail">How it was checked</th></tr></thead>
+            <tbody data-draw="t-check"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="ml-card">
+        <h3>Improvements tried</h3>
+        <p class="ml-note">ML blend log loss on 2014–18, after the leak fix.</p>
+        <div class="ml-tablebox">
+          <table class="ml-table" data-source="improvements" data-row-key="change">
+            <thead><tr><th data-field="change">Change</th><th class="num" data-field="val_ll_without">Without</th><th class="num" data-field="val_ll_with">With</th><th data-field="kept">Kept</th></tr></thead>
+            <tbody data-draw="t-improve"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="ml-card">
+        <h3>Hindsight-leak regression check</h3>
+        <p class="ml-note">Fights where only one fighter's height, reach, age or stance had to be filled in. Before 2019 those fighters mostly lost, because UFCStats left blanks for fighters later cut. A model that can't see the fill-ins rates them far above that.</p>
+        <table class="ml-table" data-source="fill_in" data-row-key="window">
+          <thead><tr><th data-field="window">Years</th><th class="num" data-field="n">Fights</th><th class="num" data-field="won">Filled-in fighter won</th><th class="num" data-field="model_said">ML blend said</th></tr></thead>
+          <tbody data-draw="t-fill"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="ml-sec" id="all">
+    <h2>Every result</h2>
+    <p>All models on the ledger's bouts, for each period, on every graded bout and on the bouts with a closing price. Every individual prediction, for every UFC fight since 1994, is in Sources as a file you can download.</p>
+    <div class="ml-card">
+      <input class="ml-search" type="search" placeholder="Filter rows" aria-label="Filter rows">
+      <div class="ml-tablebox">
+        <table class="ml-table" data-source="results" data-row-key="set,bouts,model">
+          <thead><tr>
+            <th data-field="set"><button type="button" data-sort="set">Period</button></th>
+            <th data-field="bouts"><button type="button" data-sort="bouts">Bouts</button></th>
+            <th data-field="model"><button type="button" data-sort="model">Model</button></th>
+            <th class="num" data-field="n"><button type="button" data-sort="n">n</button></th>
+            <th class="num" data-field="acc"><button type="button" data-sort="acc">Picked</button></th>
+            <th class="num" data-field="ll"><button type="button" data-sort="ll">Log loss</button></th>
+          </tr></thead>
+          <tbody data-draw="t-results"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="ml-card" style="margin-top: var(--cds-gap-md)">
+      <h3>By division</h3>
+      <p class="ml-note">ML blend against the close, 2019–26 ledger bouts with a closing price, divisions with 60 or more.</p>
+      <div class="ml-tablebox">
+        <table class="ml-table" data-source="divisions_blend" data-row-key="division">
+          <thead><tr><th data-field="division">Division</th><th class="num" data-field="n">Bouts</th><th class="num" data-field="acc">ML picked</th><th class="num" data-field="close_acc">Close picked</th><th class="num" data-field="ll">ML log loss</th><th class="num" data-field="close_ll">Close log loss</th></tr></thead>
+          <tbody data-draw="t-div"></tbody>
+        </table>
+      </div>
+    </div>
+    <p class="ml-cap" style="margin-top: var(--cds-gap-md)">Predictions on file: <b class="dash-skeleton" data-draw="val" data-fmt="int" data-source="pred_count" data-field="rows" data-row="0" data-fetchpriority="low">—</b> fights.</p>
+  </section>
+</div>
+
+<script>
+(() => {
+  const F = {
+    pct: d3.format('.1%'), ll: d3.format('.4f'), int: d3.format(','),
+    signed: (v) => (v > 0 ? '+' : v < 0 ? '−' : '') + d3.format(',.0f')(Math.abs(v)),
+  };
+  const num = (v) => (v === '' || v == null ? NaN : Number(v));
+  const parseWhere = (w) => (w || '').split('&').filter(Boolean).map((kv) => kv.split('=').map(decodeURIComponent));
+  const COLORS = () => dash.colors;
+  window.ML = { F, num, parseWhere };
+
+  // swatches take the series colors
+  const paint = () => document.querySelectorAll('.ml-sw[data-series]').forEach((el) => { el.style.background = COLORS()[+el.dataset.series]; });
+  paint();
+
+  dash.calc('gate_count', {
+    title: 'Models that beat the close',
+    description: 'For each period, how many models clear the gate (whole 95% interval above zero) out of how many were tested.',
+    inputs: ['gate'],
+    fn: (gate) => Array.from(d3.group(gate, (r) => r.set), ([set, rows]) => ({ set, passed: rows.filter((r) => r.verdict === 'PASS').length, models: rows.length })),
+  });
+  dash.calc('ablation_blend', {
+    title: 'ML blend without each source',
+    description: 'The ablation rows for the ML blend only.',
+    inputs: ['ablation'],
+    fn: (ablation) => ablation.filter((r) => r.model === 'ML blend'),
+  });
+  dash.calc('divisions_blend', {
+    title: 'ML blend by division',
+    description: 'The division rows for the ML blend only.',
+    inputs: ['divisions'],
+    fn: (divisions) => divisions.filter((r) => r.model === 'ML blend'),
+  });
+  dash.calc('pred_count', {
+    title: 'Predictions on file',
+    description: 'How many fights the predictions file holds.',
+    inputs: ['predictions'],
+    fn: (predictions) => [{ rows: predictions.length }],
+  });
+
+  dash.draw('coin', (el) => { el.textContent = F.ll(Math.LN2); });   // log loss of a 50/50 guess
+  // one value from one row
+  dash.draw('val', (el) => {
+    const d = dash.data(el.dataset.source);
+    if (d.status !== 'ok') { el.textContent = '—'; el.classList.toggle('dash-skeleton', d.status === 'loading'); return; }
+    el.classList.remove('dash-skeleton');
+    let row;
+    if (el.dataset.row != null) row = d.data[+el.dataset.row];
+    else { const conds = parseWhere(el.dataset.where); row = d.data.find((r) => conds.every(([k, v]) => String(r[k]) === v)); }
+    const v = row ? num(row[el.dataset.field]) : NaN;
+    el.textContent = Number.isFinite(v) ? (F[el.dataset.fmt] || F.ll)(v) : '—';
+  });
+})();
+</script>
+
+<script>
+(() => {
+  const { F, num } = window.ML;
+  // shared chart pieces
+  const tipIn = (el) => {
+    const t = document.createElement('div'); t.className = 'ml-tip'; t.hidden = true; el.appendChild(t); return t;
+  };
+  const placeTip = (el, tip, x, y) => {
+    tip.hidden = false;
+    const w = tip.offsetWidth, h = tip.offsetHeight, W = el.clientWidth;
+    let left = x + 12; if (left + w > W) left = Math.max(0, x - 12 - w);
+    tip.style.left = left + 'px'; tip.style.top = Math.max(0, y - h - 8) + 'px';
+  };
+  const tipRows = (tip, head, rows) => {
+    tip.replaceChildren();
+    const h = document.createElement('div'); h.className = 'ml-tip-h'; h.textContent = head; tip.appendChild(h);
+    rows.forEach(([color, name, value]) => {
+      const r = document.createElement('div'); r.className = 'ml-tip-r';
+      if (color) { const i = document.createElement('i'); i.style.background = color; r.appendChild(i); }
+      const s = document.createElement('span'); s.textContent = name ? `${name}: ${value}` : value; r.appendChild(s);
+      tip.appendChild(r);
+    });
+  };
+  const fail = (el, d) => {
+    el.replaceChildren();
+    if (d.status === 'error') { const f = document.createElement('div'); f.className = 'ml-fail'; f.textContent = 'Failed to load'; el.appendChild(f); }
+    el.classList.toggle('dash-skeleton', d.status === 'loading');
+  };
+  const styleAxis = (g) => {
+    g.attr('font-size', null).attr('font-family', null);
+    g.selectAll('.domain').style('stroke', 'var(--cds-chart-axis)');
+    g.selectAll('.tick line').style('stroke', 'var(--cds-chart-grid)');
+  };
+  const textWidth = (svg, s) => { const t = svg.append('text').text(s); const w = t.node().getComputedTextLength(); t.remove(); return w; };
+  window.ML.chart = { tipIn, placeTip, tipRows, fail, styleAxis, textWidth };
+
+  // a time line chart with several series, a crosshair and an optional shaded band / reference line
+  window.ML.lineChart = (el, series, o) => {
+    const { tipIn, placeTip, tipRows, styleAxis, textWidth } = window.ML.chart;
+    el.replaceChildren(); el.classList.remove('dash-skeleton');
+    const W = Math.max(280, el.clientWidth), H = o.height;
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('height', H);
+    const all = series.flatMap((s) => s.points);
+    const yDom = o.yDomain || d3.extent(all, (p) => p.y);
+    const yTicks = d3.scaleLinear(yDom, [0, 1]).ticks(5);
+    const left = 8 + d3.max(yTicks, (t) => textWidth(svg, o.yFmt(t)));
+    const endW = o.endLabels ? d3.max(series, (s) => textWidth(svg, s.short || s.name)) + 10 : 8;
+    const m = { top: 12, right: Math.max(12, endW), bottom: 26, left };
+    const x = (o.xScale || d3.scaleUtc)(o.xDomain || d3.extent(all, (p) => p.x), [m.left, W - m.right]);
+    const y = d3.scaleLinear(yDom, [H - m.bottom, m.top]);
+    if (o.band) svg.append('rect').attr('x', x(o.band[0])).attr('width', x(o.band[1]) - x(o.band[0])).attr('y', m.top).attr('height', H - m.top - m.bottom)
+      .style('fill', 'var(--cds-chart-grid)').attr('opacity', 0.6);
+    svg.append('g').attr('transform', `translate(0,${H - m.bottom})`).call(d3.axisBottom(x).ticks(Math.max(3, Math.floor((W - m.left - m.right) / 80))).tickSizeOuter(0).tickFormat(o.xFmt || null)).call(styleAxis);
+    svg.append('g').attr('transform', `translate(${m.left},0)`).call(d3.axisLeft(y).tickValues(yTicks).tickFormat(o.yFmt).tickSize(-(W - m.left - m.right))).call(styleAxis).call((g) => g.select('.domain').remove());
+    (o.refs || []).forEach((r) => {
+      if (r.x != null) svg.append('line').attr('x1', x(r.x)).attr('x2', x(r.x)).attr('y1', m.top).attr('y2', H - m.bottom).style('stroke', 'var(--cds-chart-reference)').attr('stroke-dasharray', '4 3');
+      if (r.y != null) svg.append('line').attr('x1', m.left).attr('x2', W - m.right).attr('y1', y(r.y)).attr('y2', y(r.y)).style('stroke', 'var(--cds-chart-reference)').attr('stroke-dasharray', '4 3');
+      if (r.label) svg.append('text').attr('x', r.x != null ? x(r.x) + 4 : m.left + 4).attr('y', r.y != null ? y(r.y) - 4 : m.top + 10).text(r.label);
+    });
+    const line = d3.line().defined((p) => Number.isFinite(p.y)).x((p) => x(p.x)).y((p) => y(p.y));
+    const g = svg.append('g').attr('class', 'ml-draw-in');
+    series.forEach((s) => g.append('path').datum(s.points).style('fill', 'none').style('stroke', s.color).attr('stroke-width', 2)
+      .attr('stroke-linejoin', 'round').attr('stroke-linecap', 'round').attr('d', line));
+    if (o.endLabels) {
+      const ends = series.map((s) => ({ s, p: s.points[s.points.length - 1] })).filter((e) => e.p).map((e) => ({ ...e, yy: y(e.p.y) })).sort((a, b) => a.yy - b.yy);
+      for (let i = 1; i < ends.length; i++) if (ends[i].yy - ends[i - 1].yy < 13) ends[i].yy = ends[i - 1].yy + 13;
+      ends.forEach((e) => svg.append('text').attr('class', 'ml-lbl').attr('x', W - m.right + 6).attr('y', e.yy + 4).text(e.s.short || e.s.name));
+    }
+    const tip = tipIn(el);
+    const rule = svg.append('line').attr('y1', m.top).attr('y2', H - m.bottom).style('stroke', 'var(--cds-chart-axis)').attr('opacity', 0);
+    const dots = svg.append('g');
+    svg.append('rect').attr('x', m.left).attr('y', 0).attr('width', W - m.left - m.right).attr('height', H).style('fill', 'transparent')
+      .on('pointermove', (ev) => {
+        const [px] = d3.pointer(ev); const xv = x.invert(px);
+        const hits = series.map((s) => {
+          const i = d3.bisector((p) => p.x).center(s.points, xv); return { s, p: s.points[i] };
+        }).filter((h) => h.p && Number.isFinite(h.p.y));
+        if (!hits.length) return;
+        rule.attr('x1', px).attr('x2', px).attr('opacity', 1);
+        dots.selectAll('circle').data(hits).join('circle').attr('r', 4).attr('cx', (h) => x(h.p.x)).attr('cy', (h) => y(h.p.y))
+          .style('fill', (h) => h.s.color).style('stroke', 'var(--color-panel)').attr('stroke-width', 2);
+        tipRows(tip, o.tipHead(hits[0].p.x), hits.map((h) => [h.s.color, h.s.name, o.yTip(h.p.y)]));
+        placeTip(el, tip, px, d3.min(hits, (h) => y(h.p.y)));
+      })
+      .on('pointerleave', () => { tip.hidden = true; rule.attr('opacity', 0); dots.selectAll('circle').remove(); });
+  };
+})();
+</script>
+
+<script>
+(() => {
+  const { F, num } = window.ML;
+  const C = () => dash.colors;
+  const day = (s) => new Date(String(s).slice(0, 10) + 'T00:00:00Z');
+  const fmtDay = d3.utcFormat('%b %-d, %Y');
+
+  dash.draw('curve', (el) => {
+    const d = dash.data('curve');
+    if (d.status !== 'ok') return window.ML.chart.fail(el, d);
+    const want = [['Elo only', 0, 'Elo'], ['Online learner', 1, 'Online'], ['ML blend', 2, 'Blend'], ['RL agent', 3, 'RL']];
+    const by = d3.group(d.data, (r) => r.model);
+    const series = want.filter(([nm]) => by.has(nm)).map(([nm, ci, short]) => ({
+      name: nm, short, color: C()[ci], points: by.get(nm).map((r) => ({ x: day(r.date), y: num(r.acc400) })).sort((a, b) => a.x - b.x),
+    }));
+    window.ML.lineChart(el, series, {
+      height: 320, yFmt: d3.format('.0%'), yTip: F.pct, tipHead: (x) => 'Up to ' + fmtDay(x), endLabels: el.clientWidth > 480,
+      yDomain: [Math.min(0.5, d3.min(series, (s) => d3.min(s.points, (p) => p.y))) - 0.01, d3.max(series, (s) => d3.max(s.points, (p) => p.y)) + 0.01],
+      band: [day('2014-01-01'), day('2019-01-01')], refs: [{ x: day('2019-01-01'), label: 'test from here' }, { y: 0.5 }],
+    });
+  });
+
+  dash.draw('reward', (el) => {
+    const d = dash.data('rl_reward');
+    if (d.status !== 'ok') return window.ML.chart.fail(el, d);
+    const pts = d.data.map((r) => ({ x: day(r.date), y: num(r.cum_reward) })).sort((a, b) => a.x - b.x);
+    window.ML.lineChart(el, [{ name: 'Total reward', color: C()[3], points: pts }], {
+      height: 260, yFmt: d3.format(',.0f'), yTip: F.signed, tipHead: (x) => 'Up to ' + fmtDay(x),
+      yDomain: [Math.min(0, d3.min(pts, (p) => p.y)), d3.max(pts, (p) => p.y)], refs: [{ x: day('2019-01-01'), label: 'test from here' }, { y: 0 }],
+    });
+  });
+
+  dash.draw('yearly', (el) => {
+    const d = dash.data('yearly');
+    if (d.status !== 'ok') return window.ML.chart.fail(el, d);
+    const want = [['RL agent', 3], ["RL agent's own picks", 4], ['Online learner', 1]];
+    const by = d3.group(d.data.filter((r) => +r.year >= 2005), (r) => r.model);
+    const series = want.filter(([nm]) => by.has(nm)).map(([nm, ci]) => ({
+      name: nm, color: C()[ci], points: by.get(nm).map((r) => ({ x: +r.year, y: num(r.acc) })).sort((a, b) => a.x - b.x),
+    }));
+    window.ML.lineChart(el, series, {
+      height: 260, xScale: d3.scaleLinear, xFmt: d3.format('d'), yFmt: d3.format('.0%'), yTip: F.pct, tipHead: (x) => String(Math.round(x)),
+      band: [2013.5, 2018.5], refs: [{ y: 0.5 }],
+    });
+  });
+
+  // gate: interval per model against zero
+  let gateSet = '2019-26';
+  const segs = () => document.querySelectorAll('#gate .ml-seg button');
+  segs().forEach((b) => b.addEventListener('click', () => {
+    gateSet = b.dataset.set;
+    segs().forEach((o) => o.setAttribute('aria-pressed', String(o === b)));
+    dash.draw('gate');
+  }));
+  dash.draw('gate', (el) => {
+    const { tipIn, placeTip, tipRows, fail, styleAxis, textWidth } = window.ML.chart;
+    const d = dash.data('gate');
+    if (d.status !== 'ok') return fail(el, d);
+    el.replaceChildren(); el.classList.remove('dash-skeleton');
+    const order = ['ML blend', 'Boosted trees', 'Yearly logistic', 'Online learner', 'Elo only', 'RL agent', 'RL agent (5 seeds)', 'v4 (ledger)'];
+    const rows = d.data.filter((r) => r.set === gateSet).sort((a, b) => order.indexOf(a.model) - order.indexOf(b.model));
+    const W = Math.max(280, el.clientWidth), rowH = 30, H = rows.length * rowH + 40;
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('height', H);
+    const left = 12 + d3.max(rows, (r) => textWidth(svg, r.model));
+    const m = { top: 8, right: 16, bottom: 28, left };
+    const lo = -0.12, hi = 0.04;
+    const x = d3.scaleLinear([lo, hi], [m.left, W - m.right]);
+    const y = d3.scaleBand(rows.map((r) => r.model), [m.top, H - m.bottom]).padding(0.35);
+    svg.append('g').attr('transform', `translate(0,${H - m.bottom})`).call(d3.axisBottom(x).ticks(Math.max(3, Math.floor((W - m.left) / 70))).tickFormat(d3.format('+.2f')).tickSize(-(H - m.top - m.bottom))).call(styleAxis).call((g) => g.select('.domain').remove());
+    svg.append('line').attr('x1', x(0)).attr('x2', x(0)).attr('y1', m.top).attr('y2', H - m.bottom).style('stroke', 'var(--cds-chart-axis)').attr('stroke-width', 1.5);
+    const tip = tipIn(el);
+    const g = svg.append('g').attr('class', 'ml-draw-in');
+    rows.forEach((r) => {
+      const cy = y(r.model) + y.bandwidth() / 2, gap = num(r.gap), a = num(r.ci_lo), b = num(r.ci_hi);
+      const clip = (v) => Math.max(lo, Math.min(hi, v));
+      const color = r.model === 'v4 (ledger)' ? dash.colors[5] : r.model.startsWith('RL') ? dash.colors[3] : dash.colors[2];
+      svg.append('text').attr('class', 'ml-lbl').attr('x', m.left - 8).attr('y', cy + 4).attr('text-anchor', 'end').text(r.model);
+      g.append('line').attr('x1', x(clip(a))).attr('x2', x(clip(b))).attr('y1', cy).attr('y2', cy).style('stroke', color).attr('stroke-width', 2).attr('stroke-linecap', 'round');
+      const off = gap < lo;
+      if (off) {
+        g.append('path').attr('d', d3.symbol(d3.symbolTriangle, 70)()).attr('transform', `translate(${x(lo) + 6},${cy}) rotate(-90)`).style('fill', color);
+        g.append('text').attr('x', x(lo) + 16).attr('y', cy + 4).text(d3.format('+.3f')(gap));
+      } else {
+        g.append('circle').attr('cx', x(gap)).attr('cy', cy).attr('r', 5).style('fill', color).style('stroke', 'var(--color-panel)').attr('stroke-width', 2);
+      }
+      svg.append('rect').attr('x', 0).attr('width', W).attr('y', y(r.model) - 6).attr('height', y.bandwidth() + 12).style('fill', 'transparent')
+        .on('pointermove', (ev) => {
+          const [px, py] = d3.pointer(ev);
+          tipRows(tip, `${r.model} · ${r.set} · ${F.int(num(r.n))} bouts`, [
+            [color, 'Advantage', `${d3.format('+.4f')(gap)} (${d3.format('+.4f')(a)} to ${d3.format('+.4f')(b)})`],
+            [null, 'Log loss', `${F.ll(num(r.model_ll))} vs close ${F.ll(num(r.close_ll))}`],
+            [null, 'Picked', `${F.pct(num(r.model_acc))} vs close ${F.pct(num(r.close_acc))}`],
+            [null, 'Gate', r.verdict === 'PASS' ? 'passes' : 'fails']]);
+          placeTip(el, tip, px, py);
+        })
+        .on('pointerleave', () => { tip.hidden = true; });
+    });
+    svg.append('text').attr('x', x(0) + 4).attr('y', H - 4).text('beats the close →');
+  });
+
+  dash.draw('calib', (el) => {
+    const { tipIn, placeTip, tipRows, fail, styleAxis } = window.ML.chart;
+    const d = dash.data('calibration');
+    if (d.status !== 'ok') return fail(el, d);
+    el.replaceChildren(); el.classList.remove('dash-skeleton');
+    const want = [['ML blend', 2], ['RL agent', 3], ['v4 (ledger)', 5], ['Closing line', 6]];
+    const by = d3.group(d.data, (r) => r.model);
+    const W = Math.max(280, el.clientWidth), H = 320, m = { top: 10, right: 14, bottom: 34, left: 44 };
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('height', H);
+    const x = d3.scaleLinear([0.5, 1], [m.left, W - m.right]), y = d3.scaleLinear([0.3, 1], [H - m.bottom, m.top]);
+    svg.append('g').attr('transform', `translate(0,${H - m.bottom})`).call(d3.axisBottom(x).ticks(5).tickFormat(d3.format('.0%')).tickSize(-(H - m.top - m.bottom))).call(styleAxis).call((g) => g.select('.domain').remove());
+    svg.append('g').attr('transform', `translate(${m.left},0)`).call(d3.axisLeft(y).ticks(6).tickFormat(d3.format('.0%')).tickSize(-(W - m.left - m.right))).call(styleAxis).call((g) => g.select('.domain').remove());
+    svg.append('line').attr('x1', x(0.5)).attr('y1', y(0.5)).attr('x2', x(1)).attr('y2', y(1)).style('stroke', 'var(--cds-chart-reference)').attr('stroke-dasharray', '4 3');
+    svg.append('text').attr('x', W - m.right).attr('y', H - 4).attr('text-anchor', 'end').text('stated chance of the favourite');
+    svg.append('text').attr('x', m.left + 4).attr('y', m.top + 10).text('won');
+    const tip = tipIn(el);
+    const g = svg.append('g').attr('class', 'ml-draw-in');
+    want.filter(([nm]) => by.has(nm)).forEach(([nm, ci]) => {
+      const pts = by.get(nm).map((r) => ({ ...r, said: num(r.said), won: num(r.won), n: num(r.n) })).sort((a, b) => a.said - b.said);
+      const color = dash.colors[ci];
+      g.append('path').datum(pts).style('fill', 'none').style('stroke', color).attr('stroke-width', 2).attr('stroke-linejoin', 'round')
+        .attr('d', d3.line().x((p) => x(Math.min(1, p.said))).y((p) => y(Math.max(0.3, p.won))));
+      g.selectAll(null).data(pts).join('circle').attr('cx', (p) => x(Math.min(1, p.said))).attr('cy', (p) => y(Math.max(0.3, p.won))).attr('r', 4.5)
+        .style('fill', color).style('stroke', 'var(--color-panel)').attr('stroke-width', 2)
+        .on('pointermove', (ev, p) => {
+          const [px, py] = d3.pointer(ev, el);
+          tipRows(tip, `${nm} · said ${p.bin}`, [[color, 'Said', F.pct(p.said)], [null, 'Won', F.pct(p.won)], [null, 'Bouts', F.int(p.n)]]);
+          placeTip(el, tip, px, py);
+        })
+        .on('pointerleave', () => { tip.hidden = true; });
+    });
+  });
+})();
+</script>
+
+<script>
+(() => {
+  const { F, num } = window.ML;
+  // tables: words only; the <table> carries the source and row key
+  const fill = (tbody, rows, cols) => {
+    tbody.replaceChildren();
+    rows.forEach((r) => {
+      const tr = document.createElement('tr');
+      cols.forEach(([k, fmt, cls]) => {
+        const td = document.createElement('td'); if (cls) td.className = cls;
+        const v = r[k];
+        td.textContent = fmt ? (Number.isFinite(num(v)) ? fmt(num(v)) : (v === '' || v == null ? '—' : String(v))) : String(v ?? '');
+        if (k === 'result' || k === 'kept') td.classList.add(/^(pass|yes|kept)/i.test(String(v)) ? 'ml-ok' : /^(fixed)/i.test(String(v)) ? 'ml-warn' : /^(fail|no)/i.test(String(v)) ? 'ml-bad' : 'x');
+        tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+    });
+  };
+  const simple = (name, src, cols, sort) => dash.draw(name, (tb) => {
+    const d = dash.data(src);
+    if (d.status !== 'ok') { tb.replaceChildren(); return; }
+    fill(tb, sort ? [...d.data].sort(sort) : d.data, cols);
+  });
+  simple('t-ablation', 'ablation_blend', [['variant'], ['val_acc', F.pct, 'num'], ['val_ll', F.ll, 'num'], ['test_acc', F.pct, 'num'], ['test_ll', F.ll, 'num']]);
+  simple('t-adds', 'adds', [['model'], ['test'], ['with_ll', F.ll, 'num'], ['without_ll', F.ll, 'num'], ['weight', d3.format('+.2f'), 'num']]);
+  simple('t-check', 'checklist', [['item', null, 'wrap'], ['result'], ['detail', null, 'wrap']]);
+  simple('t-improve', 'improvements', [['change', null, 'wrap'], ['val_ll_without', F.ll, 'num'], ['val_ll_with', F.ll, 'num'], ['kept']]);
+  simple('t-fill', 'fill_in', [['window'], ['n', F.int, 'num'], ['won', F.pct, 'num'], ['model_said', F.pct, 'num']]);
+  simple('t-div', 'divisions_blend', [['division'], ['n', F.int, 'num'], ['acc', F.pct, 'num'], ['close_acc', F.pct, 'num'], ['ll', F.ll, 'num'], ['close_ll', F.ll, 'num']], (a, b) => num(b.n) - num(a.n));
+
+  // the full results table: sortable and searchable
+  let sortKey = null, sortDir = 1, query = '';
+  document.querySelectorAll('#all [data-sort]').forEach((b) => b.addEventListener('click', () => {
+    const k = b.dataset.sort; sortDir = sortKey === k ? -sortDir : 1; sortKey = k;
+    document.querySelectorAll('#all th').forEach((th) => th.removeAttribute('aria-sort'));
+    b.closest('th').setAttribute('aria-sort', sortDir > 0 ? 'ascending' : 'descending');
+    dash.draw('t-results');
+  }));
+  document.querySelectorAll('#all .ml-search').forEach((inp) => inp.addEventListener('input', () => { query = inp.value.trim().toLowerCase(); dash.draw('t-results'); }));
+  dash.draw('t-results', (tb) => {
+    const d = dash.data('results');
+    if (d.status !== 'ok') { tb.replaceChildren(); return; }
+    let rows = d.data.filter((r) => !query || [r.set, r.bouts, r.model].join(' ').toLowerCase().includes(query));
+    if (sortKey) {
+      const isNum = ['n', 'acc', 'll'].includes(sortKey);
+      rows = [...rows].sort((a, b) => sortDir * (isNum ? num(a[sortKey]) - num(b[sortKey]) : String(a[sortKey]).localeCompare(String(b[sortKey]))));
+    }
+    fill(tb, rows, [['set'], ['bouts'], ['model'], ['n', F.int, 'num'], ['acc', F.pct, 'num'], ['ll', F.ll, 'num']]);
+  });
+})();
+</script>
