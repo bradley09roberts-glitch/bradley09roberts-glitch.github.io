@@ -9,7 +9,7 @@ const { chromium } = require('playwright');
     page.on('pageerror', e => errs.push('PAGEERROR ' + e.message));
     for (const r of routes) {
       const [route, click] = r.split('|');
-      await page.goto('file://' + file + '#' + route, { waitUntil: 'load', timeout: 120000 });
+      await page.goto((/^https?:/.test(file) ? file : 'file://' + file) + '#' + route, { waitUntil: 'load', timeout: 120000 });
       await page.waitForTimeout(1500);
       if (click) { await page.click(click).catch(e => errs.push('CLICK ' + click + ' ' + e.message)); await page.waitForTimeout(800); }
       const name = `${outDir}/${tag}_${route.replace(/[^a-z0-9]+/gi, '_').slice(0, 60)}${click ? '_t' : ''}.png`;
