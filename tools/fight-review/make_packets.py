@@ -28,7 +28,10 @@ for e in L["events"]:
                    + (f" Finish detail: {f['detail']}." if f.get("detail") else ""))
         if f.get("judges"):
             first = f["names"][0]
-            out.append("- Judges: " + "; ".join(f"{j[0]} {j[1]}-{j[2]} ({first} first)" for j in f["judges"]))
+            second = f["names"][1]
+            out.append("- Judges' cards: " + "; ".join(
+                f"{j[0]} {max(j[1], j[2])}-{min(j[1], j[2])} for {first if j[1] > j[2] else second}" if j[1] != j[2] else f"{j[0]} {j[1]}-{j[2]} even"
+                for j in f["judges"]))
         if b.get("fw"): out.append(f"- Note: {b['fw']}")
         out.append("")
         out.append("UFCStats by round (landed/attempted where two numbers):")

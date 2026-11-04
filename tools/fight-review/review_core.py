@@ -22,7 +22,7 @@ ST = load_stories(S)
 KD, SIGL, SIGA, TOTL, TOTA, TDL, TDA, SUB, REV, CTRL, HEADL, HEADA, BODYL, BODYA, LEGL, LEGA, DISTL, DISTA, CLL, CLA, GRL, GRA = range(22)
 ZERO = [0] * 22
 
-def fold(s): return unicodedata.normalize("NFKD", s or "").encode("ascii", "ignore").decode().lower()
+def fold(s): return unicodedata.normalize("NFKD", re.sub(r"['’`]", "", s or "")).encode("ascii", "ignore").decode().lower()
 def toks(s): return [t for t in re.findall(r"[a-z]+", fold(s)) if t not in ("jr", "sr", "ii", "iii")]
 
 def round_lengths(f):
@@ -40,15 +40,37 @@ def feats(rp, ro):
 FEAT_NAMES = ["sig_strikes", "knockdowns", "takedowns", "control_min", "sub_attempts", "other_strikes", "reversals"]
 
 # ---------- Sherdog round labels (majority of the three scorers), oriented to pick/opp
+def _near(a, b):
+    """Two name tokens match: equal, or one edit apart for longer names (Sherdog typos such as Vokov/Volkov)."""
+    if a == b: return True
+    if min(len(a), len(b)) < 5 or abs(len(a) - len(b)) > 1: return False
+    if len(a) == len(b): return sum(x != y for x, y in zip(a, b)) <= 1
+    if len(a) > len(b): a, b = b, a
+    return any(b[:i] + b[i + 1:] == a for i in range(len(b)))
+def name_side(sd, name):
+    """Which fighter a scorer's name refers to: 'p', 'o' or None. Surname first, then any token, with typo tolerance;
+    when only one fighter's Sherdog name is known, a name that isn't him is the other fighter."""
+    t = toks(name)
+    if not t: return None
+    P, O = toks(sd["names"]["pick"]), toks(sd["names"]["opp"])
+    def score(ft):
+        if not ft: return 0
+        if any(_near(x, ft[-1]) for x in t): return 2
+        return 1 if any(_near(x, y) for x in t for y in ft) else 0
+    sp, so = score(P), score(O)
+    if sp > so: return "p"
+    if so > sp: return "o"
+    if not P and so == 0: return "p"
+    if not O and sp == 0: return "o"
+    return None
 def sherdog_round_owner(sd, rnd):
     votes = []
     for sc in rnd.get("scores", []):
         _, a, b, name, _tot = sc
         if a == b: votes.append("e"); continue
-        sp = max(len(set(toks(name)) & set(toks(sd["names"]["pick"]))), 0)
-        so = max(len(set(toks(name)) & set(toks(sd["names"]["opp"]))), 0)
-        if sp > so: votes.append("p" if a > b else "o")
-        elif so > sp: votes.append("o" if a > b else "p")
+        side = name_side(sd, name)
+        if side is None: return None, votes       # an unattributable vote: don't let the rest form a false majority
+        votes.append(side if a > b else ("o" if side == "p" else "p"))
     if not votes: return None, votes
     for k in ("p", "o", "e"):
         if votes.count(k) * 2 > len(votes): return k, votes
@@ -63,11 +85,10 @@ def sherdog_total(sd):
         tot = sc[4]
         if not tot: continue
         a, b, name = tot
-        sp = len(set(toks(name)) & set(toks(sd["names"]["pick"])))
-        so = len(set(toks(name)) & set(toks(sd["names"]["opp"])))
-        if a == b: out.append([a, b])
-        elif sp > so: out.append([max(a, b), min(a, b)])
-        elif so > sp: out.append([min(a, b), max(a, b)])
+        if a == b: out.append([a, b]); continue
+        side = name_side(sd, name)
+        if side is None: return []
+        out.append([max(a, b), min(a, b)] if side == "p" else [min(a, b), max(a, b)])
     return out
 
 # ---------- collect graded bouts
@@ -170,8 +191,13 @@ for it in bouts:
         sd_for_loser = sum(1 for t in sdt if (t[1] > t[0] if winner == "p" else t[0] > t[1]))
         sd_for_winner = sum(1 for t in sdt if (t[0] > t[1] if winner == "p" else t[1] > t[0]))
         stat_gap = (exp_p - exp_o) if winner == "p" else (exp_o - exp_p)   # rounds, winner minus loser, by the stats model
+        reasons_split_clear = False
         unlucky = []
-        if dk in ("S", "M"): unlucky.append("split" if dk == "S" else "majority")
+        sd_backs_winner = bool(sdt) and sd_for_winner == len(sdt)
+        if dk in ("S", "M"):
+            # a split card is a coin flip unless Sherdog's scorers all had the winner and the stats clearly agree
+            if sd_backs_winner and stat_gap >= 1: reasons_split_clear = True
+            else: unlucky.append("split" if dk == "S" else "majority")
         if sdt and sd_for_loser * 2 > len(sdt): unlucky.append("sherdog_loser")
         # the stats model only overrules the cards when Sherdog's scorers don't back the winner too
         if stat_gap <= -0.5 and not (sdt and sd_for_winner * 2 > len(sdt)): unlucky.append("stats_loser")
@@ -182,37 +208,50 @@ for it in bouts:
         elif margins and sum(margins) / len(margins) >= 2:
             verdict = "clear"; reasons = ["mostly_wide_cards"]
         else:
-            verdict = "close"; reasons = ["one_round_cards"]
-            if stat_gap >= 1.5 and (not sdt or sd_for_winner * 2 > len(sdt)): verdict = "clear"; reasons = ["one_round_cards", "stats_dominant"]
+            verdict = "close"
+            reasons = ["one_round_cards"] if margins and max(margins) <= 1 else ["mostly_one_round"] if margins else ["no_cards"]
+            if dk in ("S", "M"): reasons = ["split_but_clear"]
+            elif stat_gap >= 1.5 and (not sdt or sd_for_winner * 2 > len(sdt)): verdict = "clear"; reasons = reasons + ["stats_dominant"]
     else:
         rf = f.get("rd") or len(rows)
-        done = owners[: rf - 1]
+        full_last = secs is not None and lens and lens[-1] >= 300    # stopped between rounds: the last round was fought in full
+        done = owners[: rf] if full_last else owners[: rf - 1]
         bank_w = sum(1 for x in done if x == winner); bank_l = sum(1 for x in done if x == loser)
-        lean = story.get("bf") if story else None    # before the finish, the final round leaned: winner / loser / even
+        lean = None if full_last else (story.get("bf") if story else None)    # the final round's lean before the finish
         early = secs is not None and secs < 60
         stats_lean = False
-        if lean is None and rows and rf - 1 < len(pr):
+        if lean is None and not full_last and rows and rf - 1 < len(pr):
             # No written read: the final round's numbers include the winner's finishing burst, so they lean his way.
             # If the loser still led them clearly over at least 90 seconds, he was ahead in that round.
             p_loser = pr[rf - 1] if loser == "p" else 1 - pr[rf - 1]
             final_secs = (secs or 0) - 300 * (rf - 1)
             if p_loser >= .65 and final_secs >= 90: lean, stats_lean = "loser", True
         dq = how == "DQ"
+        # Score the fight at the moment it ended: banked rounds plus the round in progress.
+        net = bank_w - bank_l + (1 if lean == "winner" else -1 if lean == "loser" else 0)
+        lean_reason = (["final_round_loser_stats"] if stats_lean else ["final_round_loser"]) if lean == "loser" else \
+                      ["final_round_winner"] if lean == "winner" else ["final_round_even"] if lean == "even" else []
+        af = story.get("ahead_at_finish") if story else None
         if dq:
             verdict = "variance"; reasons = ["disqualification"]
-        elif bank_l > bank_w or (bank_l == bank_w and lean == "loser"):
-            verdict = "loser_ahead"; reasons = [f"rounds_{bank_l}_{bank_w}"] + ((["final_round_loser_stats"] if stats_lean else ["final_round_loser"]) if lean == "loser" else [])
-        elif bank_w > bank_l or (bank_w == bank_l and lean == "winner"):
-            verdict = "loser_behind"; reasons = [f"rounds_{bank_l}_{bank_w}"] + (["final_round_winner"] if lean == "winner" else [])
-        elif rf == 1 and lean is None:
+        elif af in ("winner", "loser", "even"):
+            # the checked written review's own call on who was ahead when it ended (it reads the round in progress)
+            verdict = {"winner": "loser_behind", "loser": "loser_ahead", "even": "level"}[af]
+            reasons = [f"rounds_{bank_l}_{bank_w}"] + lean_reason + ["story_" + af]
+        elif net < 0:
+            verdict = "loser_ahead"; reasons = [f"rounds_{bank_l}_{bank_w}"] + lean_reason
+        elif net > 0:
+            verdict = "loser_behind"; reasons = [f"rounds_{bank_l}_{bank_w}"] + lean_reason
+        elif rf == 1 and lean is None and not full_last:
             verdict = "quick"; reasons = ["first_round_no_read"]
-        elif early:
-            verdict = "quick"; reasons = ["under_a_minute"]
         else:
-            verdict = "level"; reasons = [f"rounds_{bank_l}_{bank_w}"] + (["final_round_even"] if lean == "even" else [])
+            verdict = "level"; reasons = [f"rounds_{bank_l}_{bank_w}"] + lean_reason
+        if full_last: reasons.append("between_rounds")
         if early and verdict in ("loser_behind", "level"): verdict = "quick"; reasons = ["under_a_minute"]
         detail = (f.get("detail") or "")
         if re.search(r"doctor|injur|could not continue", detail + " " + method, re.I): reasons.append("doctor_or_injury")
+        if re.search(r"injur", detail, re.I) and not re.search(r"cut", detail, re.I) and verdict != "loser_behind":
+            verdict = "variance"; reasons.append("injury")
 
     # map to the pick's perspective
     if ok:

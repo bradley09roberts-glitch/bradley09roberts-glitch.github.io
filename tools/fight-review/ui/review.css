@@ -97,7 +97,7 @@
 .rv-item-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .rv-item-h .sp{flex:1}
 .rv-item-a p{margin:2px 0 0;color:var(--text-2)}
-.rv .grid-2{align-items:start}
+.rvw .grid-2{align-items:start}
 .rv-head-r{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
 .hist-t .rv-pill{align-self:flex-start;margin-top:3px}
 .ulist-i .rv-pill{margin-left:auto}

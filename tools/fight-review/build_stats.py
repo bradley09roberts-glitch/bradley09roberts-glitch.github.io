@@ -25,6 +25,10 @@ for r in rows("ufc_event_details.csv"):
     try: dates[norm(r["EVENT"])] = datetime.strptime(norm(r["DATE"]), "%B %d, %Y").strftime("%Y-%m-%d")
     except Exception: pass
 
+# event names sometimes differ between the CSVs ("UFC Fight Night: Lopes vs. Silva" vs "Noche UFC: Lopes vs. Silva"):
+# fall back to the part after the colon
+dates_h = {}
+for k, v in dates.items(): dates_h.setdefault(k.split(":", 1)[-1].strip(), v)
 fights, key2id = {}, {}
 for r in rows("ufc_fight_results.csv"):
     fid = r["URL"].rstrip("/").split("/")[-1]
@@ -36,10 +40,22 @@ for r in rows("ufc_fight_results.csv"):
     lens = [int(x) * 60 for x in m.group(2).split("-")] if m else [300] * 5
     secs = sum(lens[: max(rd - 1, 0)]) + tm if rd else None
     det = norm(r["DETAILS"])
-    judges = [[j.strip(), int(a), int(b)] for j, a, b in re.findall(r"([A-Za-z'.\- ]+?)\s+(\d+)\s*-\s*(\d+)\.?", det)] if norm(r["METHOD"]).startswith("Decision") else []
     o = norm(r["OUTCOME"]).split("/")
-    fights[fid] = {"ev": ev, "d": dates.get(ev), "names": names, "out": o, "method": norm(r["METHOD"]),
-                   "detail": det if not judges else "", "judges": judges, "rd": rd, "time": norm(r["TIME"]),
+    judges = []
+    if norm(r["METHOD"]).startswith("Decision"):
+        # UFCStats lists each card as "loser score - winner score" (lower first), not in the bout's name order.
+        # Re-orient to the bout's name order: [judge, score of names[0], score of names[1]].
+        for j, a, b in re.findall(r"([A-Za-z'.\- ]+?)\s*(\d+)\s*-\s*(\d+)\.?", det):
+            j = re.sub(r"^[\s.]+", "", j).strip()
+            j = re.split(r"(?<=[a-z])(?=[A-Z][a-z]+ [A-Z])", j)[-1].strip()   # drop a glued prefix ("...by SongDerek Cleary")
+            a, b = int(a), int(b)
+            if o[0] == "W": judges.append([j, b, a])      # names[0] won: his score is the second number
+            elif o[0] == "L": judges.append([j, a, b])    # names[0] lost: his score is the first number
+            else: judges.append([j, a, b])                # draw or no contest: order unknown, keep as listed
+    clean_det = re.sub(r"^to(?:\s+(?:At Distance|On Ground|In Clinch|From [A-Z][a-z]+(?: [A-Z][a-z]+)*))?\s*", "", det).strip()
+    clean_det = clean_det[:1].upper() + clean_det[1:]
+    fights[fid] = {"ev": ev, "d": dates.get(ev) or dates_h.get(ev.split(":", 1)[-1].strip()), "names": names, "out": o, "method": norm(r["METHOD"]),
+                   "detail": clean_det if not judges else "", "judges": judges, "rd": rd, "time": norm(r["TIME"]),
                    "fmt": fmt, "sched": len(lens) if m else None, "secs": secs, "wc": norm(r["WEIGHTCLASS"]),
                    "ref": norm(r["REFEREE"]), "rounds": {}}
     key2id[(ev, bout)] = fid

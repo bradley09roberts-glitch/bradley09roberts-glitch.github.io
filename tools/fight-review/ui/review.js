@@ -6,11 +6,35 @@
 // Data: { b: {boutId: review}, f: {fighterId: profile}, agg, rm, th, al, tdt }. Inside a bout review "p" is the
 // model's pick and "o" its opponent, as the ledger records them; the page shows them as Fighter A and B.
 
-let RV = null;
-function rvData() {
-  if (RV === null) RV = safe(() => JSON.parse(document.getElementById("review-data").textContent), false) || false;
-  return RV;
+// The review data lives in its own file published beside the page (review-data.json), so the page itself stays small.
+// It starts loading as soon as this script runs; views that use it draw without it and are redrawn once it arrives.
+// An inline <script id="review-data"> block, when present, is used instead.
+let RV = null, RV_STATE = "idle";   // idle | loading | ready | failed
+function rvLoad() {
+  if (RV_STATE !== "idle") return;
+  const inline = document.getElementById("review-data");
+  if (inline) { RV = safe(() => JSON.parse(inline.textContent), null); RV_STATE = RV ? "ready" : "failed"; return; }
+  RV_STATE = "loading";
+  fetch("review-data.json", { cache: "no-cache" })
+    .then(r => { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
+    .then(d => { RV = d; RV_STATE = "ready"; }, () => { RV = null; RV_STATE = "failed"; })
+    .then(() => {
+      // redraw the open view if it shows review data, keeping the reader's place
+      if (!L || !Nav.token || !/^(fight-|fighter-|event|review|performance)/.test(Nav.token)) return;
+      if (layers.length) return;
+      const y = window.scrollY, tab = muTab;
+      render(Nav.token);
+      muTab = tab;
+      requestAnimationFrame(() => requestAnimationFrame(() => window.scrollTo(0, y)));
+    });
 }
+function rvData() { if (RV_STATE === "idle") rvLoad(); return RV_STATE === "ready" ? RV : null; }
+function rvPending() {
+  return RV_STATE === "failed"
+    ? emptyState("The fight review didn't load", "Its data file couldn't be read. Reload the page to try again.", h("button.btn", { type: "button", onclick: () => location.reload() }, "Reload"), ".err")
+    : h("div", { role: "status", "aria-live": "polite" }, h("p.small.muted", "Loading the fight review…"), h("div.sk.sk-card"), h("div.sk.sk-card"));
+}
+rvLoad();
 const reviewOf = b => { const D = rvData(); return D && b && b.raw ? D.b[b.raw.id] || null : null; };
 const rvProfile = id => { const D = rvData(); return D && D.f ? D.f[id] || null : null; };
 
@@ -23,7 +47,7 @@ const RV_VERDICT = {
   outclassed: { label: "Outclassed", tone: "neg", icon: "cross",
     def: "The pick was clearly beaten: two rounds or more on the judges' cards, or behind when it was finished." },
   close: { label: "Close", tone: "", icon: "swap",
-    def: "Competitive either way: one round in it on every card, or level when it was finished." },
+    def: "Competitive either way: about one round in it on the cards, a split card that the other scorers backed, or level when it was finished." },
   earned: { label: "Earned", tone: "pos", icon: "check",
     def: "The pick won clearly: two rounds or more on the cards, or ahead when the fight was finished." },
   fortunate: { label: "Fortunate", tone: "warn", icon: "dice",
@@ -104,7 +128,15 @@ function verdictWhy(b, rv) {
     else if (w === "stats_loser") bits.push(`The round-by-round stats favoured ${Lr}.`);
     else if (w === "wide_cards") bits.push("Every judge had it by two rounds or more.");
     else if (w === "mostly_wide_cards") bits.push("The judges had it by two rounds or more on average.");
-    else if (w === "one_round_cards") bits.push("One round was the difference on the cards.");
+    else if (w === "one_round_cards") bits.push("One round was the difference on every card.");
+    else if (w === "mostly_one_round") bits.push(`Mostly one round on the cards (${(rv.j || []).map(j => Math.abs(j[1] - j[2])).sort().join(", ")} points).`);
+    else if (w === "split_but_clear") bits.push(`A split decision, but Sherdog's scorers all had ${W} and the round-by-round stats agreed.`);
+    else if (w === "no_cards") bits.push("The judges' cards aren't on record.");
+    else if (w === "story_winner") bits.push(`Reading the fight, ${W} was ahead when it ended.`);
+    else if (w === "story_loser") bits.push(`Reading the fight, ${Lr} was ahead when it ended.`);
+    else if (w === "story_even") bits.push("Reading the fight, it was level when it ended.");
+    else if (w === "between_rounds") bits.push("Stopped between rounds, so the last round counts in full.");
+    else if (w === "injury") bits.push("Ended by an injury rather than damage, which counts as luck.");
     else if (w === "stats_dominant") bits.push(`The round-by-round stats were one-sided for ${W}.`);
     else if ((m = /^rounds_(\d+)_(\d+)$/.exec(w))) {
       const l = +m[1], wn = +m[2];
@@ -132,7 +164,7 @@ function underratedText(b, rv) {
     case "model_unpriced": return [`No usable price. The model gave ${lastName(Lr)} ${pct(b.p)}.`, ""];
     case "market": return [`The market favoured ${lastName(poName(b, "o"))} (${pct(1 - mp)}); the model's pick ${lastName(W)} (${pct(b.p)}) won.`, "The model beat the market here."];
     case "neither": return [`Model (${pct(b.p)}) and market (${pct(mp)}) both had ${lastName(W)}.`, ""];
-    default: return ["", ""];
+    default: return b.result.ok ? [`No usable price. The model gave ${lastName(W)} ${pct(b.p)}.`, ""] : ["", ""];
   }
 }
 
@@ -177,8 +209,8 @@ function rvStoryPanel(b, rv) {
 }
 
 function rvBar(a, bb) {
-  const t = a + bb, wa = t ? a / t * 100 : 50;
-  return h("div.rv-bar", { "aria-hidden": "true" }, h("i.a", { style: { width: wa + "%" } }), h("i.b", { style: { width: (100 - wa) + "%" } }));
+  const t = a + bb, wa = t ? a / t * 100 : 0;
+  return h("div.rv-bar", { "aria-hidden": "true" }, h("i.a", { style: { width: wa + "%" } }), h("i.b", { style: { width: (t ? 100 - wa : 0) + "%" } }));
 }
 function rvRoundsPanel(b, rv) {
   const rounds = rv.r || [];
@@ -325,8 +357,8 @@ function rvLessonsPanel(b, rv) {
 function rvMethodNote() {
   const D = rvData(); const rm = D && D.rm || {};
   return paras(h("b", "How the verdict is decided"),
-    "Decisions: a split or majority decision, Sherdog's scorers having the loser ahead, or the round-by-round stats favouring the loser by half a round or more make it unlucky (or fortunate, for a pick that won). Two rounds or more on the cards is clear. Anything else is close.",
-    "Finishes: completed rounds are scored with Sherdog's scorers where they exist, otherwise with the stats. The written review says who was ahead in the round it ended in, before the finish. Ahead when finished is unlucky; level is close; behind is outclassed (or earned).",
+    "Decisions: unlucky (or fortunate, for a pick that won) when it was a split or majority decision, unless Sherdog's scorers all had the winner and the stats agreed; when Sherdog's scorers had the loser; or when the round-by-round stats favoured the loser by half a round or more and Sherdog didn't back the winner. Two rounds or more on the cards is clear. Anything else is close.",
+    "Finishes: who was ahead at the moment it ended, counting completed rounds (Sherdog's scorers where they exist, otherwise the stats) and the round in progress. Where a checked written review exists, its own call on who was ahead decides. Ahead when finished is unlucky; level is close; behind is outclassed (or earned). A fight ended by injury rather than damage counts as luck unless the loser was clearly behind.",
     `The stats round model was fitted on ${NF.format(rm.n_rounds || 0)} rounds that Sherdog's scorers scored, and agrees with them about ${pct(rm.cv_accuracy || 0)} of the time on rounds it wasn't fitted on.`,
     h("p.faint", "None of this changes the record: a miss is still a miss."));
 }
@@ -339,9 +371,10 @@ function rvRoundModelNote() {
 }
 
 function reviewTab(b) {
+  if (!rvData()) return h("div.mu-stack.rvw", rvPending());
   if (!b.result) return weakSpotsTab(b);
   const rv = reviewOf(b);
-  const out = h("div.mu-stack.rv");
+  const out = h("div.mu-stack.rvw");
   if (!rv) { out.append(emptyState("No fight review for this bout", "UFCStats has no round-by-round record for it.")); return out; }
   [rvVerdictPanel(b, rv), rvStoryPanel(b, rv), rvRoundsPanel(b, rv), rvMomentsPanel(b, rv), rvProjPanel(b, rv), rvLessonsPanel(b, rv)].forEach(p => p && out.append(p));
   return out;
@@ -349,9 +382,9 @@ function reviewTab(b) {
 
 // ---------- weak spots for a booked bout
 function weakSpotsTab(b) {
-  const out = h("div.mu-stack.rv");
+  const out = h("div.mu-stack.rvw");
   const D = rvData();
-  if (!D) { out.append(emptyState("No weak-spot data", "This build of the page has no fight review data.")); return out; }
+  if (!D) { out.append(rvPending()); return out; }
   const pa = rvProfile(b.A.id), pb = rvProfile(b.B.id);
   const watch = [];
   const check = (f, p, opp, po) => {
@@ -389,7 +422,8 @@ function rvFighterCard(f, p) {
     h("dt", "UFC losses"), h("dd", losses ? `${losses}: ${fin[1]} KO/TKO, ${fin[2]} submission, ${fin[3]} decision` : "None"),
     h("dt", "Takedowns stopped"), h("dd", p.tdd[1] ? `${p.tdd[1] - p.tdd[0]} of ${p.tdd[1]}` : "None tried", p.tdd[1] ? h("small", ` · ${pct(p.tdd[2])} adjusted, division ${pct(p.tdd[3])}`) : null),
     h("dt", "Time controlled"), h("dd", pct(p.cc[0]), h("small", ` · division ${pct(p.cc[2])}`)),
-    h("dt", "After conceding the first takedown"), h("dd", (p.ftd.conceded[0] + p.ftd.conceded[1]) ? `${p.ftd.conceded[0]}–${p.ftd.conceded[1]}` : "Never happened")));
+    h("dt", "After conceding the first takedown"), h("dd", (p.ftd.conceded[0] + p.ftd.conceded[1]) ? `${p.ftd.conceded[0]}–${p.ftd.conceded[1]}` : "Never happened",
+      p.ftd_base && (p.ftd.conceded[0] + p.ftd.conceded[1]) ? h("small", ` · most lose ${pct(p.ftd_base)}`) : null)));
   return host;
 }
 
@@ -407,7 +441,7 @@ function weakSpotsPanel(f) {
     h("div.panel-head", h("div", h("h2.h-sec", "Weak spots"),
       h("p.cap", `From all ${plural(p.n, "UFC fight")} on UFCStats (${Math.round(p.mins)} minutes), round by round. Rates are pulled toward the division average until the sample is big enough, so a short career can't look extreme.`)),
       infoBtn("How weak spots are found", () => paras(h("b", "Weak spots"),
-        "A weak spot is flagged when, after allowing for sample size, the fighter is among the worst fifth of their division (worst seventh for knockdowns), or when the same thing keeps happening: most losses by KO, losing most fights where the opponent lands the first takedown, a clear drop from round 1 to round 3, or a losing record against one style.",
+        "A weak spot is flagged when, after allowing for sample size, the fighter is among the worst fifth of their division (worst seventh for knockdowns), or when the same thing keeps happening: most losses by KO, losing clearly more often than the norm after conceding the first takedown, a clear drop from round 1 to round 3 in the same fights, or a losing record against one style over four fights or more.",
         `Styles are each opponent's UFC numbers going into that fight: wrestlers land ${D.th.wrestler_td15}+ takedowns a 15 minutes or control ${pct(D.th.wrestler_ctl)}+ of the time; submission hunters try ${D.th.sub15}+ submissions a 15; power strikers score ${D.th.kd15}+ knockdowns a 15; volume strikers land ${D.th.slpm}+ significant strikes a minute.`,
         h("p.faint", "These describe the record. In testing, takedown mismatches didn't beat the model's or the market's prices.")))),
     rvFlagList(p, 8),
@@ -425,11 +459,13 @@ function weakSpotsPanel(f) {
           h("dt", "Division average"), h("dd", pct(p.tdd[3])),
           h("dt", "Taken down"), h("dd", `${fixed(p.tk[0], 2)} a 15`, h("small", ` · division ${fixed(p.tk[2], 2)}`)),
           h("dt", "Time controlled"), h("dd", pct(p.cc[0]), h("small", ` · division ${pct(p.cc[2])}`)),
-          h("dt", "After conceding the first takedown"), h("dd", (p.ftd.conceded[0] + p.ftd.conceded[1]) ? `won ${p.ftd.conceded[0]}, lost ${p.ftd.conceded[1]}` : "Never happened"),
+          h("dt", "After conceding the first takedown"), h("dd", (p.ftd.conceded[0] + p.ftd.conceded[1]) ? `won ${p.ftd.conceded[0]}, lost ${p.ftd.conceded[1]}` : "Never happened",
+            p.ftd_base && (p.ftd.conceded[0] + p.ftd.conceded[1]) ? h("small", ` · most fighters lose ${pct(p.ftd_base)} of these`) : null),
           h("dt", "After landing the first takedown"), h("dd", (p.ftd.landed[0] + p.ftd.landed[1]) ? `won ${p.ftd.landed[0]}, lost ${p.ftd.landed[1]}` : "Never happened")))),
+    p.fade_pair ? h("p.small", `In the ${p.fade_pair[0]} fights that reached a full third round: ${p.fade_pair[1] > 0 ? "+" : ""}${fixed(p.fade_pair[1], 1)} significant strikes a minute in round 1, ${p.fade_pair[2] > 0 ? "+" : ""}${fixed(p.fade_pair[2], 1)} in round 3.`) : null,
     fadeRows.length ? h("div", h("h3.h-sub.stats-sub", "Round by round"),
       h("div.tablewrap.flat", h("table.table",
-        h("thead", h("tr", h("th", "Round"), h("th.n", "Strike difference a minute"), h("th.n", "Rounds"))),
+        h("thead", h("tr", h("th", "Round (every full round of that number)"), h("th.n", "Strike difference a minute"), h("th.n", "Rounds"))),
         h("tbody", fadeRows.map(([r, v, n]) => h("tr", h("td", "Round " + r), h("td.n" + (v < 0 ? ".rv-neg" : ".rv-pos"), v == null ? "—" : (v > 0 ? "+" : "") + fixed(v, 1)), h("td.n", String(n)))))))) : null,
     archRows.length ? h("div", h("h3.h-sub.stats-sub", "Against each style"),
       h("div.tablewrap.flat", h("table.table",
@@ -464,7 +500,7 @@ VIEWS.review = host => {
   const D = rvData();
   host.append(h("div.page-head", h("div", h("span.eyebrow", "Why picks won or lost"), h("h1.h-page", "Fight review"),
     h("p.lede", "Every graded fight checked round by round: UFCStats numbers, the judges, Sherdog's round scoring and a written story of the fight. Was a miss bad luck, a coin flip or a beating? Did the model and the market both underrate the winner? Does a fighter keep losing the same way?"))));
-  if (!D) { host.append(emptyState("No review data in this build", "The page was built without the fight review block.")); return; }
+  if (!D) { host.append(rvPending()); return; }
   const body = h("div.view");
   host.append(h("div.toolbar",
     segmented([["season", "2025–26 season"], ["all", "Since 2019"]], rvUI.win, v => { rvUI.win = v; rvUI.n = 40; saveRv(); draw(); }, "Window")), body);
@@ -477,7 +513,7 @@ VIEWS.review = host => {
     const misses = xs.filter(b => !b.result.ok), hits = xs.filter(b => b.result.ok);
     const cnt = (ys, v) => ys.filter(b => reviewOf(b).v === v).length;
     const tile = (v, ys, sub) => { const k = cnt(ys, v), V = RV_VERDICT[v];
-      return h("button.stat.rv-tile.tone-" + (V.tone || "plain"), { type: "button", onclick: () => { rvUI.res = sub; rvUI.v = v; rvUI.n = 40; saveRv(); draw(); listHost.scrollIntoView({ behavior: reduceMotion() ? "auto" : "smooth", block: "start" }); } },
+      return h("button.stat.rv-tile.tone-" + (V.tone || "plain"), { type: "button", onclick: () => { rvUI.res = sub; rvUI.v = v; rvUI.ub = "all"; rvUI.q = ""; rvUI.n = 40; saveRv(); draw(); listHost.scrollIntoView({ behavior: reduceMotion() ? "auto" : "smooth", block: "start" }); } },
         h("span.l", icon(V.icon), V.label), h("span.v.num", ys.length ? pct(k / ys.length) : "—"), h("span.s", `${frac(k, ys.length)} ${sub === "miss" ? "misses" : "right picks"}`)); };
     body.append(h("section.pf-sec",
       h("div.sec-head", h("h2.h-sec", `The misses: ${NF.format(misses.length)} of ${NF.format(xs.length)}`),
@@ -521,30 +557,40 @@ VIEWS.review = host => {
           `for ${NF.format(t.model.n)} graded bouts, each fighter's takedowns conceded and landed going in (only earlier UFC fights) were combined into a mismatch score. It added nothing to the model's price (z = ${t.model.z}) or the market's (z = ${t.market.z}): a fighter who gets taken down a lot, facing a wrestler, won about as often as the prices said. Weak spots describe a fighter; they weren't a betting edge on their own.`)); })(),
       h("p.foot", "“Model gap” is how much more often the pick won than the model's average forecast said, in percentage points (market gap: the same against the market's price for the pick), with its 95% range.")));
 
-    // the list
+    // the list: its controls are built once here, so typing in the search box never loses focus;
+    // drawList() only redraws the results under them
     listHost = h("section.panel.rv-listp");
+    results = h("div.rv-results");
+    const set = k => v => { rvUI[k] = v; rvUI.n = 40; saveRv(); if (k === "res") fillVerdicts(); drawList(); };
+    const vSel = selectEl("rv-v", [], rvUI.v, set("v"), "Verdict");
+    fillVerdicts = () => {
+      const vs = verdictsFor();
+      if (rvUI.v !== "all" && !vs.includes(rvUI.v)) rvUI.v = "all";
+      vSel.replaceChildren(...[["all", "Any verdict"], ...vs.map(v => [v, RV_VERDICT[v].label])].map(([v, lab]) => new Option(lab, v, false, v === rvUI.v)));
+      vSel.value = rvUI.v;
+    };
+    fillVerdicts();
+    listHost.append(h("div.panel-head", h("div", h("h3.h-sec", "Every reviewed fight"), h("p.cap", "Open one for its round-by-round review."))),
+      h("div.toolbar",
+        h("div.field", h("label", { htmlFor: "rv-res" }, "Picks"), selectEl("rv-res", [["miss", "Misses"], ["hit", "Right picks"], ["all", "All"]], rvUI.res, set("res"), "Picks")),
+        h("div.field", h("label", { htmlFor: "rv-v" }, "Verdict"), vSel),
+        h("div.field", h("label", { htmlFor: "rv-ub" }, "Market"), selectEl("rv-ub", [["all", "Any"], ["both", "Both had the loser"], ["model", "Only the model wrong"], ["market", "Model beat the market"], ["neither", "Both right"], ["model_unpriced", "No price"]], rvUI.ub, set("ub"), "Market")),
+        h("div.field.toolbar-grow", h("label", { htmlFor: "rv-q" }, "Fighter or event"), searchField("rv-q", "e.g. Osbourne", rvUI.q, set("q"), "Fighter or event"))),
+      results);
     body.append(listHost);
     drawList();
   }
-  let listHost = null;
+  let listHost = null, results = null, fillVerdicts = () => {};
+  const verdictsFor = () => rvUI.res === "hit" ? RV_ORDER_HIT : rvUI.res === "miss" ? RV_ORDER_MISS : ["unlucky", "fortunate", "close", "outclassed", "earned", "quick"];
   function drawList() {
-    clear(listHost);
+    clear(results);
     const xs0 = L.graded.filter(inWin).filter(b => reviewOf(b));
-    const verdicts = rvUI.res === "hit" ? RV_ORDER_HIT : rvUI.res === "miss" ? RV_ORDER_MISS : ["unlucky", "fortunate", "close", "outclassed", "earned", "quick"];
-    if (rvUI.v !== "all" && !verdicts.includes(rvUI.v)) rvUI.v = "all";
-    const set = k => v => { rvUI[k] = v; rvUI.n = 40; saveRv(); drawList(); };
     const xs = xs0.filter(b => (rvUI.res === "all" || (rvUI.res === "hit") === b.result.ok)
       && (rvUI.v === "all" || reviewOf(b).v === rvUI.v)
       && (rvUI.ub === "all" || reviewOf(b).ub === rvUI.ub)
       && (!rvUI.q || fold(b.A.name + " " + b.B.name + " " + b.ev.name).includes(fold(rvUI.q)))).slice().reverse();
-    listHost.append(h("div.panel-head", h("div", h("h3.h-sec", "Every reviewed fight"), h("p.cap", "Open one for its round-by-round review."))),
-      h("div.toolbar",
-        h("div.field", h("label", { htmlFor: "rv-res" }, "Picks"), selectEl("rv-res", [["miss", "Misses"], ["hit", "Right picks"], ["all", "All"]], rvUI.res, set("res"), "Picks")),
-        h("div.field", h("label", { htmlFor: "rv-v" }, "Verdict"), selectEl("rv-v", [["all", "Any verdict"], ...verdicts.map(v => [v, RV_VERDICT[v].label])], rvUI.v, set("v"), "Verdict")),
-        h("div.field", h("label", { htmlFor: "rv-ub" }, "Market"), selectEl("rv-ub", [["all", "Any"], ["both", "Both had the loser"], ["model", "Only the model wrong"], ["market", "Model beat the market"], ["neither", "Both right"], ["model_unpriced", "No price"]], rvUI.ub, set("ub"), "Market")),
-        h("div.field.toolbar-grow", h("label", { htmlFor: "rv-q" }, "Fighter or event"), searchField("rv-q", "e.g. Osbourne", rvUI.q, set("q"), "Fighter or event"))),
-      h("p.ev-count", { "aria-live": "polite" }, `${plural(xs.length, "fight")}`));
-    if (!xs.length) { listHost.append(emptyState("No fights match", "Loosen a filter.")); return; }
+    results.append(h("p.ev-count", { "aria-live": "polite" }, `${plural(xs.length, "fight")}`));
+    if (!xs.length) { results.append(emptyState("No fights match", "Loosen a filter.")); return; }
     const ul = h("ul.rv-list");
     xs.slice(0, rvUI.n).forEach(b => {
       const rv = reviewOf(b), V = RV_VERDICT[rv.v];
@@ -559,8 +605,8 @@ VIEWS.review = host => {
           h("small.faint", `${b.result.winnerName} by ${rvHow(rv.how) || b.result.how}${b.result.how !== "Decision" ? `, R${rv.rd} ${rv.tm}` : ""} · model ${pct(b.p)} ${lastName(sideName(b, b.pickSide))}`),
           rv.st && rv.st.s ? h("p.small", rv.st.s) : (ub1 ? h("p.small.muted", ub1) : null))));
     });
-    listHost.append(ul);
-    if (xs.length > rvUI.n) listHost.append(h("div.center-row", h("button.btn", { type: "button", onclick: () => { rvUI.n += 40; drawList(); } }, `Show more (${NF.format(xs.length - rvUI.n)} left)`)));
+    results.append(ul);
+    if (xs.length > rvUI.n) results.append(h("div.center-row", h("button.btn", { type: "button", onclick: () => { rvUI.n += 40; drawList(); } }, `Show more (${NF.format(xs.length - rvUI.n)} left)`)));
   }
   draw();
 };

@@ -51,10 +51,16 @@ import csv
 _names = Counter(r["FIGHTER"].strip() for r in csv.DictReader(open(f"{S}/raw/ufc_fighter_tott.csv", encoding="utf8")))
 DUPS = {n for n, c in _names.items() if c > 1}
 name2id = {c["name"]: fid_ for fid_, c in FZ.items() if c["name"] not in DUPS}
+dup2id = {c["name"]: (fid_, (c.get("div") or "").lower(), bool(c.get("w"))) for fid_, c in FZ.items() if c["name"] in DUPS}
 def key_of(fid, name):
     k = idmap.get((fid, name))
     if k: return k
-    if name in DUPS: return "n:" + name + "|" + U[fid].get("wc", "")
+    if name in DUPS:
+        wc = (U[fid].get("wc") or "").lower()
+        led = dup2id.get(name)
+        # the ledger's fighter of that name fights in one division: fights in that division are his
+        if led and led[1] and led[1] in wc and (("women" in wc) == led[2]): return led[0]
+        return "n:" + name + "|" + U[fid].get("wc", "")
     return name2id.get(name, "n:" + name)
 
 # ---------- chronological pass: pre-fight snapshots
@@ -126,6 +132,7 @@ for k in hist: hist[k].sort(key=lambda h: h["d"])
 def prof_raw(H):
     s = defaultdict(float)
     fade = defaultdict(lambda: [0.0, 0])   # round index -> [sum of sig diff per minute, n rounds]
+    pair = [0, 0.0, 0.0]                   # fights with a full round 3: n, sum of round-1 and round-3 sig diff per minute
     ftd = {"conceded": [0, 0], "landed": [0, 0], "none": [0, 0]}
     fin = Counter()
     arch = defaultdict(lambda: [0, 0, 0, 0.0])  # n, W, L, sum of stat round share
@@ -144,14 +151,22 @@ def prof_raw(H):
         for i, (rp, ro) in enumerate(rows):
             if i < len(rows) - 1 or secs >= 300 * (i + 1):   # full rounds only
                 fade[i + 1][0] += (rp[SIGL] - ro[SIGL]) / 5.0; fade[i + 1][1] += 1
+        if len(rows) >= 3 and secs >= 900:
+            pair[0] += 1; pair[1] += (rows[0][0][SIGL] - rows[0][1][SIGL]) / 5.0; pair[2] += (rows[2][0][SIGL] - rows[2][1][SIGL]) / 5.0
         first = next(((rp[TDL], ro[TDL]) for rp, ro in rows if rp[TDL] or ro[TDL]), None)
         k = "none" if not first else ("conceded" if first[1] > 0 and first[0] == 0 else "landed" if first[0] > 0 and first[1] == 0 else "none")
         if res in ("W", "L"): ftd[k][0 if res == "W" else 1] += 1
         share = sum(p_round(rp, ro) for rp, ro in rows) / len(rows)
         a = arch[h["oarch"]]; a[0] += 1; a[1] += res == "W"; a[2] += res == "L"; a[3] += share
+    s["pair"] = pair
     return s, fade, ftd, fin, arch
 
 raw = {fid: prof_raw(H) for fid, H in hist.items()}
+# how often a fighter loses after conceding the fight's first takedown, across every ledger fighter: the baseline
+_c = [r[2]["conceded"] for r in raw.values()]
+BASE_FTD = sum(x[1] for x in _c) / max(1, sum(x[0] + x[1] for x in _c))
+def binom_tail(k, n, p):
+    return sum(math.comb(n, i) * p ** i * (1 - p) ** (n - i) for i in range(k, n + 1))
 
 # division means for shrinkage (fighters with at least 3 UFC fights)
 def divk(c): return ("w:" if c.get("w") else "m:") + (c.get("div") or "unknown")
@@ -169,9 +184,23 @@ def dmean(dk, k):
         xs = [x for d in DM for x in DM[d][k] if x is not None]
     return float(np.mean(xs))
 
+def shrunk(fid, s):
+    """Each rate pulled toward the division mean by a fixed prior: takedown success (10 attempts), takedowns conceded
+    (30 minutes), control conceded (30 minutes), strikes absorbed (30 minutes), knockdowns suffered (45 minutes)."""
+    dk = divk(FZ[fid]); m15, mins = s["secs"] / 900, s["secs"] / 60
+    return {"tdsucc": (s["otdL"] + 10 * dmean(dk, "tdsucc")) / (s["otdA"] + 10),
+            "tk15": (s["otdL"] + 2 * dmean(dk, "tk15")) / (m15 + 2),
+            "cc": (s["octrl"] + 1800 * dmean(dk, "cc")) / (s["secs"] + 1800),
+            "ab": (s["sigA"] + 30 * dmean(dk, "ab")) / (mins + 30),
+            "kd15": (s["okd"] + 3 * dmean(dk, "kd15")) / (m15 + 3)}
+# peers are ranked on the same shrunk scale as the fighter (fighters with 3+ UFC fights)
+DMS = defaultdict(lambda: defaultdict(list))
+for fid, (s, *_rest) in raw.items():
+    if s["n"] < 3: continue
+    for k, v in shrunk(fid, s).items(): DMS[divk(FZ[fid])][k].append(v)
 def pctile(dk, k, v, higher_bad=True):
-    xs = [x for x in DM[dk][k] if x is not None]
-    if len(xs) < 8: xs = [x for d in DM for x in DM[d][k] if x is not None]
+    xs = DMS[dk][k]
+    if len(xs) < 8: xs = [x for d in DMS for x in DMS[d][k]]
     below = sum(1 for x in xs if x < v)
     return round(below / len(xs), 2)
 
@@ -212,16 +241,20 @@ for fid, (s, fade, ftd, fin, arch) in raw.items():
         flags.append(["ko_losses", f"{fin['L_KO']} of {fin['L_KO'] + fin['L_SUB'] + fin['L_DEC'] + fin['L_OTHER']} UFC losses came by KO/TKO."])
     if fin["L_SUB"] >= 2 and fin["L_SUB"] >= 0.5 * max(1, fin["L_KO"] + fin["L_SUB"] + fin["L_DEC"] + fin["L_OTHER"]):
         flags.append(["sub_losses", f"{fin['L_SUB']} of {fin['L_KO'] + fin['L_SUB'] + fin['L_DEC'] + fin['L_OTHER']} UFC losses came by submission."])
-    f1 = next((x for x in P["fade"] if x[0] == 1), None); f3 = next((x for x in P["fade"] if x[0] == 3), None)
-    if f1 and f3 and f1[2] >= 4 and f3[2] >= 4:
-        drop = (f1[1] - f3[1]) * f3[2] / (f3[2] + 6)   # shrunk toward no change
+    pn, p1, p3 = s["pair"]
+    if pn >= 4:
+        r1, r3 = p1 / pn, p3 / pn
+        P["fade_pair"] = [int(pn), round(r1, 2), round(r3, 2)]
+        drop = (r1 - r3) * pn / (pn + 6)   # within the same fights, shrunk toward no change
         if drop >= 1.0:
-            flags.append(["fade", f"Strike differential drops from {f1[1]:+.1f} a minute in round 1 to {f3[1]:+.1f} in round 3 ({f3[2]} third rounds)."])
+            flags.append(["fade", f"In the {int(pn)} fights that reached a full third round, strike differential fell from {r1:+.1f} a minute in round 1 to {r3:+.1f} in round 3."])
         if drop <= -1.0:
-            strengths.append(["late", f"Gets better as fights go on: {f1[1]:+.1f} strikes a minute in round 1, {f3[1]:+.1f} in round 3."])
-    cf = ftd["conceded"]
-    if cf[0] + cf[1] >= 3 and cf[1] >= 2 and cf[1] / (cf[0] + cf[1]) >= .67:
-        flags.append(["first_td", f"Lost {cf[1]} of {cf[0] + cf[1]} UFC fights in which the opponent landed the first takedown."])
+            strengths.append(["late", f"Gets better as fights go on: in {int(pn)} fights that went three full rounds, {r1:+.1f} strikes a minute in round 1, {r3:+.1f} in round 3."])
+    cf = ftd["conceded"]; ncf = cf[0] + cf[1]
+    # flag only when it's clearly worse than the norm: most fighters lose after conceding the first takedown
+    if ncf >= 4 and cf[1] / ncf > BASE_FTD and binom_tail(cf[1], ncf, BASE_FTD) < .1:
+        flags.append(["first_td", f"Lost {cf[1]} of {ncf} UFC fights in which the opponent landed the first takedown; a typical fighter loses about {round(100 * BASE_FTD)}% of those."])
+    P["ftd_base"] = round(BASE_FTD, 3)
     for k, v in P["arch"].items():
         if k in ("unknown", "balanced") or v[0] < 3: continue
         shr = (v[1] + 1) / (v[0] + 2)

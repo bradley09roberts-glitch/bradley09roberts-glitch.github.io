@@ -31,6 +31,7 @@ def parse(path):
         if not h2: continue
         hh = h2.group(1)
         links = re.findall(r'<a href=\s*"(/fighter/[^"]+)"\s*>(.*?)</a>', hh, re.S)
+        links = [l for l in links if re.sub(r"<[^>]+>|\s", "", l[1])]   # some headers carry an empty anchor first
         if len(links) >= 2:
             names = [re.sub(r"\s+", " ", H.unescape(re.sub(r"<[^>]+>", "", n))).strip() for _, n in links[:2]]
             sids = [u.split("/")[-1] for u, _ in links[:2]]
@@ -44,7 +45,9 @@ def parse(path):
         res_i = re.search(r"<h[34]>\s*(The )?Official Result\s*</h[34]>", rest, re.I)
         official = None
         if res_i:
-            official = text(rest[res_i.end():res_i.end() + 600]).split("\n")[0].strip()
+            seg = re.sub(r"<script.*?</script>", " ", rest[res_i.end():res_i.end() + 1500], flags=re.S)
+            seg = re.split(r"</div>|\{", seg)[0]
+            official = text(seg).split("\n")[0].strip()[:300]
             rest_r = rest[:res_i.start()]
         else:
             rest_r = rest

@@ -1,5 +1,6 @@
 """Insert the fight review into the Octagon Season Ledger page.
-Usage: assemble.py <source page.html> <review-data.json> <review.js> <review.css> <out.html>
+Usage: assemble.py <source page.html> <review-data.json> <review.js> <review.css> <out.html> [--inline]
+Without --inline the data is copied beside out.html as review-data.json, to publish as a supporting file.
 Every patch must match exactly once, or the script stops without writing."""
 import sys
 src, data_p, js_p, css_p, out_p = sys.argv[1:6]
@@ -23,10 +24,15 @@ def once(old, new, where):
 
 # 1. styles, after the page's own stylesheet
 once('</style>\n\n<a class="skip-link"', '</style>\n<style>\n' + css + '</style>\n\n<a class="skip-link"', "css")
-# 2. data block, right after the ledger's own data block
-i = page.index('<script type="application/json" id="ledger-data">')
-j = page.index('</script>', i) + len('</script>')
-page = page[:j] + '\n<script type="application/json" id="review-data">' + data + '</script>' + page[j:]
+# 2. data: by default a separate file published beside the page (review-data.json, fetched at start-up);
+#    with --inline, a block right after the ledger's own data block
+import os, shutil
+if "--inline" in sys.argv:
+    i = page.index('<script type="application/json" id="ledger-data">')
+    j = page.index('</script>', i) + len('</script>')
+    page = page[:j] + '\n<script type="application/json" id="review-data">' + data + '</script>' + page[j:]
+else:
+    shutil.copyfile(data_p, os.path.join(os.path.dirname(os.path.abspath(out_p)), "review-data.json"))
 # 3. the module, before boot
 once("// ---- 99-boot.js", js + "\n// ---- 99-boot.js", "module")
 
@@ -59,5 +65,7 @@ once('h("p.cap", "The model\'s most confident picks that lost."),',
      'h("p.cap", "The model\'s most confident picks that lost. ", h("a", { href: "#review" }, "Why each miss happened"), "."),', "perf misses link")
 once('const li = (b, v) => h("li.ulist-i", h("a", { href: "#" + b.route },',
      'const li = (b, v) => h("li.ulist-i", h("a", { href: "#" + b.route, onclick: () => { muTab = "review"; } },', "perf misses tab")
+once('[{ id: "rankings", label: "Rankings", icon: "ranks", sub: "Official UFC rankings and the model\'s Elo ladders" }, ...MORE]',
+     '[{ id: "rankings", label: "Rankings", icon: "ranks", sub: "Official UFC rankings and the model\'s Elo ladders" }, { id: "review", label: "Fight review", icon: "octagon", sub: "Why each pick won or lost, round by round" }, ...MORE]', "phone more sheet")
 open(out_p, "w", encoding="utf8").write(page)
 print("written", out_p, len(page.encode()), "bytes")

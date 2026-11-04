@@ -45,7 +45,10 @@ python3 -I make_packets.py $WORK
 python3 -I review_core.py $WORK && python3 -I review_profiles.py $WORK
 python3 -I build_review_data.py $WORK 2026-11-04
 python3 -I assemble.py ledger.html $WORK/work/review-data.json ui/review.js ui/review.css $WORK/build/ledger.html
-node shoot.js $WORK/build/ledger.html $WORK/shots review   # render check, desktop and phone
+#    -> build/ledger.html plus build/review-data.json; publish the data file beside the page (the page fetches it)
+# 7. checks: serve build/ over http (fetch doesn't work from file://), with the publish skeleton prepended as test.html
+node test_review.js http://127.0.0.1:8765/test.html
+node shoot.js http://127.0.0.1:8765/test.html $WORK/shots review   # screenshots, desktop and phone
 ```
 
 ## After the ledger is rebuilt
@@ -58,23 +61,33 @@ ledger artifact as supporting files.
 
 ## How the verdicts work
 
-- **Decisions**: unlucky (or fortunate) if it was a split or majority decision, if Sherdog's scorers had the loser
-  winning, or if the round-by-round stats favoured the loser by half a round or more and Sherdog didn't back the winner.
-  Clear if the judges had it by two rounds or more. Otherwise close.
-- **Finishes**: completed rounds are owned by Sherdog's majority score where there is one, otherwise by the stats round
-  model (60/40 or wider). The final round's lean before the finish comes from the written story; without one, the loser
-  counts as ahead in that round only if they still led its numbers (finishing flurry included) at 65% or more over 90
-  seconds or longer. Ahead at the finish is unlucky, level is close, behind is outclassed (or earned). A first-round
-  finish with no read, or anything under a minute, is a quick finish.
+- **Judges' cards**: UFCStats lists each card as loser score - winner score; `build_stats.py` re-orients them to the
+  bout's name order.
+- **Decisions**: unlucky (or fortunate) if it was a split or majority decision (unless Sherdog's scorers all had the
+  winner and the stats agree by a round or more, which is close), if Sherdog's scorers had the loser winning, or if the
+  round-by-round stats favoured the loser by half a round or more and Sherdog didn't back the winner. Clear if the
+  judges had it by two rounds or more. Otherwise close.
+- **Finishes**: who was ahead when it ended. Completed rounds are owned by Sherdog's majority score where every vote can
+  be attributed, otherwise by the stats round model (60/40 or wider); a stoppage between rounds counts that round in
+  full. Where a checked story exists its own "ahead at the finish" call decides. Without one: banked rounds plus the
+  round in progress, where the loser counts as ahead in that round only if they still led its numbers (finishing flurry
+  included) at 65% or more over 90 seconds or longer. Ahead at the finish is unlucky, level is close, behind is
+  outclassed (or earned). A first-round finish with no read, or anything under a minute, is a quick finish. An injury
+  (not a cut) ending a fight the loser wasn't clearly losing counts as luck.
 - **Stats round model**: logistic regression on the round's differences in significant strikes, knockdowns, takedowns,
   control minutes, submission attempts, other strikes and reversals, fitted on about 2,400 Sherdog-scored rounds from
   2024 to 2026; about 83% cross-validated agreement with Sherdog's majority.
-- **Weak spots**: flagged when a shrunk rate is in the worst fifth of the fighter's division, or a pattern repeats
-  (most losses by KO, losing most fights after conceding the first takedown, a clear round 1 to round 3 drop, a losing
-  record against one opponent style with four or more fights).
+- **Weak spots**: flagged when a shrunk rate is in the worst fifth of the fighter's division (peers ranked on the same
+  shrunk scale), or a pattern repeats: most losses by KO; losing clearly more often than the norm after conceding the
+  first takedown (fighters lose about 62% of those; one-sided binomial test at 10%); a round 1 to round 3 drop measured
+  within the same fights; a losing record against one opponent style over four fights or more.
 
 ## What the checks found
 
+- An independent audit (three reviewers, each finding checked by a skeptic) found and fixed: reversed judges' cards on
+  58% of decisions, story-blind finish verdicts, between-round stoppages, unattributed Sherdog votes, peer ranking on
+  the wrong scale, an unbaselined first-takedown flag, a fade measure biased by early finishes, missing event dates,
+  and page bugs (reduced-motion blanking, search focus, phone navigation).
 - No style blind spot: against wrestlers, submission hunters, power and volume strikers, the model's picks won at least
   as often as it said, in line with its slight overall caution.
 - A walk-forward test of takedown mismatch (a fighter who concedes takedowns facing one who lands them, both measured on
