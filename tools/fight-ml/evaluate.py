@@ -12,6 +12,7 @@ import csv, hashlib, json, os, sys
 import numpy as np
 S = sys.argv[1]; MLD = os.environ.get("ML_DIR", f"{S}/ml"); TAGS = sys.argv[2:] or ["all"]
 MARGIN = 0.0457
+WINDOW, EXTREME, N_BOOT, DIV_MIN = 400, 0.02, 5000, 60      # rolling window, near-certain cut-off, bootstrap draws, smallest division shown
 def sha(fn): return hashlib.sha256(open(fn, "rb").read()).hexdigest()[:16]
 M = json.load(open(f"{MLD}/features_meta.json")); meta = M["meta"]
 assert not M.get("firewall"), "this features.npz is a firewalled development copy"
@@ -29,7 +30,7 @@ def lo(p): p = np.clip(p, 1e-6, 1 - 1e-6); return np.log(p / (1 - p))
 def sig(z): return 1 / (1 + np.exp(-z))
 def lls(p, y): p = np.clip(p, 1e-12, 1 - 1e-12); return -(y * np.log(p) + (1 - y) * np.log(1 - p))
 def acc(p, y): return float(np.mean(np.where(p == .5, .5, (p > .5) == (y == 1))))
-def gate(pm, pc, y, n_boot=5000, seed=0):
+def gate(pm, pc, y, n_boot=N_BOOT, seed=0):
     gap = lls(pc, y) - lls(pm, y)                      # > 0 = model better
     boots = np.random.default_rng(seed).choice(gap, (n_boot, len(gap))).mean(1)
     lo_, hi_ = np.percentile(boots, [2.5, 97.5])
@@ -106,7 +107,7 @@ for nm in [k for k in P if not k.startswith("v4")]:
 CAL = list(P) + ["close (market)"]
 for nm in CAL:
     p = mk if nm == "close (market)" else P[nm]
-    ok = ~np.isnan(p); pp, yy = p[ok], y[ok]
+    ok = priced & ~np.isnan(p); pp, yy = p[ok], y[ok]              # priced bouts only, so every series is on the same bouts
     fav = np.maximum(pp, 1 - pp); won = np.where(pp >= .5, yy, 1 - yy)
     rows = []
     for a, b_ in ((.5, .55), (.55, .6), (.6, .65), (.65, .7), (.7, .75), (.75, .8), (.8, .9), (.9, 1.01)):
@@ -118,7 +119,7 @@ for nm in [k for k in ("gbm", "online", "logit", "blend") if k in P] + ["v4 (led
     seg = {}
     for dv in sorted(set(divs)):
         s = (divs == dv) & priced & ~np.isnan(P[nm])
-        if s.sum() >= 60:
+        if s.sum() >= DIV_MIN:
             seg[dv] = {"n": int(s.sum()), "acc": round(acc(P[nm][s], y[s]), 3), "ll": round(float(lls(P[nm][s], y[s]).mean()), 4),
                        "close_acc": round(acc(mk[s], y[s]), 3), "close_ll": round(float(lls(mk[s], y[s]).mean()), 4)}
     out["segments"][nm] = seg
@@ -129,9 +130,9 @@ for nm, p in preds.items():
     ok = lab & ~np.isnan(p)
     hit = np.where(p[ok] == .5, .5, (p[ok] > .5) == (Y[ok] == 1)).astype(float)
     dd = dates_all[ok]; yy = yrs_all[ok]
-    roll = np.convolve(hit, np.ones(400) / 400, mode="valid")
+    roll = np.convolve(hit, np.ones(WINDOW) / WINDOW, mode="valid")
     step = max(1, len(roll) // 300)
-    out["curves"][nm] = {"rolling400": [[dd[i + 399], round(float(roll[i]), 4)] for i in range(0, len(roll), step)],
+    out["curves"][nm] = {"rolling400": [[dd[i + WINDOW - 1], round(float(roll[i]), 4)] for i in range(0, len(roll), step)],
                          "yearly": {yv: {"n": int((yy == yv).sum()), "acc": round(float(hit[yy == yv].mean()), 4),
                                          "ll": round(float(lls(p[ok][yy == yv], Y[ok][yy == yv]).mean()), 4)}
                                     for yv in sorted(set(yy)) if (yy == yv).sum() >= 50}}
@@ -148,8 +149,9 @@ out["rl"] = {
     "own_hit_2019_26": round(float(own_hit[dl >= "2019-01-01"].mean()), 4),
     "own_hit_2014_18": round(float(own_hit[(dl >= "2014-01-01") & (dl < "2019-01-01")].mean()), 4),
     "cum_reward": [[dl[i], round(float(cum_reward[i]), 1)] for i in range(0, len(cum_reward), max(1, len(cum_reward) // 300))] + [[dl[-1], round(float(cum_reward[-1]), 1)]],
-    "rolling400_reward": [[dl[i], round(float(np.mean(rw[lab][max(0, i - 399):i + 1])), 4)] for i in range(399, len(dl), max(1, len(dl) // 300))],
-    "share_extreme_probs_2019_26": round(float(np.mean((preds["rl"][lab & (dates_all >= "2019-01-01")] < .02) | (preds["rl"][lab & (dates_all >= "2019-01-01")] > .98))), 4) if "rl" in preds else None,
+    "rolling400_reward": [[dl[i], round(float(np.mean(rw[lab][max(0, i - WINDOW + 1):i + 1])), 4)] for i in range(WINDOW - 1, len(dl), max(1, len(dl) // 300))],
+    # the same agent as the reward: the exploring policy's own chances (rl, averaged over its seeds)
+    "share_extreme_probs_2019_26": round(float(np.mean((preds["rl"][lab & (dates_all >= "2019-01-01")] < EXTREME) | (preds["rl"][lab & (dates_all >= "2019-01-01")] > 1 - EXTREME))), 4) if "rl" in preds else None,
 }
 
 # regression check for the hindsight leak the audit found: in fights where exactly one fighter's physicals were filled in,
@@ -169,6 +171,9 @@ if IMP is not None:
                 rec[f"{nm}_n"] = int((~np.isnan(q)).sum())
         out["fill_in_check"][win] = rec
 
+LJ = json.load(open(f"{MLD}/learn_{TAGS[0]}.json"))["res"]
+out["method"] = {"rolling_window": WINDOW, "extreme_lo": EXTREME, "extreme_hi": 1 - EXTREME, "n_boot": N_BOOT, "ci": 0.95, "div_min": DIV_MIN,
+                 "rl_seeds": LJ["rl"]["seeds"], "close_margin": MARGIN}
 json.dump(out, open(f"{MLD}/eval.json", "w"), indent=1)
 with open(f"{MLD}/predictions_all.csv", "w", newline="") as fh:
     w = csv.writer(fh); w.writerow(["date", "fight_id", "fighter_a", "fighter_b", "a_won"] + list(preds))

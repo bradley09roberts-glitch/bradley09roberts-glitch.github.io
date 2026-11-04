@@ -43,7 +43,7 @@ idx_by_day = defaultdict(list)
 for i, d in enumerate(dates): idx_by_day[d].append(i)
 
 def sig(z): return 1 / (1 + np.exp(-np.clip(z, -30, 30)))
-def ll(p, y): p = np.clip(p, 1e-6, 1 - 1e-6); return float(-np.mean(y * np.log(p) + (1 - y) * np.log(1 - p)))
+def ll(p, y): p = np.clip(p, 1e-12, 1 - 1e-12); return float(-np.mean(y * np.log(p) + (1 - y) * np.log(1 - p)))   # same clip as the gate
 
 # ---------- running scale for linear learners (past rows only)
 class Scaler:

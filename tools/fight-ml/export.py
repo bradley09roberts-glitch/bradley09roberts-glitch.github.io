@@ -1,14 +1,14 @@
 """Turn a finished run (features, predictions, eval.json) into the report's data files.
 
-Usage: export.py <scratch> <run_dir> <out_dir> [dev_dir ...]   ->  out_dir/*.csv
-Every number on the report page comes from one of these files.
+Usage: export.py <scratch> <run_dir> <out_dir>   ->  out_dir/*.csv
+With report_tables.py (improvements.csv, checklist.csv) these are every data file the report page reads.
 """
-import csv, json, os, sys
+import csv, json, os, shutil, sys
 import numpy as np
 S, RUN, OUT = sys.argv[1], sys.argv[2], sys.argv[3]
 os.makedirs(OUT, exist_ok=True)
 E = json.load(open(f"{RUN}/eval.json"))
-LABEL = {"elo": "Elo only", "online": "Online learner", "rl": "RL agent (5 seeds)", "rl_greedy": "RL agent", "gbm": "Boosted trees", "logit": "Yearly logistic",
+LABEL = {"elo": "Elo only", "online": "Online learner", "rl": "RL agent", "rl_greedy": "RL agent, no exploration", "gbm": "Boosted trees", "logit": "Yearly logistic",
          "blend": "ML blend", "v4 (ledger model)": "v4 (ledger)", "close (market)": "Closing line"}
 def w(name, cols, rows):
     with open(f"{OUT}/{name}.csv", "w", newline="") as fh:
@@ -53,7 +53,7 @@ w("rl_summary", ["measure", "value"], [
     {"measure": "fights_rewarded", "value": int((np.load(f"{RUN}/features.npz")["Y"] >= 0).sum())}])
 
 rows = []
-for m in ("blend", "online", "gbm", "rl_greedy", "v4 (ledger model)", "close (market)"):
+for m in ("blend", "online", "gbm", "rl", "v4 (ledger model)", "close (market)"):
     for b in E["calibration"][m]:
         rows.append({"model": LABEL[m], "bin": f"{int(b['lo'] * 100)}-{int(b['hi'] * 100)}%", "n": b["n"], "said": b["said"], "won": b["won"]})
 w("calibration", ["model", "bin", "n", "said", "won"], rows)
@@ -81,7 +81,7 @@ for tag, lab in AB:
     fn = f"{RUN}/learn_{tag}.json"
     if not os.path.exists(fn): continue
     r = json.load(open(fn))["res"]
-    for m in ("blend", "online", "logit", "gbm", "rl_greedy"):
+    for m in ("blend", "online", "logit", "gbm", "rl"):
         rows.append({"variant": lab, "model": LABEL[m], "val_n": r[m + "_val"]["n"], "val_acc": r[m + "_val"]["acc"], "val_ll": r[m + "_val"]["ll"],
                      "test_n": r[m + "_test"]["n"], "test_acc": r[m + "_test"]["acc"], "test_ll": r[m + "_test"]["ll"]})
 w("ablation", ["variant", "model", "val_n", "val_acc", "val_ll", "test_n", "test_acc", "test_ll"], rows)
@@ -91,3 +91,7 @@ for win, x in E["fill_in_check"].items():
     rows.append({"window": win.replace("_", "-").replace("pre-2014", "before 2014"), "n": x["n"], "won": x["filled_in_fighter_won"],
                  "model_said": x.get("blend_said", "")})
 w("fill_in", ["window", "n", "won", "model_said"], rows)
+
+M = E["method"]
+w("method", ["measure", "value"], [{"measure": k, "value": v} for k, v in M.items()])
+shutil.copyfile(f"{RUN}/predictions_all.csv", f"{OUT}/predictions.csv"); print("predictions copied")

@@ -6,8 +6,9 @@ that fight's row. Odds never enter.
 
 Row = fighter A (UFCStats names[0]) minus fighter B (names[1]); every feature is antisymmetric, so the models (which
 have no intercept) give P(A) = 1 - P(B) and can't learn the UFCStats habit of listing winners first.
-Missing values stay NaN (blank), never zero. Rates are shrunk toward population means of past fights; a debutant gets
-those priors themselves, so a fight against a debutant still carries the other fighter's record.
+Rates are shrunk toward population means of past fights; a debutant's UFCStats rates start at those priors, so a fight
+against a debutant still carries the other fighter's record. Layoff, Sherdog and story features stay blank (NaN) when
+there is no data, never zero. Missing physicals are filled with running typical values from fighters already seen.
 Ratings group: Glicko-1 (rating plus RD that grows with time out) and an Elo, both scored by margin of victory
 (finish = full win, decision by the judges' point margin, blended with the stats round share); gl_p is the Glicko win logit.
 
@@ -41,34 +42,66 @@ def inches(s):
     m = re.match(r"\s*(\d+)'\s*(\d+)", s or ""); return int(m.group(1)) * 12 + int(m.group(2)) if m else None
 def reach(s):
     m = re.match(r"\s*(\d+(?:\.\d+)?)\"", s or ""); return float(m.group(1)) if m else None
-PHYS = {}
-for r in tott:
-    n = r["FIGHTER"].strip()
-    if n in DUPS: continue
+DIVS = [("light heavyweight", 205), ("strawweight", 115), ("flyweight", 125), ("bantamweight", 135), ("featherweight", 145),
+        ("lightweight", 155), ("welterweight", 170), ("middleweight", 185), ("heavyweight", 265)]
+def div_lbs(wc):
+    s_ = (wc or "").lower()
+    for nm, lb in DIVS:
+        if nm in s_: return lb
+    return None
+def lbs(s_):
+    m = re.match(r"\s*(\d+)", s_ or ""); return int(m.group(1)) if m else None
+def phys_of(r):
     try: dob = datetime.strptime(r["DOB"].strip(), "%b %d, %Y").date()
     except Exception: dob = None
-    PHYS[n] = {"dob": dob, "h": inches(r["HEIGHT"]), "r": reach(r["REACH"]), "st": (r["STANCE"] or "").strip().lower()}
-def key_of(fid, name): return name + ("|" + U[fid].get("wc", "") if name in DUPS else "")
+    return {"dob": dob, "h": inches(r["HEIGHT"]), "r": reach(r["REACH"]), "st": (r["STANCE"] or "").strip().lower()}
+PHYS, TOTT_ROWS = {}, defaultdict(list)
+for r in tott:
+    n = r["FIGHTER"].strip()
+    if n in DUPS: TOTT_ROWS[n].append((lbs(r["WEIGHT"]), phys_of(r)))
+    else: PHYS[n] = phys_of(r)
+# Two UFCStats fighters share each name in DUPS. Each bout goes to the namesake whose listed weight is nearest the bout's
+# division; a fighter who moves up or down one division (within 15 lb, within 3 years of their last bout) keeps their
+# identity. Uses only the bout's own division and earlier assignments.
+KEY, _last = {}, {}
+for _fid, _f in sorted(U.items(), key=lambda kv: kv[1].get("d") or ""):
+    for _nm in _f.get("names", []):
+        if _nm not in DUPS: continue
+        _rows, _lb, _d = TOTT_ROWS[_nm], div_lbs(_f.get("wc")), D.fromisoformat(_f["d"]) if _f.get("d") else None
+        _prev = _last.get(_nm)
+        dist = lambda j: abs(_rows[j][0] - (_lb or 170)) if _rows[j][0] else 999
+        if _prev and (_lb is None or (_rows[_prev[0]][0] and abs(_rows[_prev[0]][0] - _lb) <= 15 and _d and (_d - _prev[1]).days <= 3 * 365)):
+            j = _prev[0]
+        else:
+            j = min(range(len(_rows)), key=dist)
+        KEY[(_fid, _nm)] = f"{_nm}|{j}"; PHYS[f"{_nm}|{j}"] = _rows[j][1]
+        if _d: _last[_nm] = (j, _d)
+def key_of(fid, name): return KEY.get((fid, name), name)
 
 # ---------- missing physicals are filled with typical values, never left blank or flagged.
 # UFCStats (scraped in 2026) mostly filled in reach, height, stance and (before 2014) DOB for fighters who stayed on the
 # roster, so a blank marks a fighter who was later cut: information from after the fight. A filled-in value looks like a
 # real one, so the learners can't tell which fighters had blanks. All constants are static and use no results.
-_hw = defaultdict(list); _seen = set()
-for _fid, _f in U.items():
-    for _nm in _f.get("names", []):
-        _P = PHYS.get(_nm)
-        if _P and _P.get("h") and (_nm, _f.get("wc")) not in _seen:
-            _seen.add((_nm, _f.get("wc"))); _hw[_f.get("wc")].append(_P["h"])
-H_WC = {wc: round(float(np.mean(v))) for wc, v in _hw.items() if len(v) >= 10}
-H_ALL = round(float(np.mean([P["h"] for P in PHYS.values() if P.get("h")])))
-APE = float(np.mean([P["r"] - P["h"] for P in PHYS.values() if P.get("h") and P.get("r")]))
-_first = {}
-for _fid, _f in U.items():
-    for _nm in _f.get("names", []):
-        if _f.get("d"): _first[_nm] = min(_first.get(_nm, "9999"), _f["d"])
-AGE_DEBUT = float(np.mean([(D.fromisoformat(_first[n]) - P["dob"]).days / 365.25 for n, P in PHYS.items() if P.get("dob") and n in _first]))
-print(f"physical fill-ins: height by weight class {H_WC}, ape index {APE:+.2f} in, age at UFC debut {AGE_DEBUT:.1f}", flush=True)
+class Running:
+    """Mean of values seen so far, starting from a weak prior (FILL_PRIOR pseudo-observations at a fixed typical value)."""
+    def __init__(self, prior): self.s = prior * FILL_PRIOR; self.c = FILL_PRIOR
+    def add(self, v): self.s += v; self.c += 1
+    def mean(self): return self.s / self.c
+FILL_PRIOR = 5
+FILL_H = defaultdict(lambda: Running(70.0))      # height by division (lb), from fighters already seen in it
+FILL_HALL = Running(70.0); FILL_APE = Running(1.5); FILL_AGE = Running(28.0)
+SEEN_PHYS, SEEN_DIV = set(), set()
+def fill_update(key, wc, day):
+    """After a card: add this fighter's real physicals to the running fill-in values (once each)."""
+    P = PHYS.get(key, {})
+    lb = div_lbs(wc)
+    if P.get("h") and (key, lb) not in SEEN_DIV:
+        SEEN_DIV.add((key, lb)); FILL_H[lb].add(P["h"])
+    if key in SEEN_PHYS: return
+    SEEN_PHYS.add(key)
+    if P.get("h"): FILL_HALL.add(P["h"])
+    if P.get("h") and P.get("r"): FILL_APE.add(P["r"] - P["h"])
+    if P.get("dob"): FILL_AGE.add((day - P["dob"]).days / 365.25)   # age at this, their first UFC fight
 
 def p_round(rp, ro):
     x = [rp[SIGL] - ro[SIGL], rp[KD] - ro[KD], rp[TDL] - ro[TDL], (rp[CTRL] - ro[CTRL]) / 60.0, rp[SUB] - ro[SUB],
@@ -117,6 +150,8 @@ def mov_score(res0, meth, judges, nrd, pr):
     if pr: s = (1 - MOV_BETA) * s + MOV_BETA * (sum(pr) / len(pr))
     return min(max(s, 0.0), 1.0)
 
+DEBUT_PRIORS = os.environ.get("DEBUT_PRIORS", "1") == "1"   # 0 = original: a debutant's record and stats stay blank
+RATINGS = os.environ.get("RATINGS", "1") == "1"             # 0 = original: no Glicko / margin-of-victory group
 SHRINK = float(os.environ.get("SHRINK", "4"))   # multiplies every prior weight below; tuned on 2014-2018 (validation) only
 def rate(num, den, prior_mean, prior_w):
     prior_w *= SHRINK
@@ -126,7 +161,7 @@ def fighter_feats(f, day, name, wc=None):
     a = f.a; n = a["n"]
     gm = lambda k, d: (G[k] / G[d]) if G[d] else None
     mins, m15 = a["secs"] / 60, a["secs"] / 900
-    P = PHYS.get(name.split("|")[0], {})
+    P = PHYS.get(name, {})
     pm = {k: gm(*v) for k, v in {"slpm": ("sigL", "secs60"), "sapm": ("osigL", "secs60"), "acc": ("sigL", "sigT"), "def": ("osigL", "osigT"),
           "td15": ("tdL", "secs900"), "tdacc": ("tdL", "tdT"), "tdsucc": ("otdL", "otdT"), "ctrl": ("ctrl", "secs"),
           "kd15": ("kd", "secs900"), "sub15": ("sub", "secs900"), "body": ("obody", "secs60"), "leg": ("oleg", "secs60"),
@@ -162,6 +197,8 @@ def fighter_feats(f, day, name, wc=None):
     x["opp_elo"] = a["opp_elo"] / n if n else 1500.0
     x["streak"] = float(sum(1 if r == "W" else -1 for r in f.res[-3:]))
     x["layoff"] = math.log1p((day - f.last).days) if f.last else float("nan")
+    if n == 0 and not DEBUT_PRIORS:
+        for k_ in REC_STATS: x.pop(k_, None)
     # Sherdog: round scores and notes from earlier fights
     if a["sd_f"] > 0:
         x["sd_share"] = rate(a["sd_won"], a["sd_won"] + a["sd_lost"], .5, 2)
@@ -175,12 +212,14 @@ def fighter_feats(f, day, name, wc=None):
     x["cov_st"] = 1.0 if a["st_n"] > 0 else 0.0
     imp = 0
     if P.get("dob"): x["age"] = (day - P["dob"]).days / 365.25
-    else: x["age"] = AGE_DEBUT + (((day - f.first).days / 365.25) if f.first else 0.0); imp = 1
+    else: x["age"] = FILL_AGE.mean() + (((day - f.first).days / 365.25) if f.first else 0.0); imp = 1
     h = P.get("h")
-    if not h: h = H_WC.get(wc, H_ALL); imp = 1
+    if not h:
+        lb = div_lbs(wc); fh = FILL_H[lb] if (lb in FILL_H and FILL_H[lb].c - FILL_PRIOR >= 10) else FILL_HALL
+        h = round(fh.mean()); imp = 1
     x["height"] = float(h)
     if P.get("r"): x["reach"] = float(P["r"])
-    else: x["reach"] = float(round(h + APE)); imp = 1
+    else: x["reach"] = float(round(h + FILL_APE.mean())); imp = 1
     st = P.get("st") or ""
     if not st: st = "orthodox"; imp = 1
     x["southpaw"] = 1.0 if st == "southpaw" else 0.0; x["switch"] = 1.0 if st == "switch" else 0.0
@@ -198,7 +237,9 @@ GROUPS = {
     "stories": ["st_td", "st_hurt", "st_one", "st_luckL", "cov_st"],
     "style": ["x_grap", "x_ctrl", "x_strike", "x_power", "x_sub", "x_hurt"],
 }
+if not RATINGS: del GROUPS["ratings"]
 NAMES = [k for g in GROUPS.values() for k in g]
+REC_STATS = ["winrate", "fin_w", "ko_l", "sub_l", "luck_adj", "opp_elo", "streak", "layoff", "d_win"] + GROUPS["stats"]
 
 def row(xa, xb):
     v = {}
@@ -248,7 +289,7 @@ for day_s in sorted(by_day):
         R0, R1 = f["rounds"].get(n0, []), f["rounds"].get(n1, [])
         nr = max(len(R0), len(R1))
         rows = [((R0[i] if i < len(R0) else ZERO), (R1[i] if i < len(R1) else ZERO)) for i in range(nr)]
-        secs = f.get("secs") or 0
+        secs = (f.get("secs") or 0) if nr > 0 else 0      # no round stats (some 1990s fights): no minutes either
         meth = f.get("method", "")
         finish = not meth.startswith("Decision")
         pr = [p_round(a, b) for a, b in rows]
@@ -323,6 +364,7 @@ for day_s in sorted(by_day):
             elif st:
                 a["st_n"] += 1
             me.res.append(res)
+            fill_update(k, f.get("wc"), day)
             if me.first is None: me.first = day
             me.last = day
         # population totals
@@ -343,7 +385,8 @@ os.makedirs(MLD, exist_ok=True)
 np.savez_compressed(f"{MLD}/features.npz", X=X, Y=Y, IMP=np.array(IMP))
 json.dump({"names": NAMES, "groups": GROUPS, "meta": META, "elo_k": ELO_K,
            "ratings": {"gl_rd0": GL_RD0, "gl_c": GL_C, "mov_gam": MOV_GAM, "mov_beta": MOV_BETA, "em_k": EM_K},
-           "shrink": SHRINK, "firewall": os.environ.get("FIREWALL") == "1"}, open(f"{MLD}/features_meta.json", "w"))
+           "shrink": SHRINK, "debut_priors": DEBUT_PRIORS, "ratings_group": RATINGS, "firewall": os.environ.get("FIREWALL") == "1",
+           "fill_ins_final": {"age_at_debut": round(FILL_AGE.mean(), 2), "ape": round(FILL_APE.mean(), 2), "height_all": round(FILL_HALL.mean(), 1)}}, open(f"{MLD}/features_meta.json", "w"))
 lab = Y >= 0
 print("rows", len(Y), "labelled", int(lab.sum()), "features", X.shape[1], "from", META[0][1], "to", META[-1][1])
 print("share of labelled rows where names[0] won:", round(float(Y[lab].mean()), 3), "(the models can't use this: no intercept, antisymmetric features)")

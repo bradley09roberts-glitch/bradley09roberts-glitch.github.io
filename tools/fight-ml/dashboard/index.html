@@ -20,7 +20,7 @@
 .ml-card h3 { font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); margin: 0 0 var(--cds-gap-xs); }
 .ml-note { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); margin: 0 0 var(--cds-gap-md); line-height: 1.45; }
 .ml-chart { position: relative; width: 100%; }
-.ml-chart.tall { min-height: 320px; } .ml-chart.mid { min-height: 260px; } .ml-chart.short { min-height: 230px; }
+.ml-chart.tall { min-height: 320px; } .ml-chart.mid { min-height: 260px; } .ml-chart.short { min-height: 230px; } .ml-chart.gatebox { min-height: 280px; }
 .ml-chart svg { display: block; overflow: visible; }
 .ml-chart text { font-family: var(--font-anthropic-sans); font-size: var(--cds-font-size-caption); fill: var(--color-fg-muted); }
 .ml-chart .ml-lbl { fill: var(--color-fg); }
@@ -82,9 +82,9 @@
 
   <section class="ml-sec" id="learning">
     <h2>How accurate it got, fight by fight since 1994</h2>
-    <p>Each model predicts a card, then sees the results and learns from them before the next card. Settings were chosen on 2014–18 (shaded); nothing was tuned on 2019 onward, so the line from 2019 is a true test.</p>
+    <p>Each model predicts a card, then sees the results and learns from them before the next card. Every setting was chosen on 2014–18 (shaded) with all 2019+ results hidden from the code. An earlier version, before the leakage audit, had been scored on 2019+; the checks below say what that changed.</p>
     <div class="ml-card">
-      <h3>Winners picked, last 400 UFC fights</h3>
+      <h3>Winners picked, last <b class="dash-skeleton" data-draw="val" data-fmt="int" data-source="method" data-field="value" data-where="measure=rolling_window">—</b> UFC fights</h3>
       <p class="ml-note">Every UFC fight with a result, not only the ledger's bouts. Hover for values.</p>
       <ul class="ml-legend">
         <li><i class="ml-sw" data-series="0"></i>Elo only</li>
@@ -98,16 +98,16 @@
 
   <section class="ml-sec" id="reward">
     <h2>Rewarded for every right pick</h2>
-    <p>The RL agent picks a fighter, scores +1 when that fighter wins and −1 when they lose, and shifts its weights toward whatever earned reward (policy gradient). It explores by picking each side in proportion to its belief, so its own picks land a little below its best guesses.</p>
+    <p>The RL agent picks a fighter, scores +1 when that fighter wins and −1 when they lose, and shifts its weights toward whatever earned reward (policy gradient). It explores by picking each side in proportion to its belief, so its own picks land a little below its best guesses. A second agent trained the same way but always taking its top pick (no exploration) is in the gate chart and the full results.</p>
     <div class="ml-grid">
       <div class="ml-card">
         <h3>Running score</h3>
-        <p class="ml-note">Total reward over <b class="dash-skeleton" data-draw="val" data-fmt="int" data-source="rl_summary" data-field="value" data-where="measure=fights_rewarded">—</b> fights: <b class="dash-skeleton" data-draw="val" data-fmt="signed" data-source="rl_summary" data-field="value" data-where="measure=total_reward">—</b>, averaged over 5 runs.</p>
+        <p class="ml-note">Total reward over <b class="dash-skeleton" data-draw="val" data-fmt="int" data-source="rl_summary" data-field="value" data-where="measure=fights_rewarded">—</b> fights: <b class="dash-skeleton" data-draw="val" data-fmt="signed" data-source="rl_summary" data-field="value" data-where="measure=total_reward">—</b>, averaged over <b class="dash-skeleton" data-draw="val" data-fmt="int" data-source="method" data-field="value" data-where="measure=rl_seeds">—</b> runs.</p>
         <div class="ml-chart mid dash-skeleton" data-draw="reward" data-source="rl_reward"></div>
       </div>
       <div class="ml-card">
         <h3>Accuracy by year</h3>
-        <p class="ml-note">Its own exploring picks were right <b class="dash-skeleton" data-draw="val" data-fmt="pct" data-source="rl_summary" data-field="value" data-where="measure=own_hit_2019_26">—</b> of the time in 2019–26. But <b class="dash-skeleton" data-draw="val" data-fmt="pct" data-source="rl_summary" data-field="value" data-where="measure=share_extreme_probs_2019_26">—</b> of its 2019–26 chances were below 2% or above 98%: a ±1 reward teaches who to pick, not how likely they are to win.</p>
+        <p class="ml-note">Its own exploring picks were right <b class="dash-skeleton" data-draw="val" data-fmt="pct" data-source="rl_summary" data-field="value" data-where="measure=own_hit_2019_26">—</b> of the time in 2019–26. But <b class="dash-skeleton" data-draw="val" data-fmt="pct" data-source="rl_summary" data-field="value" data-where="measure=share_extreme_probs_2019_26">—</b> of its 2019–26 chances were below <b class="dash-skeleton" data-draw="val" data-fmt="pct0" data-source="method" data-field="value" data-where="measure=extreme_lo">—</b> or above <b class="dash-skeleton" data-draw="val" data-fmt="pct0" data-source="method" data-field="value" data-where="measure=extreme_hi">—</b>: a ±1 reward teaches who to pick, not how likely they are to win.</p>
         <ul class="ml-legend">
           <li><i class="ml-sw" data-series="3"></i>RL agent (best guess)</li>
           <li><i class="ml-sw" data-series="4"></i>RL agent's own picks</li>
@@ -120,7 +120,7 @@
 
   <section class="ml-sec" id="gate">
     <h2>Does it beat the closing line?</h2>
-    <p>The model gate: log loss against the de-vigged close on the same bouts, with a 95% bootstrap interval. A model clears it only if the whole interval is right of zero.</p>
+    <p>The model gate: log loss against the de-vigged close on the same bouts, with a <b class="dash-skeleton" data-draw="val" data-fmt="pct0" data-source="method" data-field="value" data-where="measure=ci">—</b> bootstrap interval (<b class="dash-skeleton" data-draw="val" data-fmt="int" data-source="method" data-field="value" data-where="measure=n_boot">—</b> draws). A model clears it only if the whole interval is right of zero.</p>
     <div class="ml-card">
       <h3>Log loss advantage over the close</h3>
       <p class="ml-note">Close's log loss minus the model's, per bout. Right of zero beats the market. A model far off the scale is drawn at the edge with its value.</p>
@@ -129,13 +129,13 @@
         <button type="button" data-set="2023-26" aria-pressed="false">2023–26 locked</button>
         <button type="button" data-set="2025-26" aria-pressed="false">2025–26 season</button>
       </div>
-      <div class="ml-chart mid dash-skeleton" data-draw="gate" data-source="gate"></div>
+      <div class="ml-chart gatebox dash-skeleton" data-draw="gate" data-source="gate"></div>
     </div>
   </section>
 
   <section class="ml-sec" id="calibration">
     <h2>Are its chances honest?</h2>
-    <p>For each band of the favourite's stated chance, how often the favourite won, on the ledger's 2019–26 bouts. On the diagonal is honest; below it is overconfident.</p>
+    <p>For each band of the favourite's stated chance, how often the favourite won, on the ledger's 2019–26 bouts with a closing price, so all four are on the same bouts. On the diagonal is honest; below it is overconfident.</p>
     <div class="ml-card">
       <h3>Stated chance against how often it happened</h3>
       <ul class="ml-legend">
@@ -150,7 +150,7 @@
 
   <section class="ml-sec" id="sources">
     <h2>What each kind of data adds</h2>
-    <p>The ML blend re-trained without each source, re-tuned on 2014–18 each time. The 2019+ columns score every UFC fight from 2019, not only the ledger's bouts.</p>
+    <p>The ML blend re-trained without each source, re-tuned on 2014–18 each time. The 2019+ columns score every UFC fight from 2019 with a result.</p>
     <div class="ml-grid">
       <div class="ml-card">
         <h3>Without each data source</h3>
@@ -230,7 +230,7 @@
     </div>
     <div class="ml-card" style="margin-top: var(--cds-gap-md)">
       <h3>By division</h3>
-      <p class="ml-note">ML blend against the close, 2019–26 ledger bouts with a closing price, divisions with 60 or more.</p>
+      <p class="ml-note">ML blend against the close, 2019–26 ledger bouts with a closing price, divisions with <b class="dash-skeleton" data-draw="val" data-fmt="int" data-source="method" data-field="value" data-where="measure=div_min">—</b> or more.</p>
       <div class="ml-tablebox">
         <table class="ml-table" data-source="divisions_blend" data-row-key="division">
           <thead><tr><th data-field="division">Division</th><th class="num" data-field="n">Bouts</th><th class="num" data-field="acc">ML picked</th><th class="num" data-field="close_acc">Close picked</th><th class="num" data-field="ll">ML log loss</th><th class="num" data-field="close_ll">Close log loss</th></tr></thead>
@@ -245,7 +245,7 @@
 <script>
 (() => {
   const F = {
-    pct: d3.format('.1%'), ll: d3.format('.4f'), int: d3.format(','),
+    pct: d3.format('.1%'), pct0: d3.format('.0%'), ll: d3.format('.4f'), int: d3.format(','),
     signed: (v) => (v > 0 ? '+' : v < 0 ? '−' : '') + d3.format(',.0f')(Math.abs(v)),
   };
   const num = (v) => (v === '' || v == null ? NaN : Number(v));
@@ -351,7 +351,7 @@
       .style('fill', 'var(--cds-chart-grid)').attr('opacity', 0.6);
     svg.append('g').attr('transform', `translate(0,${H - m.bottom})`).call(d3.axisBottom(x).ticks(Math.max(3, Math.floor((W - m.left - m.right) / 80))).tickSizeOuter(0).tickFormat(o.xFmt || null)).call(styleAxis);
     svg.append('g').attr('transform', `translate(${m.left},0)`).call(d3.axisLeft(y).tickValues(yTicks).tickFormat(o.yFmt).tickSize(-(W - m.left - m.right))).call(styleAxis).call((g) => g.select('.domain').remove());
-    (o.refs || []).forEach((r) => {
+    (o.refs || []).filter((r) => (r.y == null || (r.y >= yDom[0] && r.y <= yDom[1])) && (r.x == null || (r.x >= x.domain()[0] && r.x <= x.domain()[1]))).forEach((r) => {
       if (r.x != null) svg.append('line').attr('x1', x(r.x)).attr('x2', x(r.x)).attr('y1', m.top).attr('y2', H - m.bottom).style('stroke', 'var(--cds-chart-reference)').attr('stroke-dasharray', '4 3');
       if (r.y != null) svg.append('line').attr('x1', m.left).attr('x2', W - m.right).attr('y1', y(r.y)).attr('y2', y(r.y)).style('stroke', 'var(--cds-chart-reference)').attr('stroke-dasharray', '4 3');
       if (r.label) svg.append('text').attr('x', r.x != null ? x(r.x) + 4 : m.left + 4).attr('y', r.y != null ? y(r.y) - 4 : m.top + 10).text(r.label);
@@ -429,6 +429,7 @@
     window.ML.lineChart(el, series, {
       height: 260, xScale: d3.scaleLinear, xFmt: d3.format('d'), yFmt: d3.format('.0%'), yTip: F.pct, tipHead: (x) => String(Math.round(x)),
       band: [2013.5, 2018.5], refs: [{ y: 0.5 }],
+      yDomain: [Math.min(0.5, d3.min(series, (s) => d3.min(s.points, (p) => p.y))) - 0.01, d3.max(series, (s) => d3.max(s.points, (p) => p.y)) + 0.01],
     });
   });
 
@@ -445,7 +446,8 @@
     const d = dash.data('gate');
     if (d.status !== 'ok') return fail(el, d);
     el.replaceChildren(); el.classList.remove('dash-skeleton');
-    const order = ['ML blend', 'Boosted trees', 'Yearly logistic', 'Online learner', 'Elo only', 'RL agent', 'RL agent (5 seeds)', 'v4 (ledger)'];
+    const order = ['ML blend', 'Boosted trees', 'Yearly logistic', 'Online learner', 'Elo only', 'RL agent', 'RL agent, no exploration', 'v4 (ledger)'];
+    const CI = { 'Elo only': 0, 'Online learner': 1, 'ML blend': 2, 'RL agent': 3, 'v4 (ledger)': 5 };   // same colors as the other charts' legends
     const rows = d.data.filter((r) => r.set === gateSet).sort((a, b) => order.indexOf(a.model) - order.indexOf(b.model));
     const W = Math.max(280, el.clientWidth), rowH = 30, H = rows.length * rowH + 40;
     const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('height', H);
@@ -461,7 +463,7 @@
     rows.forEach((r) => {
       const cy = y(r.model) + y.bandwidth() / 2, gap = num(r.gap), a = num(r.ci_lo), b = num(r.ci_hi);
       const clip = (v) => Math.max(lo, Math.min(hi, v));
-      const color = r.model === 'v4 (ledger)' ? dash.colors[5] : r.model.startsWith('RL') ? dash.colors[3] : dash.colors[2];
+      const color = r.model in CI ? dash.colors[CI[r.model]] : 'var(--cds-chart-muted)';
       svg.append('text').attr('class', 'ml-lbl').attr('x', m.left - 8).attr('y', cy + 4).attr('text-anchor', 'end').text(r.model);
       g.append('line').attr('x1', x(clip(a))).attr('x2', x(clip(b))).attr('y1', cy).attr('y2', cy).style('stroke', color).attr('stroke-width', 2).attr('stroke-linecap', 'round');
       const off = gap < lo;
