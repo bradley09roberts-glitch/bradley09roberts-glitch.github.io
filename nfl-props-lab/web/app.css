@@ -865,3 +865,19 @@ details.small > summary { padding-block: 7px; margin-block: -7px; }
 .pcodds input { background: linear-gradient(var(--card), var(--card)), var(--base); }
 .pcodds input::placeholder { color: var(--muted-2); opacity: 1; }
 .pcev { display: block; font-size: 0.84rem; color: var(--ink); }
+
+/* two-stat combo markets (P+R, P+A, R+A): never tested against prices. A quiet "untested" tag
+   beside the market name and one plain note, on the card ground so it keeps the app's contrast */
+.utag { display: inline-block; margin-left: 4px; padding: 0 6px; border: 1px dashed currentColor; border-radius: 999px; font-family: var(--f-body);
+  font-size: 0.62rem; font-weight: 800; letter-spacing: 0.02em; line-height: 1.5; text-transform: none; color: var(--ink-2); white-space: nowrap; vertical-align: 1px; }
+h2 .utag { font-size: 0.7rem; vertical-align: 3px; }
+.utest { margin: 8px 0 0; padding: 6px 10px; border-radius: 10px; border: 1px dashed var(--rule-2); font-size: 0.78rem; line-height: 1.45; color: var(--ink-2);
+  background: linear-gradient(var(--card), var(--card)), var(--base); }
+.pckey { margin: 0; color: var(--ink-2); }
+.glog th.on { color: var(--acc-text); box-shadow: inset 0 -2px 0 var(--acc); }
+.glog td.on { font-weight: 750; }
+/* more than five market tabs (the combos): one strip where they fit, two rows on phones (no strip
+   scrolled sideways). Only those strips: the five-market strips and the small toggles keep their look */
+.mktabs.mk4 { flex-wrap: wrap; }
+@media (max-width: 560px) { .mktabs.mk4 { border-radius: 20px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); width: 100%; }
+  .mktabs.mk4 button { padding: 7px 12px; } }

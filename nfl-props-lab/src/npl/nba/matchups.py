@@ -86,8 +86,10 @@ def team_game_rows(seasons=APP_SEASONS) -> dict:
     return out
 
 
+# pr, pa, ra (points + rebounds, points + assists, rebounds + assists) are summed like pra; the
+# team-game rows (BOX_COLS) carry pts, reb and ast, so the app adds those up for the combos
 BOX_STATS = ("pts", "reb", "oreb", "dreb", "ast", "pra", "fg3m", "fg3a", "fg2m", "fg2a", "fta", "stl",
-             "blk", "tov", "minutes")
+             "blk", "tov", "minutes", "pr", "pa", "ra")
 
 
 def reliability(seasons=(2023, 2024, 2025, 2026)) -> dict:
@@ -143,6 +145,7 @@ def reliability(seasons=(2023, 2024, 2025, 2026)) -> dict:
     pg = pg[pg.season.isin(seasons) & (pg.participation == "played")].copy()
     pg["fg2m"], pg["fg2a"] = pg.fgm - pg.fg3m, pg.fga - pg.fg3a
     pg["pra"] = pg.pts + pg.reb + pg.ast
+    pg["pr"], pg["pa"], pg["ra"] = pg.pts + pg.reb, pg.pts + pg.ast, pg.reb + pg.ast
     pg = pg.merge(tg[["game_id", "team", "half"]].rename(columns={"team": "opp"}),
                   on=["game_id", "opp"])
     ngames = tg.groupby(["season", "team", "half"]).size()
@@ -155,7 +158,7 @@ def reliability(seasons=(2023, 2024, 2025, 2026)) -> dict:
 
 
 RELIABILITY_FILE = shots.SHOTS_LAKE / "def_reliability.json"
-RELIABILITY_VERSION = 2  # 2: adds box-score stats by opposing position
+RELIABILITY_VERSION = 3  # 2: adds box-score stats by opposing position; 3: adds pr, pa, ra
 
 
 def cached_reliability() -> dict:

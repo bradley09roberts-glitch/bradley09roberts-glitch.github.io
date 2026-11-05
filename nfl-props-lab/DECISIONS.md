@@ -694,3 +694,75 @@ on the game total, not the prop; the under needed 54.1% at -118 against a margin
 - What would change this: a factor rule making money at the best regulated price and improving
   on the market's own forecast on clean 2026-27 data (the next untouched holdout), first by
   closing-line value, before anything is labelled more than context.
+
+## D-048 (5 Nov 2026) NBA combo markets P+R, P+A and R+A added; untested against prices; opt-in pull
+The user asked for three two-stat combo markets beside points, rebounds, assists, threes and PRA:
+points + rebounds (`pr`, "Pts + Reb", P+R), points + assists (`pa`, "Pts + Ast", P+A) and
+rebounds + assists (`ra`, "Reb + Ast", R+A). **We hold no past bookmaker lines for any of them,
+so nothing about them has been tested against prices.** Every place a combo chance or lean is
+shown says so; nothing is called a pick or a signal.
+- **How they are built.** Exactly like PRA, from the same per-minute points, rebounds and
+  assists forecasts: the parts' count distributions are convolved at each minutes value and mixed
+  over the minutes distribution (P+R reuses PRA's first convolution, points with rebounds). The
+  parts are independent once minutes are known (n13 below measures what that leaves out).
+  Opponent factor and rank for a combo use one stat (npl.nba.model.OPP_STAT: points for P+R and
+  P+A, rebounds for R+A). Baselines A and C borrow PRA's untuned dispersion (COMBO_DISP_A = 8.0).
+  The simple baseline S gained rest factors for the three combos; its five stored entries in
+  reports/nba/model/simple_rest.json are unchanged byte for byte. The model version string stays
+  **nba-0.3**: the five original markets' numbers are bit-identical to the pre-combo code
+  (tests/test_nba_combos.py::test_original_markets_are_bit_identical_to_the_pre_combo_code,
+  against tests/fixtures/nba_pmf_reference.npz made from the committed code; also checked on the
+  real 4 Nov frame, 533 players, and on all 32,526 n13 backtest rows). A known approximation the
+  combos inherit from PRA, not new: summed markets are mixed on every other minute at mins + 0.5,
+  so a combo's mean can sit up to about 4% above the sum of its parts' means for players with
+  about 2 expected minutes (median gap 0.002 or less on the 5 Nov frame). Putting the summed
+  markets on the full grid would move PRA too, so it would need a new version string.
+- **Proxy calibration (n13): not adopted.** Proxy line = the sum of the parts' main lines (the n10
+  consensus calibration_v4 was fitted on), tested first on PRA against its real lines with a
+  criterion fixed before the run: (1) slope within 0.10 of the real-line fit, (2) cost on real
+  2025-26 PRA lines at most 0.001 nats per prop, (3) the upper end of its 95% interval below
+  0.002. Real PRA line minus proxy: mean +0.43 (2024-25, 14,141 player-games), equal within 0.5
+  in 49%, within 1.0 in 97%. Fitted on proxy v real PRA lines (2024-25): b 0.038 v 0.002, a +0.073
+  v -0.015. On 3,563 real 2025-26 PRA lines the proxy fit cost +0.0009 [-0.0006, +0.0024] nats:
+  (1) and (2) pass, (3) fails. The proxy sits about 0.4 low, so its level would put the over
+  about 2 points too high at a real line; the real-line fit itself only ties a coin flip on PRA
+  (-0.00004 [-0.0003, +0.0002]). So calibration.json has **no calibration_combo_proxy block**,
+  every combo card has p_cal_market null and p_cal_basis null, and the app shows "No tested model
+  view for this market (no past lines)" at a US line. Combo fits on proxy lines were run for
+  description only: their slopes swing with the arbitrary rounding of the whole-number proxy (P+R
+  b 0.094 v -0.008, R+A 0.397 v 0.174), and raw combo chances scored worse than a coin flip at
+  those lines (log loss 0.70-0.72 v 0.693). Dispersion (2025-26 test): variance ratio P+R 1.10
+  [1.01, 1.24], P+A 1.08 [0.98, 1.22], R+A 1.06 [0.98, 1.20], slightly too narrow; rebounds
+  correlate with points and assists beyond shared minutes (about 4-5% of P+R's and R+A's
+  variance), points and assists do not. No model change was made. npl.nba.calib refuses to apply
+  any other market's coefficients to a combo (calibrated() and anchored() raise KeyError);
+  combo_calibrated() reads only a combo's own proxy block and never falls back.
+- **Odds: opt-in only.** The provider keys (checked on its betting-markets page, 4 Nov 2026, no
+  API call) player_points_rebounds, player_points_assists, player_rebounds_assists and their
+  _alternate versions map to pr, pa, ra. The default NBA pull still asks for exactly the five
+  markets. `npl quotes --sport nba --combos` adds the three combos, up to 1 credit per combo market
+  per game per region (about 3 more credits per game for US); `npl quotes --sport nba --dry-run
+  [--combos]` prints the markets and the estimate with no call of any kind. `npl close` still
+  prices tracked markets only. No combo prices have been pulled.
+- **Frozen rules unchanged.** nba-anchored-ev2-mgm@D044 and nba-simple-gap1@D038 are restricted
+  explicitly to npl.picks.TRACKED_MARKETS (pts, reb, ast, fg3m, pra); combos are skipped before
+  any calibration is called, so both rules keep exactly their frozen population. live.posted_lines
+  counts only the five markets, so a combo line can never set has_line or move the five markets'
+  numbers; a card's line_known keeps its per-player meaning (a line in any of the five).
+- **App.** Combo cards carry untested: true and p_cal_basis; the props payload adds market_short,
+  market_info (label, short, parts, opp_stat, tested, calibration) and combo_note; factor tabs on
+  combo cards are marked tested: null with the untested label, and none of the five markets' test
+  figures is shown for them. A combo tab appears only when the board has cards for it. Offline copy:
+  combo cards only for players the books price (snapshot_combos_lined_only), slimmed to what their
+  parts do not already hold and rebuilt exactly in the page (snapshot_combos_slim; node checked
+  1,831 of 1,831 cards rebuild to the server's).
+- **Sizes.** Snapshot with current data and default thresholds: 14,515,245 bytes on 4 Nov with the
+  stored edition (no combo cards yet); the same build from a scratch rebuild of the 4 Nov final
+  with combos: 14,827,037 bytes (+311,792; 516 combo cards for 172 priced players). Editions grow
+  about 68% (4 Nov final 3.77 MB to 6.35 MB with combos in N1, A and C).
+- **Open.** Edition size in git (records/editions/nba is already 34 MB): publishing combos for N1
+  only would cut the growth to about 27%. Snapshot headroom: D-047's 15-game, 900-lined-card
+  estimate (about 15.34 MB) would be about 15.7 MB with combos, over the 15.5 MB we aim for but
+  under the 16 MB limit. What would change the combos' status: real combo lines pulled with
+  `--combos` over enough nights to fit and test a calibration on them, first by closing-line
+  value, before any combo chance is shown as more than the raw model.

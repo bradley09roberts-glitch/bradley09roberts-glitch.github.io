@@ -26,14 +26,21 @@ from ..config import REPORTS_DIR
 from . import canon
 
 STATS = ("pts", "reb", "ast", "fg3m")
-MARKETS = ("pts", "reb", "ast", "fg3m", "pra")
+# the summed markets are built exactly as PRA: their own season average, opponent allowed and
+# rest factor; the combos' rest factors were fitted the same way on 2018-2023 on 4 Nov 2026 (the
+# five original markets' factors are untouched)
+MARKETS = ("pts", "reb", "ast", "fg3m", "pra", "pr", "pa", "ra")
+SUMS = {"pra": ("pts", "reb", "ast"), "pr": ("pts", "reb"), "pa": ("pts", "ast"),
+        "ra": ("reb", "ast")}
 PRIOR_GAMES = 5.0
 OPP_K = 10.0
 REST_PATH = REPORTS_DIR / "nba" / "model" / "simple_rest.json"
 
 
 def _with_pra(d: pd.DataFrame) -> pd.DataFrame:
-    return d.assign(pra=d.pts + d.reb + d.ast)
+    """The frame with every summed market (PRA as pts + reb + ast, then pr, pa, ra)."""
+    return d.assign(pra=d.pts + d.reb + d.ast, pr=d.pts + d.reb, pa=d.pts + d.ast,
+                    ra=d.reb + d.ast)
 
 
 def player_states(pg: pd.DataFrame) -> pd.DataFrame:
@@ -59,7 +66,10 @@ def defense_states(tg: pd.DataFrame) -> pd.DataFrame:
     league's per-game level over the same season to date."""
     t = tg.merge(tg[["game_id", "team", *STATS]].rename(columns={"team": "opp"}),
                  on=["game_id", "opp"], suffixes=("", "_allowed"))
-    t = t.assign(pra_allowed=t.pts_allowed + t.reb_allowed + t.ast_allowed)
+    t = t.assign(pra_allowed=t.pts_allowed + t.reb_allowed + t.ast_allowed,
+                 pr_allowed=t.pts_allowed + t.reb_allowed,
+                 pa_allowed=t.pts_allowed + t.ast_allowed,
+                 ra_allowed=t.reb_allowed + t.ast_allowed)
     t = t.sort_values(["tip_utc"]).reset_index(drop=True)
     out = t[["team", "tip_utc", "season"]].rename(columns={"team": "opp"}).copy()
     g = t.groupby(["team", "season"], sort=False)
@@ -132,8 +142,11 @@ def fit_rest(f: pd.DataFrame, actual: pd.DataFrame) -> dict:
     return out
 
 
-def save_rest(rest: dict) -> None:
-    REST_PATH.write_text(json.dumps({"fit_seasons": [2018, 2023], "rest": rest}, indent=1) + "\n")
+def save_rest(rest: dict, note: str | None = None) -> None:
+    d = {"fit_seasons": [2018, 2023], "rest": rest}
+    if note:
+        d["note"] = note
+    REST_PATH.write_text(json.dumps(d, indent=1) + "\n")
 
 
 def load_rest() -> dict:
@@ -145,6 +158,8 @@ def project(f: pd.DataFrame, rest: dict) -> pd.DataFrame:
     """S per market: season average x opponent factor x rest factor x minutes trend."""
     out = pd.DataFrame(index=f.index)
     for s in MARKETS:
+        if s not in rest:  # a market with no fitted rest factors gets no S
+            continue
         rf = f.rest.map(rest[s]).fillna(1.0)
         out[s] = f[f"avg_{s}"] * f[f"opp_factor_{s}"] * rf * f.min_trend
     return out

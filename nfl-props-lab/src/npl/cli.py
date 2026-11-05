@@ -199,10 +199,62 @@ def _skipped_lines(budget) -> list[str]:
     return out + [f"Credits left: {left} (floor {budget.floor:,}, env NPL_ODDS_FLOOR)."]
 
 
+def _stored_games_ahead(con, hours: float) -> int | None:
+    """NBA games starting within `hours` by the locally stored schedule (no network); None when
+    no schedule is stored."""
+    import pandas as pd
+
+    from .nba import live
+    from .util import utcnow
+
+    try:
+        sched, _ = live._latest(con, "nba_schedule")
+    except Exception:  # noqa: BLE001 - no stored schedule
+        return None
+    t = pd.to_datetime(sched.date, utc=True)
+    now = pd.Timestamp(utcnow())
+    return int(((t > now) & (t <= now + pd.Timedelta(hours=hours))).sum())
+
+
+def quotes_plan_lines(plan: dict) -> list[str]:
+    """What `npl quotes --dry-run` prints: the markets a pull would ask for and its cost."""
+    out = [f"Props pull plan, {plan['sport'].upper()} ({plan['regions']}): "
+           f"{', '.join(plan['markets'])}.",
+           f"Up to {plan['credits_per_game']} credits per game (markets x regions; only markets "
+           "returned are billed)."]
+    if plan["combos"]:
+        out.append(f"The combos (--combos) add up to {plan['combo_extra_per_game']} of those per "
+                   "game.")
+    elif plan["combo_markets_available"]:
+        out.append(f"Combos not asked for; --combos would add up to "
+                   f"{plan['combo_extra_if_asked']} credits per game "
+                   f"({', '.join(plan['combo_markets_available'])}).")
+    if plan.get("games") is not None:
+        out.append(f"{plan['games']} games in the window by the stored schedule: up to "
+                   f"{plan['credits_for_games']} credits"
+                   + (f", {plan['combo_extra_for_games']} of them for the combos"
+                      if plan["combos"] else "") + ".")
+    if plan.get("game_lines"):
+        out.append(f"Game lines: {plan['game_lines']} credits for the slate (--no-game-lines "
+                   "skips them).")
+    return out + ["Dry run: no call made (not even the free events call)."]
+
+
 def cmd_quotes(a) -> int:
     from .sources import odds_api
 
+    combos = bool(getattr(a, "combos", False))
+    if combos and a.sport != "nba":
+        print("--combos is for --sport nba only")
+        return 2
     con = db.connect()
+    if getattr(a, "dry_run", False):  # no key needed, no call of any kind
+        games = _stored_games_ahead(con, a.hours_ahead) if a.sport == "nba" else None
+        plan = odds_api.pull_plan(a.sport, a.regions, combos=combos, games=games)
+        if a.sport == "nba" and not a.no_game_lines:
+            plan["game_lines"] = len(odds_api.GAME_MARKETS) * odds_api.n_regions(a.regions)
+        print("\n".join(quotes_plan_lines(plan)))
+        return 0
     try:
         odds_api.api_key()
         budget = odds_api.Budget()  # one floor for the whole pull (props, then game lines)
@@ -212,10 +264,10 @@ def cmd_quotes(a) -> int:
         return 3
     lines = a.sport == "nba" and not a.no_game_lines
     with rawstore.job(con, "quotes.snapshot", {"regions": a.regions, "sport": a.sport,
-                                               "game_lines": lines}) as st:
+                                               "game_lines": lines, "combos": combos}) as st:
         st["detail"] = odds_api.snapshot_upcoming(con, regions=a.regions,
                                                   hours_ahead=a.hours_ahead, sport=a.sport,
-                                                  budget=budget)
+                                                  budget=budget, combos=combos)
         if lines:
             st["detail"]["game_lines"] = odds_api.snapshot_game_lines(
                 con, sport=a.sport, regions=a.regions, budget=budget)
@@ -445,6 +497,11 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--sport", choices=["nfl", "nba"], default="nfl")
     s.add_argument("--no-game-lines", action="store_true",
                    help="NBA: skip the game-lines snapshot (moneyline, spread, total; 3 credits)")
+    s.add_argument("--combos", action="store_true",
+                   help="NBA: also ask for Pts + Reb, Pts + Ast and Reb + Ast (about 3 more "
+                        "credits per game; off by default)")
+    s.add_argument("--dry-run", action="store_true",
+                   help="print the markets and estimated credits only; makes no call at all")
     s.set_defaults(func=cmd_quotes)
 
     s = sub.add_parser("close", help="closing snapshot of tracked props before tip-off (credits)")

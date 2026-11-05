@@ -13,8 +13,21 @@ from ..config import REPORTS_DIR
 from ..dist import Dist
 from ..util import iso, utcnow
 from . import canon, live
+from . import model as M
 
 OUT = REPORTS_DIR / "nba" / "record"
+
+
+def actual_value(r, market: str) -> float:
+    """A played player-game's result in a market: the stat, or for PRA and the combos (pr, pa,
+    ra) the sum of its parts (M.COMBO_PARTS), PRA added as pts + reb + ast."""
+    parts = M.COMBO_PARTS.get(market)
+    if parts is None:
+        return float(r[market])
+    v = r[parts[0]]
+    for q in parts[1:]:
+        v = v + r[q]
+    return float(v)
 
 
 def counting_forecasts() -> pd.DataFrame:
@@ -47,14 +60,12 @@ def run() -> dict:
     part = [out.participation.get((g, p), "absent") for g, p in
             zip(fc.game_id, fc.player_id, strict=True)]
     fc["participation"] = part
-    stat = {"pts": "pts", "reb": "reb", "ast": "ast", "fg3m": "fg3m"}
     vals = []
     for g, p, mk, pa in zip(fc.game_id, fc.player_id, fc.market, fc.participation, strict=True):
         if pa != "played":
             vals.append(np.nan)
             continue
-        r = out.loc[(g, p)]
-        vals.append(float(r.pts + r.reb + r.ast) if mk == "pra" else float(r[stat[mk]]))
+        vals.append(actual_value(out.loc[(g, p)], mk))
     fc["actual"] = vals
     fc["crps"] = [Dist.from_json(d).crps(y) if not np.isnan(y) else np.nan
                   for d, y in zip(fc.dist, fc.actual, strict=True)]

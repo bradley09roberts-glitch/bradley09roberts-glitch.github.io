@@ -78,7 +78,16 @@ NBA_MARKET_MAP = {
     "player_threes": ("fg3m", False), "player_threes_alternate": ("fg3m", True),
     "player_points_rebounds_assists": ("pra", False),
     "player_points_rebounds_assists_alternate": ("pra", True),
+    # two-stat combos (keys from the provider's betting-markets page, checked 4 Nov 2026). Opt-in
+    # only (OPT_IN): each costs about 1 credit per game per pull, so the default pull asks for
+    # the five markets above and nothing else
+    "player_points_rebounds": ("pr", False), "player_points_rebounds_alternate": ("pr", True),
+    "player_points_assists": ("pa", False), "player_points_assists_alternate": ("pa", True),
+    "player_rebounds_assists": ("ra", False),
+    "player_rebounds_assists_alternate": ("ra", True),
 }
+# main-line markets a pull asks for only when told to (`npl quotes --sport nba --combos`)
+OPT_IN = {"nba": ("player_points_rebounds", "player_points_assists", "player_rebounds_assists")}
 SPORTS = {"nfl": ("americanfootball_nfl", MARKET_MAP), "nba": ("basketball_nba", NBA_MARKET_MAP)}
 # provider team names that differ from the schedule's display names
 NBA_NAME_ALIASES = {"Los Angeles Clippers": "LAC"}
@@ -86,8 +95,33 @@ NBA_NAME_ALIASES = {"Los Angeles Clippers": "LAC"}
 GAME_MARKETS = {"h2h": "moneyline", "spreads": "spread", "totals": "total"}
 
 
-def core_markets(sport: str) -> list[str]:
-    return [k for k, (_, alt) in SPORTS[sport][1].items() if not alt]
+def core_markets(sport: str, combos: bool = False) -> list[str]:
+    """The main-line markets a pull asks for: the default set (NBA: points, rebounds, assists,
+    threes, PRA), plus the opt-in ones (OPT_IN: NBA's two-stat combos) only when `combos`."""
+    extra = OPT_IN.get(sport, ())
+    return [k for k, (_, alt) in SPORTS[sport][1].items()
+            if not alt and (combos or k not in extra)]
+
+
+def pull_plan(sport: str = "nba", regions: str = "us", combos: bool = False,
+              games: int | None = None) -> dict:
+    """What a props pull would ask for and its estimated cost, without any call: the markets,
+    credits per game (markets x regions; the provider bills only markets returned, so this is
+    an upper bound) and, with `games`, for the slate. `combo_extra_per_game` is what the opt-in
+    combos add (0 when they are not asked for), `combo_extra_if_asked` what they would add.
+    Game lines (NBA: 3 credits for one region) are separate."""
+    markets = core_markets(sport, combos=combos)
+    per_region = n_regions(regions)
+    per_game = len(markets) * per_region
+    extra = len([m for m in markets if m in OPT_IN.get(sport, ())]) * per_region
+    out = {"sport": sport, "regions": regions, "combos": combos, "markets": markets,
+           "credits_per_game": per_game, "combo_extra_per_game": extra,
+           "combo_markets_available": list(OPT_IN.get(sport, ())),
+           "combo_extra_if_asked": len(OPT_IN.get(sport, ())) * per_region}
+    if games is not None:
+        out |= {"games": games, "credits_for_games": per_game * games,
+                "combo_extra_for_games": extra * games}
+    return out
 
 
 def provider_markets(sport: str) -> dict[str, str]:
@@ -827,15 +861,18 @@ def relink_raw(con: sqlite3.Connection, raw_file_id: int, lake_dir=None) -> dict
 def snapshot_upcoming(con, *, regions: str = "us", hours_ahead: float = 48, session=None,
                       max_events: int = 20, markets: list[str] | None = None,
                       event_ids: list[str] | None = None, sport: str = "nfl",
-                      budget: Budget | None = None, lake_dir=None) -> dict:
-    """Collect current prop quotes for events kicking off within `hours_ahead`.
+                      budget: Budget | None = None, lake_dir=None,
+                      combos: bool = False) -> dict:
+    """Collect current prop quotes for events kicking off within `hours_ahead`. Without
+    `markets`, the default main-line set (core_markets); the NBA's two-stat combos only with
+    `combos` (about 1 extra credit per combo market per game).
     One event-odds call per event for the wanted markets, with no `markets` pre-call: the cost
     counts only the unique markets returned (x regions) and an event without props returns
     nothing and costs nothing, so the 1-credit pre-call only added cost. Core markets only by
     default (alternate lines cost extra credits). The free events call that opens the pull reads
     the credits left; a call whose estimated cost (markets requested x regions) would take them
     below the floor is skipped and listed under "skipped"."""
-    markets = markets or core_markets(sport)
+    markets = markets or core_markets(sport, combos=combos)
     budget = budget or Budget()
     first_skip = len(budget.skipped)
     events, credits = _start(con, budget, session, sport)
@@ -1119,5 +1156,6 @@ __all__ = ["parse_event_odds", "parse_game_lines", "link_players", "link_event",
            "store_quotes", "store_game_lines", "game_lines_frame", "status", "snapshot_upcoming",
            "snapshot_game_lines", "snapshot_close", "plan_close", "Budget", "credit_floor",
            "link_and_store", "link_quotes_nba", "relink_raw", "MissingKey", "json",
-           "core_markets", "provider_markets", "NBA_MARKET_MAP", "GAME_MARKETS", "pull_rows",
+           "core_markets", "provider_markets", "pull_plan", "OPT_IN", "NBA_MARKET_MAP",
+           "GAME_MARKETS", "pull_rows",
            "record_pull", "pulls_frame", "backfill_pulls", "requested_markets"]

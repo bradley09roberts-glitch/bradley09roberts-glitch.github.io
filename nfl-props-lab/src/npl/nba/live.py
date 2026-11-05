@@ -44,6 +44,10 @@ INJ_GTD_MULT = 0.65
 # expectation, rate factors for players with a posted line, points variance proportional to the
 # mean), with calibration.json refitted for it. Still no lineup-aware minutes.
 LIVE_PARAMS = "nba-0.3"
+# the edition note on the two-stat combos (added 4 Nov 2026; the five original markets unchanged)
+COMBO_NOTE = ("Pts + Reb, Pts + Ast and Reb + Ast are built like PRA, from the same points, "
+              "rebounds and assists forecasts. We hold no past bookmaker lines for them, so they "
+              "have never been tested against prices.")
 
 
 # --------------------------------------------------------------------------- availability
@@ -195,9 +199,11 @@ def build(date_et: str, con: sqlite3.Connection | None = None, now: datetime | N
 
 
 def posted_lines(con: sqlite3.Connection, x: pd.DataFrame) -> tuple[pd.Series, str | None]:
-    """Which candidates have a bookmaker line in any market in the stored quotes (nba-0.3 lifts
-    those players' rates: the model runs low for players the books price; fitted on 2024-25).
-    Before the first odds pull of the day nobody has one, so publish again after pulling lines."""
+    """Which candidates have a bookmaker line in any of the five original markets in the stored
+    quotes (nba-0.3 lifts those players' rates: the model runs low for players the books price;
+    fitted on 2024-25). Before the first odds pull of the day nobody has one, so publish again
+    after pulling lines. The flag is per player, so a combo's `line_known` says the same thing
+    as his other markets': the line factors were applied to the parts it is built from."""
     from ..sources import odds_api
 
     none = pd.Series(False, index=x.index)
@@ -205,7 +211,10 @@ def posted_lines(con: sqlite3.Connection, x: pd.DataFrame) -> tuple[pd.Series, s
         q = odds_api.quotes_frame(con)
     except Exception:  # noqa: BLE001 - no quotes table yet
         return none, None
-    q = q[q.game_id.isin(set(x.game_id.astype(str))) & q.player_id.notna()]
+    # the five original markets only: the factors were fitted on them, and a combo line pulled
+    # later (opt-in, `npl quotes --combos`) must not move any market's numbers
+    q = q[q.game_id.isin(set(x.game_id.astype(str))) & q.player_id.notna()
+          & q.market.isin(M.ORIGINAL_MARKETS)]
     if q.empty:
         return none, None
     have = set(zip(q.game_id.astype(str), q.player_id.astype(str), strict=True))
@@ -242,23 +251,7 @@ def publish(date_et: str, kind: str = "early", con: sqlite3.Connection | None = 
     if "error" in b:
         return b
     x, sg, pms = b["x"], b["games"], b["pms"]
-    forecasts = []
-    for i, r in enumerate(x.itertuples()):
-        for model, pm in pms.items():
-            for mk in M.MARKETS:
-                d = _trim(pm[mk][i])
-                forecasts.append({
-                    "game_id": r.game_id, "player_id": r.player_id, "name": r.name,
-                    "team": r.team, "opponent": r.opp, "position": r.pos, "model": model,
-                    "market": mk, "p_play": round(float(r.p_play), 4),
-                    "injury": None if pd.isna(r.fantasy) else {
-                        "status": r.status, "fantasy": r.fantasy, "detail": r.detail,
-                        "as_of": r.as_of_date, "source": r.injury_source},
-                    "minutes_expected": round(float(r.min_mu), 1),
-                    "line_known": bool(r.has_line),  # nba-0.3 line factors applied (D-044)
-                    "minutes_lineup_shift": round(float(r.min_mu - r.min_mu_base), 1),
-                    "mean": round(d.mean(), 2), "median": d.median(),
-                    "q10": d.quantile(0.1), "q90": d.quantile(0.9), "dist": d.to_json()})
+    forecasts = forecast_rows(x, pms)
     eid = f"NBA-{date_et}-{kind}-{now.strftime('%Y%m%dT%H%MZ')}"
     doc = {"edition_id": eid, "sport": "NBA", "date_et": date_et, "kind": kind,
            "published_at": iso(now), "headline_model": HEADLINE, "models": list(MODELS),
@@ -270,7 +263,7 @@ def publish(date_et: str, kind: str = "early", con: sqlite3.Connection | None = 
                      "separate. Injury adjustments (Out 1%, game-time decision x0.65) are "
                      "assumptions, not validated. Minutes do not react to teammates ruled out "
                      "(lineup-aware minutes are off in live editions, D-037). No bookmaker "
-                     "prices were used.", injury_note(b["inputs"]["injuries"])],
+                     "prices were used.", injury_note(b["inputs"]["injuries"]), COMBO_NOTE],
            "games": [{"game_id": g.game_id, "home": g.home, "away": g.away,
                       "tip_utc": iso(g.tip_utc), "time_valid": bool(g.time_valid),
                       "published_before_tip": now < g.tip_utc} for g in sg.itertuples()],
@@ -298,6 +291,29 @@ def publish(date_et: str, kind: str = "early", con: sqlite3.Connection | None = 
     return {"edition_id": eid, "path": str(path), "sha256": digest, "players": len(x),
             "games": len(sg), "forecasts": len(forecasts),
             "first_tip": iso(sg.tip_utc.min()), "inputs": b["inputs"]}
+
+
+def forecast_rows(x: pd.DataFrame, pms: dict) -> list[dict]:
+    """The edition's forecast rows: every player of `x`, model of `pms` and market (M.MARKETS:
+    the five original markets, then the combos pr, pa and ra)."""
+    forecasts = []
+    for i, r in enumerate(x.itertuples()):
+        for model, pm in pms.items():
+            for mk in M.MARKETS:
+                d = _trim(pm[mk][i])
+                forecasts.append({
+                    "game_id": r.game_id, "player_id": r.player_id, "name": r.name,
+                    "team": r.team, "opponent": r.opp, "position": r.pos, "model": model,
+                    "market": mk, "p_play": round(float(r.p_play), 4),
+                    "injury": None if pd.isna(r.fantasy) else {
+                        "status": r.status, "fantasy": r.fantasy, "detail": r.detail,
+                        "as_of": r.as_of_date, "source": r.injury_source},
+                    "minutes_expected": round(float(r.min_mu), 1),
+                    "line_known": bool(r.has_line),  # nba-0.3 line factors applied (D-044)
+                    "minutes_lineup_shift": round(float(r.min_mu - r.min_mu_base), 1),
+                    "mean": round(d.mean(), 2), "median": d.median(),
+                    "q10": d.quantile(0.1), "q90": d.quantile(0.9), "dist": d.to_json()})
+    return forecasts
 
 
 def edition_files() -> list:

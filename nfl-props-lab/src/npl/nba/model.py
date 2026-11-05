@@ -8,6 +8,12 @@ N1, per player and game, using only games that tipped off earlier:
   rate     = exponentially weighted per-minute rate, shrunk to the position-group rate
   PRA      = convolution of points, rebounds and assists given the same minutes, so the
              combined market is consistent with its parts
+  P+R, P+A, R+A (pr, pa, ra) = the same construction with two of the three: the component
+             pmfs at each minutes value (same rates, opponent, absence and line factors) are
+             convolved, then mixed over the minutes distribution. Added on 4 Nov 2026 under
+             nba-0.3; the five original markets' numbers are unchanged (a test compares them bit
+             for bit with a reference written before the combos existed). The combos have never
+             been tested against bookmaker prices: we hold no past lines for them.
 Baselines (no minutes model, no opponent):
   A = exponentially weighted per-game average, NegBin with fitted dispersion
   C = plain average of the last 10 games played, same dispersion ("L10 average")
@@ -23,11 +29,30 @@ import numpy as np
 import pandas as pd
 from scipy.special import gammaln
 
-MARKETS = ("pts", "reb", "ast", "fg3m", "pra")
+# the markets validated, calibrated and tracked under nba-0.3 (D-043, D-044): the paper rules and
+# calibration_v4 cover these only
+ORIGINAL_MARKETS = ("pts", "reb", "ast", "fg3m", "pra")
+# two-stat combos (4 Nov 2026): no past bookmaker lines stored, so never tested against prices
+COMBOS = ("pr", "pa", "ra")
+MARKETS = ORIGINAL_MARKETS + COMBOS
 BASE_STATS = ("pts", "reb", "ast", "fg3m")
+# every market that is a sum of box-score stats, with its parts in the order they are added
+COMBO_PARTS = {"pra": ("pts", "reb", "ast"), "pr": ("pts", "reb"), "pa": ("pts", "ast"),
+               "ra": ("reb", "ast")}
 MARKET_LABELS = {"pts": "Points", "reb": "Rebounds", "ast": "Assists", "fg3m": "3-pointers made",
-                 "pra": "Pts + Reb + Ast"}
-MAX_K = {"pts": 80, "reb": 35, "ast": 30, "fg3m": 15, "pra": 110}
+                 "pra": "Pts + Reb + Ast", "pr": "Pts + Reb", "pa": "Pts + Ast",
+                 "ra": "Reb + Ast"}
+MARKET_SHORT = {"pts": "PTS", "reb": "REB", "ast": "AST", "fg3m": "3PM", "pra": "PRA",
+                "pr": "P+R", "pa": "P+A", "ra": "R+A"}
+# The one place that says which single stat stands in for a summed market where the code shows a
+# per-stat figure that has no summed version (the opponent factor and its rank on cards, "defence
+# v ..." in the app): points for PRA (as before), P+R and P+A, rebounds for R+A. Where the code
+# already sums for PRA (logs, hit rates, the matchup rule's allowed totals, settlement), the
+# combos are summed from their parts (COMBO_PARTS) instead.
+OPP_STAT = {"pra": "pts", "pr": "pts", "pa": "pts", "ra": "reb"}
+MAX_K = {"pts": 80, "reb": 35, "ast": 30, "fg3m": 15, "pra": 110, "pr": 100, "pa": 100, "ra": 60}
+# baseline A / C dispersion for the combos: not tuned, PRA's tuned value borrowed (disp_a)
+COMBO_DISP_A = 8.0
 MIN_GRID = np.arange(1, 49, 1.0)  # minutes grid for the mixture
 MODEL_VERSION = "nba-0.2"  # nba-0.2: lineup-aware minutes (n07, D-036)
 
@@ -85,6 +110,11 @@ def player_states(pg: pd.DataFrame, p: Params) -> pd.DataFrame:
     pra = x.pts + x.reb + x.ast
     out["pra_l10"] = pra.groupby(x.player_id, sort=False).transform(
         lambda v: v.rolling(10, min_periods=1).mean())
+    for c in COMBOS:  # after PRA, which is left exactly as it was
+        a, b = COMBO_PARTS[c]
+        out[f"{c}_gm"] = out[f"{a}_gm"] + out[f"{b}_gm"]
+        out[f"{c}_l10"] = (x[a] + x[b]).groupby(x.player_id, sort=False).transform(
+            lambda v: v.rolling(10, min_periods=1).mean())
     out["starter_ew"] = g.starter.transform(lambda s: s.astype(float).ewm(halflife=4).mean())
     out["last_played_tip"] = x.tip_utc
     return out.rename(columns={"team": "last_team", "starter": "last_starter",
@@ -466,13 +496,17 @@ def n1_pmfs(x: pd.DataFrame, p: Params, lg: dict,
                 continue
             mix += W[:, j:j + 1] * count_pmf(s, rate * mins * m, p)
         pm[s] = mix
-    if "pra" not in only:
+    sums = [c for c in ("pra", *COMBOS) if c in only]
+    if not sums:
         return pm
-    # PRA: convolve conditional pmfs at each minutes value, then mix
-    K = MAX_K["pra"]
-    pra = np.zeros((n, K + 1))
+    # summed markets: convolve the parts' conditional pmfs at each minutes value, then mix. The
+    # rates and the PRA arithmetic are exactly as they were before the two-stat combos existed,
+    # so PRA's numbers do not move; each combo reuses the same per-minute pmfs (P+R is PRA's
+    # first convolution, points with rebounds)
+    need = [s for s in ("pts", "reb", "ast") if any(s in COMBO_PARTS[c] for c in sums)]
+    acc = {c: np.zeros((n, MAX_K[c] + 1)) for c in sums}
     rates = {}
-    for s in ("pts", "reb", "ast"):
+    for s in need:
         prior = x.pos.map(lambda q, s=s: lg["pos_rate"].get(q, lg["pos_rate"]["F"])[s]).to_numpy()
         r = ((x[f"{s}_sum"].fillna(0) + p.k_rate * prior) / (x.min_sum.fillna(0) + p.k_rate))
         m = mult.copy()
@@ -490,13 +524,20 @@ def n1_pmfs(x: pd.DataFrame, p: Params, lg: dict,
         w = W[:, jj] + (W[:, jj + 1] if jj + 1 < W.shape[1] else 0)
         if not w.any():
             continue
-        a = count_pmf("pts", rates["pts"] * (mins + 0.5), p)
-        b = count_pmf("reb", rates["reb"] * (mins + 0.5), p)
-        c = count_pmf("ast", rates["ast"] * (mins + 0.5), p)
-        ab = _conv_rows(a, b)
-        abc = _conv_rows(ab, c)[:, :K + 1]
-        pra += w[:, None] * abc
-    pm["pra"] = pra / pra.sum(1, keepdims=True)
+        cond = {s: count_pmf(s, rates[s] * (mins + 0.5), p) for s in need}
+        ab = None
+        if "pra" in acc:
+            ab = _conv_rows(cond["pts"], cond["reb"])
+            abc = _conv_rows(ab, cond["ast"])[:, :MAX_K["pra"] + 1]
+            acc["pra"] += w[:, None] * abc
+        for c in COMBOS:
+            if c not in acc:
+                continue
+            a, b = COMBO_PARTS[c]
+            two = ab if (c == "pr" and ab is not None) else _conv_rows(cond[a], cond[b])
+            acc[c] += w[:, None] * two[:, :MAX_K[c] + 1]
+    for c, v in acc.items():
+        pm[c] = v / v.sum(1, keepdims=True)
     return pm
 
 
@@ -512,7 +553,9 @@ def _conv_rows(a: np.ndarray, b: np.ndarray) -> np.ndarray:
 def baseline_pmfs(x: pd.DataFrame, p: Params, kind: str,
                   only: tuple[str, ...] | None = None) -> dict[str, np.ndarray]:
     col = "gm" if kind == "A" else "l10"
-    return {s: nb_pmf_matrix(x[f"{s}_{col}"].fillna(0).to_numpy(), p.disp_a[s], MAX_K[s])
+    return {s: nb_pmf_matrix(x[f"{s}_{col}"].fillna(0).to_numpy(),
+                             p.disp_a.get(s, COMBO_DISP_A) if s in COMBOS else p.disp_a[s],
+                             MAX_K[s])
             for s in (only or MARKETS)}
 
 
@@ -537,7 +580,27 @@ def pit_rows(pm: np.ndarray, y: np.ndarray, rng: np.random.Generator) -> np.ndar
 def actual(x: pd.DataFrame, s: str) -> np.ndarray:
     if s == "pra":
         return (x.pts_y + x.reb_y + x.ast_y).to_numpy()
+    if s in COMBO_PARTS:
+        a, b = COMBO_PARTS[s]
+        return (x[f"{a}_y"] + x[f"{b}_y"]).to_numpy()
     return x[f"{s}_y"].to_numpy()
+
+
+def stat_values(d: pd.DataFrame, market: str) -> pd.Series:
+    """A market's value per box-score row: the column itself, or for a summed market (PRA and
+    the combos, COMBO_PARTS) its parts added left to right (PRA as pts + reb + ast)."""
+    parts = COMBO_PARTS.get(market)
+    if parts is None:
+        return d[market]
+    out = d[parts[0]]
+    for q in parts[1:]:
+        out = out + d[q]
+    return out
+
+
+def with_sums(d: pd.DataFrame) -> pd.DataFrame:
+    """The frame with a column for every summed market (pra, pr, pa, ra) from pts, reb, ast."""
+    return d.assign(**{c: stat_values(d, c) for c in COMBO_PARTS})
 
 
 # --------------------------------------------------------------------------- availability

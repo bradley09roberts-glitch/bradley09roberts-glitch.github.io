@@ -80,6 +80,12 @@ def _unshared(k: str, f, shared: dict | None):
     otherwise the factor as it is."""
     if not isinstance(f, dict) or not shared:
         return f
+    u = shared.get("untested") or {}
+    if f.get("tested", 0) is None and isinstance(u.get("reliability"), str):
+        # a combo's factor (untested): its None and its label are put back from `untested`
+        if f.get("reliability") == u["reliability"]:
+            return {x: v for x, v in f.items() if x not in ("tested", "reliability")}
+        return f
     drop = set()
     t = (shared.get("tested") or {}).get(k)
     if t is not None and f.get("tested") == t:
@@ -94,8 +100,11 @@ def _overall(o, shared: dict | None):
     """The overall line without its closing sentence when that is the props payload's
     (factor_tests.overall: "agree" when 3 or more factors agree, else "other"): `text` gives
     way to `counts`, the words before it, and REHYDRATE joins the two again."""
-    end = ((shared or {}).get("overall") or {}).get(
-        "agree" if isinstance(o, dict) and o.get("agree") else "other")
+    if isinstance(o, dict) and o.get("untested"):
+        end = ((shared or {}).get("untested") or {}).get("overall")
+    else:
+        end = ((shared or {}).get("overall") or {}).get(
+            "agree" if isinstance(o, dict) and o.get("agree") else "other")
     t = o.get("text") if isinstance(o, dict) else None
     if not (isinstance(end, str) and end and isinstance(t, str)) or "counts" in o:
         return o
@@ -130,22 +139,30 @@ def _nba_card(c: dict, shared: dict | None = None) -> dict:
 # sentence after its `counts` (factor_tests.overall), so the app reads the same card shape as
 # from the server (the evidence stays cut to what the tabs show). A factor that kept its own
 # lines or label, or an overall line that kept its text, is left alone.
-REHYDRATE = """<script>(function () {
+REHYDRATE_HEAD = """<script>(function () {
   var p = window.NPL_SNAPSHOT && window.NPL_SNAPSHOT.data["/api/nba/props"];
-  var s = p && p.factor_tests;
-  if (!s || typeof s !== "object" || !Array.isArray(p.cards)) return;
+  if (!p || !Array.isArray(p.cards)) return;
+%s
+  var s = p.factor_tests;
+  if (!s || typeof s !== "object") return;
   var t = s.tested || {}, r = s.reliability || {}, e = s.overall || {};
+  var u = s.untested || {}, um = u.markets || [];
   p.cards.forEach(function (c) {
-    var f = c.factors;
+    var f = c.factors, combo = um.indexOf(c.market) >= 0;
     if (!f || typeof f !== "object") return;
     Object.keys(f).forEach(function (k) {
       var x = f[k];
       if (!x || typeof x !== "object") return;
       if (k === "overall") {
         if (typeof x.counts !== "string" || "text" in x) return;
-        var end = e[x.agree ? "agree" : "other"];
+        var end = combo ? u.overall : e[x.agree ? "agree" : "other"];
         x.text = typeof end === "string" ? (x.counts ? x.counts + " " + end : end) : x.counts;
         delete x.counts;
+        return;
+      }
+      if (combo) {  // untested market: no test lines, the reason as the label
+        if (!("tested" in x)) x.tested = null;
+        if (!("reliability" in x) && typeof u.reliability === "string") x.reliability = u.reliability;
         return;
       }
       if (!("tested" in x) && t[k]) x.tested = t[k];
@@ -154,6 +171,141 @@ REHYDRATE = """<script>(function () {
     });
   });
 })();</script>"""
+
+
+# Combo cards (pr, pa, ra) in the offline copy. Only for players the bookmakers price (a line in
+# any market, `line_known`, or a stored line for that combo): the rest would add about 0.2 MB to a
+# full slate (snapshot_combos_lined_only). A kept combo card leaves out what the page can rebuild
+# exactly, and carries "slim": 1 instead: each field from COMBO_COPY that is the same as on the
+# player's card for the combo's first part (points, or rebounds for R+A), the log and the
+# with/without arrays when they are exactly the sums of the parts' arrays over the same games (as
+# the server builds them), what market_info says once for every card of that market (_combo_info:
+# market_label, untested, p_cal_basis) and the fields that are null (COMBO_NULL). COMBO_JS (run by
+# REHYDRATE before the app) puts back each field the card does not have and removes `slim`, so the
+# app reads the same card as from the server. A field that differs stays on the card, so putting
+# back only what is missing is exact. A combo card is slimmed only when all its parts' cards are
+# kept.
+COMBO_COPY = ("name", "team", "opponent", "position", "p_play", "injury", "minutes_expected",
+              "minutes_lineup_shift", "line_known", "tip_utc", "tip_london", "is_home",
+              "opp_pace", "opp_factor", "teammates_out", "model")
+COMBO_NULL = ("market_line", "p_cal_market", "p_cal_basis", "simple")
+
+
+def _combo_info(m: dict | None) -> dict:
+    """What a combo card's market_info entry says for every card of that market."""
+    m = m or {}
+    return {"market_label": m.get("label"), "untested": not m.get("tested", True),
+            "p_cal_basis": m.get("calibration")}
+
+
+def _sum_lists(arrs: list) -> list | None:
+    """Element-wise sums of equal-length lists (None at a position where any is None); None when
+    the lengths differ."""
+    if not arrs or any(not isinstance(a, list) or len(a) != len(arrs[0]) for a in arrs):
+        return None
+    return [None if any(a[i] is None for a in arrs) else sum(a[i] for a in arrs)
+            for i in range(len(arrs[0]))]
+
+
+def _summed_log(src: list) -> dict | None:
+    logs = [s.get("log") for s in src]
+    if not all(isinstance(lg, dict) for lg in logs):
+        return None
+    v = _sum_lists([lg.get("values") for lg in logs])
+    if v is None or any({k: x for k, x in lg.items() if k != "values"} !=
+                        {k: x for k, x in logs[0].items() if k != "values"} for lg in logs):
+        return None
+    return {**logs[0], "values": v}
+
+
+def _summed_wowy(src: list) -> list | None:
+    ws = [s.get("wowy") for s in src]
+    if not all(isinstance(w, list) and len(w) == len(ws[0]) for w in ws):
+        return None
+    out = []
+    for i, w in enumerate(ws[0]):
+        rows = [x[i] for x in ws]
+        if not all(isinstance(r, dict) and r.get("name") == w.get("name") for r in rows):
+            return None
+        wi, wo = _sum_lists([r.get("with") for r in rows]), _sum_lists([r.get("without")
+                                                                        for r in rows])
+        if wi is None or wo is None:
+            return None
+        out.append({**w, "with": wi, "without": wo})
+    return out
+
+
+def _slim_combos(cards: list, info: dict) -> list:
+    """The kept cards with each combo card slimmed (see COMBO_COPY) when all of its parts' cards
+    are kept; others unchanged. `info`: the payload's market_info (parts, label, tested,
+    calibration per market). A new list: the cards themselves are never changed."""
+    by = {(c.get("player_id"), c.get("market")): c for c in cards}
+    out = []
+    for c in cards:
+        mi = info.get(c.get("market")) or {}
+        ps = mi.get("parts") if c.get("untested") else None
+        src = [by.get((c.get("player_id"), q)) for q in ps or ()]
+        if not ps or not all(src):
+            out.append(c)
+            continue
+        first, ci = src[0], _combo_info(mi)
+        drop = {k for k in COMBO_COPY if k in c and k in first and c[k] == first[k]}
+        drop |= {k for k, v in ci.items() if k in c and c[k] == v}
+        drop |= {k for k in COMBO_NULL if k in c and c[k] is None}
+        if "log" in c and c["log"] == _summed_log(src):
+            drop.add("log")
+        if "wowy" in c and c["wowy"] == _summed_wowy(src):
+            drop.add("wowy")
+        out.append({**{k: v for k, v in c.items() if k not in drop}, "slim": 1} if drop else c)
+    return out
+
+
+def _combos_kept(cards: list) -> list:
+    """The cards without combo cards of players the bookmakers do not price: kept when he has a
+    line in any market (line_known) or a stored line for that combo (market_line)."""
+    return [c for c in cards if not c.get("untested") or c.get("line_known") is True
+            or c.get("market_line")]
+
+
+COMBO_JS = ("\n  var COPY = " + json.dumps(list(COMBO_COPY)) + ", NUL = "
+            + json.dumps(list(COMBO_NULL)) + ";" + """
+  var info = p.market_info || {}, by = {};
+  p.cards.forEach(function (c) { by[c.player_id + "|" + c.market] = c; });
+  function sum(arrs) {
+    return arrs[0].map(function (_, i) {
+      var t = 0;
+      for (var j = 0; j < arrs.length; j++) {
+        if (arrs[j][i] == null) return null;
+        t += arrs[j][i];
+      }
+      return t;
+    });
+  }
+  p.cards.forEach(function (c) {
+    var mi = info[c.market];
+    if (c.slim !== 1 || !mi || !Array.isArray(mi.parts)) return;
+    var src = mi.parts.map(function (m) { return by[c.player_id + "|" + m]; });
+    if (src.some(function (x) { return !x; })) return;
+    var first = src[0];
+    COPY.forEach(function (k) { if (!(k in c) && k in first) c[k] = first[k]; });
+    if (!("log" in c) && first.log) {
+      c.log = Object.assign({}, first.log, { values: sum(src.map(function (x) { return x.log.values; })) });
+    }
+    if (!("wowy" in c) && Array.isArray(first.wowy)) {
+      c.wowy = first.wowy.map(function (w, i) {
+        var ws = src.map(function (x) { return x.wowy[i]; });
+        return Object.assign({}, w, { "with": sum(ws.map(function (x) { return x["with"]; })),
+                                      without: sum(ws.map(function (x) { return x.without; })) });
+      });
+    }
+    if (!("market_label" in c)) c.market_label = mi.label;
+    if (!("untested" in c)) c.untested = !mi.tested;
+    if (!("p_cal_basis" in c)) c.p_cal_basis = mi.calibration == null ? null : mi.calibration;
+    NUL.forEach(function (k) { if (!(k in c)) c[k] = null; });
+    delete c.slim;
+  });
+""")
+REHYDRATE = REHYDRATE_HEAD.replace("%s", COMBO_JS, 1)
 
 
 def _nba_extras(ex: dict, cards: list) -> dict:
@@ -201,6 +353,8 @@ def _add_nba(data: dict, min_p_play: float = 0.5) -> None:
     props = dict(nba.props())  # a copy: the cached payload itself is never trimmed
     shared = props.get("factor_tests") or None
     props["cards"] = [_nba_card(c, shared) for c in props["cards"] if c["p_play"] >= min_p_play]
+    props["cards"] = _combos_kept(props["cards"])  # combos only for players the books price
+    props["snapshot_combos_lined_only"] = True
     props["snapshot_min_p_play"] = min_p_play
     props["snapshot_factors_lined_only"] = True  # factor tabs only on cards with a line
     if shared and shared.get("tested"):  # each factor's `tested` lines kept once (REHYDRATE)
@@ -208,6 +362,11 @@ def _add_nba(data: dict, min_p_play: float = 0.5) -> None:
     if shared and (shared.get("reliability") or shared.get("overall")):  # labels, likewise
         props["snapshot_labels_shared"] = True
     props["extras"] = _nba_extras(props.get("extras") or {}, props["cards"])
+    # last, once everything else has read the full cards: combo cards without what REHYDRATE
+    # rebuilds from their parts' cards (_slim_combos)
+    props["cards"] = _slim_combos(props["cards"], props.get("market_info") or {})
+    if any("slim" in c for c in props["cards"]):
+        props["snapshot_combos_slim"] = True
     data["/api/nba/props"] = nba.clean(props)
     data["/api/nba/backtests"] = nba.clean(nba.backtests())
     for g in s["games"]:

@@ -99,6 +99,8 @@ const fair = (pw, pp = 0) => (pw > 0 ? (pw + (1 - pw - pp)) / pw : null);
 const tip = document.createElement("div"); tip.id = "tip"; tip.hidden = true; tip.setAttribute("role", "tooltip"); document.body.appendChild(tip);
 let tipFor = null, tipPinned = false, lastPtr = -1e9;
 function placeTip(x, y, box) {
+  // measure at the origin: a fixed tip left where the previous one sat shrinks to the room left of it
+  tip.style.left = "0px"; tip.style.top = "0px";
   const w = tip.offsetWidth, h = tip.offsetHeight;
   // beside the pointer, or centred above the element (below it when there is no room above)
   let top = (box ? box.top : y) - h - 12; if (box && top < 8) top = box.bottom + 10;
@@ -734,8 +736,35 @@ function endPlace(rank, of, first, last) {
 }
 
 // ---------------------------------------------------------------- NBA
-const NBA_MKT = { pts: "Points", reb: "Rebounds", ast: "Assists", fg3m: "3-pointers made", pra: "Pts + Reb + Ast" };
-const NBA_SHORT = { pts: "PTS", reb: "REB", ast: "AST", fg3m: "3PM", pra: "PRA" };
+const NBA_MKT = { pts: "Points", reb: "Rebounds", ast: "Assists", fg3m: "3-pointers made", pra: "Pts + Reb + Ast", pr: "Pts + Reb", pa: "Pts + Ast", ra: "Reb + Ast" };
+const NBA_SHORT = { pts: "PTS", reb: "REB", ast: "AST", fg3m: "3PM", pra: "PRA", pr: "P+R", pa: "P+A", ra: "R+A" };
+// The two-stat combos (added 4 Nov 2026) are built like PRA from the same forecasts. We hold no
+// past bookmaker lines for them, so nothing about them has been tested against prices: their
+// cards carry `untested` and show no tested model view at a US line unless the props payload
+// has a proxy calibration for them (p_cal_basis "combo_proxy"), which is then flagged as such.
+// The props payload's market_info (parts, opp_stat, tested) is read first; these are the fallback.
+const NBA_COMBOS = ["pr", "pa", "ra"];
+const NBA_PARTS = { pra: ["pts", "reb", "ast"], pr: ["pts", "reb"], pa: ["pts", "ast"], ra: ["reb", "ast"] };
+const NBA_OPP = { pra: "pts", pr: "pts", pa: "pts", ra: "reb" }; // the stat whose opponent factor and rank a summed market shows
+const nbaInfo = (mk) => cache.get("/api/nba/props")?.market_info?.[mk] || null;
+const partsOf = (mk) => { const p = nbaInfo(mk)?.parts; return Array.isArray(p) && p.length ? p : NBA_PARTS[mk] || null; };
+const oppStat = (mk) => nbaInfo(mk)?.opp_stat || NBA_OPP[mk] || mk;
+const isUntested = (mk) => { const i = nbaInfo(mk); return i && typeof i.tested === "boolean" ? !i.tested : NBA_COMBOS.includes(mk); };
+const untested = (c) => !!c && (c.untested === true || isUntested(c.market));
+const UNTESTED_NOTE = "Pts + Reb, Pts + Ast and Reb + Ast are built like PRA, from the same points, rebounds and assists forecasts. We hold no past bookmaker lines for them, so nothing about them has been tested against prices: a lean or a chance shown for them is untested.";
+const comboNote = () => cache.get("/api/nba/props")?.combo_note || UNTESTED_NOTE;
+// a market as a sentence names it: a summed market in full the first time a block names it
+// ("P+R (points + rebounds)", recorded in `said`), by its short name after; a single stat by its
+// long name ("rebounds")
+function mkName(said, mk) {
+  if (!partsOf(mk)) return NBA_LONG[mk] || mk;
+  if (said && said[mk]) return NBA_SHORT[mk] || mk;
+  if (said) said[mk] = true;
+  return `${NBA_SHORT[mk] || mk} (${NBA_LONG[mk] || mk})`;
+}
+// "P+R = points + rebounds; R+A = rebounds + assists" for the summed markets among `mks`
+const andList = (l) => (l.length > 1 ? `${l.slice(0, -1).join(", ")} and ${l[l.length - 1]}` : l.join(""));
+const sumKey = (mks) => [...new Set(mks)].filter((m) => partsOf(m)).map((m) => `${NBA_SHORT[m]} = ${NBA_LONG[m]}`).join("; ");
 
 // an injury field the source leaves unspecified reads as empty (as npl.nba.extras._spec)
 const UNSPEC = new Set(["", "nan", "none", "not specified", "unknown"]);
@@ -755,18 +784,18 @@ function nbaCard(c, idx, cal) {
   const ms = c.minutes_lineup_shift, minShift = ms && Math.abs(ms) >= 1 ? minusShown(c.minutes_expected, c.minutes_expected - ms, 0) : 0;
   // the opponent chips name their direction: ranks arrive with 1 = allows least (defence) and
   // 1 = fastest (pace)
-  const oStat = c.market === "pra" ? "pts" : c.market, oPlace = o ? endPlace(o.rank, 30, "fewest", "most") : "";
+  const oStat = oppStat(c.market), oPlace = o ? endPlace(o.rank, 30, "fewest", "most") : "";
   const pPlace = c.opp_pace ? endPlace(c.opp_pace.rank, 30, "fastest", "slowest") : "";
   return `<article class="pcard">
     <header>${avatar(c.team, c.name, c.player_id, "nba")}<div class="who">${nameLink(hasNbaPage(c.player_id), `#nba-player.${esc(c.player_id)}.${esc(c.market)}`, c.name)}
       <div class="sub">${esc(c.position)} · ${esc(c.team)} ${c.is_home ? "v" : "@"} ${esc(c.opponent)} · <span class="nw">${esc(c.tip_london)}</span></div></div>${nbaInjury(c.injury)}</header>
-    <div class="pline"><div><span class="mk">${esc(NBA_MKT[c.market])}</span><button class="linebtn" data-line="${idx}" aria-label="Change the line">${line}<small>${src} ${ICONS.pen}</small></button></div>
+    <div class="pline"><div><span class="mk">${esc(NBA_MKT[c.market])}${untested(c) ? ` <span class="utag">untested</span>` : ""}</span><button class="linebtn" data-line="${idx}" aria-label="Change the line">${line}<small>${src} ${ICONS.pen}</small></button></div>
       <div class="proj"><b>${dec(c.mean, 1)}</b><span>projection</span></div></div>
     ${nbaOuBar(ch, isFair)}
     ${usPrices(c)}
     ${hitChips(c.log, line, c.opponent)}
     ${miniBars(c.log, line, 10)}
-    <div class="facts"><span data-tip="Chance he plays|${c.injury ? "Includes the injury report (assumed effect, not validated)" : "From recent appearances"}">Plays ${pct(c.p_play)}</span><span data-tip="Expected minutes|${c.minutes_lineup_shift ? `Includes ${pm1(c.minutes_lineup_shift)} for teammates out tonight or back from absences` : "No change for teammates in or out"}">Min ${dec(c.minutes_expected, 0)}${minShift ? ` <small>(${pm2(minShift)})</small>` : ""}</span><span>80% range ${c.q10}–${c.q90}</span>${c.simple != null ? `<span data-tip="Simple baseline|Season average x opponent allowed x rest days x minutes trend. A rule-of-thumb check, not the model: its line gaps have not beaten the market so far.">Simple ${dec(c.simple, 1)}</span>` : ""}
+    <div class="facts"><span data-tip="Chance he plays|${c.injury ? "Includes the injury report (assumed effect, not validated)" : "From recent appearances"}">Plays ${pct(c.p_play)}</span><span data-tip="Expected minutes|${c.minutes_lineup_shift ? `Includes ${pm1(c.minutes_lineup_shift)} for teammates out tonight or back from absences` : "No change for teammates in or out"}">Min ${dec(c.minutes_expected, 0)}${minShift ? ` <small>(${pm2(minShift)})</small>` : ""}</span><span>80% range ${c.q10}–${c.q90}</span>${c.simple != null ? `<span data-tip="Simple baseline|Season average x opponent allowed x rest days x minutes trend. A rule-of-thumb check, not the model: ${untested(c) ? "never tested for this market (no past lines)" : "its line gaps have not beaten the market so far"}.">Simple ${dec(c.simple, 1)}</span>` : ""}
       ${o ? `<span class="mu ${rankTone(o.rank)}" data-tip="${esc(c.opponent)} defence v ${esc(NBA_SHORT[oStat])}|Allows the ${oPlace} ${esc(NBA_LONG[oStat])} per possession of the 30 teams; model factor ${pm1(shift(o.factor, 2) - 100)}%">Opp. defence: ${oPlace} allowed</span>` : ""}
       ${dvpChip(c)}
       ${c.opp_pace ? `<span data-tip="${esc(c.opponent)} pace|${esc(c.opp_pace.value)} possessions per 48 min, the ${pPlace} of the 30 teams">Pace: ${pPlace}</span>` : ""}</div>
@@ -808,7 +837,7 @@ const TINY = 5; // fewer games or player-games than this: "tiny sample"
 const tinyTag = (n) => (n != null && n > 0 && n < TINY ? `<span class="tinys">tiny sample</span>` : "");
 const LEAN_PP = 3; // model and market chances (whole per cent, as shown) under 3 percentage points apart: "No lean"
 const THIN_BOOKS = 3; // fewer books than this at the line, or no regulated best price: a thin market, no lean
-const NBA_LONG = { pts: "points", reb: "rebounds", ast: "assists", fg3m: "3-pointers made", pra: "points + rebounds + assists" };
+const NBA_LONG = { pts: "points", reb: "rebounds", ast: "assists", fg3m: "3-pointers made", pra: "points + rebounds + assists", pr: "points + rebounds", pa: "points + assists", ra: "rebounds + assists" };
 // The props payload's `calibration` (npl.nba.calib through appdata): the V4 slope per market for
 // the edition's model version and the slope below which a market has no model view at the
 // bookmakers' line (D-043). null, missing or for another version: no calibrated chance at all.
@@ -828,17 +857,29 @@ function shortTime(iso) { return iso ? new Intl.DateTimeFormat("en-GB", { timeZo
 //   flat    bookmakers' line, calibration slope below flat_below: no model view
 //   thin    fewer than 3 books or no regulated best price: no lean (calibrated chance still shown)
 //   nopcal  bookmakers' line with no calibrated chance stored
+//   untested  a combo (P+R, P+A, R+A) at the bookmakers' line with no proxy calibration: no past
+//           lines, so no tested model view at all
 //   lean    calibrated model v market; gap = their difference in whole percentage points, as shown
+// A combo never takes another market's slope: only the payload's calibration.combo_proxy, and
+// then every state built from it carries `proxy` (fitted on proxy lines, not bookmaker prices).
+// Every combo state carries `untested`.
 function nbaChance(c, line, cal) {
-  const L = new Dist(c.dist).line(line); const m = c.market_line;
-  const base = { ...L, raw: L.over, mk: c.market, show: true, cal: false };
+  const L = new Dist(c.dist).line(line); const m = c.market_line, ut = untested(c);
+  const base = { ...L, raw: L.over, mk: c.market, show: true, cal: false, untested: ut };
   if (!m || m.line !== line) return { ...base, kind: "raw", hasCal: !!cal };
   const at = { ...base, show: false, market: m.fair_over, books: m.books };
-  const b = cal ? cal.slope[c.market] : null;
-  if (b == null) return { ...at, kind: "nocal" };
-  if (b < cal.flat_below) return { ...at, kind: "flat", slope: b, below: cal.flat_below };
+  let b = null, proxy = false;
+  if (ut) {
+    const px = cal && cal.combo_proxy && cal.combo_proxy.slope ? cal.combo_proxy.slope[c.market] : null;
+    if (c.p_cal_basis !== "combo_proxy" || px == null || c.p_cal_market == null) return { ...at, kind: "untested" };
+    b = px; proxy = true;
+  } else {
+    b = cal ? cal.slope[c.market] : null;
+    if (b == null) return { ...at, kind: "nocal" };
+  }
+  if (b < cal.flat_below) return { ...at, kind: "flat", slope: b, below: cal.flat_below, proxy };
   const pc = c.p_cal_market;
-  const calib = pc == null ? at : { ...at, over: pc, under: Math.max(0, 1 - pc - L.push), show: true, cal: true };
+  const calib = pc == null ? at : { ...at, over: pc, under: Math.max(0, 1 - pc - L.push), show: true, cal: true, proxy };
   if (m.books < THIN_BOOKS || m.best_over == null || m.best_under == null || m.fair_over == null) return { ...calib, kind: "thin" };
   if (pc == null) return { ...at, kind: "nopcal" };
   return { ...calib, kind: "lean", gap: pctInt(pc) - pctInt(m.fair_over), exact: pc - m.fair_over };
@@ -848,17 +889,27 @@ function nbaLean(ch, isFair) {
   const tag = (txt, tipTxt, cls = "") => `<span class="lean${cls ? " " + cls : ""}"${tipTxt ? ` data-tip="${esc(tipTxt)}"` : ""}>${txt}</span>`;
   const what = NBA_LONG[ch.mk] || ch.mk;
   if (ch.kind === "raw") return tag(isFair ? "Model's 50/50 line" : "No market at this line");
+  if (ch.kind === "untested") return tag("No tested model view for this market (no past lines)", `No tested model view|We hold no past bookmaker lines for ${NBA_SHORT[ch.mk] || ch.mk} (${what}), so the model has never been checked against prices for it and no chance is shown at the US line. A line you type shows the raw model, untested.`);
   if (ch.kind === "nocal") return tag("No calibrated chance for this model", "No calibrated chance|This model version has no calibration on real bookmakers' lines, so the card shows no chance at the US line. A line you type shows the raw model.");
-  if (ch.kind === "flat") return tag("No model view at this line", `No model view|Tested on real lines, the calibrated chance for ${what} barely follows the model (slope ${dec(ch.slope, 2)}; below ${dec(ch.below, 1)} counts as no view), so a gap to the market would mostly show the price.`);
+  if (ch.kind === "flat") return tag("No model view at this line", ch.proxy ? `No model view|On proxy lines (not bookmaker prices) the calibrated chance for ${what} barely follows the model (slope ${dec(ch.slope, 2)}; below ${dec(ch.below, 1)} counts as no view). Untested against prices.`
+    : `No model view|Tested on real lines, the calibrated chance for ${what} barely follows the model (slope ${dec(ch.slope, 2)}; below ${dec(ch.below, 1)} counts as no view), so a gap to the market would mostly show the price.`);
   if (ch.kind === "thin") return tag(`No lean: thin market (${plural(ch.books, "book")})`, `Thin market|${plural(ch.books, "US book")} at this line${ch.books >= THIN_BOOKS ? ", but no regulated best price" : ""}. Setting the model against the market needs ${THIN_BOOKS} or more books and a regulated best price on both sides.`);
   if (ch.kind === "nopcal") return tag("No calibrated chance at this line", "No calibrated chance|None was stored for this line, so the model is not set against the market here.");
   const vs = `model ${pct(ch.over)} v market ${pct(ch.market)}`, gap = Math.abs(ch.gap);
-  const tipTxt = `Model v market|Calibrated model ${pct(ch.over)} v market ${pct(ch.market)} over (margin removed): ${plural(gap, "percentage point")} apart. Under ${LEAN_PP} apart: no lean. Not a pick: gaps like this have not made money on past lines.`;
-  if (gap < LEAN_PP) return tag(`No lean: ${vs}`, tipTxt);
-  return tag(`Leans ${ch.gap > 0 ? "over" : "under"}: ${vs}`, tipTxt, ch.gap > 0 ? "over" : "under");
+  const tipTxt = ch.proxy ? `Model v market|Proxy-calibrated model ${pct(ch.over)} v market ${pct(ch.market)} over (margin removed): ${plural(gap, "percentage point")} apart. Under ${LEAN_PP} apart: no lean. The calibration was fitted on proxy lines, not bookmaker prices, and no gap in this market has ever been tested against prices.`
+    : `Model v market|Calibrated model ${pct(ch.over)} v market ${pct(ch.market)} over (margin removed): ${plural(gap, "percentage point")} apart. Under ${LEAN_PP} apart: no lean. Not a pick: gaps like this have not made money on past lines.`;
+  const ut = ch.proxy ? " (untested)" : "";
+  if (gap < LEAN_PP) return tag(`No lean: ${vs}${ut}`, tipTxt);
+  return tag(`Leans ${ch.gap > 0 ? "over" : "under"}: ${vs}${ut}`, tipTxt, ch.gap > 0 ? "over" : "under");
 }
 function calNote(ch) {
   const what = NBA_LONG[ch.mk] || ch.mk;
+  if (ch.untested) {  // a combo: never tested against prices, said every time a chance or lean is shown
+    if (ch.kind === "raw") return "Raw model chance, untested for this market (no past lines).";
+    if (ch.kind === "untested") return "No past lines, so nothing to test it on. Type a line for the raw model (untested).";
+    if (ch.proxy && ch.show) return `Fitted on proxy lines, not bookmaker prices: untested against prices (raw model ${pct(ch.raw)} over).`;
+    if (ch.proxy) return "Proxy calibration (fitted on proxy lines, not bookmaker prices); untested against prices. Type a line for the raw model.";
+  }
   if (ch.kind === "raw") return ch.hasCal ? "Raw model chance (calibrated only at a US line)." : "Raw model chance (this model version has no calibration).";
   if (ch.kind === "nocal") return "The raw model is far too confident at bookmakers' lines, so none is shown. Type a line for the raw model.";
   if (ch.kind === "flat") return `On real bookmakers' lines the model added almost nothing for ${esc(what)}. Type a line for the raw model.`;
@@ -933,7 +984,7 @@ function cxVolume(x) {
     <p class="tiny muted">Per game, except usage rate: the share of his team's plays he ends with a shot, free throws or a turnover while on court. Seasons: regular season only; last 5: his last 5 games this season. Shot volume = FGA + 0.44 × FTA.</p></section>`;
 }
 // "PRA (points + rebounds + assists)" the first time the context block names it, "PRA" after
-const praName = (said) => (said.pra ? "PRA" : ((said.pra = true), "PRA (points + rebounds + assists)"));
+const praName = (said) => mkName(said, "pra");
 // game lines from his team's side: spread, total, prices to win, implied points and the move
 function glRows(g, team, opp, home) {
   if (!g) return [["Game lines", `<span class="muted">none stored for this game</span>`]];
@@ -981,30 +1032,41 @@ function cxOpp(x, c, market, said, extra = [], place = placeFrom(false)) {
   if (d) rows.push(["Assists allowed", `<b>${dec(d.ast_allowed, 1)}</b> per game · ${place(d.ast_rank, d.of)}`],
     ["Defensive rebounds", `<b>${pct1(d.dreb_pct)}</b> DREB% · ${placeTxt(`${ord(d.dreb_rank)}-highest of ${d.of}`)}`]);
   else rows.push(["Defence", `<span class="muted">no team box scores this season yet</span>`]);
-  const mk = market === "pra" ? praName(said) : NBA_LONG[market] || market;
+  const mk = mkName(said, market), bare = partsOf(market) ? NBA_SHORT[market] || market : mk;
   // average result and average line per player-game; the difference is taken from the two
   // figures as shown
   const lines = [String(S.current), String(S.last)].filter((s) => pv[s]).map((s) => { const m = pv[s].markets?.[market]; const df = m ? minusShown(m.result, m.line, 1) : null;
-    return `${esc(seasonLab(S, s))}: ${m ? `average <b>${dec(m.result, 1)}</b> v line ${dec(m.line, 1)} <span class="${df > 0 ? "upc" : df < 0 ? "dnc" : ""}">(${pm1(df)})</span> · ${m.over} over, ${m.under} under · ${plural(m.n, "player-game")}${tinyTag(m.n)}` : `<span class="muted">no ${esc(market === "pra" ? "PRA" : mk)} lines stored</span>`}`; });
+    return `${esc(seasonLab(S, s))}: ${m ? `average <b>${dec(m.result, 1)}</b> v line ${dec(m.line, 1)} <span class="${df > 0 ? "upc" : df < 0 ? "dnc" : ""}">(${pm1(df)})</span> · ${m.over} over, ${m.under} under · ${plural(m.n, "player-game")}${tinyTag(m.n)}` : `<span class="muted">no ${esc(bare)} lines stored</span>`}`; });
   rows.push([`${esc(POS_NAME[c.position] || c.position)} v ${esc(c.opponent)}: ${esc(mk)} v their lines`, lines.length ? lines.join("<br>") : `<span class="muted">no stored lines in ${esc(c.opponent)} games</span>`]);
   return `<section class="cx"><h4>Opponent: ${esc(c.opponent)}${d ? ` · ${esc(seasonLab(S, d.season))}, ${plural(d.games, "game")}` : ""}${d ? tinyTag(d.games) : ""}</h4>${kvl(rows)}</section>`;
 }
 // his games against tonight's opponent: result per stat, minus tonight's line (green over, red
-// under), and that night's stored line where we have one
+// under), and that night's stored line where we have one. The payload's arrays follow its stats
+// (the five original markets); a combo card's own market gets one more column, its result the
+// sum of its parts' entries, tonight's line the card's US line and no past line (none stored).
+function gridVal(arr, base, s) {
+  if (!Array.isArray(arr)) return null;
+  const i = base.indexOf(s); if (i >= 0) return arr[i];
+  const ps = partsOf(s); if (!ps) return null;
+  let t = 0; for (const q of ps) { const j = base.indexOf(q); if (j < 0 || arr[j] == null) return null; t += arr[j]; }
+  return t;
+}
 function cxGrid(x, c, market, said) {
   const g = x.vs_opp; if (!g || !c) return "";
-  const st = x.stats || NBA_STATS, n = (g.games || []).length;
+  const base = x.stats || NBA_STATS, n = (g.games || []).length;
+  const extra = partsOf(market) && !base.includes(market) ? market : null, st = extra ? [...base, extra] : base;
   if (!n) return `<section class="cx"><h4>v ${esc(g.opp)}</h4><p class="small muted">No games against ${esc(g.opp)} in our box scores.</p></section>`;
   const type = { R: "Reg.", I: "Play-in", P: "Playoffs" };
   const rows = g.games.map((r) => `<tr><td><b>${esc(dayFmt(r.d, "2-digit"))}</b><small>${type[r.t] || ""} ${r.h ? "home" : "away"}</small>${r.tm !== c.team ? `<small>for ${esc(r.tm)}</small>` : ""}</td>${st.map((s, i) => {
     // result minus tonight's line, from the two figures as shown in this column
-    const v = r.v ? r.v[i] : null, t = g.tonight ? g.tonight[i] : null, l = r.line ? r.line[i] : null;
+    const v = gridVal(r.v, base, s), t = s === extra ? c.market_line?.line ?? null : g.tonight ? g.tonight[i] : null, l = s === extra ? null : r.line ? r.line[i] : null;
     const d = v == null || t == null ? null : minusShown(v, t, 1);
     const cls = [d == null ? "" : d > 0 ? "ov" : d < 0 ? "un" : "ev", s === market ? "on" : ""].filter(Boolean).join(" ");
     return `<td${cls ? ` class="${cls}"` : ""}><b>${v == null ? "–" : v}</b>${d == null ? "" : `<small>${pm1(d)}</small>`}${l == null ? "" : `<em>${esc(l)}</em>`}</td>`; }).join("")}</tr>`).join("");
   return `<section class="cx"><h4>v ${esc(g.opp)} · ${plural(g.n, "game")}${tinyTag(g.n)}</h4><div class="tablewrap"><table class="vog"><thead><tr><th>Game</th>${st.map((s) => `<th${s === market ? ' class="on"' : ""}>${NBA_SHORT[s]}</th>`).join("")}</tr></thead>
-    <tbody><tr class="tn"><td>Tonight's line</td>${st.map((s, i) => `<td${s === market ? ' class="on"' : ""}>${g.tonight?.[i] == null ? "–" : esc(g.tonight[i])}</td>`).join("")}</tr>${rows}</tbody></table></div>
-    <p class="tiny muted">Newest first${g.n > n ? `, latest ${n} of ${g.n}` : ""}. Coloured: result minus tonight's line (green over, red under). Grey: that night's stored line, where we have one.${said && !said.pra && st.includes("pra") ? " PRA = points + rebounds + assists." : ""}</p></section>`;
+    <tbody><tr class="tn"><td>Tonight's line</td>${st.map((s, i) => { const t = s === extra ? c.market_line?.line ?? null : g.tonight?.[i];
+      return `<td${s === market ? ' class="on"' : ""}>${t == null ? "–" : esc(t)}</td>`; }).join("")}</tr>${rows}</tbody></table></div>
+    <p class="tiny muted">Newest first${g.n > n ? `, latest ${n} of ${g.n}` : ""}. Coloured: result minus tonight's line (green over, red under). Grey: that night's stored line, where we have one.${said ? (() => { const k = sumKey(st.filter((s) => !said[s])); return k ? ` ${esc(k)}.` : ""; })() : ""}${extra ? ` ${esc(NBA_SHORT[extra])}: his ${esc(NBA_LONG[extra])} added up; no past ${esc(NBA_SHORT[extra])} lines are stored.` : ""}</p></section>`;
 }
 function cxNotes(x) {
   const n = x.notes || {}; const keys = ["volume", "script", "defence", "pos_v_opp", "vs_opp", "injury", "game_lines"].filter((k) => n[k]);
@@ -1053,7 +1115,13 @@ function fxRule(T, k, figures = true) {
 // `tested`, each rule's test-season figures from factor_tests, as before.
 const SEASON_RE = /\b\d{4}-\d{2}\b/;
 const seasonOf = (s, alt) => (SEASON_RE.test(String(s || "")) ? String(s).split(":")[0].trim() : alt);
-function fxTest(k, f, T) {
+function fxTest(k, f, T, combo = false) {
+  // a combo market: the rule in words only. It was never tested on this market (no past lines),
+  // and the other markets' results are not shown, since they do not carry over
+  if (combo) {
+    const rules = FX_RULES[k].map((r) => fxRule(T, r, false)).filter(Boolean).join("");
+    return `<details class="ftest"><summary>How this lean is set</summary>${rules ? `<ul>${rules}</ul>` : ""}${k === "role" ? "<p>Either rule alone sets the lean; both together, or neither, give no lean.</p>" : ""}<p>Never tested on this market (no past lines). Its results on the five markets it was tested on are not shown here: they do not carry over to this one.</p></details>`;
+  }
   const t = f?.tested && typeof f.tested === "object" ? f.tested : null;
   const seasons = t ? [[t.fit, seasonOf(T?.fit, "First season")], [t.test, seasonOf(T?.test, "Second season")]].filter(([s]) => typeof s === "string" && s.trim()) : [];
   const role = k === "role" ? "<p>Either rule alone sets the lean; both together, or neither, give no lean.</p>" : "";
@@ -1086,9 +1154,9 @@ function muMost(f) {
 // opponent ranks, the position v the opponent's lines and his games against them
 function fxMatchup(c, x, f, said) {
   const ev = f?.evidence || {}, grp = POS_ONE[c.position], rows = [], fewest = f?.lean === "under", place = placeFrom(fewest);
-  if (ev.allowed != null && grp) rows.push([`${esc(c.opponent)} v ${esc(grp)}`, `<b>${dec(ev.allowed, 1)}</b> ${esc(c.market === "pra" ? praName(said) : NBA_LONG[c.market] || c.market)} a game, all ${esc(grp)} combined · ${placeTxt(`${fewest ? `${ord(ev.rank)}-fewest` : `${ord(muMost(f))}-most`} of ${ev.of}`)} · ${plural(ev.games, "game")}${tinyTag(ev.games)}`]);
-  const o = c.opp_factor, pc = c.opp_pace, per = NBA_LONG[c.market === "pra" ? "pts" : c.market];
-  if (o) rows.push([`Defence v ${esc(NBA_SHORT[c.market === "pra" ? "pts" : c.market])}`, `${place(o.rank, 30)} <span class="muted">(${esc(per)} allowed per possession)</span>`]);
+  if (ev.allowed != null && grp) rows.push([`${esc(c.opponent)} v ${esc(grp)}`, `<b>${dec(ev.allowed, 1)}</b> ${esc(mkName(said, c.market))} a game, all ${esc(grp)} combined · ${placeTxt(`${fewest ? `${ord(ev.rank)}-fewest` : `${ord(muMost(f))}-most`} of ${ev.of}`)} · ${plural(ev.games, "game")}${tinyTag(ev.games)}`]);
+  const o = c.opp_factor, pc = c.opp_pace, os = oppStat(c.market), per = NBA_LONG[os] || os;
+  if (o) rows.push([`Defence v ${esc(NBA_SHORT[os] || os)}`, `${place(o.rank, 30)} <span class="muted">(${esc(per)} allowed per possession)</span>`]);
   if (pc) rows.push(["Pace", `${placeTxt(`${ord(pc.rank)}-fastest of 30`)} <span class="muted">(${dec(pc.value, 1)} possessions per 48 min)</span>`]);
   if (x) return cxOpp(x, c, c.market, said, rows, place) + cxGrid(x, c, c.market, said);
   return rows.length ? `<section class="cx"><h4>Opponent: ${esc(c.opponent)}</h4>${kvl(rows)}</section>` : "";
@@ -1116,15 +1184,16 @@ function fxRole(c, x, f) {
 // A note as the tabs show it: the tabs write a place with its direction ("6th-most of 30"), so a
 // note's sentence on which end rank 1 is ("Rank 1 = gives up least ...") is left out.
 const fxNote = (s) => String(s ?? "").replace(/\s*\bRank 1 = [^.]*\./g, "").trim();
-function fxNotes(x, T) {
+function fxNotes(x, T, combo = false) {
   const n = x?.notes || {}; const keys = ["volume", "script", "defence", "pos_v_opp", "vs_opp", "injury", "game_lines"].filter((k) => fxNote(n[k]));
-  const tested = T?.summary ? `<p class="tiny muted"><b>Factor leans.</b> ${esc(T.summary)} Rules fixed before any result was seen and checked on ${esc(T.fit)} and the ${esc(T.test)}.</p>` : "";
+  const tested = combo ? `<p class="tiny muted"><b>Factor leans.</b> ${esc(T?.untested?.overall || "Not tested for this market: we hold no past bookmaker lines for it, so nothing here has been checked against prices.")}${T?.summary ? ` On the five markets the rules were tested on (${esc(T.fit)} and the ${esc(T.test)}): ${esc(T.summary)}` : ""}</p>`
+    : T?.summary ? `<p class="tiny muted"><b>Factor leans.</b> ${esc(T.summary)} Rules fixed before any result was seen and checked on ${esc(T.fit)} and the ${esc(T.test)}.</p>` : "";
   return keys.length || tested ? `<details class="cxnotes"><summary class="tiny">How these are measured and tested</summary>${tested}${keys.map((k) => `<p class="tiny muted">${esc(fxNote(n[k]))}</p>`).join("")}</details>` : "";
 }
 // the four tabs for one card: the summary line, the tab row, one panel per tab (the first open
 // unless `keep` names a player page whose open tab is remembered)
 function fxBlock(c, x, P, { keep = null } = {}) {
-  const F = c.factors && typeof c.factors === "object" ? c.factors : null, T = P?.factor_tests || null, uid = `fx${++fxSeq}`;
+  const F = c.factors && typeof c.factors === "object" ? c.factors : null, T = P?.factor_tests || null, uid = `fx${++fxSeq}`, combo = untested(c);
   const open = keep && fxKeep?.key === keep && FX_TABS.some(([k]) => k === fxKeep.tab) ? fxKeep.tab : FX_TABS[0][0];
   const why = SNAP && P?.snapshot_factors_lined_only && !c.market_line ? "the offline copy keeps them only for cards with a US line" : "none were built for this card";
   const top = F?.overall?.text ? `<p class="fxall">${esc(F.overall.text)}</p>` : `<p class="fxall none">No factor leans here: ${why}. The context is under the same tabs.</p>`;
@@ -1132,11 +1201,11 @@ function fxBlock(c, x, P, { keep = null } = {}) {
   const tabs = FX_TABS.map(([k, label]) => { const f = F?.[k], on = k === open;
     return `<button type="button" role="tab" id="${uid}-t-${k}" aria-controls="${uid}-p-${k}" aria-selected="${on}" tabindex="${on ? 0 : -1}" data-ftab="${k}"><b>${esc(label)}</b>${f ? fxTag(f.lean) : ""}</button>`; }).join("");
   const panels = FX_TABS.map(([k]) => { const f = F?.[k], said = { pra: false }; // each tab names PRA in full the first time
-    const head = f ? `<div class="fhd"><p class="fhl">${esc(f.headline)}</p><p class="frel">${esc(f.reliability)}</p>${fxTest(k, f, T)}</div>` : "";
+    const head = f ? `<div class="fhd"><p class="fhl">${esc(f.headline)}</p><p class="frel">${esc(f.reliability)}</p>${fxTest(k, f, T, combo)}</div>` : "";
     return `<div class="fpanel" role="tabpanel" id="${uid}-p-${k}" aria-labelledby="${uid}-t-${k}" tabindex="0"${k === open ? "" : " hidden"}>${head}
       ${body[k](said) || `<p class="small muted">No further figures for this card.</p>`}${f && fxNote(T?.notes?.[k]) ? `<p class="tiny muted">${esc(fxNote(T.notes[k]))}</p>` : ""}</div>`; }).join("");
   const missing = x ? "" : `<p class="tiny muted">No context figures for this card${P?.extras?.error ? ` (${esc(P.extras.error)})` : ""}.</p>`;
-  return `<div class="fx"${keep ? ` data-keep="${esc(keep)}"` : ""}>${top}<div class="ftabs" role="tablist" aria-label="Factor check">${tabs}</div>${panels}${missing}${fxNotes(x, T)}<p class="tiny muted">Context only: none of these figures feeds the projection.</p></div>`;
+  return `<div class="fx"${keep ? ` data-keep="${esc(keep)}"` : ""}>${top}<div class="ftabs" role="tablist" aria-label="Factor check">${tabs}</div>${panels}${missing}${fxNotes(x, T, combo)}<p class="tiny muted">Context only: none of these figures feeds the projection.</p></div>`;
 }
 // tabs: a tap or click opens one; arrow keys, Home and End move along the row (WAI-ARIA tabs)
 function fxSelect(btn, focus) {
@@ -1159,8 +1228,8 @@ function openNbaSheet(c, P, opener) {
   const x = nbaCtx(c, P.extras);
   const back = document.createElement("div"); back.className = "sheet-back";
   back.innerHTML = `<div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(c.name)}: factor check and context">
-    <div class="row between" style="flex-wrap:nowrap;align-items:flex-start"><div><span class="eyebrow">${esc(c.team)} ${c.is_home ? "v" : "@"} ${esc(c.opponent)} · ${esc(c.tip_london)}</span><h2>${esc(c.name)}</h2><p class="tiny muted">Factor check and context for his ${esc(NBA_LONG[c.market] || c.market)} card${c.market_line ? ` (US line ${esc(c.market_line.line)})` : ""}</p></div><button class="btn ghost" data-close>Close</button></div>
-    ${fxBlock(c, x, P)}
+    <div class="row between" style="flex-wrap:nowrap;align-items:flex-start"><div><span class="eyebrow">${esc(c.team)} ${c.is_home ? "v" : "@"} ${esc(c.opponent)} · ${esc(c.tip_london)}</span><h2>${esc(c.name)}</h2><p class="tiny muted">Factor check and context for his ${esc(NBA_COMBOS.includes(c.market) ? mkName({}, c.market) : (NBA_LONG[c.market] || c.market))} card${c.market_line ? ` (US line ${esc(c.market_line.line)})` : ""}</p></div><button class="btn ghost" data-close>Close</button></div>
+    ${untested(c) ? `<p class="utest">${esc(comboNote())}</p>` : ""}${fxBlock(c, x, P)}
     ${hasNbaPage(c.player_id) ? `<p class="small sheetlink"><a href="#nba-player.${esc(c.player_id)}.${esc(c.market)}">${esc(c.name)}: full player page (${esc(NBA_SHORT[c.market] || c.market)})</a></p>` : `<p class="tiny sheetlink nopage">His player page is not in this offline copy.</p>`}</div>`;
   document.body.appendChild(back);
   const release = sheetFocus(back, opener);
@@ -1365,6 +1434,8 @@ async function openPcSheet(opener) {
     if (!R.length) { body.innerHTML = `<p class="small pcempty">No legs yet. Use "Add to parlay check" on a card with a US line, then choose over or under.</p>`; return; }
     body.innerHTML = `${ok.length ? `<ol class="pclegs">${ok.map((l, i) => row(l, i + 1)).join("")}</ol>` : ""}
       ${old.length ? `<p class="tiny pcold">Left out of the sums:</p><ul class="pclegs">${old.map((l) => row(l, 0)).join("")}</ul>` : ""}
+      ${(() => { const sm = R.map((l) => l.mk), k = sumKey(sm), ut = [...new Set(sm.filter((m) => isUntested(m)))];
+        return k ? `<p class="tiny pckey">${esc(k)}.${ut.length ? ` No past lines for ${esc(andList(ut.map((m) => NBA_SHORT[m])))}, so the model was never tested on ${ut.length > 1 ? "them" : "it"}; a leg's chance here is the books' own.` : ""}</p>` : ""; })()}
       ${res ? `<div class="pcsum"><div><span class="l">Combined fair chance</span><b>${pct1(res.chance)}</b>${res.independent ? "" : `<span class="tinys">legs share a game</span>`}</div><div><span class="l">Fair decimal odds</span><b>${dec(res.fair_odds, 2)}</b></div></div>
         ${res.warnings.length ? `<ul class="pcwarn">${res.warnings.map((w) => `<li>${ICONS.warn}<span>${esc(w)}</span></li>`).join("")}</ul>` : ""}
         <form class="pcodds" autocomplete="off"><label for="pcOdds">Offered odds for the whole parlay</label><input id="pcOdds" type="text" enterkeyhint="done" spellcheck="false" autocapitalize="off" placeholder="e.g. 4.5, +350 or 7/2" value="${esc(odds)}" aria-describedby="pcEv"><output id="pcEv" class="pcev" for="pcOdds" aria-live="polite"></output></form>` : ""}
@@ -1457,8 +1528,13 @@ async function viewNbaProps(v) {
   const p = await api("/api/nba/props"); await dvpCtx().catch(() => null);
   const cal = nbaCal(p), flat = flatMarkets(cal);
   const all = p.cards;
+  // the market tabs, in the app's order: the five original markets, and a combo only when the board
+  // has cards for it (an edition published before the combos existed has none)
+  const have = new Set(all.map((c) => c.market));
+  const mkts = Object.keys(NBA_SHORT).filter((k) => !NBA_COMBOS.includes(k) || have.has(k)), combos = mkts.filter((k) => NBA_COMBOS.includes(k));
   const games = [...new Map(all.map((c) => [c.game_id, `${c.is_home ? c.opponent : c.team} @ ${c.is_home ? c.team : c.opponent}`])).entries()];
   const f = Object.assign({ q: "", game: "", market: "pts", minp: "0.6", sort: "proj", form: "all" }, store.get("nbaFilter", {}));
+  if (!mkts.includes(f.market)) f.market = "pts";
   // hot: over the line in >= 4 of the last 5 and >= 7 of the last 10; cold: the reverse
   const formOf = (c) => { const { line } = lineFor("nba", c); const v = c.log.values; const h5 = hitRate(v.slice(-5), line), h10 = hitRate(v.slice(-10), line);
     if (!h5 || !h10 || h10.n < 10) return "none"; if (h5.over >= 4 && h10.over >= 7) return "hot"; if (h5.over <= 1 && h10.over <= 3) return "cold"; return "none"; };
@@ -1472,8 +1548,8 @@ async function viewNbaProps(v) {
   const wide = window.matchMedia("(min-width: 700px)").matches;
   v.innerHTML = `<section class="hero"><div class="medal">${leagueMark("nba")}</div><span class="eyebrow">NBA props · ${esc(p.date_et)} · saved ${esc(p.published_london)}</span><h1>Props board</h1>
       ${banner("warn", `<p><b>Research only: no demonstrated edge.</b> Tested on a full season of real bookmaker lines (about 72,000 props, 2024-25), the bookmakers' prices were more accurate than this model, and backing its leans lost about 2% at the best US prices (more at a single bookmaker). Use these cards to research, not as bets.</p>`)}
-      <details class="howto"${wide ? " open" : ""}><summary>How the cards work</summary><p>Each card shows the model's projection, its over/under chance at a line, and how often the player went over that line recently. The line is, in order: yours (tap it to type your bookmaker's), the US market line where stored (a research reference; US books are not open to UK bettors), or the model's fair 50/50 line. ${cal ? `At the US line the chance is calibrated on real lines; at any other line it is the raw model.${flat.length ? ` For ${esc(flat.map((k) => NBA_LONG[k]).join(" and "))} the calibration found almost no signal, so those cards show no model view at the US line.` : ""}` : "This model version has no calibration on real lines, so cards show no chance at the US line; at any other line they show the raw model."} "${esc(FX_BTN)}" opens four tabs (${esc(fxNames())}): how four simple rules read tonight (none made money at the best regulated price when tested on two seasons of real lines) with the context under each. "Add to parlay check" collects legs at the US line and combines their market chances.</p></details></section>
-    <div class="mktabs" role="tablist">${Object.entries(NBA_SHORT).map(([k, l]) => `<button role="tab" class="${k === f.market ? "on" : ""}" data-mk="${k}">${l}</button>`).join("")}</div>
+      <details class="howto"${wide ? " open" : ""}><summary>How the cards work</summary><p>Each card shows the model's projection, its over/under chance at a line, and how often the player went over that line recently. The line is, in order: yours (tap it to type your bookmaker's), the US market line where stored (a research reference; US books are not open to UK bettors), or the model's fair 50/50 line. ${cal ? `At the US line the chance is calibrated on real lines; at any other line it is the raw model.${flat.length ? ` For ${esc(flat.map((k) => NBA_LONG[k]).join(" and "))} the calibration found almost no signal, so those cards show no model view at the US line.` : ""}` : "This model version has no calibration on real lines, so cards show no chance at the US line; at any other line they show the raw model."} "${esc(FX_BTN)}" opens four tabs (${esc(fxNames())}): how four simple rules read tonight (none made money at the best regulated price when tested on two seasons of real lines) with the context under each. "Add to parlay check" collects legs at the US line and combines their market chances.${combos.length ? ` ${esc(andList(combos.map((k) => mkName({}, k))))} are built like PRA from the same forecasts, but we hold no past bookmaker lines for them, so they have never been tested against prices: ${cal && cal.combo_proxy ? "any chance shown for them at a US line comes from a proxy calibration, fitted on proxy lines, not bookmaker prices" : "at a US line they show no tested model view"}.` : ""}</p></details></section>
+    <div class="mktabs${mkts.length > 5 ? " mk4" : ""}" role="tablist" aria-label="Market">${mkts.map((k) => `<button role="tab" aria-selected="${k === f.market}" class="${k === f.market ? "on" : ""}" data-mk="${k}"${partsOf(k) ? ` aria-label="${esc(NBA_SHORT[k])}: ${esc(NBA_LONG[k])}" title="${esc(NBA_LONG[k])}"` : ""}>${esc(NBA_SHORT[k])}</button>`).join("")}</div>
     <div class="filters nbaf" role="search">
       <label>Player<input type="search" id="nq" value="${esc(f.q)}" placeholder="Name"></label>
       <label>Game<select id="ngame"><option value="">All games</option>${games.map(([id, l]) => `<option value="${esc(id)}" ${id === f.game ? "selected" : ""}>${esc(l)}</option>`).join("")}</select></label>
@@ -1481,7 +1557,7 @@ async function viewNbaProps(v) {
       <label>Form<select id="nform">${[["all", "Everyone"], ["hot", "Hot: 4+ of last 5 over"], ["cold", "Cold: 1 or fewer of last 5 over"]].map(([k, l]) => `<option value="${k}" ${k === f.form ? "selected" : ""}>${l}</option>`).join("")}</select></label>
       <label>Sort<select id="nsort">${[["proj", "Projection"], ["edge", "Biggest gap to the market"], ["l10", "L10 hit rate"], ["tip", "Tip-off"]].map(([k, l]) => `<option value="${k}" ${k === f.sort ? "selected" : ""}>${l}</option>`).join("")}</select></label>
     </div>
-    <div class="countrow"><p class="tiny" id="ncount"></p>${snapMin != null ? `<p class="tiny" id="nsnap">This copy holds players at least ${pctInt(snapMin)}% likely to play.</p>` : ""}</div><div class="cards" id="ncards"></div><div class="row"><button class="btn ghost" id="nmore" hidden>Show more</button></div>`;
+    <div id="nnote"></div><div class="countrow"><p class="tiny" id="ncount"></p>${snapMin != null ? `<p class="tiny" id="nsnap">This copy holds players at least ${pctInt(snapMin)}% likely to play.</p>` : ""}</div><div class="cards" id="ncards"></div><div class="row"><button class="btn ghost" id="nmore" hidden>Show more</button></div>`;
   let shown = 24;
   const render = () => {
     let r = all.filter((c) => c.market === f.market && c.p_play >= +f.minp && (!f.game || c.game_id === f.game) && (!f.q || c.name.toLowerCase().includes(f.q.toLowerCase())) && (f.form === "all" || formOf(c) === f.form));
@@ -1491,17 +1567,19 @@ async function viewNbaProps(v) {
     // order it came
     let comparable = 0;
     const key = (c) => { const { line } = lineFor("nba", c);
-      if (f.sort === "edge") { const ch = nbaChance(c, line, cal); if (ch.kind !== "lean") return [1, 0, 0]; comparable++; return [0, -Math.abs(ch.gap), -Math.abs(ch.exact)]; }
+      // a combo's gap is never sorted on, even with a proxy calibration: untested against prices
+      if (f.sort === "edge") { const ch = nbaChance(c, line, cal); if (ch.kind !== "lean" || ch.untested) return [1, 0, 0]; comparable++; return [0, -Math.abs(ch.gap), -Math.abs(ch.exact)]; }
       if (f.sort === "l10") { const h = hitRate(c.log.values.slice(-10), line); return [-(h ? h.r : 0)]; } if (f.sort === "proj") return [-c.mean]; return [c.tip_utc]; };
     const cmp = (a, b) => { for (let i = 0; i < a.length; i++) { if (a[i] < b[i]) return -1; if (a[i] > b[i]) return 1; } return 0; };
     r = r.map((c) => [key(c), c]).sort((a, b) => cmp(a[0], b[0])).map((x) => x[1]);
     $("#ncount").textContent = `${r.length} players · ${NBA_MKT[f.market]}${f.form !== "all" ? ` · ${f.form} at each card's line (form describes the past; the last-10 average was the weakest forecast tested)` : ""}${f.sort === "edge" ? (comparable ? ` · ${comparable} can be set against the market; the rest follow` : " · none of these can be set against the market at its line, so the gap sort leaves them in order") : ""}`;
+    $("#nnote").innerHTML = isUntested(f.market) ? banner("info", `<p class="small"><b>${esc(mkName({}, f.market))}.</b> ${esc(comboNote())}${SNAP && p.snapshot_combos_lined_only ? ` This copy holds ${esc(NBA_SHORT[f.market])} cards only for players the books price.` : ""}</p>`) : "";
     $("#ncards").innerHTML = r.slice(0, shown).map((c) => nbaCard(c, all.indexOf(c), cal)).join("") || banner("info", "<p>No players match these filters.</p>");
     $("#nmore").hidden = r.length <= shown;
     bindLineButtons($("#ncards"), all, "nba", render);
   };
   const save = () => { store.set("nbaFilter", f); shown = 24; render(); };
-  $$(".mktabs button").forEach((b) => b.addEventListener("click", () => { f.market = b.dataset.mk; $$(".mktabs button").forEach((x) => x.classList.toggle("on", x === b)); save(); }));
+  $$(".mktabs button").forEach((b) => b.addEventListener("click", () => { f.market = b.dataset.mk; $$(".mktabs button").forEach((x) => { x.classList.toggle("on", x === b); x.setAttribute("aria-selected", String(x === b)); }); save(); }));
   $("#nq").addEventListener("input", (e) => { f.q = e.target.value; save(); });
   $("#ngame").addEventListener("change", (e) => { f.game = e.target.value; save(); });
   $("#nminp").addEventListener("change", (e) => { f.minp = e.target.value; save(); });
@@ -1529,19 +1607,21 @@ async function viewNbaPlayer(v, arg) {
     // one: the context block alone
     const ctxPanel = (x, card) => (card ? `<section class="panel fxpanel"><h2>Factor check</h2>${fxBlock(card, x, props, { keep: pid })}</section>`
       : x ? `<section class="panel"><h2>Context</h2>${ctxBlock(x, null, mk)}</section>` : "");
-    if (!c) { v.innerHTML = head + banner("info", "<p>No forecast for this player in the latest edition (no game tonight, or no previous NBA minutes).</p>") + ctxPanel(own, null) + logTable(P); return; }
+    if (!c) { v.innerHTML = head + banner("info", "<p>No forecast for this player in the latest edition (no game tonight, or no previous NBA minutes).</p>") + ctxPanel(own, null) + logTable(P, mk); return; }
     const { line, src, fair: isFair } = lineFor("nba", c); const D = new Dist(c.dist); const ch = nbaChance(c, line, cal);
-    v.innerHTML = head + `<div class="mktabs">${cards.map((x) => `<button class="${x.market === mk ? "on" : ""}" data-mk="${x.market}">${NBA_SHORT[x.market]}</button>`).join("")}</div>
-      <section class="panel"><div class="row between"><div><span class="eyebrow">${esc(c.team)} ${c.is_home ? "v" : "@"} ${esc(c.opponent)} · ${esc(c.tip_london)}</span><h2>${esc(NBA_MKT[mk])}</h2></div>${nbaInjury(c.injury)}</div>
+    const ut = untested(c), bev = ch.proxy ? "proxy-calibrated chance, untested against prices" : ch.cal ? "calibrated chance" : ut ? "raw model, untested for this market" : "raw model";
+    v.innerHTML = head + `<div class="mktabs${cards.length > 5 ? " mk4" : ""}">${cards.map((x) => `<button class="${x.market === mk ? "on" : ""}" data-mk="${x.market}" aria-pressed="${x.market === mk}"${partsOf(x.market) ? ` aria-label="${esc(NBA_SHORT[x.market])}: ${esc(NBA_LONG[x.market])}" title="${esc(NBA_LONG[x.market])}"` : ""}>${esc(NBA_SHORT[x.market])}</button>`).join("")}</div>
+      <section class="panel"><div class="row between"><div><span class="eyebrow">${esc(c.team)} ${c.is_home ? "v" : "@"} ${esc(c.opponent)} · ${esc(c.tip_london)}</span><h2>${esc(NBA_MKT[mk])}${ut ? ` <span class="utag">untested</span>` : ""}</h2></div>${nbaInjury(c.injury)}</div>
+        ${ut ? `<p class="utest">${esc(comboNote())}</p>` : ""}
         <div class="pline"><div><span class="mk">Line</span><button class="linebtn" data-line="0">${line}<small>${src} ${ICONS.pen}</small></button></div><div class="proj"><b>${dec(c.mean, 1)}</b><span>projection (median ${c.median}, 80% ${c.q10}–${c.q90})</span></div></div>
-        ${nbaOuBar(ch, isFair)}${usPrices(c)}${pcOk(c) ? `<div class="row cardacts">${pcButton(c, 0)}</div>` : ""}<p class="tiny solid bep">${ch.show ? `Break-even decimal prices at this line (${ch.cal ? "calibrated chance" : "raw model"}): over ${dec(fair(ch.over, ch.push), 2)}, under ${dec(fair(ch.under, ch.push), 2)}.` : "No break-even prices at this line: the card shows no model chance here."}</p>
+        ${nbaOuBar(ch, isFair)}${usPrices(c)}${pcOk(c) ? `<div class="row cardacts">${pcButton(c, 0)}</div>` : ""}<p class="tiny solid bep">${ch.show ? `Break-even decimal prices at this line (${bev}): over ${dec(fair(ch.over, ch.push), 2)}, under ${dec(fair(ch.under, ch.push), 2)}.` : "No break-even prices at this line: the card shows no model chance here."}</p>
         ${hitChips(c.log, line, c.opponent)}
         <h3 style="margin-top:12px">Last 20 games</h3>${miniBars(c.log, line, 20, { width: 640, height: 170 })}
         <h3 style="margin-top:12px">Model distribution</h3>${distChart(D, { line })}
         <p class="tiny solid">Conditional on playing (chance he plays ${pct(c.p_play)}). Model N1; simpler forecasts for comparison: recent average ${dec(c.baselines.A, 1)}, last-10 average ${dec(c.baselines.C, 1)}. "Break-even" is the decimal price at which a bet would neither win nor lose money if that chance were exactly right.</p></section>
       ${ctxPanel(nbaCtx(c, props.extras) || own, c)}
       <div id="mupanel"></div>
-      ${logTable(P)}`;
+      ${logTable(P, mk)}`;
     const mu = (season) => nbaMatchupPanel(c, season, props.date_et || null).then((h) => { const el = $("#mupanel", v); if (!el) return; el.innerHTML = h;
       $$("[data-museason]", el).forEach((b) => b.addEventListener("click", () => { store.set("muSeason", b.dataset.museason); mu(b.dataset.museason); })); });
     mu();
@@ -1553,20 +1633,31 @@ async function viewNbaPlayer(v, arg) {
   };
   draw();
 }
-function logTable(P) {
-  const rows = P.game_log.slice(-15).reverse();
-  return `<section class="panel"><h2>Game log</h2><div class="tablewrap"><table><thead><tr><th class="l">Date</th><th class="l">Opp</th><th>Min</th><th>PTS</th><th>REB</th><th>AST</th><th>3PM</th><th>PRA</th></tr></thead><tbody>
-    ${rows.map((r) => r.participation === "played" ? `<tr><td class="l">${esc(r.date)}${r.starter ? "" : ' <span class="tiny muted">bench</span>'}</td><td class="l">${r.home ? "v" : "@"} ${esc(r.opp)}</td><td>${dec(r.minutes, 0)}</td><td>${dec(r.pts, 0)}</td><td>${dec(r.reb, 0)}</td><td>${dec(r.ast, 0)}</td><td>${dec(r.fg3m, 0)}</td><td>${dec(r.pts + r.reb + r.ast, 0)}</td></tr>`
-      : `<tr class="dim"><td class="l">${esc(r.date)}</td><td class="l">${r.home ? "v" : "@"} ${esc(r.opp)}</td><td colspan="6" class="l">Did not play</td></tr>`).join("")}</tbody></table></div></section>`;
+// his last 15 games: minutes, the four box stats and PRA, and the open market's column when it
+// is a two-stat combo (its parts added up: P+R = points + rebounds)
+function logTable(P, mk) {
+  const rows = P.game_log.slice(-15).reverse(), ps = mk !== "pra" ? partsOf(mk) : null;
+  const sum = (r, q) => q.reduce((t, k) => (t == null || r[k] == null ? null : t + r[k]), 0);
+  return `<section class="panel"><h2>Game log</h2><div class="tablewrap"><table class="glog"><thead><tr><th class="l">Date</th><th class="l">Opp</th><th>Min</th><th>PTS</th><th>REB</th><th>AST</th><th>3PM</th><th>PRA</th>${ps ? `<th class="on">${esc(NBA_SHORT[mk])}</th>` : ""}</tr></thead><tbody>
+    ${rows.map((r) => r.participation === "played" ? `<tr><td class="l">${esc(r.date)}${r.starter ? "" : ' <span class="tiny muted">bench</span>'}</td><td class="l">${r.home ? "v" : "@"} ${esc(r.opp)}</td><td>${dec(r.minutes, 0)}</td><td>${dec(r.pts, 0)}</td><td>${dec(r.reb, 0)}</td><td>${dec(r.ast, 0)}</td><td>${dec(r.fg3m, 0)}</td><td>${dec(r.pts + r.reb + r.ast, 0)}</td>${ps ? `<td class="on">${dec(sum(r, ps), 0)}</td>` : ""}</tr>`
+      : `<tr class="dim"><td class="l">${esc(r.date)}</td><td class="l">${r.home ? "v" : "@"} ${esc(r.opp)}</td><td colspan="${ps ? 7 : 6}" class="l">Did not play</td></tr>`).join("")}</tbody></table></div>
+    <p class="tiny muted">${esc(sumKey(["pra", ...(ps ? [mk] : [])]))}.</p></section>`;
 }
 
+// the two-stat combos on the game page live in the PRA cell's tip (no more columns at phone
+// width): "P+R 25.1 (80% 16–35)", one line each, then a line saying they are untested
+function comboTip(p) {
+  const l = NBA_COMBOS.filter((m) => p[m] && p[m].mean != null).map((m) => `${NBA_SHORT[m]} ${dec(p[m].mean, 1)} (80% ${p[m].q10}–${p[m].q90})`);
+  return l.length ? `|${l.join("|")}|${NBA_COMBOS.filter((m) => p[m]).map((m) => NBA_SHORT[m]).join(", ")}: untested, no past lines` : "";
+}
 async function viewNbaGame(v, gid) {
   const g = await api(`/api/nba/game/${gid}`); const G = g.game;
+  const hasCombo = g.players.some((p) => NBA_COMBOS.some((m) => p[m]));
   const tbl = (team) => `<div class="tablewrap"><table><thead><tr><th class="l">Player</th><th>Plays</th><th>Min</th><th>PTS</th><th>REB</th><th>AST</th><th>3PM</th><th>PRA</th></tr></thead><tbody>
-    ${g.players.filter((p) => p.team === team && (p.p_play >= 0.05 || p.injury)).map((p) => `<tr class="${p.p_play < 0.5 ? "dim" : ""}"><td class="l">${nameLink(hasNbaPage(p.player_id), `#nba-player.${esc(p.player_id)}`, p.name, "plink")} ${nbaInjury(p.injury)}</td><td>${pct(p.p_play)}</td><td>${dec(p.minutes_expected, 0)}</td>${["pts", "reb", "ast", "fg3m", "pra"].map((m) => `<td data-tip="${esc(NBA_MKT[m])}|median ${p[m]?.median}, 80% ${p[m]?.q10}–${p[m]?.q90}">${dec(p[m]?.mean, 1)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
+    ${g.players.filter((p) => p.team === team && (p.p_play >= 0.05 || p.injury)).map((p) => `<tr class="${p.p_play < 0.5 ? "dim" : ""}"><td class="l">${nameLink(hasNbaPage(p.player_id), `#nba-player.${esc(p.player_id)}`, p.name, "plink")} ${nbaInjury(p.injury)}</td><td>${pct(p.p_play)}</td><td>${dec(p.minutes_expected, 0)}</td>${["pts", "reb", "ast", "fg3m", "pra"].map((m) => `<td data-tip="${esc(NBA_MKT[m])}|median ${p[m]?.median}, 80% ${p[m]?.q10}–${p[m]?.q90}${m === "pra" ? comboTip(p) : ""}">${dec(p[m]?.mean, 1)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
   const mu = (t) => { const o = g.opp[t]; if (!o) return ""; return ["pts", "reb", "ast", "fg3m"].map((s) => `<span class="mu ${rankTone(o[s].rank)}">${NBA_SHORT[s]} ${o[s].rank}/30</span>`).join(" ") + ` <span class="tiny muted">pace ${o.pace.value} (${o.pace.rank}/30)</span>`; };
   const box = (t) => { const d = (g.defence || {})[t]; return d ? `<div class="tiny defline">${dec(d.ast_allowed, 1)} assists allowed per game (${ord(d.ast_rank)} of ${d.of}, 1st = fewest) · DREB% ${pct1(d.dreb_pct)} (${ord(d.dreb_rank)}, 1st = highest) · ${plural(d.games, "game")}${tinyTag(d.games)}</div>` : ""; };
-  v.innerHTML = `<section class="hero"><span class="eyebrow">${esc(G.tip_london)} · edition ${esc(g.edition_id)}</span><h1>${esc(G.away)} @ ${esc(G.home)}</h1><p class="small">${G.published_before_tip === false ? "This game had started before this edition was saved. " : ""}Projections are means conditional on playing; rows below 50% to play are dimmed.</p></section>
+  v.innerHTML = `<section class="hero"><span class="eyebrow">${esc(G.tip_london)} · edition ${esc(g.edition_id)}</span><h1>${esc(G.away)} @ ${esc(G.home)}</h1><p class="small">${G.published_before_tip === false ? "This game had started before this edition was saved. " : ""}Projections are means conditional on playing; rows below 50% to play are dimmed.${hasCombo ? " Tap a PRA figure for his P+R (points + rebounds), P+A (points + assists) and R+A (rebounds + assists) projections: built like PRA, never tested against prices (no past lines)." : ""}</p></section>
     <section class="panel"><h2>Game lines</h2>${g.game_lines ? `<div class="solid">${kvl(glRows(g.game_lines, G.home, G.away, true))}<p class="tiny gl-foot">From ${esc(G.home)}'s side. Median of regulated US books, best price to win per side; implied points = (total ∓ spread) / 2. US prices: research only, not open to UK customers.</p></div>` : `<p class="small solid gl-none">No game lines stored for this game.</p>`}</section>
     <section class="panel"><h2>Defences</h2><p class="small">Rank of each defence by what it allows per possession (1 = allows least, 30 = most), shrunk towards average as the model uses it. Full breakdowns by court area, shot type and position: <a href="#nba-defense.${esc(G.away)}">${esc(G.away)}</a> · <a href="#nba-defense.${esc(G.home)}">${esc(G.home)}</a>.</p>
       ${[G.away, G.home].map((t) => `<div class="solid defrow"><b>${esc(t)} defence</b> ${mu(t)}${box(t)}</div>`).join("")}</section>
@@ -1588,6 +1679,7 @@ async function viewNbaLab(v) {
 async function viewNbaAbout(v) {
   v.innerHTML = `<section class="hero"><span class="eyebrow">NBA</span><h1>Data and method</h1></section>
     <section class="panel"><h2>What the model does</h2><p class="small">For each player: expected minutes (recent games weighted towards the latest three) with the spread of minutes players actually showed in past seasons, so short nights from blowouts and foul trouble are included; per-minute scoring, rebounding, assist and three-point rates weighted over about 15 games and shrunk towards the position average when minutes are few; an opponent adjustment (what that defence allows per possession, relative to the league at the time) and pace. Points + rebounds + assists is built from the same minutes, so it is consistent with its parts.</p>
+      <p class="small">P+R (points + rebounds), P+A (points + assists) and R+A (rebounds + assists), added on 4 Nov 2026, are built the same way from the same forecasts. We hold no past bookmaker lines for them, so nothing about them has been tested against prices: at a US line their cards say "No tested model view for this market (no past lines)", and any chance or lean shown for them is untested. Their prices are not pulled by default (each extra market costs credits).</p>
       <p class="small">Chance of playing comes from recent appearances, then the daily injury report: Out = 1%, game-time decision = 65% of the usual chance. Those two numbers are assumptions; injury reports have no history here before September 2026, so their effect is judged from now on.</p></section>
     <section class="panel"><h2>Known gaps</h2><ul class="small"><li>When a teammate who played last game is ruled out, the extra minutes and shots are not added yet (flagged on the card).</li><li>Box scores arrive the morning after games (about 12:00 to 12:40 UK time). An edition published before then is made without the previous night's games, so a team on the second night of a back-to-back is forecast without the first one.</li><li>Injury news comes from the daily snapshot (about 18:40 UK time). Later news is not included, so late scratches are missed.</li><li>Bookmaker prices are US books' (The Odds API), shown as a research reference only: UK bookmakers' NBA props are not available through the odds feed, and any line you enter is your own.</li></ul></section>
     <section class="panel"><h2>Sources</h2><p class="small">Box scores, schedules and the daily injury snapshot: SportsDataverse (sportsdataverse-data releases, CC BY 4.0), built from ESPN's game feeds. Nothing is fetched from ESPN itself (its terms forbid automated access; D-046). Player photos and logos are copies saved before 3 Nov 2026; without one, initials are shown. Prices: The Odds API (player props and game lines from US books), a research reference only. Not used: NBA.com statistics and injury PDFs (their terms forbid use in connection with gambling).</p></section>
@@ -1601,6 +1693,8 @@ async function viewNbaAbout(v) {
     // the edition's calibration, as the cards use it (slopes from reports/nba/model/calibration.json)
     const cal = nbaCal(p), flat = flatMarkets(cal);
     el.insertAdjacentHTML("beforeend", `<p class="small">${cal ? `Model ${esc(cal.version)}: calibration slope ${NBA_STATS.filter((k) => cal.slope[k] != null).map((k) => `${esc(NBA_SHORT[k])} ${dec(cal.slope[k], 2)}`).join(", ")} (1 would mean the calibrated chance follows the model fully). Below ${dec(cal.flat_below, 1)} the card shows no model view at the US line${flat.length ? `: ${esc(flat.map((k) => NBA_LONG[k]).join(" and "))}` : ""}.` : "This edition's model version has no calibration on real lines, so cards show no chance at the US line."}</p>`);
+    const px = cal && cal.combo_proxy && cal.combo_proxy.slope ? Object.entries(cal.combo_proxy.slope).filter(([, b]) => b != null) : [];
+    if (px.length) el.insertAdjacentHTML("beforeend", `<p class="small">P+R, P+A and R+A: a proxy calibration (slope ${px.map(([k, b]) => `${esc(NBA_SHORT[k] || k)} ${dec(b, 2)}`).join(", ")}${cal.combo_proxy.fitted_on ? `, fitted on ${esc(cal.combo_proxy.fitted_on)}` : ""}). Fitted on proxy lines, not bookmaker prices: untested against prices.</p>`);
     if (!n) return;
     const lab = { volume: "Volume", script: "Game script", defence: "Opponent defence", pos_v_opp: "Position v the opponent's lines", vs_opp: "Games v tonight's opponent", injury: "Injuries", game_lines: "Game lines" };
     el.insertAdjacentHTML("beforeend", `<dl class="cxkv">${Object.entries(lab).filter(([k]) => n[k]).map(([k, l]) => `<dt>${l}</dt><dd class="small">${esc(n[k])}</dd>`).join("")}</dl>`); }).catch(() => null);
@@ -1737,6 +1831,9 @@ const DVP = [ // key, short, long, value from the summed box (before scaling), "
   ["dreb", "DREB", "Defensive rebounds", (b) => b[11]],
   ["ast", "AST", "Assists", (b) => b[2]],
   ["pra", "PRA", "Points + rebounds + assists", (b) => b[0] + b[1] + b[2]],
+  ["pr", "P+R", "Points + rebounds", (b) => b[0] + b[1]],
+  ["pa", "P+A", "Points + assists", (b) => b[0] + b[2]],
+  ["ra", "R+A", "Rebounds + assists", (b) => b[1] + b[2]],
   ["fg3m", "3PM", "3-pointers made", (b) => b[7]],
   ["fg3a", "3PA", "3-point attempts", (b) => b[6]],
   ["fg3p", "3P%", "3-point percentage", (b) => (b[6] ? b[7] / b[6] : null), "pct"],
@@ -1908,7 +2005,7 @@ async function nbaMatchupPanel(card, oppSeason, before = null) {
     ${lines.length ? `<ul class="small mlist">${lines.map(([k, t, rel]) => `<li class="${k}"><b>${k === "adv" ? "Advantage" : "Difficulty"}:</b> ${esc(t)} <span class="tiny muted">(signal: ${relWord(rel)})</span></li>`).join("")}</ul>` : `<p class="small muted">No clear advantage or difficulty in his main shooting areas at this sample size.</p>`}
     <div class="tablewrap"><table class="deft"><thead><tr><th class="l">Area</th><th>His share</th><th>His FG%</th><th>His pts per game</th><th>${esc(opp)} att. allowed per 100 poss.</th><th>${esc(opp)} FG% allowed</th></tr></thead><tbody>${tbl}</tbody></table></div>
     ${(() => { const B = dvpBoard(M, { ...f, rate: "pg" }); const g = B.agg[opp]?.games || 0; if (!g || !DVP_POS.includes(f.pos)) return "";
-      const keys = ["pts", "reb", "ast", "pra", "fg3m", "fg3a", "fg2m", "fta", "stl", "blk", "tov"];
+      const keys = ["pts", "reb", "ast", "pra", "pr", "pa", "ra", "fg3m", "fg3a", "fg2m", "fta", "stl", "blk", "tov"];
       return `<h3 style="margin-top:12px">${esc(opp)} v opposing ${POS_ONE[f.pos]}, every stat</h3><div class="tablewrap"><table class="pit deft dvp"><thead><tr><th class="l">Stat</th><th>Allowed per game</th><th>League</th><th>Rank</th></tr></thead><tbody>${keys.map((k) => { const s = DVP.find((x) => x[0] === k); const L = B.league(f.pos, k); const r = L.rank(opp);
         return `<tr><td class="l">${esc(s[2])}</td><td>${dvpFmt(s, L.vals[opp])}</td><td>${dvpFmt(s, L.avg)}</td><td class="c ${dvpClass(r, L.n)}" data-tip="signal: ${esc(relWord(dvpRel(M, f.pos, k, g)))}">${r}/${L.n}</td></tr>`; }).join("")}</tbody></table></div>
         <p class="tiny muted">${g} games; 30/30 = gives up the most to this position. Red = generous, blue = stingy.</p>`; })()}

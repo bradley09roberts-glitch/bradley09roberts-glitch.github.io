@@ -75,6 +75,10 @@ TRACK_EV = 0.02  # D-043: frozen paper-tracking threshold
 TRACK_RULE = "nba-anchored-ev2-mgm@D044"  # rule ids on the paper record (track.py)
 TRACK_MODEL = "nba-0.3"  # the rule is recorded only from editions made by this model
 SIMPLE_RULE = "nba-simple-gap1@D038"
+# Both frozen rules keep exactly the population they were frozen on: these five markets. The
+# two-stat combos added on 4 Nov 2026 (pr, pa, ra) never enter either rule (calib.anchored has no
+# coefficients for them, and nothing about them has been tested against prices).
+TRACKED_MARKETS = ("pts", "reb", "ast", "fg3m", "pra")
 
 
 def nba() -> dict:
@@ -100,6 +104,8 @@ def nba() -> dict:
     ver = P["model_version"]  # the stack fitted for the model that made this edition
     rows = []
     for c in P["cards"]:
+        if c["market"] not in TRACKED_MARKETS:
+            continue  # the frozen rule's markets only (combos are not part of it)
         m = c.get("market_line")
         if (not m or c["p_play"] < 0.85 or c["injury"] or m["books"] < 3
                 or float(m["line"]).is_integer() or pd.Timestamp(c["tip_utc"]) <= now):
@@ -140,6 +146,8 @@ def simple_gap(cards: list[dict]) -> list[dict]:
     won about half its bets (n08)."""
     out = []
     for c in cards:
+        if c["market"] not in TRACKED_MARKETS:
+            continue  # the frozen rule's markets only (combos are not part of it)
         m, s = c.get("market_line"), c.get("simple")
         if (not m or s is None or c["p_play"] < 0.85 or c["injury"] or m["books"] < 3
                 or float(m["line"]).is_integer()):

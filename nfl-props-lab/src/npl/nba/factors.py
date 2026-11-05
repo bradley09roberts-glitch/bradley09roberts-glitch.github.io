@@ -35,6 +35,11 @@ the props with a regulated price. A factor's reliability label follows from its 
 props payload carries both tables once, beside `tested` (tests_payload), so the offline copy can
 keep them once too (npl.snapshot).
 
+Combo markets (pr, pa, ra, added 4 Nov 2026): the rules are applied to them the same way (the
+matchup rule on the combo's own allowed totals), but none was ever tested on them, since we hold no
+past bookmaker lines for those markets: their factors carry `tested` None and the reason as their
+label (UNTESTED), and the overall line ends with UNTESTED_OVERALL (`untested`).
+
 Cut-off (cutoffs): a card's box-score inputs count only games that started strictly before the
 earlier of the edition's publication and his own game's start. An edition published after some
 games had started (the 2 Nov 2026 final, 01:13 UTC, after 9 of 15) therefore never counts those
@@ -55,7 +60,10 @@ from . import extras as X
 FACTORS = ("matchup", "form", "game_script", "role")
 OVER, UNDER, NEUTRAL, UNKNOWN = "over", "under", "neutral", "unknown"
 LEANS = (OVER, UNDER, NEUTRAL, UNKNOWN)
-MARKETS = ("pts", "reb", "ast", "fg3m", "pra")
+MARKETS = ("pts", "reb", "ast", "fg3m", "pra", "pr", "pa", "ra")
+# the markets the rules were backtested on (R2); the combos were not (no past lines stored)
+TESTED_MARKETS = ("pts", "reb", "ast", "fg3m", "pra")
+COMBOS = ("pr", "pa", "ra")
 GROUPS = ("G", "F", "C")
 
 FORM_GAMES, FORM_SIDE = 4, 3  # T4: 3 or 4 of his last 4 on one side of tonight's line
@@ -68,7 +76,8 @@ LAST = 3  # RM: games in his recent minutes
 AGREE = 3  # factors pointing the same way for the tested combination (CB)
 
 STAT_WORDS = {"pts": "points", "reb": "rebounds", "ast": "assists", "fg3m": "3-pointers",
-              "pra": "PRA"}
+              "pra": "PRA", "pr": "points + rebounds", "pa": "points + assists",
+              "ra": "rebounds + assists"}
 GROUP_WORDS = {"G": "guards", "F": "forwards", "C": "centres"}
 
 # ------------------------------------------------------------------ backtest R2, 3 Nov 2026
@@ -226,7 +235,10 @@ def tests_payload() -> dict:
             "rules": {k: {**v, "rule": RULES[k]} for k, v in TESTS.items()},
             "tested": {k: dict(v) for k, v in TESTED.items()},
             "reliability": {k: dict(v) for k, v in RELIABILITY.items()},
-            "overall": dict(OVERALL_TESTED)}
+            "overall": dict(OVERALL_TESTED),
+            # what combo cards carry instead of test figures (kept once here, as above)
+            "untested": {"markets": list(COMBOS), "reliability": UNTESTED,
+                         "overall": UNTESTED_OVERALL}}
 
 
 # ------------------------------------------------------------------ formatting
@@ -319,6 +331,13 @@ OVERALL_TESTED = {
               f"chance of {_pc(_CB['market'])} in the test season and lost money at the best "
               f"regulated price in both seasons. No edge."),
     "other": NO_EDGE}
+# combo markets (pr, pa, ra): the same facts and rule conditions, but no rule was ever tested on
+# them (we hold no past bookmaker lines for these markets), so no test figures are shown: `tested`
+# is None and the label says why
+UNTESTED = ("Not tested for this market: we hold no past bookmaker lines for it, so this rule "
+            "has never been checked against prices here.")
+UNTESTED_OVERALL = ("Not tested for this market: we hold no past bookmaker lines for it, so "
+                    "nothing here has been checked against prices.")
 
 
 def factor(name: str, lean: str, headline: str, evidence: dict) -> dict:
@@ -374,6 +393,7 @@ def matchup_table(p: pd.DataFrame, tg: pd.DataFrame) -> pd.DataFrame:
             [], names=["team", "pos", "market"]))
     n = tg.groupby("team").game_id.nunique()
     x = p[p.game_id.isin(set(tg.game_id))]
+    x = x.assign(**{c: _values(x, c) for c in SUMS if c not in x})  # summed markets, if absent
     tot = x.groupby(["opp", "pos"])[list(MARKETS)].sum()
     idx = pd.MultiIndex.from_product([n.index, GROUPS], names=["team", "pos"])
     tot = tot.rename_axis(index=["team", "pos"]).reindex(idx, fill_value=0.0)
@@ -533,9 +553,31 @@ def breakdown(parts: dict) -> dict:
             "overall": overall({f: parts[f]["lean"] for f in FACTORS})}
 
 
+def untested(b: dict) -> dict:
+    """A combo card's factors block: the same leans, headlines and figures, with no test figures
+    (`tested` None) and the reason as each factor's label; the overall line keeps its counts
+    and ends with UNTESTED_OVERALL instead of a tested sentence."""
+    out = {f: {**b[f], "tested": None, "reliability": UNTESTED} for f in FACTORS}
+    o = b["overall"]
+    c = {k: o[k] for k in LEANS}
+    return {**out, "overall": {**o, "untested": True,
+                               "text": f"{_counts_text(c)} {UNTESTED_OVERALL}"}}
+
+
 # ------------------------------------------------------------------ assembly
 def _values(lg: pd.DataFrame, market: str) -> pd.Series:
-    return lg.pts + lg.reb + lg.ast if market == "pra" else lg[market]
+    parts = SUMS.get(market)
+    if parts is None:
+        return lg[market]
+    out = lg[parts[0]]
+    for q in parts[1:]:
+        out = out + lg[q]
+    return out
+
+
+# summed markets and their parts, added left to right (npl.nba.model.COMBO_PARTS)
+SUMS = {"pra": ("pts", "reb", "ast"), "pr": ("pts", "reb"), "pa": ("pts", "ast"),
+        "ra": ("reb", "ast")}
 
 
 def utc(ts) -> pd.Timestamp:
@@ -586,7 +628,8 @@ def season_rows(L: dict, cur: int, cutoff: pd.Timestamp, before: pd.Timestamp | 
     t = t[["game_id", "team"]]
     if other:
         p, t = p[~p.game_id.isin(other)], t[~t.game_id.isin(other)]
-    return p.assign(pra=p.pts + p.reb + p.ast), t, other
+    return p.assign(pra=p.pts + p.reb + p.ast, pr=p.pts + p.reb, pa=p.pts + p.ast,
+                    ra=p.reb + p.ast), t, other
 
 
 def build(e: dict, fc: list, logs: dict, mkt: dict, ex: dict, L: dict) -> dict:
@@ -622,7 +665,7 @@ def build(e: dict, fc: list, logs: dict, mkt: dict, ex: dict, L: dict) -> dict:
         hs = gl.get("home_spread")
         q4 = ((((players.get(pid) or {}).get("script") or {}).get("q4") or {}).get(str(cur))
               or {}).get("q4")
-        res[(pid, mk)] = breakdown({
+        res[(pid, mk)] = (untested if mk in COMBOS else (lambda b: b))(breakdown({
             "form": form(vals, (mkt.get((pid, mk)) or {}).get("line")),
             "matchup": matchup(table, f["opponent"], f["position"], mk),
             "game_script": game_script(
@@ -630,5 +673,5 @@ def build(e: dict, fc: list, logs: dict, mkt: dict, ex: dict, L: dict) -> dict:
                 gl.get("home_points" if home else "away_points"), q4,
                 league if q4 is not None else None),
             "role": role(team, pid, out.get(team), minutes_trend(mins.get(pid, []))),
-        })
+        }))
     return res

@@ -18,7 +18,32 @@ from . import extras as X
 from . import factors as F
 from . import model as M
 
-STAT_COLS = {"pts": "pts", "reb": "reb", "ast": "ast", "fg3m": "fg3m"}
+# what the props payload says once about the two-stat combos (pr, pa, ra); each combo card also
+# carries "untested": True
+COMBO_NOTE = ("Pts + Reb, Pts + Ast and Reb + Ast are built like PRA, from the same points, "
+              "rebounds and assists forecasts. We hold no past bookmaker lines for them, so "
+              "nothing about them has been tested against prices: a lean or a chance shown for "
+              "them is untested.")
+
+
+def market_info(version: str | None) -> dict:
+    """{market: {label, short, parts, opp_stat, tested, calibration}} for the front end: the
+    parts a summed market adds up (M.COMBO_PARTS, None for a single stat), the single stat that
+    stands in for it where a per-stat figure has no summed version (M.OPP_STAT: the opponent
+    factor), whether it was ever tested against bookmaker prices, and which calibration gives
+    its p_cal_market ("calibration_v4", "combo_proxy" or None: no tested model view)."""
+    from . import calib
+
+    proxy = calib.combo_slopes(version) if version else None
+    out = {}
+    for m in M.MARKETS:
+        combo = m in M.COMBOS
+        cal = (("combo_proxy" if proxy and m in proxy else None) if combo else
+               "calibration_v4")
+        out[m] = {"label": M.MARKET_LABELS[m], "short": M.MARKET_SHORT[m],
+                  "parts": list(M.COMBO_PARTS[m]) if m in M.COMBO_PARTS else None,
+                  "opp_stat": M.OPP_STAT.get(m, m), "tested": not combo, "calibration": cal}
+    return out
 
 
 def _london(ts) -> str:
@@ -47,7 +72,7 @@ def lake() -> dict:
 
 
 def _values(pg: pd.DataFrame, mk: str) -> pd.Series:
-    return pg.pts + pg.reb + pg.ast if mk == "pra" else pg[STAT_COLS[mk]]
+    return M.stat_values(pg, mk)  # summed markets (PRA, pr, pa, ra) from their parts
 
 
 def game_logs(cuts: dict, own: dict | None = None) -> dict[str, pd.DataFrame]:
@@ -276,7 +301,8 @@ def _props() -> dict:
             seasons = []
         g = games[f["game_id"]]
         o = opp.get(f["opponent"], {})
-        stat = "pts" if f["market"] == "pra" else f["market"]
+        stat = M.OPP_STAT.get(f["market"], f["market"])  # points for pra/pr/pa, rebounds for ra
+        combo = f["market"] in M.COMBOS
         cards.append({
             **{k: f[k] for k in ("game_id", "player_id", "name", "team", "opponent", "position",
                                  "market", "p_play", "minutes_expected", "mean", "median", "q10",
@@ -304,12 +330,21 @@ def _props() -> dict:
                               t["played_last"]],
             "wowy": _wowy(f, lg, logs, out_by_team.get(f["team"], []), int(season) + 1
                           if int(e["date_et"][5:7]) >= 8 else int(season)),
-            # matchup, form, game script and role leans from the backtested rules (D-047)
-            "factors": fx.get((f["player_id"], f["market"]))})
+            # matchup, form, game script and role leans from the backtested rules (D-047);
+            # untested for the combos (factors.untested)
+            "factors": fx.get((f["player_id"], f["market"])),
+            # combos only: never tested against prices (no past lines), and what p_cal_market
+            # comes from ("combo_proxy", or None: no tested model view)
+            **({"untested": True, "p_cal_basis": _cal_basis(f["market"],
+                                                            e["code"]["model_version"])}
+               if combo else {})})
     return {"edition_id": e["edition_id"], "date_et": e["date_et"], "cards": cards,
             "model_version": e["code"]["model_version"],
             "calibration": calibration(e["code"]["model_version"]),
             "markets": {k: M.MARKET_LABELS[k] for k in M.MARKETS},
+            "market_short": dict(M.MARKET_SHORT),
+            "market_info": market_info(e["code"]["model_version"]),
+            "combo_note": COMBO_NOTE,
             "published_london": _london(e["published_at"]), "extras": ex,
             "factor_tests": F.tests_payload()}
 
@@ -369,7 +404,15 @@ def calibration(version: str | None) -> dict | None:
     slopes = calib.v4_slopes(version) if version else None
     if slopes is None:
         return None
-    return {"version": version, "slope": slopes, "flat_below": calib.FLAT_BELOW}
+    k = calib.combo_proxy(version)
+    proxy = None if k is None else {
+        "slope": calib.combo_slopes(version), "fitted_on": k.get("fitted_on"),
+        "validation": k.get("validation"),
+        "note": "Not fitted on bookmaker lines (we hold none for these markets): untested "
+                "against prices."}
+    # the combos never use the V4 slopes: `combo_proxy` (absent: no model view for them at all)
+    out = {"version": version, "slope": slopes, "flat_below": calib.FLAT_BELOW}
+    return out if proxy is None else {**out, "combo_proxy": proxy}
 
 
 def _extras(e: dict, mkt: dict) -> tuple[dict, dict]:
@@ -394,16 +437,29 @@ def _extras(e: dict, mkt: dict) -> tuple[dict, dict]:
 
 def _p_cal(f: dict, m: dict | None, version: str) -> float | None:
     """Calibrated model over chance at the bookmakers' line (D-043), with the coefficients fitted
-    for the model version that made this edition; None without a line or without coefficients."""
+    for the model version that made this edition; None without a line or without coefficients.
+    A combo uses only calibration.json's calibration_combo_proxy block (calib.combo_calibrated);
+    without it, None."""
     if not m:
         return None
     from . import calib
     try:
-        p = calib.calibrated(f["market"], Dist.from_json(f["dist"]).line(m["line"])["over"],
-                             version)
+        raw = Dist.from_json(f["dist"]).line(m["line"])["over"]
+        if f["market"] in M.COMBOS:  # their own proxy block only; never another market's
+            p = calib.combo_calibrated(f["market"], raw, version)
+        else:
+            p = calib.calibrated(f["market"], raw, version)
     except KeyError:  # an edition from a model with no fitted calibration
         return None
-    return round(p, 4)
+    return None if p is None else round(p, 4)
+
+
+def _cal_basis(market: str, version: str) -> str | None:
+    """Where a combo card's p_cal_market comes from: "combo_proxy" when calibration.json holds
+    proxy coefficients for that market and model version, else None (no tested model view)."""
+    from . import calib
+
+    return "combo_proxy" if (calib.combo_slopes(version) or {}).get(market) is not None else None
 
 
 def _simple(fc: list, games: dict) -> dict:

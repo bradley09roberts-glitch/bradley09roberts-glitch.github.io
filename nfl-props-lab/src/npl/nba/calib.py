@@ -7,6 +7,14 @@ recalibration fitted on 2024-25 (valid near bookmakers' lines, not for arbitrary
 the model in rebounds, assists and threes. Neither beat the market out of sample; the anchored
 rule is tracked on paper only. Coefficients are stored per N1 parameter version
 (calibration.json "by_model") and must match the model that produced p_over.
+
+The two-stat combos (pr, pa, ra) have no real-line calibration: we hold no past bookmaker lines
+for them. `calibrated` and `anchored` refuse them (KeyError), so no other market's coefficients
+(PRA's included) can ever be applied to one. `combo_calibrated` reads only an optional, separate
+block, by_model[version]["calibration_combo_proxy"] = {"form", "coef": {market: {"a", "b"}},
+"logit_clip", "fitted_on", "validation"}, fitted elsewhere on something other than real lines
+(hence "proxy"); without it, or without that market in it, a combo gets None: no model view at
+any line. There is no anchored chance for a combo.
 """
 
 from __future__ import annotations
@@ -59,13 +67,56 @@ def _sig(z: float) -> float:
     return float(1 / (1 + np.exp(-z)))
 
 
+COMBOS = ("pr", "pa", "ra")  # npl.nba.model.COMBOS (not imported: calib loads without model)
+PROXY = "calibration_combo_proxy"
+
+
+def _refuse_combo(market: str) -> None:
+    if market in COMBOS:
+        raise KeyError(f"{market}: a combo market has no real-line calibration or anchored "
+                       "coefficients (use combo_calibrated)")
+
+
 def calibrated(market: str, p_over: float, version: str | None = None) -> float:
+    _refuse_combo(market)
     k = _coef(version)["calibration_v4"]
     c = k["coef"][market]
     return _sig(c["a"] + c["b"] * _logit(p_over, k["logit_clip"]))
 
 
 def anchored(market: str, fair_over: float, p_over: float, version: str | None = None) -> float:
+    _refuse_combo(market)
     k = _coef(version)["anchored_stack"]
     c, e = k["coef"][market], k["logit_clip"]
     return _sig(c["a"] + c["c"] * _logit(fair_over, e) + c["w"] * _logit(p_over, e))
+
+
+def combo_proxy(version: str | None = None) -> dict | None:
+    """The calibration_combo_proxy block for an N1 parameter version (default: the live one), or
+    None when calibration.json has no such block for it (or no entry for that version)."""
+    try:
+        k = _coef(version).get(PROXY)
+    except KeyError:
+        return None
+    return k if isinstance(k, dict) and isinstance(k.get("coef"), dict) else None
+
+
+def combo_calibrated(market: str, p_over: float, version: str | None = None) -> float | None:
+    """A combo's calibrated over chance from its own proxy coefficients only; None when the
+    block, or this market in it, is absent. Never falls back to another market's coefficients."""
+    if market not in COMBOS:
+        raise KeyError(f"{market} is not a combo market")
+    k = combo_proxy(version)
+    c = (k or {}).get("coef", {}).get(market)
+    if not isinstance(c, dict) or "a" not in c or "b" not in c:
+        return None
+    return _sig(float(c["a"]) + float(c["b"]) * _logit(p_over, float(k.get("logit_clip", 1e-4))))
+
+
+def combo_slopes(version: str | None = None) -> dict[str, float] | None:
+    """The proxy slope b per combo market that has one; None without a proxy block."""
+    k = combo_proxy(version)
+    if k is None:
+        return None
+    return {m: float(k["coef"][m]["b"]) for m in COMBOS
+            if isinstance(k["coef"].get(m), dict) and "b" in k["coef"][m]}

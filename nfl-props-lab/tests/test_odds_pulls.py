@@ -578,3 +578,99 @@ def test_cli_quotes_takes_game_lines_for_the_nba(con, monkeypatch, capsys, sport
     if expect:
         assert seen["lines_budget"] is seen["budget"]  # one floor across the whole pull
     assert "Credits left: 999 (floor 400" in capsys.readouterr().out
+
+
+# --------------------------------------------------------------------------- combos (opt-in)
+FIVE_NBA = ["player_points", "player_rebounds", "player_assists", "player_threes",
+            "player_points_rebounds_assists"]
+COMBO_KEYS = ["player_points_rebounds", "player_points_assists", "player_rebounds_assists"]
+
+
+def test_combo_markets_are_mapped_but_never_asked_for_by_default():
+    m = oa.NBA_MARKET_MAP
+    assert {k: m[k] for k in COMBO_KEYS} == {"player_points_rebounds": ("pr", False),
+                                             "player_points_assists": ("pa", False),
+                                             "player_rebounds_assists": ("ra", False)}
+    assert {m[k + "_alternate"] for k in COMBO_KEYS} == {("pr", True), ("pa", True), ("ra", True)}
+    assert oa.core_markets("nba") == FIVE_NBA  # the default pull: exactly the five markets
+    assert oa.core_markets("nba", combos=True) == FIVE_NBA + COMBO_KEYS
+    assert oa.core_markets("nfl", combos=True) == oa.core_markets("nfl")
+    assert oa.provider_markets("nba")["pr"] == "player_points_rebounds"
+
+
+def test_combo_quotes_parse_under_their_own_market_keys():
+    ev = _props("ev1", "Detroit Pistons", "Philadelphia 76ers", t(20), {
+        "fanduel": [("player_points_rebounds", "Cade Cunningham", 31.5, 1.9, 1.9),
+                    ("player_rebounds_assists_alternate", "Cade Cunningham", 14.5, 2.5, 1.5)]})
+    rows = oa.parse_event_odds(ev, observed_at=t(0), request_region="us",
+                               market_map=oa.NBA_MARKET_MAP)
+    assert sorted({r["market"] for r in rows}) == ["pr", "ra"] and len(rows) == 4
+
+
+@pytest.mark.parametrize("combos,asked", [(False, FIVE_NBA), (True, FIVE_NBA + COMBO_KEYS)])
+def test_props_pull_asks_for_combos_only_when_told(con, combos, asked):
+    events = [{"id": "ev1", "home_team": "Detroit Pistons", "away_team": "Philadelphia 76ers",
+               "commence_time": t(20)}]
+    fake = FakeOddsAPI(remaining=1000, events=events, event_odds={"ev1": CLOSE_ODDS})
+    oa.snapshot_upcoming(con, regions="us", hours_ahead=48, session=fake, sport="nba",
+                         combos=combos)
+    odds = [p for p, q in fake.calls if p.endswith("/odds")]
+    assert len(odds) == 1 and fake.calls[1][1]["markets"] == ",".join(asked)
+
+
+def test_pull_plan_shows_the_combos_cost():
+    p = oa.pull_plan("nba", "us")
+    assert p["markets"] == FIVE_NBA and p["credits_per_game"] == 5
+    assert p["combo_extra_per_game"] == 0 and p["combo_extra_if_asked"] == 3
+    p = oa.pull_plan("nba", "us", combos=True, games=10)
+    assert p["credits_per_game"] == 8 and p["combo_extra_per_game"] == 3
+    assert p["credits_for_games"] == 80 and p["combo_extra_for_games"] == 30
+    assert oa.pull_plan("nba", "us,us2")["combo_extra_if_asked"] == 6
+
+
+@pytest.mark.parametrize("combos", [False, True])
+def test_cli_quotes_dry_run_makes_no_call_and_prints_the_cost(con, monkeypatch, capsys, combos):
+    monkeypatch.setattr(db, "connect", lambda *a, **k: con)
+    monkeypatch.delenv("ODDS_API_KEY")  # no key needed for a plan
+
+    def refuse(*a, **k):
+        raise AssertionError("a dry run must not pull")
+
+    monkeypatch.setattr(oa, "snapshot_upcoming", refuse)
+    monkeypatch.setattr(oa, "snapshot_game_lines", refuse)
+    args = ["quotes", "--sport", "nba", "--dry-run"] + (["--combos"] if combos else [])
+    a = cli.build_parser().parse_args(args)
+    assert a.combos is combos
+    assert cli.cmd_quotes(a) == 0
+    out = capsys.readouterr().out
+    assert "no call made" in out
+    asked = out.split("\n")[0].split(": ", 1)[1].rstrip(".").split(", ")
+    assert asked == (FIVE_NBA + COMBO_KEYS if combos else FIVE_NBA)
+    assert f"Up to {8 if combos else 5} credits per game" in out
+    if combos:
+        assert "add up to 3 of those per game" in out
+    else:
+        assert "--combos would add up to 3 credits per game" in out
+
+
+@pytest.mark.parametrize("combos", [False, True])
+def test_cli_quotes_passes_the_combos_flag(con, monkeypatch, capsys, combos):
+    seen = {}
+
+    def props(con, **kw):
+        seen.update(kw)
+        kw["budget"].observe({"x-requests-remaining": "999"})
+        return {"events": []}
+
+    monkeypatch.setattr(db, "connect", lambda *a, **k: con)
+    monkeypatch.setattr(oa, "snapshot_upcoming", props)
+    monkeypatch.setattr(oa, "snapshot_game_lines", lambda con, **kw: {"stored": 0})
+    a = cli.build_parser().parse_args(["quotes", "--sport", "nba"] + (["--combos"] * combos))
+    cli.cmd_quotes(a)
+    assert seen["combos"] is combos
+
+
+def test_cli_combos_is_nba_only(capsys):
+    a = cli.build_parser().parse_args(["quotes", "--sport", "nfl", "--combos"])
+    assert cli.cmd_quotes(a) == 2
+

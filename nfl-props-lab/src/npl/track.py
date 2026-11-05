@@ -70,7 +70,9 @@ def settle(t: pd.DataFrame, pg: pd.DataFrame) -> pd.DataFrame:
     out["status"] = "open"
     if out.empty:
         return out
-    b = pg.assign(pra=pg.pts + pg.reb + pg.ast)
+    # summed markets (PRA and the combos pr, pa, ra; npl.nba.model.COMBO_PARTS) from their parts
+    b = pg.assign(pra=pg.pts + pg.reb + pg.ast, pr=pg.pts + pg.reb, pa=pg.pts + pg.ast,
+                  ra=pg.reb + pg.ast)
     have = set(b.game_id.astype(str))
     key = b.assign(game_id=b.game_id.astype(str), player_id=b.player_id.astype(str)).set_index(
         ["game_id", "player_id"])

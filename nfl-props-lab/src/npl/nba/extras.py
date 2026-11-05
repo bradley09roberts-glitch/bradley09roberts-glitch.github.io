@@ -55,6 +55,12 @@ from . import canon, source
 from . import model as M
 
 STATS = ("pts", "reb", "ast", "fg3m", "pra")  # order of every per-stat array in the payload
+# The two-stat combos are left out of those arrays (the vs_opp grid's v, diff and line): their
+# values are sums of the pts, reb and ast entries (npl.nba.model.COMBO_PARTS), which the app adds
+# up itself, and no past line is stored for them. Stored combo lines (pulled only on request,
+# `npl quotes --combos`) do enter the position-v-lines table (pos_v_opp), under their own keys.
+COMBOS = ("pr", "pa", "ra")
+LINED = STATS + COMBOS  # markets whose stored lines pos_v_opp counts
 CLOSE = 5  # a close game is decided by this many points or fewer
 GRID_CAP = 10  # games shown against tonight's opponent
 STYPE = {"REG": "R", "PLAYIN": "I", "POST": "P"}
@@ -153,12 +159,14 @@ def league_games(games: pd.DataFrame) -> set:
 
 
 def played_frame(L: dict) -> pd.DataFrame:
-    """Played player-games between league teams with PRA, his team's minutes, FGA and FTA in
-    that game (t_*, summed from the player rows) and the final margin (absolute, NaN when the
-    game is not final). The team's turnovers come from the team box score (with_team_tov)."""
+    """Played player-games between league teams with PRA (and P+R, P+A, R+A), his team's
+    minutes, FGA and FTA in that game (t_*, summed from the player rows) and the final margin
+    (absolute, NaN when the game is not final). The team's turnovers come from the team box
+    score (with_team_tov)."""
     pg, tg, games = L["player_games"], L["team_games"], L["games"]
     p = pg[(pg.participation == "played") & pg.game_id.isin(league_games(games))].copy()
     p["pra"] = p.pts + p.reb + p.ast
+    p["pr"], p["pa"], p["ra"] = p.pts + p.reb, p.pts + p.ast, p.reb + p.ast
     tcols = ["minutes", "fga", "fta"]
     t = tg[["game_id", "team", *tcols]].rename(columns={c: f"t_{c}" for c in tcols})
     p = p.merge(t, on=["game_id", "team"], how="left")
@@ -624,7 +632,8 @@ def vs_opp(p: pd.DataFrame, slate: pd.DataFrame, lines: pd.DataFrame, tonight: d
 def lined_results(lines: pd.DataFrame, p: pd.DataFrame) -> pd.DataFrame:
     """Stored lines joined to results of players who played (a void prop has no result)."""
     act = p.melt(id_vars=["game_id", "player_id", "season", "date", "team", "opp", "pos"],
-                 value_vars=list(STATS), var_name="market", value_name="actual")
+                 value_vars=[c for c in LINED if c in p], var_name="market",
+                 value_name="actual")
     d = lines[KEYS + ["line"]].merge(act, on=KEYS)
     return d[d.actual.notna() & d.line.notna()]
 

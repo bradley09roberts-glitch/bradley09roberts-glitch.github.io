@@ -1,4 +1,25 @@
-# Status (Tuesday 3 November 2026)
+# Status (Thursday 5 November 2026)
+
+## Latest (5 Nov, NBA combo markets, D-048)
+
+* **Three new NBA markets:** Pts + Reb (P+R), Pts + Ast (P+A) and Reb + Ast (R+A), forecast in
+  every edition published from now on (stored editions have none), built like PRA from the same
+  points, rebounds and assists forecasts. Model version still nba-0.3: the five original markets'
+  numbers are bit-identical to the pre-combo code (a fixture test proves it).
+* **Never tested against prices.** We hold no past bookmaker lines for the combos. n13 tried a
+  proxy line (the sum of the parts' lines) on PRA first with a check fixed beforehand; it failed
+  (the proxy sits about 0.4 below the real PRA line; cost +0.0009 nats per prop, interval up to
+  +0.0024 against a limit of 0.002), so no combo calibration was written. Combo cards show the raw
+  model marked untested and "No tested model view for this market (no past lines)" at a US line.
+* **Opt-in prices:** `npl quotes --sport nba --combos` adds the three combo markets (up to about 3
+  more credits per game); the default pull is still the five markets, `npl close` still prices
+  tracked markets only, and `npl quotes --dry-run [--combos]` prints the plan with no call. No
+  combo prices have been pulled.
+* **Frozen paper rules unchanged:** nba-anchored-ev2-mgm@D044 and nba-simple-gap1@D038 are limited
+  to the five original markets.
+* **Snapshot:** about 14.5 MB with tonight's stored edition (no combo cards yet); about 14.8 MB
+  from the 4 Nov final rebuilt with combos (combo cards kept only for priced players, slimmed and
+  rebuilt in the page). Open: editions grow about 68% with combos (3.77 MB to 6.35 MB on 4 Nov).
 
 ## Latest (3 Nov, factor tabs and parlay check, D-047)
 

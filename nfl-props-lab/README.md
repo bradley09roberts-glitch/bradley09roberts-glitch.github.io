@@ -51,11 +51,22 @@ uv run npl nba update             # NBA: SportsDataverse box scores, schedule, i
 uv run npl nba publish --date 2026-10-28 --kind final   # NBA edition (US date)
 uv run npl nba settle             # NBA pre-tip record -> reports/nba/record/
 uv run npl quotes --sport nba --regions us --hours-ahead 24   # NBA prop prices + game lines (credits)
+uv run npl quotes --sport nba --dry-run [--combos]   # markets and credit estimate only, no call
 uv run npl close --sport nba --within 30 --dry-run   # plan a closing snapshot of tracked props
 uv run npl serve                  # web app at http://127.0.0.1:8765
 uv run npl snapshot --min-p-play 0.9 --nba-min-p-play 0.7   # offline copy of the app (no server)
 uv run npl verify                 # lint, tests, edition hashes, API smoke test
 ```
+
+NBA combo markets (Pts + Reb, Pts + Ast, Reb + Ast; keys pr, pa, ra, added 4 Nov 2026) are
+forecast in every edition, built like PRA from the same points, rebounds and assists forecasts.
+We hold no past bookmaker lines for them, so nothing about them has been tested against prices,
+and they are in neither tracked paper rule. A props pull does not ask for their prices unless
+told to: `npl quotes --sport nba --combos` adds the provider's three combo markets (about 3 more
+credits per game; `--dry-run` prints the markets and the estimate without any call). The
+default pull asks for the five markets only, and `npl close` prices tracked markets only.
+A proxy calibration (summed part lines) failed its check on PRA (n13), so the app shows no
+tested model view for a combo (D-048).
 
 Odds calls cost credits. Every pull opens with the provider's free events call, makes no paid
 call that would leave fewer than `NPL_ODDS_FLOOR` credits (default 400) and lists any call it
