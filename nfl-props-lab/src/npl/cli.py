@@ -168,9 +168,9 @@ def cmd_picks(a) -> int:
     print(picks.table(res))
     if a.sport == "nba" and not res.get("error"):
         con, now = db.connect(), utcnow().isoformat()
-        lists = [("simple_gap", picks.SIMPLE_RULE)]
+        lists = []  # the simple rule (nba-simple-gap1@D038) was stopped on 5 Nov 2026 (D-049)
         if res["model_version"] == picks.TRACK_MODEL:
-            lists.insert(0, ("tracking", picks.TRACK_RULE))
+            lists.append(("tracking", picks.TRACK_RULE))
         else:  # the frozen rule's stack was fitted on TRACK_MODEL's probabilities only
             print(f"Tracked rule not recorded: this edition was made by {res['model_version']}, "
                   f"the rule needs {picks.TRACK_MODEL}. Publish a new edition first.")

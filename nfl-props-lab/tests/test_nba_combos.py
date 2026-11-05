@@ -191,7 +191,7 @@ def test_combos_never_enter_the_frozen_rules_and_do_not_crash_them(monkeypatch):
     P = {"edition_id": "e", "model_version": picks.TRACK_MODEL, "cards": cards}
     monkeypatch.setattr(A, "props", lambda: P)
     r = picks.nba()
-    assert r["tracking"] == [] and r["simple_gap"] == []
+    assert r["tracking"] == [] and "simple_gap" not in r  # simple rule stopped (D-049)
     # the same card in an original market is taken by both, so the exclusion is what stops it
     P["cards"] = cards + [_card("pts")]
     r = picks.nba()

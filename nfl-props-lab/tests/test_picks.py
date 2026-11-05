@@ -73,3 +73,33 @@ def test_tracked_rule_needs_betmgm_at_its_own_line_and_a_line_known_at_publish(m
     card["line_known"] = True
     card["market_line"] |= {"mgm_over": None, "mgm_under": None, "mgm_line": 21.5}
     assert picks.nba()["tracking"] == []  # BetMGM hangs another line: no fallback book
+
+
+def test_simple_rule_is_stopped_and_only_the_betmgm_rule_is_recorded(monkeypatch, tmp_path):
+    """D-049: `npl picks` records the BetMGM rule only; the simple rule makes no new flags."""
+    import argparse
+
+    from npl import cli, config, db, track
+
+    res = {"edition_id": "e1", "model_version": picks.TRACK_MODEL,
+           "tracking": [{"player": "A"}], "simple_gap": [{"player": "B"}]}
+    monkeypatch.setattr(picks, "nba", lambda: res)
+    monkeypatch.setattr(db, "connect", lambda *a, **k: None)
+    monkeypatch.setattr(config, "DATA_HOME", tmp_path)
+    calls = []
+    monkeypatch.setattr(track, "record",
+                        lambda con, rows, *, rule, **k: calls.append((rule, rows)) or len(rows))
+    assert cli.cmd_picks(argparse.Namespace(sport="nba", game=None)) == 0
+    assert calls == [(picks.TRACK_RULE, [{"player": "A"}])]
+    assert picks.SIMPLE_STOPPED.startswith("5 Nov 2026")
+
+
+def test_track_table_labels_the_stopped_simple_rule():
+    from npl import track
+
+    s = {"flagged": 2, "won": 1, "lost": 1, "void": 0, "open": 0, "slates": 1}
+    rep = {"rules": {picks.SIMPLE_RULE: s, picks.TRACK_RULE: s},
+           "rows": [{c: None for c in ["rule", "player", "market", "side", "line", "price",
+                                        "book", "status", "actual", "fair_close", "clv"]}]}
+    lines = track.table(rep).splitlines()
+    assert "stopped 5 Nov 2026, D-049" in lines[0] and "stopped" not in lines[1]

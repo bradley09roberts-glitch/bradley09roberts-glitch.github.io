@@ -1,5 +1,15 @@
 # Status (Thursday 5 November 2026)
 
+## Latest (5 Nov, simple rule stopped, D-049)
+
+* **Simple-baseline rule stopped** at the user's request after two slates: 165-169 (2 void),
+  -21.15 units, ROI -6.3%, closing-line value -4.6% on 224 bets. `npl picks` now records only the
+  BetMGM rule; the simple rule's history stays in `npl track`, labelled stopped. The Simple
+  baseline still shows on cards as a reference.
+* **BetMGM rule continues:** 9-0, +8.11 units over two slates, but closing-line value -6.4% on 5
+  bets and 9 wins against 4.8 expected: too few bets to judge.
+* **Closing snapshots** now cover only games with a BetMGM flag, which cuts their credit cost.
+
 ## Latest (5 Nov, NBA combo markets, D-048)
 
 * **Three new NBA markets:** Pts + Reb (P+R), Pts + Ast (P+A) and Reb + Ast (R+A), forecast in
@@ -15,8 +25,8 @@
   more credits per game); the default pull is still the five markets, `npl close` still prices
   tracked markets only, and `npl quotes --dry-run [--combos]` prints the plan with no call. No
   combo prices have been pulled.
-* **Frozen paper rules unchanged:** nba-anchored-ev2-mgm@D044 and nba-simple-gap1@D038 are limited
-  to the five original markets.
+* **Frozen paper rules unchanged:** nba-anchored-ev2-mgm@D044 and nba-simple-gap1@D038 (stopped
+  on 5 Nov, D-049) are limited to the five original markets.
 * **Snapshot:** about 14.5 MB with tonight's stored edition (no combo cards yet); about 14.8 MB
   from the 4 Nov final rebuilt with combos (combo cards kept only for priced players, slimmed and
   rebuilt in the page). Open: editions grow about 68% with combos (3.77 MB to 6.35 MB on 4 Nov).

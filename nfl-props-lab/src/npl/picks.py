@@ -75,6 +75,10 @@ TRACK_EV = 0.02  # D-043: frozen paper-tracking threshold
 TRACK_RULE = "nba-anchored-ev2-mgm@D044"  # rule ids on the paper record (track.py)
 TRACK_MODEL = "nba-0.3"  # the rule is recorded only from editions made by this model
 SIMPLE_RULE = "nba-simple-gap1@D038"
+# D-049: the user stopped the simple rule on 5 Nov 2026 after two slates (165-169, -6.3% ROI,
+# closing-line value -4.6% on 224 bets). No new flags are made or recorded; its settled history
+# stays on the paper record, and the Simple baseline still shows on cards as a reference.
+SIMPLE_STOPPED = "5 Nov 2026 (D-049)"
 # Both frozen rules keep exactly the population they were frozen on: these five markets. The
 # two-stat combos added on 4 Nov 2026 (pr, pa, ra) never enter either rule (calib.anchored has no
 # coefficients for them, and nothing about them has been tested against prices).
@@ -134,7 +138,7 @@ def nba() -> dict:
                      "ev": round(ev, 4), "books": m["books"], "line_seen": m["observed_at"]})
     return {"edition_id": P["edition_id"], "model_version": ver,
             "tracking": sorted(rows, key=lambda r: -r["ev"]),
-            "simple_gap": simple_gap(P["cards"]), "rules": nba.__doc__}
+            "rules": nba.__doc__}  # no simple_gap list: that rule was stopped (D-049)
 
 
 SIMPLE_GAP = 1.0  # D-038: tracked, not picks
@@ -143,7 +147,8 @@ SIMPLE_GAP = 1.0  # D-038: tracked, not picks
 def simple_gap(cards: list[dict]) -> list[dict]:
     """Tracking list for the simple baseline: the side S favours when it beats the US line by at
     least SIMPLE_GAP (eligible props only). Not a pick list: on the first three nights this rule
-    won about half its bets (n08)."""
+    won about half its bets (n08). Stopped on 5 Nov 2026 (D-049): kept so the rule stays
+    reproducible, but nothing calls it and nothing it returns is recorded."""
     out = []
     for c in cards:
         if c["market"] not in TRACKED_MARKETS:

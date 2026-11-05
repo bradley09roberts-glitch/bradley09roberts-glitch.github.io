@@ -341,6 +341,8 @@ history of the ESPN pre-game injury reports now stored at every publish (D-033),
 adjustment on reported absences rather than observed ones, then check it prospectively.
 
 ## D-038 (1 Nov 2026) Simple baseline S built; its line-gap rule is tracked, not used for picks
+Stopped by D-049 (5 Nov 2026): the line-gap rule makes no new flags; the Simple baseline still
+shows on cards.
 Asked for a simple baseline (season average x opponent factor x rest factor x minutes trend)
 and to bet when it beats the book's line by 1-2 points, tracking 50-100 bets. Built as
 npl.nba.simple (rest factors fitted on 2018-2023) and shown on NBA cards as "Simple". It is
@@ -766,3 +768,22 @@ shown says so; nothing is called a pick or a signal.
   under the 16 MB limit. What would change the combos' status: real combo lines pulled with
   `--combos` over enough nights to fit and test a calibration on them, first by closing-line
   value, before any combo chance is shown as more than the raw model.
+
+## D-049 (5 Nov 2026) Simple-baseline rule stopped; the BetMGM rule continues
+The user asked to stop the simple rule (nba-simple-gap1@D038) and keep the BetMGM rule
+(nba-anchored-ev2-mgm@D044). Its paper record at the stop, over two slates (2 and 4 Nov ET):
+336 flagged, 165-169 with 2 void, -21.15 units at the recorded US prices (ROI -6.3%, no
+interval yet), 165 wins against 169.0 the closing prices expected, and closing-line value
+-4.59% on the 224 bets with a closing snapshot (6.2% of them positive, close a median 15
+minutes before tip). That matches D-038's backtest: the gap rule wins about half its bets.
+- **What changed.** `npl picks --sport nba` no longer builds or records the simple list
+  (picks.nba() returns no simple_gap; cmd_picks records TRACK_RULE only). picks.simple_gap and
+  SIMPLE_RULE stay so the rule remains reproducible. `npl track` keeps the rule's settled
+  history and labels it "stopped 5 Nov 2026, D-049: no new flags" (track.STOPPED).
+- **Unchanged.** The BetMGM rule and its freeze. The Simple baseline S is still computed and
+  shown on cards ("Simple"), as a reference, not a rule.
+- **Credits.** `npl close` prices games with tracked props only, so closing snapshots now cover
+  only games with a BetMGM flag (on 4 Nov the simple rule had props in all 14 games).
+- **BetMGM rule at the same point:** 9-0 over two slates, +8.11 units, 9 wins against 4.8 the
+  closing prices expected, closing-line value -6.41% on 5 bets (1 positive). Too few bets to
+  judge; D-038's bar of 50-100 tracked bets still applies.

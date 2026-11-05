@@ -204,12 +204,17 @@ def report(con: sqlite3.Connection, pg: pd.DataFrame | None = None, q: pd.DataFr
             "rows": t.to_dict("records")}
 
 
+# rules that make no new flags; their settled history stays on the record
+STOPPED = {"nba-simple-gap1@D038": "stopped 5 Nov 2026, D-049"}
+
+
 def table(rep: dict, last: int = 30) -> str:
     if not rep["rules"]:
         return "Paper record: nothing tracked yet."
     out = []
     for rule, s in rep["rules"].items():
-        line = (f"{rule}: {s['flagged']} tracked, {s.get('won', 0)}-{s.get('lost', 0)} "
+        stop = f" [{STOPPED[rule]}: no new flags]" if rule in STOPPED else ""
+        line = (f"{rule}{stop}: {s['flagged']} tracked, {s.get('won', 0)}-{s.get('lost', 0)} "
                 f"({s.get('void', 0)} void, {s.get('open', 0)} open) over {s.get('slates', 0)} slates")
         if "roi" in s:
             ci = (f"[{s['roi_ci95'][0]:+.1%}, {s['roi_ci95'][1]:+.1%}]" if s["roi_ci95"]
