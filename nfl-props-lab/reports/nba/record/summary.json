@@ -1,104 +1,158 @@
 {
- "settled_at": "2026-11-05T12:58:54Z",
- "games": 56,
- "forecasts": 31260,
- "scored": 18630,
+ "settled_at": "2026-11-06T13:32:21Z",
+ "games": 58,
+ "forecasts": 32940,
+ "scored": 19878,
  "participation": {
-  "played": 1242,
-  "absent": 607,
-  "dnp": 235
+  "played": 1294,
+  "absent": 624,
+  "dnp": 236
  },
- "p_play_brier": 0.09388890247120922,
+ "p_play_brier": 0.09328907336118848,
  "by_model_market": [
   {
    "model": "A",
    "market": "ast",
-   "mean": 0.9156,
-   "size": 1242
+   "mean": 0.9209,
+   "size": 1294
   },
   {
    "model": "A",
    "market": "fg3m",
    "mean": 0.6001,
-   "size": 1242
+   "size": 1294
+  },
+  {
+   "model": "A",
+   "market": "pa",
+   "mean": 4.0782,
+   "size": 52
+  },
+  {
+   "model": "A",
+   "market": "pr",
+   "mean": 4.1714,
+   "size": 52
   },
   {
    "model": "A",
    "market": "pra",
-   "mean": 4.4413,
-   "size": 1242
+   "mean": 4.4557,
+   "size": 1294
   },
   {
    "model": "A",
    "market": "pts",
-   "mean": 3.3355,
-   "size": 1242
+   "mean": 3.341,
+   "size": 1294
+  },
+  {
+   "model": "A",
+   "market": "ra",
+   "mean": 2.056,
+   "size": 52
   },
   {
    "model": "A",
    "market": "reb",
-   "mean": 1.3186,
-   "size": 1242
+   "mean": 1.3206,
+   "size": 1294
   },
   {
    "model": "C",
    "market": "ast",
-   "mean": 0.9366,
-   "size": 1242
+   "mean": 0.9405,
+   "size": 1294
   },
   {
    "model": "C",
    "market": "fg3m",
-   "mean": 0.614,
-   "size": 1242
+   "mean": 0.611,
+   "size": 1294
+  },
+  {
+   "model": "C",
+   "market": "pa",
+   "mean": 3.8147,
+   "size": 52
+  },
+  {
+   "model": "C",
+   "market": "pr",
+   "mean": 3.8403,
+   "size": 52
   },
   {
    "model": "C",
    "market": "pra",
-   "mean": 4.5358,
-   "size": 1242
+   "mean": 4.5331,
+   "size": 1294
   },
   {
    "model": "C",
    "market": "pts",
-   "mean": 3.4189,
-   "size": 1242
+   "mean": 3.4107,
+   "size": 1294
+  },
+  {
+   "model": "C",
+   "market": "ra",
+   "mean": 1.9319,
+   "size": 52
   },
   {
    "model": "C",
    "market": "reb",
-   "mean": 1.3436,
-   "size": 1242
+   "mean": 1.3408,
+   "size": 1294
   },
   {
    "model": "N1",
    "market": "ast",
-   "mean": 0.9005,
-   "size": 1242
+   "mean": 0.9041,
+   "size": 1294
   },
   {
    "model": "N1",
    "market": "fg3m",
-   "mean": 0.5904,
-   "size": 1242
+   "mean": 0.5898,
+   "size": 1294
+  },
+  {
+   "model": "N1",
+   "market": "pa",
+   "mean": 3.5788,
+   "size": 52
+  },
+  {
+   "model": "N1",
+   "market": "pr",
+   "mean": 3.5909,
+   "size": 52
   },
   {
    "model": "N1",
    "market": "pra",
-   "mean": 4.2536,
-   "size": 1242
+   "mean": 4.2455,
+   "size": 1294
   },
   {
    "model": "N1",
    "market": "pts",
-   "mean": 3.2223,
-   "size": 1242
+   "mean": 3.2196,
+   "size": 1294
+  },
+  {
+   "model": "N1",
+   "market": "ra",
+   "mean": 1.7964,
+   "size": 52
   },
   {
    "model": "N1",
    "market": "reb",
-   "mean": 1.2823,
-   "size": 1242
+   "mean": 1.2784,
+   "size": 1294
   }
  ]
 }
